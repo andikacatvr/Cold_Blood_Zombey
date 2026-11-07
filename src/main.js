@@ -58,11 +58,14 @@ import {
   zombies,
   currentBoss,
   spawnWinterZombie,
+  spawnVictorianBride,
+  triggerBrideJumpscare,
   spawnNonaBataviaBoss,
   spawnLadyMithrillBoss,
   spawnSisterValentinaBoss,
   preloadNonaBataviaModel,
   preloadLadyMithrillModel,
+  preloadVictorianBrideModel,
   castCurseBloodOrb,
   killZombieWithKinematics
 } from './entities/enemies.js';
@@ -487,6 +490,70 @@ function updateSimulation(dt) {
           }
         }
       }
+    } else if (z.isVictorianBride) {
+      // Victorian Bride (Fast sprinting horror banshee with jumpscare bite attack)
+      const reach = 1.8;
+      z.attackCooldown -= dt;
+      z.jumpscareCooldown = (z.jumpscareCooldown || 0) - dt;
+
+      if (z.staggerTimer > 0) {
+        z.staggerTimer -= dt;
+        z.x -= Math.sin(ang) * 1.8 * dt;
+        z.z -= Math.cos(ang) * 1.8 * dt;
+        const gy = getTerrainHeight(z.x, z.z);
+        z.model.root.position.set(z.x, gy, z.z);
+        z.model.root.rotation.x = -0.22;
+        continue;
+      }
+
+      if (dist > reach) {
+        // Fast sprinting movement towards player!
+        const step = z.speed * dt;
+        const nx = z.x + Math.sin(ang) * step;
+        const nz = z.z + Math.cos(ang) * step;
+        if (!checkWallCollision(nx, nz)) {
+          z.x = nx;
+          z.z = nz;
+        }
+        const gy = getTerrainHeight(z.x, z.z);
+        z.sprintAnimTime = (z.sprintAnimTime || 0) + dt * (z.speed * 2.5);
+
+        // Aggressive forward lean & rapid visceral sway
+        z.model.root.position.set(z.x, gy + Math.abs(Math.sin(z.sprintAnimTime * 2.2)) * 0.14, z.z);
+        z.model.root.rotation.y = ang;
+        z.model.root.rotation.z = Math.sin(z.sprintAnimTime) * 0.08;
+        z.model.root.rotation.x = 0.18; // Menacing sprint lean
+
+        z.dripTimer -= dt;
+        if (z.dripTimer <= 0) {
+          z.dripTimer = 0.22;
+          spawnWalkingBloodDrip(z.x, z.z, 0.42);
+        }
+      } else {
+        // Attack range! Jumpscare occurs right before bite damage reduces player's health!
+        z.model.root.rotation.y = ang;
+        if (z.attackCooldown <= 0) {
+          if (z.jumpscareCooldown <= 0) {
+            triggerBrideJumpscare();
+            z.jumpscareCooldown = 4.2; // Cooldown between jumpscares
+            z.attackCooldown = 1.4;
+
+            // Bite damage lands right after the jumpscare face flashes in front of screen!
+            setTimeout(() => {
+              if (state.running && !z.isDead) {
+                hitPlayer(z.dmg);
+                Sfx.playL4DAttackSwipe();
+                spawnBloodPoolOnSnow(playerPos.x, playerPos.z, 0.85);
+              }
+            }, 260);
+          } else {
+            // Subsequent bite within cooldown
+            hitPlayer(z.dmg);
+            Sfx.playL4DAttackSwipe();
+            z.attackCooldown = 0.95;
+          }
+        }
+      }
     } else {
       const reach = 1.35;
 
@@ -641,6 +708,15 @@ function updateSimulation(dt) {
           r.position.y = cGroundY + 0.2;
           c.settled = true;
           Sfx.playSnowThud(1.2);
+        }
+        continue;
+      }
+
+      if (c.isVictorianBride) {
+        r.rotation.x = THREE.MathUtils.lerp(r.rotation.x, -Math.PI / 2, dt * 6.5);
+        if (c.age > 0.4 && !c.settled) {
+          c.settled = true;
+          Sfx.playSnowThud(1.0);
         }
         continue;
       }
@@ -823,6 +899,7 @@ function init() {
   initEnemyMaterials(textures);
   initEnemies(scene, camera);
   preloadNonaBataviaModel(scene);
+  preloadVictorianBrideModel(scene);
   initAndikaCompanion(scene, textures);
   initPlayer(camera, scene);
   setupPlayerControls();
@@ -832,6 +909,8 @@ function init() {
     camera,
     scene,
     state,
+    spawnBride: (dist = 12) => spawnVictorianBride(playerPos.x + dist, playerPos.z + dist, state),
+    triggerJumpscare: triggerBrideJumpscare,
     spawnNonaBatavia: () => spawnNonaBataviaBoss(state),
     spawnLadyMithrill: () => spawnNonaBataviaBoss(state),
     spawnValentina: () => spawnSisterValentinaBoss(state),

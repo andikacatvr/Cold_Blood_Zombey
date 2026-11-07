@@ -21,6 +21,7 @@ export const zombies = [];
 export let currentBoss = null;
 
 let ladyMithrillTemplate = null;
+let victorianBrideTemplate = null;
 
 let sceneRef = null;
 let cameraRef = null;
@@ -473,6 +474,139 @@ export function buildNonaBatavia() {
 }
 export const buildLadyMithrill = buildNonaBatavia;
 
+export function preloadVictorianBrideModel(scene) {
+  if (typeof THREE === 'undefined' || !THREE.GLTFLoader) return;
+  const loader = new THREE.GLTFLoader();
+  loader.load(
+    '/models/victorian_bride.glb',
+    (gltf) => {
+      victorianBrideTemplate = gltf.scene;
+      victorianBrideTemplate.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          if (child.name === 'Lace_Veil' || (child.material && child.material.name === 'Mat_Lace_Veil_Transparent')) {
+            child.material.transparent = true;
+            child.material.alphaTest = 0.12;
+            child.material.side = THREE.DoubleSide;
+            child.material.depthWrite = true;
+            child.material.needsUpdate = true;
+          }
+          if (child.material) {
+            child.material.roughness = 0.78;
+            child.material.metalness = 0.05;
+          }
+        }
+      });
+      console.log('★ Victorian Bride 3D Model preloaded successfully!');
+    },
+    undefined,
+    (err) => {
+      console.warn('Failed preloading Victorian Bride model:', err);
+    }
+  );
+}
+
+export function buildVictorianBride() {
+  const root = new THREE.Group();
+  root.name = 'Victorian_Bride_Root';
+  const scale = 1.08;
+  const parts = { root, isVictorianBride: true, scale };
+
+  const modelHolder = new THREE.Group();
+  modelHolder.scale.set(scale, scale, scale);
+  root.add(modelHolder);
+  parts.modelHolder = modelHolder;
+
+  // Head proxy for raycast shooting headshots
+  const headProxy = new THREE.Group();
+  headProxy.position.set(0, 1.62 * scale, 0);
+  root.add(headProxy);
+  parts.head = headProxy;
+
+  if (victorianBrideTemplate) {
+    const clone = victorianBrideTemplate.clone(true);
+    modelHolder.add(clone);
+  } else {
+    const loader = new THREE.GLTFLoader();
+    loader.load('/models/victorian_bride.glb', (gltf) => {
+      gltf.scene.traverse(c => {
+        if (c.isMesh) {
+          c.castShadow = true;
+          c.receiveShadow = true;
+          if (c.name === 'Lace_Veil' || (c.material && c.material.name === 'Mat_Lace_Veil_Transparent')) {
+            c.material.transparent = true;
+            c.material.alphaTest = 0.12;
+            c.material.side = THREE.DoubleSide;
+          }
+        }
+      });
+      modelHolder.add(gltf.scene);
+    });
+  }
+
+  return parts;
+}
+
+export function triggerBrideJumpscare() {
+  const overlay = document.getElementById('jumpscare-overlay');
+  if (!overlay) return;
+
+  if (Sfx.playBrideJumpscareScream) {
+    Sfx.playBrideJumpscareScream();
+  }
+
+  overlay.classList.remove('hidden');
+  overlay.classList.remove('active');
+  void overlay.offsetWidth; // Force CSS reflow
+  overlay.classList.add('active');
+
+  const canvas = document.getElementById('ps1-canvas') || document.querySelector('canvas');
+  if (canvas) {
+    canvas.style.filter = 'invert(0.2) saturate(220%) contrast(180%)';
+    setTimeout(() => {
+      if (canvas) canvas.style.filter = '';
+    }, 450);
+  }
+
+  setTimeout(() => {
+    overlay.classList.remove('active');
+    overlay.classList.add('hidden');
+  }, 560);
+}
+
+export function spawnVictorianBride(x, z, state) {
+  if (!sceneRef) return;
+  const model = buildVictorianBride();
+  const gy = getTerrainHeight(x, z);
+  model.root.position.set(x, gy, z);
+  sceneRef.add(model.root);
+
+  const wave = state ? state.wave : 1;
+  const hp = 85 + wave * 14;
+  const speed = 6.4 + Math.random() * 0.9; // Fast sprinter (significantly faster than regular 2.8 - 3.5 zombie)
+  const dmg = 24;
+
+  zombies.push({
+    model,
+    isBoss: false,
+    isVictorianBride: true,
+    x,
+    z,
+    hp,
+    maxHp: hp,
+    speed,
+    dmg,
+    isDead: false,
+    sprintAnimTime: Math.random() * 10,
+    attackCooldown: 0,
+    jumpscareCooldown: 0,
+    staggerTimer: 0,
+    dripTimer: 0.22,
+    lastStepPos: new THREE.Vector2(x, z)
+  });
+}
+
 export function spawnWinterZombie(x, z, state) {
   if (!sceneRef) return;
   const variant = Math.floor(Math.random() * 4);
@@ -754,6 +888,7 @@ export function killZombieWithKinematics(z, shotDir, hitDistance, isHeadshot, st
     model: model,
     isBoss: z.isBoss,
     isFloatingBoss: !!z.isFloatingBoss,
+    isVictorianBride: !!z.isVictorianBride,
     style: style,
     sideSign: sideProj >= 0 ? 1 : -1,
     age: 0,

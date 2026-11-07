@@ -30,6 +30,7 @@ import {
   zombies,
   currentBoss,
   spawnWinterZombie,
+  spawnVictorianBride,
   spawnSisterValentinaBoss,
   spawnLadyMithrillBoss,
   killZombieWithKinematics,
@@ -481,6 +482,17 @@ export function startWinterWave(w) {
       const r = 22 + Math.random() * 22;
       spawnWinterZombie(playerPos.x + Math.sin(a) * r, playerPos.z + Math.cos(a) * r, state);
     }, i * 260);
+  }
+
+  // Fast Victorian Bride sprinters (Unnatural speed & jumpscare bite)
+  const brideCount = Math.min(6, 1 + Math.floor(w * 0.8));
+  for (let b = 0; b < brideCount; b++) {
+    setTimeout(() => {
+      if (!state.running) return;
+      const ba = Math.random() * Math.PI * 2;
+      const br = 22 + Math.random() * 16;
+      spawnVictorianBride(playerPos.x + Math.sin(ba) * br, playerPos.z + Math.cos(ba) * br, state);
+    }, 1500 + b * 2200);
   }
 }
 

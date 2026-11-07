@@ -687,3 +687,130 @@
   75% { transform: translate(-1%, -1.5%); }
   100% { transform: translate(1%, 0.8%); }
 }
+
+/* =========================================================================
+   VICTORIAN BRIDE JUMPSCARE OVERLAY & HORROR ANIMATIONS
+   ========================================================================= */
+.jumpscare-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  overflow: hidden;
+  background: radial-gradient(circle at center, rgba(30, 0, 5, 0.5) 0%, rgba(10, 0, 2, 0.96) 100%);
+}
+
+.jumpscare-overlay.hidden {
+  display: none !important;
+}
+
+.jumpscare-overlay.active {
+  animation: jumpscareScreenShake 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.jumpscare-face-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#jumpscare-face-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: contrast(165%) saturate(180%) drop-shadow(0 0 50px rgba(255, 0, 30, 0.95));
+  opacity: 0;
+  transform: scale(0.75);
+  transition: opacity 0.08s ease-out, transform 0.45s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.jumpscare-overlay.active #jumpscare-face-img {
+  opacity: 1 !important;
+  transform: scale(1.42);
+  animation: jumpscareShakeFace 0.08s infinite alternate ease-in-out;
+}
+
+@keyframes jumpscareShakeFace {
+  0% { transform: scale(1.42) translate(-3px, -2px) rotate(-1deg); }
+  50% { transform: scale(1.46) translate(3px, 2px) rotate(1deg); }
+  100% { transform: scale(1.44) translate(-2px, 3px) rotate(-0.5deg); }
+}
+
+.jumpscare-blood-vignette {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 140px 60px rgba(180, 0, 20, 0.85);
+  pointer-events: none;
+}
+
+.jumpscare-flash-bang {
+  position: absolute;
+  inset: 0;
+  background: #ff0022;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jumpscare-overlay.active .jumpscare-flash-bang {
+  animation: jumpscareRedFlash 0.55s ease-out forwards;
+}
+
+.jumpscare-noise-overlay {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.3) 0px, rgba(0, 0, 0, 0.3) 2px, transparent 2px, transparent 4px);
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+@keyframes jumpscareLunge {
+  0% {
+    transform: scale(0.65) translate(0, 0);
+    opacity: 0;
+  }
+  15% {
+    transform: scale(1.35) translate(-2%, 1%);
+    opacity: 1;
+  }
+  30% {
+    transform: scale(1.48) translate(3%, -2%);
+  }
+  50% {
+    transform: scale(1.55) translate(-2%, 2%);
+  }
+  75% {
+    transform: scale(1.58) translate(1%, -1%);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(1.70) translate(0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes jumpscareScreenShake {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  10% { transform: translate(-18px, -12px) rotate(-1.5deg); }
+  20% { transform: translate(16px, 14px) rotate(1.2deg); }
+  30% { transform: translate(-14px, 10px) rotate(-1deg); }
+  40% { transform: translate(12px, -8px) rotate(0.8deg); }
+  50% { transform: translate(-8px, 6px) rotate(-0.5deg); }
+  70% { transform: translate(6px, -4px) rotate(0.3deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+@keyframes jumpscareRedFlash {
+  0% { opacity: 0.85; }
+  15% { opacity: 0.45; }
+  35% { opacity: 0.25; }
+  70% { opacity: 0.15; }
+  100% { opacity: 0; }
+}

@@ -860,6 +860,78 @@ import { gameSettings } from '../config/settings.js';
         gain.connect(this.dest());
         osc.start(now);
         osc.stop(now + 0.9);
+      },
+      // Terrifying Victorian Bride horror jumpscare sting (piercing screech + harsh noise burst + sub bass shock)
+      playBrideJumpscareScream() {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+
+        // 1. High screeching dissonant scream (minor second interval)
+        const osc1 = this.ctx.createOscillator();
+        const osc2 = this.ctx.createOscillator();
+        const screamGain = this.ctx.createGain();
+
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(1380, now);
+        osc1.frequency.exponentialRampToValueAtTime(2450, now + 0.10);
+        osc1.frequency.exponentialRampToValueAtTime(720, now + 0.58);
+
+        osc2.type = 'square';
+        osc2.frequency.setValueAtTime(1460, now);
+        osc2.frequency.exponentialRampToValueAtTime(2520, now + 0.10);
+        osc2.frequency.exponentialRampToValueAtTime(690, now + 0.58);
+
+        screamGain.gain.setValueAtTime(0.85, now);
+        screamGain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+
+        osc1.connect(screamGain);
+        osc2.connect(screamGain);
+        screamGain.connect(this.dest());
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.68);
+        osc2.stop(now + 0.68);
+
+        // 2. Sudden harsh noise blast (throat hiss & visceral breath blast)
+        try {
+          const bufSize = Math.floor(this.ctx.sampleRate * 0.48);
+          const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < bufSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.15));
+          }
+          const noise = this.ctx.createBufferSource();
+          noise.buffer = buf;
+
+          const noiseFilter = this.ctx.createBiquadFilter();
+          noiseFilter.type = 'bandpass';
+          noiseFilter.frequency.setValueAtTime(1900, now);
+          noiseFilter.Q.setValueAtTime(1.8, now);
+
+          const noiseGain = this.ctx.createGain();
+          noiseGain.gain.setValueAtTime(0.9, now);
+          noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.52);
+
+          noise.connect(noiseFilter);
+          noiseFilter.connect(noiseGain);
+          noiseGain.connect(this.dest());
+          noise.start(now);
+          noise.stop(now + 0.55);
+        } catch (e) {}
+
+        // 3. Low sub-bass chest thump
+        const subOsc = this.ctx.createOscillator();
+        const subGain = this.ctx.createGain();
+        subOsc.type = 'sine';
+        subOsc.frequency.setValueAtTime(130, now);
+        subOsc.frequency.exponentialRampToValueAtTime(32, now + 0.42);
+        subGain.gain.setValueAtTime(0.95, now);
+        subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+
+        subOsc.connect(subGain);
+        subGain.connect(this.dest());
+        subOsc.start(now);
+        subOsc.stop(now + 0.50);
       }
     };
 
