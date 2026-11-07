@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nona Batavia 3D Model Viewer (.GLB)</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #111418;
+      color: #e0e6ed;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+    }
+    #header {
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      z-index: 10;
+      background: rgba(18, 24, 30, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: 1px solid #2e3b48;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 20px;
+      color: #ffd15c;
+      letter-spacing: 1px;
+    }
+    p {
+      margin: 0;
+      font-size: 13px;
+      color: #8c9ba8;
+    }
+    #loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 16px;
+      color: #ffd15c;
+      background: rgba(0,0,0,0.7);
+      padding: 14px 24px;
+      border-radius: 6px;
+      pointer-events: none;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+</head>
+<body>
+  <div id="header">
+    <h1>NONA BATAVIA (3D .GLB VIEWER)</h1>
+    <p>Orbit: Klik Kiri + Geser | Zoom: Scroll | Pan: Klik Kanan + Geser</p>
+  </div>
+  <div id="loading">Memuat Nona Batavia (.glb)...</div>
+
+  <script>
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x151a21);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 1.8, 4.2);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.target.set(0, 1.3, 0);
+
+    const hemiLight = new THREE.HemisphereLight(0xfff5e6, 0x334455, 1.3);
+    scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    dirLight.position.set(4, 7, 5);
+    scene.add(dirLight);
+
+    const backLight = new THREE.DirectionalLight(0xffaa55, 0.8);
+    backLight.position.set(-4, 4, -4);
+    scene.add(backLight);
+
+    const grid = new THREE.GridHelper(10, 20, 0x445566, 0x223344);
+    grid.position.y = 0;
+    scene.add(grid);
+
+    const loader = new THREE.GLTFLoader();
+    loader.load('/models/nona_batavia.glb', (gltf) => {
+      document.getElementById('loading').style.display = 'none';
+      const model = gltf.scene;
+      scene.add(model);
+      console.log('Nona Batavia model loaded successfully!');
+    }, undefined, (err) => {
+      console.warn('Fallback load:', err);
+      loader.load('/nona_batavia.glb', (gltf) => {
+        document.getElementById('loading').style.display = 'none';
+        scene.add(gltf.scene);
+      });
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
+

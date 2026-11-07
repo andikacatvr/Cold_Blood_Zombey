@@ -1,0 +1,351 @@
+/* =========================================================================
+   CINEMATIC INTRO CUTSCENE & STORY PRESENTATION
+   - Bus drives through dark snowy wilderness forest at night and stalls
+   - Player is discovered lying unconscious and motionless in the snow beside Kristin
+   - Kristin stands guard, leaning with concern over the unconscious survivor
+   - Player stirs, regains consciousness, and rises to feet into FPS perspective
+   ========================================================================= */
+
+import {
+  schoolTourBus,
+  busWheelMeshes,
+  busHeadlights,
+  busHazardLights,
+  busCollider,
+  getTerrainHeight
+} from '../world/environment.js';
+import { andikaModel } from '../entities/andika.js';
+import { weaponHolder } from '../entities/weapons.js';
+import { playerMeshRoot, cameraMode, setPlayerCutscenePose } from '../entities/playerModel.js';
+import { scene, playerFlashlight } from '../graphics/engine.js';
+
+const THREE = window.THREE;
+
+export let isCinematicActive = false;
+let cutsceneTime = 0;
+let cameraRef = null;
+let onCompleteCallback = null;
+let currentStageIndex = -1;
+let sfxRef = null;
+let cutsceneDroppedShotgun = null;
+
+const CUTSCENE_STAGES = [
+  {
+    start: 0.0,
+    end: 5.0,
+    camStart: new THREE.Vector3(5.8, 3.6, 26.5),
+    camEnd: new THREE.Vector3(2.6, 2.0, 18.8),
+    lookStart: new THREE.Vector3(0.2, 1.2, 16.5),
+    lookEnd: new THREE.Vector3(0.4, 0.65, 14.1),
+    subtitle: "Malam pekat membeku di rimba Hutan Morbida... Bus tur sekolah terperosok dan mati total di tengah badai salju buas.",
+    onEnter: (sfx) => { if (sfx && sfx.playSnowStep) sfx.playSnowStep(); }
+  },
+  {
+    start: 5.0,
+    end: 10.0,
+    camStart: new THREE.Vector3(-2.8, 1.85, 16.5),
+    camEnd: new THREE.Vector3(-2.0, 1.55, 15.0),
+    lookStart: new THREE.Vector3(0.45, 0.75, 13.9),
+    lookEnd: new THREE.Vector3(0.55, 0.85, 14.0),
+    subtitle: "Tubuhmu terkapar kaku tak sadarkan diri di atas hamparan salju es... Di sampingmu, Kristin berjaga dengan cemas sambil mengawasi lolongan mengerikan di balik kabut tebal.",
+    onEnter: (sfx) => {
+      if (sfx && sfx.playChurchBellToll) sfx.playChurchBellToll();
+      if (sfx && sfx.playZombieGroan) sfx.playZombieGroan();
+    }
+  },
+  {
+    start: 10.0,
+    end: 15.0,
+    camStart: new THREE.Vector3(-0.15, 0.55, 15.2),
+    camEnd: new THREE.Vector3(0.0, 1.80, 14.0),
+    lookStart: new THREE.Vector3(1.15, 1.45, 14.0),
+    lookEnd: new THREE.Vector3(1.20, 1.50, 13.9),
+    subtitle: "Kristin: 'Woi, sadar bro! Akhirnya lu melek juga! Cepat berdiri, mereka udah mencium bau kita... Ambil senjatamu, kita habisi mereka bareng-bareng!' [IKUTI PLAYER: AKTIF]",
+    onEnter: (sfx) => {
+      if (sfx && sfx.playPumpRack) sfx.playPumpRack();
+      if (sfx && sfx.playSnowThud) sfx.playSnowThud(1.0);
+    }
+  }
+];
+
+function createDroppedShotgun() {
+  if (cutsceneDroppedShotgun && scene) {
+    scene.remove(cutsceneDroppedShotgun);
+    cutsceneDroppedShotgun = null;
+  }
+  const g = new THREE.Group();
+  const steelMat = new THREE.MeshStandardMaterial({ color: 0x22262a, roughness: 0.35, metalness: 0.8 });
+  const woodMat = new THREE.MeshLambertMaterial({ color: 0x3d2215 });
+
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.75, 8), steelMat);
+  barrel.rotation.x = Math.PI / 2;
+  barrel.position.set(0, 0, 0.28);
+  g.add(barrel);
+
+  const stock = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.08, 0.26), woodMat);
+  stock.position.set(0, -0.02, -0.18);
+  g.add(stock);
+
+  const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.62, 14.1) : 0;
+  g.position.set(-0.62, gy + 0.08, 14.1);
+  g.rotation.set(0.12, 0.52, Math.PI / 2.05);
+
+  cutsceneDroppedShotgun = g;
+  if (scene) scene.add(cutsceneDroppedShotgun);
+}
+
+export function startIntroCutscene(camera, sfx, onComplete) {
+  cameraRef = camera;
+  sfxRef = sfx;
+  onCompleteCallback = onComplete;
+  cutsceneTime = 0;
+  currentStageIndex = -1;
+  isCinematicActive = true;
+
+  // Hide hands viewmodel & flashlight during cutscene
+  if (weaponHolder) weaponHolder.visible = false;
+  if (playerFlashlight) playerFlashlight.visible = false;
+
+  // Initial bus state: rolling in from dark woods
+  if (schoolTourBus) {
+    schoolTourBus.position.set(0, 0, 48.0);
+  }
+  busHeadlights.forEach(l => l.intensity = 4.5);
+  busHazardLights.forEach(l => l.intensity = 0);
+
+  // Position unconscious player lying limp on back in the snow
+  setPlayerCutscenePose('unconscious');
+
+  // Spawn dropped shotgun in the snow next to player's outstretched hand
+  createDroppedShotgun();
+
+  // Position Kristin crouching/standing vigilant beside the unconscious player
+  if (andikaModel && andikaModel.root) {
+    const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.25, 14.05) : 0.1;
+    andikaModel.root.position.set(1.25, gy, 14.05);
+    andikaModel.root.rotation.set(0.12, -Math.PI / 2 - 0.25, 0.08); // Facing player & leaning down with concern
+  }
+
+  // Show cinema overlay & letterbox
+  const overlay = document.getElementById('cinematic-overlay');
+  if (overlay) {
+    overlay.style.display = 'block';
+    overlay.style.opacity = '1';
+  }
+
+  // Hide HUD while in cutscene
+  const hud = document.getElementById('hud');
+  if (hud) hud.style.display = 'none';
+  const reticle = document.getElementById('reticle');
+  if (reticle) reticle.style.display = 'none';
+
+  // Wire skip button
+  const skipBtn = document.getElementById('cinematic-skip-btn');
+  if (skipBtn) {
+    skipBtn.onclick = (e) => {
+      e.stopPropagation();
+      finishCutscene();
+    };
+  }
+
+  // Keyboard skip
+  const handleKeySkip = (e) => {
+    if (!isCinematicActive) {
+      window.removeEventListener('keydown', handleKeySkip);
+      return;
+    }
+    if (e.code === 'Space' || e.code === 'Escape' || e.code === 'KeyE') {
+      finishCutscene();
+      window.removeEventListener('keydown', handleKeySkip);
+    }
+  };
+  window.addEventListener('keydown', handleKeySkip);
+}
+
+export function updateCutscene(dt) {
+  if (!isCinematicActive || !cameraRef) return;
+
+  cutsceneTime += dt;
+
+  // 1. Bus Movement & Driving Mechanics
+  if (schoolTourBus) {
+    if (cutsceneTime < 5.8) {
+      // Phase 1: Bus rolling forward through night snow
+      const prog = cutsceneTime / 5.8;
+      schoolTourBus.position.z = THREE.MathUtils.lerp(48.0, 26.0, prog);
+      busWheelMeshes.forEach(w => {
+        w.rotation.x += dt * 9.0;
+      });
+      busHeadlights.forEach(l => {
+        l.intensity = 4.5 + Math.sin(cutsceneTime * 20.0) * 0.3;
+      });
+    } else if (cutsceneTime < 10.5) {
+      // Phase 2: Engine failure, deceleration & skidding to a halt
+      const prog = (cutsceneTime - 5.8) / 4.7;
+      const easeStop = Math.sin(prog * Math.PI * 0.5);
+      schoolTourBus.position.z = THREE.MathUtils.lerp(26.0, 21.5, easeStop);
+      busWheelMeshes.forEach(w => {
+        w.rotation.x += dt * (1.0 - prog) * 6.0;
+      });
+      // Sputtering, flickering headlights
+      if (cutsceneTime < 9.5) {
+        busHeadlights.forEach(l => {
+          l.intensity = (Math.random() > 0.35 ? 4.2 : 0.2);
+        });
+      } else {
+        // Dead headlights, emergency hazard kicks in
+        busHeadlights.forEach(l => l.intensity = 0);
+        busHazardLights.forEach(l => {
+          l.intensity = (Math.sin(cutsceneTime * 10.0) > 0 ? 2.5 : 0.2);
+        });
+      }
+    } else {
+      // Finalized bus position
+      schoolTourBus.position.z = 21.5;
+      busHeadlights.forEach(l => l.intensity = 0);
+      busHazardLights.forEach(l => {
+        l.intensity = (Math.sin(cutsceneTime * 7.0) > 0 ? 2.5 : 0.2);
+      });
+    }
+  }
+
+  // 2. Character Posing & Dynamic Awakening Transition
+  if (cutsceneTime < 10.0) {
+    // Player remains unconscious flat on the snow
+    setPlayerCutscenePose('unconscious');
+
+    // Kristin breathes and remains vigilant beside the unconscious player
+    if (andikaModel && andikaModel.root) {
+      const breath = Math.sin(cutsceneTime * 2.8) * 0.012;
+      const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.25, 14.05) : 0.1;
+      andikaModel.root.position.set(1.25, gy + breath, 14.05);
+      andikaModel.root.rotation.set(0.12, -Math.PI / 2 - 0.25, 0.08);
+    }
+  } else {
+    // Stage 3: Player awakens and rises up
+    const wakeProgress = Math.min(1.0, (cutsceneTime - 10.0) / 4.2);
+    setPlayerCutscenePose('waking', wakeProgress);
+
+    // Kristin straightens up and welcomes player back to conscious world
+    if (andikaModel && andikaModel.root) {
+      const ease = wakeProgress * wakeProgress * (3 - 2 * wakeProgress);
+      const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.25, 14.05) : 0.1;
+      andikaModel.root.position.set(1.25, gy, 14.05);
+      andikaModel.root.rotation.set(
+        THREE.MathUtils.lerp(0.12, 0, ease),
+        -Math.PI / 2 - 0.25,
+        THREE.MathUtils.lerp(0.08, 0, ease)
+      );
+    }
+
+    // Player retrieves dropped shotgun from snow
+    if (wakeProgress > 0.82 && cutsceneDroppedShotgun && scene) {
+      scene.remove(cutsceneDroppedShotgun);
+      cutsceneDroppedShotgun = null;
+    }
+  }
+
+  if (cutsceneTime >= 15.0) {
+    finishCutscene();
+    return;
+  }
+
+  // 3. Camera Choreography & Subtitles
+  let stage = null;
+  let stageIdx = -1;
+  for (let i = 0; i < CUTSCENE_STAGES.length; i++) {
+    const s = CUTSCENE_STAGES[i];
+    if (cutsceneTime >= s.start && cutsceneTime < s.end) {
+      stage = s;
+      stageIdx = i;
+      break;
+    }
+  }
+
+  if (stage) {
+    if (stageIdx !== currentStageIndex) {
+      currentStageIndex = stageIdx;
+      if (stage.onEnter) stage.onEnter(sfxRef);
+      const subEl = document.getElementById('cinematic-subtitles');
+      if (subEl) {
+        subEl.innerHTML = stage.subtitle;
+      }
+    }
+
+    const stageProgress = (cutsceneTime - stage.start) / (stage.end - stage.start);
+    const easeProg = 0.5 - 0.5 * Math.cos(stageProgress * Math.PI);
+
+    cameraRef.position.lerpVectors(stage.camStart, stage.camEnd, easeProg);
+    const lookTarget = new THREE.Vector3().lerpVectors(stage.lookStart, stage.lookEnd, easeProg);
+    cameraRef.lookAt(lookTarget);
+  }
+}
+
+export function finishCutscene() {
+  if (!isCinematicActive) return;
+  isCinematicActive = false;
+
+  // Remove dropped shotgun if still present
+  if (cutsceneDroppedShotgun && scene) {
+    scene.remove(cutsceneDroppedShotgun);
+    cutsceneDroppedShotgun = null;
+  }
+
+  // Reset player model to standard upright stance
+  setPlayerCutscenePose('reset');
+
+  // Finalize bus position & collider
+  if (schoolTourBus) {
+    schoolTourBus.position.set(0, 0, 21.5);
+  }
+  busHeadlights.forEach(l => l.intensity = 0);
+  if (busCollider) {
+    busCollider.minZ = 21.5 - 5.1;
+    busCollider.maxZ = 21.5 + 4.1;
+  }
+
+  // Position Kristin beside player ready for escort mode
+  if (andikaModel && andikaModel.root) {
+    const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.2, 13.8) : 0.1;
+    andikaModel.root.position.set(1.2, gy, 13.8);
+    andikaModel.root.rotation.set(0, -0.35, 0);
+  }
+
+  // Restore camera to default player eye-level spawn
+  if (cameraRef) {
+    cameraRef.position.set(0, 1.8, 14.0);
+    cameraRef.rotation.set(0, 0, 0);
+  }
+
+  // Fade out and hide cinema overlay
+  const overlay = document.getElementById('cinematic-overlay');
+  if (overlay) {
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+      overlay.style.display = 'none';
+    }, 400);
+  }
+
+  // Reveal HUD and Crosshair
+  const hud = document.getElementById('hud');
+  if (hud) hud.style.display = 'flex';
+  const reticle = document.getElementById('reticle');
+  if (reticle) reticle.style.display = 'block';
+
+  // Restore flashlight and viewmodels / player model
+  if (playerFlashlight) playerFlashlight.visible = true;
+  if (playerMeshRoot) playerMeshRoot.visible = (cameraMode === 'tps');
+  if (weaponHolder) weaponHolder.visible = (cameraMode === 'fps');
+
+  // Request pointer lock for FPS gameplay
+  try {
+    document.body.requestPointerLock();
+  } catch (e) {
+    console.warn('Pointer lock request:', e);
+  }
+
+  if (typeof onCompleteCallback === 'function') {
+    onCompleteCallback();
+    onCompleteCallback = null;
+  }
+}

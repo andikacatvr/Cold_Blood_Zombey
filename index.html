@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>COLD BLOOD: THE CORRUPTED SISTER (PS1 1997 / PS2 2004)</title>
+  <link rel="stylesheet" href="/src/styles/game.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="/libs/GLTFLoader.js"></script>
+  <script src="/libs/OBJLoader.js"></script>
+</head>
+<body>
+
+  <div id="game-container">
+    <canvas id="ps1-canvas"></canvas>
+    <div id="crt-fx"></div>
+    <div id="noise-filter"></div>
+    <div id="damage-flash"></div>
+    <div id="invuln-aura"></div>
+    <div id="pickup-banner">+12 SHELLS AMMO DI RUMAH!</div>
+    <div id="door-locked-prompt">PINTU TERKUNCI &amp; DIBARIKADE DARI DALAM</div>
+    <div id="boss-warning-flash">THE CORRUPTED SISTER AWAKENS...</div>
+
+    <!-- INTRO CINEMATIC CUTSCENE OVERLAY -->
+    <div id="cinematic-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; z-index:100; pointer-events:none; transition:opacity 0.5s ease;">
+      <div id="cinema-bar-top" style="position:absolute; top:0; left:0; width:100%; height:13%; background:#0a0d0c; border-bottom:2px solid #1e3325; box-shadow:0 8px 25px rgba(0,0,0,0.9); z-index:102;"></div>
+      <div id="cinema-bar-bottom" style="position:absolute; bottom:0; left:0; width:100%; height:15%; background:#0a0d0c; border-top:2px solid #1e3325; box-shadow:0 -8px 25px rgba(0,0,0,0.9); z-index:102; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:0 30px;">
+        <div id="cinematic-subtitles" style="color:#ffffff; font-family:'VT323', monospace; font-size:26px; letter-spacing:1px; text-shadow:0 0 10px rgba(0,0,0,1), 0 2px 4px #000; text-align:center; max-width:90%; line-height:1.25;"></div>
+      </div>
+      <button id="cinematic-skip-btn" style="position:absolute; top:22px; right:28px; z-index:110; pointer-events:auto; background:rgba(18,28,22,0.9); color:#a2cfb0; border:1px solid #4a825b; padding:6px 16px; font-family:'VT323', monospace; font-size:19px; border-radius:4px; cursor:pointer; box-shadow:0 0 14px rgba(0,0,0,0.8);">LEWATI CUTSCENE [ESC / SPACE / KLIK]</button>
+      <div id="cinematic-location" style="position:absolute; top:22px; left:28px; z-index:105; color:#9de8b7; font-family:'VT323', monospace; font-size:22px; letter-spacing:1px; text-shadow:0 0 12px rgba(0,0,0,1);">
+        21:45 WIB &bull; BELANTARA HUTAN SALJU MORBIDA
+      </div>
+    </div>
+
+    <!-- PURE CINEMATIC COMPANION DIALOGUE SUBTITLE -->
+    <div id="andika-npc-banner" style="display:none; position:absolute; bottom:85px; left:50%; transform:translateX(-50%); background:rgba(8,14,10,0.92); border:1px solid #3d6849; color:#cbe3d3; font-family:'VT323', monospace; padding:10px 22px; border-radius:6px; box-shadow:0 0 24px rgba(0,0,0,0.85); text-align:left; z-index:45; pointer-events:none; max-width:85%; min-width:300px; transition:opacity 0.4s ease;">
+      <div style="display:inline-flex; align-items:center; gap:14px;">
+        <img src="/textures/andika_face_hd.png" alt="Kristin" style="width:42px; height:42px; border-radius:50%; border:2px solid #9de8b7; object-fit:cover; box-shadow:0 0 10px rgba(157,232,183,0.5); flex-shrink:0;">
+        <div>
+          <div style="color:#9de8b7; font-weight:bold; font-size:24px; line-height:1.1;">★ KRISTIN</div>
+          <div id="andika-dialog-text" style="color:#f0f7f3; font-size:22px; margin-top:3px; line-height:1.25;">"Woi bro! Sumpah lu beneran masih hidup?! Gua kira lu udah tewas di bus! Masuk sini cepetan!"</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIFE LOST ALERT BANNER -->
+    <div id="life-alert-banner">
+      <div id="life-alert-title">NYAWA BERKURANG!</div>
+      <div id="life-alert-remaining">♥ ♥ ♡ (2/3)</div>
+    </div>
+
+    <!-- BOSS HEALTH BAR -->
+    <div id="boss-hud-container">
+      <div id="boss-name-banner">SISTER VALENTINA - THE BLEEDING MOTHER</div>
+      <div id="boss-bar-frame">
+        <div id="boss-bar-fill"></div>
+      </div>
+    </div>
+
+    <!-- IN-GAME HUD -->
+    <div id="hud">
+      <div class="hud-row">
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <div class="hud-box" id="hud-vital">VITAL: 100%</div>
+          <div class="hud-box" id="hud-lives">
+            <span style="color: #ff3a4b; margin-right: 4px;">NYAWA:</span>
+            <span id="hud-lives-icons"><span class="life-heart full">♥</span><span class="life-heart full">♥</span><span class="life-heart full">♥</span></span>
+            <span id="hud-lives-count" style="margin-left: 6px; font-size: 19px; color: #a9b7c6;">(3/3)</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <div class="hud-box" id="hud-score">CRIMSON PURGED: 000</div>
+          <button class="hud-box hud-btn" id="hud-settings-btn" title="Pengaturan (ESC)">⚙ PENGATURAN</button>
+        </div>
+      </div>
+
+      <div id="reticle">
+        <div class="cross-h"></div>
+        <div class="cross-v"></div>
+      </div>
+
+      <div class="hud-row">
+        <div class="hud-box" id="hud-wave">ENDLESS HORDE: WAVE I</div>
+        <div class="hud-box" id="hud-weapon-badge" style="cursor: pointer; pointer-events: auto;" title="Tekan 1 / 2 / 3 atau Q untuk ganti senjata">
+          <span style="color: #9cb0bf; margin-right: 6px;">SENJATA:</span>
+          <span id="hud-weapon-name" style="color: #ff9933; font-weight: bold;">[2] SHOTGUN PUTAR M1887</span>
+        </div>
+        <div class="hud-box" id="hud-ammo" style="cursor: pointer; pointer-events: auto;" title="Tekan R atau Klik untuk Reload">SHELLS: 5 / 24</div>
+      </div>
+    </div>
+
+    <!-- START SCREEN (CLEAN & CINEMATIC) -->
+    <div class="menu-panel" id="screen-start">
+      <div class="start-card">
+        <div class="title-banner">COLD BLOOD</div>
+        <div class="sub-banner">THE MORBIDA SCHOOL TOUR INCIDENT</div>
+        <div class="start-menu-badge">SURVIVAL HORROR &bull; ENDLESS HORDE</div>
+        <div class="start-btn-group">
+          <button class="btn-play" id="btn-enter">▶ MULAI PERJALANAN</button>
+          <button class="btn-play btn-sec" id="btn-menu-settings">⚙ PENGATURAN</button>
+        </div>
+        <div class="start-menu-hint">🎧 Gunakan Headphone untuk Pengalaman Audio Horor Spasial 3D</div>
+      </div>
+    </div>
+
+    <!-- GAME OVER SCREEN -->
+    <div class="menu-panel" id="screen-gameover" style="display: none;">
+      <div class="title-banner" style="color: #ff3344; text-shadow: 3px 3px 0 #300, 0 0 25px #b00;">CONSUMED BY THE BLOOD</div>
+      <div class="sub-banner" style="color: #a4454b;" id="go-wave-text">LOST IN THE SNOW</div>
+      <div class="scroll-box" style="text-align: center;">
+        <div style="font-size: 30px; color: #d6e2eb;" id="go-kills">CRIMSON PURGED: 0</div>
+        <p style="margin-top: 10px; font-size: 17px; color: #7f909e;">Semua 3 nyawa survivor telah musnah. Tangan berdarah Sister Valentina telah mencabut jiwamu.</p>
+      </div>
+      <div style="display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap;">
+        <button class="btn-play" id="btn-restart">TRY ONCE MORE</button>
+        <button class="btn-play btn-sec" id="btn-go-settings">⚙ PENGATURAN</button>
+      </div>
+    </div>
+
+    <!-- SETTINGS MODAL DIALOG -->
+    <div id="screen-settings" class="settings-modal-backdrop">
+      <div class="settings-dialog">
+        <!-- MODAL HEADER -->
+        <div class="settings-header">
+          <div>
+            <div class="settings-title">⚙ PENGATURAN GAME</div>
+            <div class="settings-subtitle">KONFIGURASI SISTEM SURVIVOR &bull; SILENT HILL AESTHETIC</div>
+          </div>
+          <button class="settings-close-x" id="btn-close-settings-x" title="Tutup Pengaturan (ESC)">✕</button>
+        </div>
+
+        <!-- SCROLLABLE SETTINGS BODY -->
+        <div class="settings-box">
+          <!-- SECTION 1: AUDIO & SISTEM -->
+          <div class="settings-section-header">AUDIO &amp; SISTEM KONTROL</div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <span>VOLUME SUARA (AUDIO SFX, ANGIN &amp; LONCENG)</span>
+              <span class="setting-desc">Keras/lemahnya audio desiran angin, lonceng misterius, suara air, dan jeritan zombie</span>
+            </div>
+            <div class="setting-ctrl">
+              <input type="range" id="setting-volume" min="0" max="100" step="5" value="80">
+              <span class="setting-val-badge" id="val-volume">80%</span>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <span>SENSITIVITAS MOUSE (AIM SENSITIVITY)</span>
+              <span class="setting-desc">Kecepatan putaran sudut pandang kamera saat menggerakkan mouse</span>
+            </div>
+            <div class="setting-ctrl">
+              <input type="range" id="setting-sens" min="0.2" max="2.5" step="0.1" value="1.0">
+              <span class="setting-val-badge" id="val-sens">1.0x</span>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <span>MODE LAYAR PENUH (FULLSCREEN)</span>
+              <span class="setting-desc">Perbesar ke layar penuh untuk pengalaman horor maksimal</span>
+            </div>
+            <div class="setting-ctrl">
+              <button class="btn-opt" id="btn-fullscreen">⛶ LAYAR PENUH</button>
+            </div>
+          </div>
+
+          <!-- SECTION 2: GRAFIK & TAMPILAN -->
+          <div class="settings-section-header">GRAFIK &amp; VISUAL HOROR</div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <span>MODE GRAFIK (GRAPHICS FIDELITY)</span>
+              <span class="setting-desc">PS2 2004 Enhanced (HD, Soft Shadows, Lentera Dada) atau PS1 1997 Retro (320x240 Pixelated)</span>
+            </div>
+            <div class="setting-ctrl">
+              <div class="btn-group" id="group-graphics">
+                <button class="btn-opt" data-gfx="ps1">PS1 1997</button>
+                <button class="btn-opt active" data-gfx="ps2">PS2 2004</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <span>EFEK SCANLINES CRT RETRO PS1</span>
+              <span class="setting-desc">Garis scanline dan vignette layar tabung jadul 1997</span>
+            </div>
+            <div class="setting-ctrl">
+              <div class="btn-group" id="group-crt">
+                <button class="btn-opt active" data-crt="true">AKTIF</button>
+                <button class="btn-opt" data-crt="false">NONAKTIF</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <span>WARNA RETIKEL BIDIKAN (CROSSHAIR)</span>
+              <span class="setting-desc">Pilihan warna garis bidik penargetan di tengah layar</span>
+            </div>
+            <div class="setting-ctrl">
+              <div class="btn-group" id="group-cross">
+                <button class="btn-opt active" data-color="#c5d5e2" style="color: #c5d5e2;">PUTIH</button>
+                <button class="btn-opt" data-color="#ff3344" style="color: #ff3344;">MERAH</button>
+                <button class="btn-opt" data-color="#39ff14" style="color: #39ff14;">HIJAU</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 3: GAMEPLAY & ARSENAL -->
+          <div class="settings-section-header">GAMEPLAY &amp; ARSENAL SENJATA</div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <span>TINGKAT KESULITAN (DIFFICULTY)</span>
+              <span class="setting-desc">Mudah (Damage -30%), Normal, Sulit (Damage +40% &amp; mutant lebih agresif)</span>
+            </div>
+            <div class="setting-ctrl">
+              <div class="btn-group" id="group-diff">
+                <button class="btn-opt" data-diff="easy">MUDAH</button>
+                <button class="btn-opt active" data-diff="normal">NORMAL</button>
+                <button class="btn-opt" data-diff="hard">SULIT</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <span>PILIHAN SENJATA UTAMA (WEAPON ARSENAL)</span>
+              <span class="setting-desc">Pilih Shotgun Pompa, Shotgun Putar M1887, atau Golok Melee</span>
+            </div>
+            <div class="setting-ctrl">
+              <div class="btn-group" id="group-weapon">
+                <button class="btn-opt" data-weapon="pump">[1] POMPA</button>
+                <button class="btn-opt active" data-weapon="spin">[2] PUTAR M1887</button>
+                <button class="btn-opt" data-weapon="golok">[3] GOLOK</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 4: PANDUAN KONTROL & TOMBOL (COMPACT GRID) -->
+          <div class="settings-section-header">PANDUAN KONTROL &amp; TOMBOL</div>
+          <div class="controls-grid">
+            <div class="ctrl-card"><span class="key-badge">W A S D</span> Gerak Karakter</div>
+            <div class="ctrl-card"><span class="key-badge">SHIFT</span> Lari Cepat (Sprint)</div>
+            <div class="ctrl-card"><span class="key-badge">SPACE</span> Melompat</div>
+            <div class="ctrl-card"><span class="key-badge">L-CLICK</span> Menembak / Menyerang</div>
+            <div class="ctrl-card"><span class="key-badge">R</span> Reload Peluru Shells</div>
+            <div class="ctrl-card"><span class="key-badge">1 / 2 / 3 / Q</span> Ganti Senjata</div>
+            <div class="ctrl-card"><span class="key-badge">F / V</span> Quick Melee Tebas Golok</div>
+            <div class="ctrl-card"><span class="key-badge">C</span> Toggle Kamera (FPS / TPS)</div>
+            <div class="ctrl-card"><span class="key-badge">T</span> Perintah Kristin: Ikuti / Diam</div>
+            <div class="ctrl-card"><span class="key-badge">E</span> Dialog dengan Kristin</div>
+            <div class="ctrl-card"><span class="key-badge">ESC</span> Pause / Buka Pengaturan</div>
+          </div>
+        </div>
+
+        <!-- FIXED MODAL FOOTER -->
+        <div class="settings-footer">
+          <button class="btn-play" id="btn-close-settings">SIMPAN &amp; KEMBALI</button>
+          <button class="btn-play btn-sec" id="btn-reset-settings">RESET DEFAULT</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
