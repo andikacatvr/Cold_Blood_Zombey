@@ -1,12 +1,7 @@
-# 🩸 COLD BLOOD: THE CORRUPTED SISTER
+# COLD BLOOD: THE CORRUPTED SISTER
 > **Retro 3D Survival Horror (PS1 1997 / PS2 2004 Aesthetic)**
 
 Game survival horror 3D bergaya retro PlayStation 1 & 2 yang dibangun menggunakan **Three.js** dan **Vite**. Pemain bertahan hidup dari serbuan gerombolan zombie di tengah badai salju Rimba Morbida bersama teman bernama Kristin.
-
----
-
-## 🎮 Cerita Singkat
-Malam pekat membeku di Belantara Hutan Salju Morbida. Bus tur sekolah terperosok dan mati total di tengah badai salju buas. Kamu terbangun di samping Kristin yang setia berjaga. Tak lama berselang, jeritan darah memecah keheningan malam—gerombolan mayat hidup dan roh gentayangan mulai memburu kalian.
 
 ---
 
