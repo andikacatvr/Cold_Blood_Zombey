@@ -1,5 +1,5 @@
 /* =========================================================================
-   COLD BLOOD: THE CORRUPTED SISTER
+   COLD BLOOD ZOMBEY
    Main Entry Point & Modular Game Orchestrator
    ========================================================================= */
 

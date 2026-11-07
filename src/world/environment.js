@@ -32,8 +32,8 @@ export function getRiverCenterX(z) {
  * Naturally descends 3.0 meters from waterfall plunge pool (z=-56.5) down to the southern border (z=110).
  */
 export function getRiverWaterY(z) {
-  const progress = Math.max(0, Math.min(1.0, (z - (-56.5)) / 166.5));
-  return 0.85 - progress * 3.0;
+  const progress = Math.max(0, (z - (-58.0)) / 198.0);
+  return 0.85 - progress * 3.4;
 }
 
 /**
@@ -102,15 +102,15 @@ export function getTerrainHeight(x, z) {
     }
   }
 
-  // 2. Winding Alpine River Valley & Riverbed Channel (from waterfall plunge pool z=-56.5 to southern border z=110)
-  if (z > -57.5 && z < 112.0) {
+  // 2. Winding Alpine River Valley & Riverbed Channel (from waterfall plunge pool z=-58.0 to well past southern border z=140)
+  if (z > -59.0 && z < 145.0) {
     const rX = getRiverCenterX(z);
     const distToRiver = Math.abs(x - rX);
     const waterY = getRiverWaterY(z);
 
-    const channelR = 4.6; // Submerged riverbed boundary
-    const bankR = 7.5;    // Dry snow shoreline ridge
-    const valleyR = 15.0; // Outer forest valley blend corridor
+    const channelR = 5.2; // Submerged riverbed boundary
+    const bankR = 8.5;    // Dry snow shoreline ridge
+    const valleyR = 16.0; // Outer forest valley blend corridor
 
     if (distToRiver < channelR) {
       // Submerged U-shaped riverbed:
@@ -1225,11 +1225,11 @@ export function initWorld(scene, textures) {
     const { riverWaterTex, waterfallTex, waterfallMistTex, topStreamTex, crestFoamTex, woodPlanksTex } = textures;
 
     // A. Winding Curved Mountain River Ribbon Mesh
-    const riverSegments = 120;
-    const startZ = -56.5;
-    const endZ = 110.0;
+    const riverSegments = 160;
+    const startZ = -58.0;
+    const endZ = 140.0; // Flows completely past the world boundaries (mentok sampai ujung)
     const stepZ = (endZ - startZ) / riverSegments;
-    const riverHalfW = 4.45;
+    const riverHalfW = 5.25; // Embeds deeply into the snowy shoreline banks
 
     const riverPositions = [];
     const riverNormals = [];
@@ -1388,8 +1388,8 @@ export function initWorld(scene, textures) {
     scene.add(waterfallVeilMesh);
 
     // 2b. Upper Mountain Feeder River Torrent (Water Flowing on Top of Cliff Summit)
-    const topSegmentsZ = 36;
-    const topStartPosZ = -92.0;
+    const topSegmentsZ = 48;
+    const topStartPosZ = -135.0; // Feeds all the way from deep behind northern mountain peaks (mentok)
     const topEndPosZ = crestZ; // -58.6
     const topUSegs = 16; // Exact match with waterfallMesh
 

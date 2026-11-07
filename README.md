@@ -1,4 +1,4 @@
-# COLD BLOOD: THE CORRUPTED SISTER
+# 🩸 COLD BLOOD ZOMBEY
 > **Retro 3D Survival Horror (PS1 1997 / PS2 2004 Aesthetic)**
 
 Game survival horror 3D bergaya retro PlayStation 1 & 2 yang dibangun menggunakan **Three.js** dan **Vite**. Pemain bertahan hidup dari serbuan gerombolan zombie di tengah badai salju Rimba Morbida bersama teman bernama Kristin.
