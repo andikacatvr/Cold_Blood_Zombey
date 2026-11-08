@@ -3,6 +3,8 @@
    Volume, Mouse Sensitivity, PS2/PS1 Fidelity, CRT Scanlines, Crosshair
    ========================================================================= */
 
+import { updateTouchControlsVisibility } from './touchControls.js';
+
 export let isSettingsOpen = false;
 let settingsOpenedFromGame = false;
 
@@ -74,6 +76,15 @@ export function syncSettingsUI(gameSettings, state) {
       btn.classList.toggle('active', btn.dataset.weapon === curW);
     });
   }
+
+  // Touch Controls Mode
+  const touchGroup = document.getElementById('group-touch');
+  if (touchGroup) {
+    const curTouch = gameSettings.touchControls || 'auto';
+    touchGroup.querySelectorAll('.btn-opt').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.touch === curTouch);
+    });
+  }
 }
 
 export function openSettings(state, gameSettings) {
@@ -91,6 +102,7 @@ export function openSettings(state, gameSettings) {
   const sScreen = document.getElementById('screen-settings');
   if (sScreen) sScreen.style.display = 'flex';
   syncSettingsUI(gameSettings, state);
+  updateTouchControlsVisibility();
 }
 
 export function closeSettings(state) {
@@ -101,8 +113,11 @@ export function closeSettings(state) {
 
   if (settingsOpenedFromGame && state && state.running) {
     state.isPaused = false;
-    document.body.requestPointerLock();
+    try {
+      document.body.requestPointerLock?.();
+    } catch (err) {}
   }
+  updateTouchControlsVisibility();
 }
 
 export function setupSettingsListeners(context) {
@@ -183,6 +198,16 @@ export function setupSettingsListeners(context) {
   document.querySelectorAll('#group-weapon .btn-opt').forEach(btn => {
     btn.addEventListener('click', () => {
       switchWeapon(btn.dataset.weapon);
+    });
+  });
+
+  // Touch Controls Setting
+  document.querySelectorAll('#group-touch .btn-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      gameSettings.touchControls = btn.dataset.touch || 'auto';
+      syncSettingsUI(gameSettings, state);
+      saveSettings();
+      updateTouchControlsVisibility();
     });
   });
 

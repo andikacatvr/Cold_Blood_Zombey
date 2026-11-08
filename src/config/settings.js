@@ -8,7 +8,8 @@ export const DEFAULT_SETTINGS = {
   crtEnabled: false,
   difficulty: 'normal',
   crosshairColor: '#c5d5e2',
-  weapon: 'spin'
+  weapon: 'spin',
+  touchControls: 'auto'
 };
 
 export let gameSettings = Object.assign({}, DEFAULT_SETTINGS);

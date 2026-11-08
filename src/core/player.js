@@ -48,6 +48,7 @@ import { updateHUD, showLifeLostAlert, triggerGameOver } from '../ui/hud.js';
 import { openSettings, closeSettings, isSettingsOpen } from '../ui/settingsMenu.js';
 import { triggerAndikaGesture, toggleCompanionFollow, andikaModel } from '../entities/kristin.js';
 import { startIntroCutscene, isCinematicActive } from './cutscene.js';
+import { updateTouchControlsVisibility } from '../ui/touchControls.js';
 import {
   buildSurvivorPlayerModel,
   updatePlayerModelAnimation,
@@ -83,11 +84,56 @@ export const state = {
 };
 
 export const keys = { w: false, a: false, s: false, d: false, shift: false };
+export const touchMove = { x: 0, z: 0, active: false };
 export const pVel = new THREE.Vector3();
 export const playerPos = new THREE.Vector3(0, 0, 14);
 export let isGrounded = true;
 export let yaw = 0;
 export let pitch = 0;
+
+export function setIsGrounded(val) {
+  isGrounded = !!val;
+}
+
+export function triggerPlayerJump() {
+  if (isGrounded && state.running && !state.isPaused) {
+    pVel.y = 6.8;
+    isGrounded = false;
+  }
+}
+
+export function triggerPlayerAttack() {
+  if (!state.running || state.isPaused || isSettingsOpen) return;
+  if (state.player.weapon === 'golok') {
+    performGolokSlash();
+  } else {
+    fireCombatShotgun();
+  }
+}
+
+export function addLookDelta(dx, dy) {
+  if (!state.running || state.isPaused || !cameraRef) return;
+  const sens = 0.0032 * (gameSettings.sensitivity || 1.0);
+  yaw -= dx * sens;
+  pitch -= dy * sens;
+  pitch = Math.max(-Math.PI / 2.3, Math.min(Math.PI / 2.3, pitch));
+  if (cameraRef) {
+    cameraRef.rotation.y = yaw;
+    cameraRef.rotation.x = pitch;
+  }
+}
+
+export function triggerInteract() {
+  if (!state.running || state.isPaused) return;
+  if (andikaModel) {
+    const dist = playerPos.distanceTo(andikaModel.root.position);
+    if (dist < 6.5) {
+      triggerAndikaGesture();
+    }
+  } else {
+    triggerAndikaGesture();
+  }
+}
 
 let cameraRef = null;
 
@@ -563,6 +609,7 @@ export function startWinterSurvive(scene) {
     state.running = true;
     updateHUD(state);
     startWinterWave(1);
+    updateTouchControlsVisibility();
   });
 }
 

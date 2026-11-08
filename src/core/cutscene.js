@@ -14,6 +14,7 @@ import { weaponHolder } from '../entities/weapons.js';
 import { playerMeshRoot, cameraMode, setPlayerCutscenePose } from '../entities/playerModel.js';
 import { scene, playerFlashlight } from '../graphics/engine.js';
 import { playerPos } from './player.js';
+import { updateTouchControlsVisibility } from '../ui/touchControls.js';
 
 const THREE = window.THREE;
 
@@ -210,6 +211,7 @@ export function startIntroCutscene(camera, sfx, onComplete) {
   if (hud) hud.style.display = 'none';
   const reticle = document.getElementById('reticle');
   if (reticle) reticle.style.display = 'none';
+  updateTouchControlsVisibility();
 
   // Wire skip button
   const skipBtn = document.getElementById('cinematic-skip-btn');
@@ -268,6 +270,7 @@ export function startNonaBataviaCutscene(bossZombie, camera, sfx, onComplete) {
   if (hud) hud.style.display = 'none';
   const reticle = document.getElementById('reticle');
   if (reticle) reticle.style.display = 'none';
+  updateTouchControlsVisibility();
   const bossHud = document.getElementById('boss-hud-container');
   if (bossHud) bossHud.style.display = 'none';
   const npcBanner = document.getElementById('andika-npc-banner');
@@ -393,6 +396,7 @@ export function finishNonaBataviaCutscene() {
   if (reticle) reticle.style.display = 'block';
   const bossHud = document.getElementById('boss-hud-container');
   if (bossHud) bossHud.style.display = 'flex';
+  updateTouchControlsVisibility();
 
   // Restore player viewmodel & flashlight
   if (playerFlashlight) playerFlashlight.visible = true;
@@ -551,4 +555,6 @@ export function finishCutscene() {
     onCompleteCallback();
     onCompleteCallback = null;
   }
+
+  updateTouchControlsVisibility();
 }

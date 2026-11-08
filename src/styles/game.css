@@ -814,3 +814,353 @@
   70% { opacity: 0.15; }
   100% { opacity: 0; }
 }
+
+/* =========================================================================
+   MOBILE PHONE TOUCH CONTROLS (VIRTUAL JOYSTICK & COMBAT BUTTONS)
+   PS1/PS2 Survival Horror Aesthetic for Smartphone Web Gaming
+   ========================================================================= */
+
+#touch-controls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 40;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Left Virtual Analog Thumbstick */
+#touch-joystick-zone {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  width: 140px;
+  height: 140px;
+  pointer-events: auto;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#joystick-base {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(18, 30, 24, 0.68) 0%, rgba(6, 12, 9, 0.88) 100%);
+  border: 2px solid rgba(157, 232, 183, 0.5);
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.85), inset 0 0 16px rgba(0, 0, 0, 0.9);
+  position: relative;
+  pointer-events: none;
+}
+
+#joystick-knob {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #3d6849 0%, #15291b 100%);
+  border: 2px solid #9de8b7;
+  box-shadow: 0 0 12px rgba(157, 232, 183, 0.6), inset 0 2px 5px rgba(255, 255, 255, 0.25);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -25px;
+  margin-left: -25px;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Sprint Toggle Button */
+#btn-touch-sprint {
+  position: absolute;
+  left: 32px;
+  bottom: 172px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(14, 22, 18, 0.82);
+  border: 2px solid #4a825b;
+  color: #a2cfb0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  touch-action: none;
+  font-family: 'VT323', monospace;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  transition: all 0.15s ease;
+}
+
+#btn-touch-sprint.active {
+  border-color: #ffd700;
+  color: #ffeb3b;
+  background: rgba(50, 40, 10, 0.9);
+  box-shadow: 0 0 18px rgba(255, 215, 0, 0.7);
+}
+
+/* Right Look / Camera Pan Touch Zone */
+#touch-look-zone {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60%;
+  height: 100%;
+  pointer-events: auto;
+  touch-action: none;
+  z-index: 38;
+}
+
+/* Top Right Utility Buttons */
+#touch-top-cluster {
+  position: absolute;
+  top: 66px;
+  right: 22px;
+  display: flex;
+  gap: 10px;
+  z-index: 48;
+  pointer-events: none;
+}
+
+.touch-util-btn {
+  width: 52px;
+  height: 50px;
+  border-radius: 6px;
+  pointer-events: auto;
+  touch-action: none;
+  background: rgba(14, 22, 18, 0.88);
+  border: 1px solid #3d6849;
+  color: #cbe3d3;
+}
+
+/* Bottom Right Combat Cluster */
+#touch-action-cluster {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  width: 215px;
+  height: 215px;
+  z-index: 48;
+  pointer-events: none;
+}
+
+/* Generic Touch Button Styling */
+.touch-btn {
+  border: none;
+  outline: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'VT323', monospace;
+  text-shadow: 0 1px 4px #000;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
+  transition: transform 0.08s ease, filter 0.08s ease;
+}
+
+.touch-btn:active,
+.touch-btn.active {
+  transform: scale(0.92);
+  filter: brightness(1.25);
+}
+
+.touch-btn-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.touch-btn-label {
+  font-size: 15px;
+  letter-spacing: 1px;
+  margin-top: 1px;
+}
+
+/* Fire Button (Big & Prominent) */
+#btn-touch-fire {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  background: radial-gradient(circle, #b91c1c 0%, #450a0a 100%);
+  border: 3px solid #ff4d4d;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.65), inset 0 2px 6px rgba(255, 200, 200, 0.35);
+  color: #fff;
+}
+
+#btn-touch-fire .fire-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+#btn-touch-fire .touch-fire-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+#btn-touch-fire .touch-fire-label {
+  font-size: 19px;
+  letter-spacing: 1px;
+  font-weight: bold;
+}
+
+/* Jump Button */
+#btn-touch-jump {
+  position: absolute;
+  right: 12px;
+  bottom: 104px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  background: rgba(16, 28, 22, 0.88);
+  border: 2px solid #5a9e6f;
+  color: #a2e8ba;
+}
+
+/* Reload Button */
+#btn-touch-reload {
+  position: absolute;
+  right: 104px;
+  bottom: 10px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  background: rgba(30, 22, 12, 0.88);
+  border: 2px solid #ff9933;
+  color: #ffb866;
+}
+
+/* Switch Weapon Button */
+#btn-touch-switch {
+  position: absolute;
+  right: 88px;
+  bottom: 74px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  background: rgba(14, 25, 34, 0.88);
+  border: 2px solid #66b2ff;
+  color: #a8d5ff;
+}
+
+/* Quick Melee Golok Button */
+#btn-touch-melee {
+  position: absolute;
+  right: 156px;
+  bottom: 42px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  background: rgba(34, 14, 18, 0.88);
+  border: 2px solid #ff3344;
+  color: #ff7788;
+}
+
+/* Responsive Compact Landscape Adjustments for Mobile Screens */
+@media screen and (max-height: 480px) {
+  #touch-joystick-zone {
+    width: 120px;
+    height: 120px;
+    left: 12px;
+    bottom: 12px;
+  }
+  #joystick-base {
+    width: 105px;
+    height: 105px;
+  }
+  #joystick-knob {
+    width: 44px;
+    height: 44px;
+    margin-top: -22px;
+    margin-left: -22px;
+  }
+  #btn-touch-sprint {
+    left: 20px;
+    bottom: 144px;
+    width: 44px;
+    height: 44px;
+  }
+  #touch-action-cluster {
+    right: 10px;
+    bottom: 10px;
+    width: 185px;
+    height: 185px;
+  }
+  #btn-touch-fire {
+    width: 70px;
+    height: 70px;
+    right: 4px;
+    bottom: 4px;
+  }
+  #btn-touch-fire .touch-fire-icon { font-size: 22px; }
+  #btn-touch-fire .touch-fire-label { font-size: 16px; }
+
+  #btn-touch-jump {
+    right: 8px;
+    bottom: 88px;
+    width: 46px;
+    height: 46px;
+  }
+  #btn-touch-reload {
+    right: 88px;
+    bottom: 6px;
+    width: 46px;
+    height: 46px;
+  }
+  #btn-touch-switch {
+    right: 74px;
+    bottom: 64px;
+    width: 44px;
+    height: 44px;
+  }
+  #btn-touch-melee {
+    right: 132px;
+    bottom: 34px;
+    width: 44px;
+    height: 44px;
+  }
+  #touch-top-cluster {
+    top: 50px;
+    right: 14px;
+  }
+  .touch-util-btn {
+    width: 44px;
+    height: 42px;
+  }
+  #hud {
+    padding: 8px 12px;
+    font-size: 18px;
+  }
+  .hud-box {
+    padding: 3px 8px;
+    font-size: 18px;
+  }
+  #cinematic-skip-btn {
+    font-size: 15px;
+    padding: 4px 10px;
+    top: 10px;
+    right: 14px;
+  }
+}

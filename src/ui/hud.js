@@ -3,6 +3,8 @@
    Wave stats, Health & 3 Lives Hearts, Ammo, Game Over screen
    ========================================================================= */
 
+import { updateTouchControlsVisibility } from './touchControls.js';
+
 export function updateHUD(state) {
   const waveEl = document.getElementById('hud-wave');
   if (waveEl) waveEl.innerText = `ENDLESS HORDE: WAVE ${state.wave}`;
@@ -91,6 +93,8 @@ export function triggerGameOver(state) {
   if (bossHud) bossHud.style.display = 'none';
   const settings = document.getElementById('screen-settings');
   if (settings) settings.style.display = 'none';
+
+  updateTouchControlsVisibility();
 
   const goScreen = document.getElementById('screen-gameover');
   if (goScreen) goScreen.style.display = 'flex';

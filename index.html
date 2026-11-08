@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>COLD BLOOD ZOMBEY (PS1 1997 / PS2 2004)</title>
   <link rel="stylesheet" href="/src/styles/game.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -149,12 +149,26 @@
 
           <div class="setting-row">
             <div class="setting-label">
-              <span>SENSITIVITAS MOUSE (AIM SENSITIVITY)</span>
-              <span class="setting-desc">Kecepatan putaran sudut pandang kamera saat menggerakkan mouse</span>
+              <span>SENSITIVITAS MOUSE &amp; SENTUH (SENSITIVITY)</span>
+              <span class="setting-desc">Kecepatan putaran sudut pandang kamera saat menggerakkan mouse atau geser layar HP</span>
             </div>
             <div class="setting-ctrl">
               <input type="range" id="setting-sens" min="0.2" max="2.5" step="0.1" value="1.0">
               <span class="setting-val-badge" id="val-sens">1.0x</span>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <span>TOMBOL KONTROL HP (TOUCH CONTROLS)</span>
+              <span class="setting-desc">Tampilkan analog virtual &amp; tombol aksi sentuh untuk bermain di smartphone</span>
+            </div>
+            <div class="setting-ctrl">
+              <div class="btn-group" id="group-touch">
+                <button class="btn-opt active" data-touch="auto">OTOMATIS</button>
+                <button class="btn-opt" data-touch="on">AKTIF</button>
+                <button class="btn-opt" data-touch="off">NONAKTIF</button>
+              </div>
             </div>
           </div>
 
@@ -243,7 +257,7 @@
           </div>
 
           <!-- SECTION 4: PANDUAN KONTROL & TOMBOL (COMPACT GRID) -->
-          <div class="settings-section-header">PANDUAN KONTROL &amp; TOMBOL</div>
+          <div class="settings-section-header">PANDUAN KONTROL KEYBOARD &amp; SMARTPHONE</div>
           <div class="controls-grid">
             <div class="ctrl-card"><span class="key-badge">W A S D</span> Gerak Karakter</div>
             <div class="ctrl-card"><span class="key-badge">SHIFT</span> Lari Cepat (Sprint)</div>
@@ -256,6 +270,7 @@
             <div class="ctrl-card"><span class="key-badge">T</span> Perintah Kristin: Ikuti / Diam</div>
             <div class="ctrl-card"><span class="key-badge">E</span> Dialog dengan Kristin</div>
             <div class="ctrl-card"><span class="key-badge">ESC</span> Pause / Buka Pengaturan</div>
+            <div class="ctrl-card" style="grid-column: 1 / -1; border-color: #3d6849; background: rgba(18, 30, 22, 0.85);"><span class="key-badge" style="background:#22442c; color:#9de8b7; border-color:#4a825b;">📱 SMARTPHONE HP</span> Analog Kiri = Gerak | Geser Kanan Layar = Arah Kamera / Bidik | Tombol Kanan = Tembak, Reload, Lompat, Ganti Senjata, Tebas Golok, Kristin</div>
           </div>
         </div>
 
@@ -275,6 +290,63 @@
         <img id="jumpscare-face-img" src="/textures/bride_jumpscare.png" alt="Victorian Bride Face Jumpscare" />
       </div>
       <div class="jumpscare-noise-overlay"></div>
+    </div>
+
+    <!-- MOBILE PHONE ON-SCREEN TOUCH CONTROLS (VIRTUAL JOYSTICK & ACTION BUTTONS) -->
+    <div id="touch-controls" style="display: none;">
+      <!-- LEFT VIRTUAL ANALOG JOYSTICK ZONE -->
+      <div id="touch-joystick-zone">
+        <div id="joystick-base">
+          <div id="joystick-knob"></div>
+        </div>
+      </div>
+
+      <!-- SPRINT TOGGLE BUTTON (ABOVE JOYSTICK) -->
+      <button id="btn-touch-sprint" class="touch-btn touch-sprint-btn" title="Toggle Lari Cepat">
+        <span class="touch-btn-icon">⚡</span>
+        <span class="touch-btn-label">LARI</span>
+      </button>
+
+      <!-- RIGHT LOOK / AIM TOUCH ZONE (FULL RIGHT SCREEN AREA) -->
+      <div id="touch-look-zone"></div>
+
+      <!-- TOP RIGHT UTILITY BUTTONS (CAMERA & KRISTIN INTERACTION) -->
+      <div id="touch-top-cluster">
+        <button id="btn-touch-camera" class="touch-btn touch-util-btn" title="Ganti Sudut Kamera (FPS/TPS)">
+          <span class="touch-btn-icon">🎥</span>
+          <span class="touch-btn-label">KAMERA</span>
+        </button>
+        <button id="btn-touch-interact" class="touch-btn touch-util-btn" title="Dialog Kristin [E]">
+          <span class="touch-btn-icon">★</span>
+          <span class="touch-btn-label">KRISTIN</span>
+        </button>
+      </div>
+
+      <!-- BOTTOM RIGHT COMBAT ACTION BUTTONS -->
+      <div id="touch-action-cluster">
+        <button id="btn-touch-switch" class="touch-btn touch-sub-btn" title="Ganti Senjata (Q)">
+          <span class="touch-btn-icon">⇄</span>
+          <span class="touch-btn-label">GANTI</span>
+        </button>
+        <button id="btn-touch-melee" class="touch-btn touch-sub-btn" title="Quick Melee Tebas Golok (F)">
+          <span class="touch-btn-icon">⚔</span>
+          <span class="touch-btn-label">TEBAS</span>
+        </button>
+        <button id="btn-touch-reload" class="touch-btn touch-sub-btn" title="Reload Peluru (R)">
+          <span class="touch-btn-icon">⟳</span>
+          <span class="touch-btn-label">RELOAD</span>
+        </button>
+        <button id="btn-touch-jump" class="touch-btn touch-sub-btn" title="Melompat (SPACE)">
+          <span class="touch-btn-icon">▲</span>
+          <span class="touch-btn-label">LOMPAT</span>
+        </button>
+        <button id="btn-touch-fire" class="touch-btn touch-fire-btn" title="Tembak / Serang">
+          <div class="fire-inner">
+            <span class="touch-fire-icon">🔥</span>
+            <span class="touch-fire-label">TEMBAK</span>
+          </div>
+        </button>
+      </div>
     </div>
   </div>
 

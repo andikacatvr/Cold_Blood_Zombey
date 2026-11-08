@@ -78,10 +78,12 @@ import {
 import {
   state,
   keys,
+  touchMove,
   pVel,
   playerPos,
   yaw,
   pitch,
+  setIsGrounded,
   initPlayer,
   switchWeapon,
   hitPlayer,
@@ -99,6 +101,10 @@ import {
   setupSettingsListeners,
   syncSettingsUI
 } from './ui/settingsMenu.js';
+import {
+  initTouchControls,
+  updateTouchControlsVisibility
+} from './ui/touchControls.js';
 
 const THREE = window.THREE;
 
@@ -127,8 +133,12 @@ function updateSimulation(dt) {
   if (keys.s) move.z += 1;
   if (keys.a) move.x -= 1;
   if (keys.d) move.x += 1;
-  const isMoving = move.lengthSq() > 0;
-  move.normalize();
+  if (touchMove && touchMove.active) {
+    move.x += touchMove.x;
+    move.z += touchMove.z;
+  }
+  const isMoving = move.lengthSq() > 0.01;
+  if (isMoving) move.normalize();
 
   const spd = (keys.shift ? state.player.sprintSpeed : state.player.walkSpeed) * dt;
   const rot = new THREE.Vector3(move.x, 0, move.z).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
@@ -152,12 +162,14 @@ function updateSimulation(dt) {
     if (playerPos.y <= targetGroundY) {
       playerPos.y = targetGroundY;
       pVel.y = 0;
+      setIsGrounded(true);
       Sfx.playSnowStep();
     }
   } else {
     // Smooth step-up climbing undulating hills & knolls
     playerPos.y = THREE.MathUtils.lerp(playerPos.y, targetGroundY, Math.min(1.0, dt * 20));
     pVel.y = 0;
+    setIsGrounded(true);
   }
 
   // River immersion check (wading through the icy mountain river)
@@ -935,6 +947,7 @@ function init() {
   initAndikaCompanion(scene, textures);
   initPlayer(camera, scene);
   setupPlayerControls();
+  initTouchControls();
 
   window.__gameDebug = {
     playerPos,
