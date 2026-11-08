@@ -40,7 +40,8 @@ import {
   lockedDoors,
   blastOpenDoor,
   checkWallCollision,
-  respawnHousePickups
+  respawnHousePickups,
+  MAP_LIMIT
 } from '../world/environment.js';
 import { updateHUD, showLifeLostAlert, triggerGameOver } from '../ui/hud.js';
 import { openSettings, closeSettings, isSettingsOpen } from '../ui/settingsMenu.js';
@@ -479,8 +480,12 @@ export function startWinterWave(w) {
     setTimeout(() => {
       if (!state.running) return;
       const a = Math.random() * Math.PI * 2;
-      const r = 22 + Math.random() * 22;
-      spawnWinterZombie(playerPos.x + Math.sin(a) * r, playerPos.z + Math.cos(a) * r, state);
+      const r = 20 + Math.random() * 20;
+      let sx = playerPos.x + Math.sin(a) * r;
+      let sz = playerPos.z + Math.cos(a) * r;
+      sx = Math.max(-MAP_LIMIT + 3.0, Math.min(MAP_LIMIT - 3.0, sx));
+      sz = Math.max(-MAP_LIMIT + 3.0, Math.min(MAP_LIMIT - 3.0, sz));
+      spawnWinterZombie(sx, sz, state);
     }, i * 260);
   }
 
@@ -490,8 +495,12 @@ export function startWinterWave(w) {
     setTimeout(() => {
       if (!state.running) return;
       const ba = Math.random() * Math.PI * 2;
-      const br = 22 + Math.random() * 16;
-      spawnVictorianBride(playerPos.x + Math.sin(ba) * br, playerPos.z + Math.cos(ba) * br, state);
+      const br = 20 + Math.random() * 16;
+      let bx = playerPos.x + Math.sin(ba) * br;
+      let bz = playerPos.z + Math.cos(ba) * br;
+      bx = Math.max(-MAP_LIMIT + 3.0, Math.min(MAP_LIMIT - 3.0, bx));
+      bz = Math.max(-MAP_LIMIT + 3.0, Math.min(MAP_LIMIT - 3.0, bz));
+      spawnVictorianBride(bx, bz, state);
     }, 1500 + b * 2200);
   }
 }

@@ -8,7 +8,8 @@ import { spawnWoodSplinters } from '../entities/effects.js';
 
 const THREE = window.THREE;
 
-export const MAP_LIMIT = 110;
+export const MAP_LIMIT = 90;
+export const TERRAIN_LIMIT = 165;
 
 export let riverWaterMesh = null;
 export let waterfallMesh = null;
@@ -312,8 +313,8 @@ export function initWorld(scene, textures) {
     creamStoneTex
   } = textures;
 
-  // Undulating Natural Forest Ground Mesh (Expanded 220m Expanse - Optimized 110x110)
-  const groundGeo = new THREE.PlaneGeometry(MAP_LIMIT * 2, MAP_LIMIT * 2, 110, 110);
+  // Undulating Natural Forest Ground Mesh (Expanded 330m Expanse - Infinite snowy horizon past boundary)
+  const groundGeo = new THREE.PlaneGeometry(TERRAIN_LIMIT * 2, TERRAIN_LIMIT * 2, 130, 130);
   groundGeo.rotateX(-Math.PI / 2);
   const posAttr = groundGeo.attributes.position;
   for (let i = 0; i < posAttr.count; i++) {
@@ -324,7 +325,7 @@ export function initWorld(scene, textures) {
   groundGeo.computeVertexNormals();
 
   if (snowTex) {
-    snowTex.repeat.set(64, 64);
+    snowTex.repeat.set(96, 96);
   }
   const groundMat = new THREE.MeshLambertMaterial({ map: snowTex, flatShading: false });
   const groundMesh = new THREE.Mesh(groundGeo, groundMat);
@@ -1068,15 +1069,15 @@ export function initWorld(scene, textures) {
     scene.add(totem);
   }
 
-  // 7. High-Performance Instanced Snowy Pine & Winter Forest Generator (220m Map)
+  // 7. High-Performance Instanced Snowy Pine & Winter Forest Generator (Expansive 300m Map)
   function buildDenseSnowForest() {
     const pinePositions = [];
     const barePositions = [];
 
-    // Distribute 320 tall snowy pines and bare trunks across the 206m terrain
-    for (let i = 0; i < 320; i++) {
-      const x = (Math.random() - 0.5) * 204;
-      const z = (Math.random() - 0.5) * 204;
+    // Distribute 420 tall snowy pines and bare trunks across the 290m terrain (stretching beyond boundary)
+    for (let i = 0; i < 420; i++) {
+      const x = (Math.random() - 0.5) * 286;
+      const z = (Math.random() - 0.5) * 286;
 
       // Natural clearing around player starting position (0, 14)
       if (Math.hypot(x - 0, z - 14) < 5.0) continue;
@@ -1116,14 +1117,14 @@ export function initWorld(scene, textures) {
       }
     }
 
-    // Outer forest perimeter barrier (64 giant pines sealing 220m map borders)
-    for (let i = 0; i < 64; i++) {
-      const a = (i / 64) * Math.PI * 2;
-      const r = 107 + (i % 3) * 2.5;
+    // Outer forest pines stretching far out into the snow (r = 95m to 155m)
+    for (let i = 0; i < 75; i++) {
+      const a = (i / 75) * Math.PI * 2;
+      const r = 96 + Math.random() * 55;
       const x = Math.cos(a) * r;
       const z = Math.sin(a) * r;
       const gy = getTerrainHeight(x, z);
-      const sc = 1.45 + Math.random() * 0.45;
+      const sc = 1.35 + Math.random() * 0.55;
       const rotY = Math.random() * Math.PI * 2;
       pinePositions.push({ x, y: gy, z, scale: sc, rotY });
     }
@@ -1154,9 +1155,11 @@ export function initWorld(scene, textures) {
         pineFoliageMesh.setMatrixAt(i, dummy.matrix);
         pineSnowMesh.setMatrixAt(i, dummy.matrix);
 
-        // Precise slender trunk collider
-        const colR = 0.38 * p.scale;
-        colliders.push({ minX: p.x - colR, maxX: p.x + colR, minZ: p.z - colR, maxZ: p.z + colR });
+        // Precise slender trunk collider (only inside active play area)
+        if (Math.abs(p.x) < MAP_LIMIT + 2 && Math.abs(p.z) < MAP_LIMIT + 2) {
+          const colR = 0.38 * p.scale;
+          colliders.push({ minX: p.x - colR, maxX: p.x + colR, minZ: p.z - colR, maxZ: p.z + colR });
+        }
       }
 
       pineTrunkMesh.instanceMatrix.needsUpdate = true;
@@ -1199,8 +1202,10 @@ export function initWorld(scene, textures) {
         bareBranchMesh.setMatrixAt(i, dummy.matrix);
         bareSnowMesh.setMatrixAt(i, dummy.matrix);
 
-        const colR = 0.34 * b.scale;
-        colliders.push({ minX: b.x - colR, maxX: b.x + colR, minZ: b.z - colR, maxZ: b.z + colR });
+        if (Math.abs(b.x) < MAP_LIMIT + 2 && Math.abs(b.z) < MAP_LIMIT + 2) {
+          const colR = 0.34 * b.scale;
+          colliders.push({ minX: b.x - colR, maxX: b.x + colR, minZ: b.z - colR, maxZ: b.z + colR });
+        }
       }
 
       bareTrunkMesh.instanceMatrix.needsUpdate = true;
@@ -1218,6 +1223,78 @@ export function initWorld(scene, textures) {
       scene.add(bareBranchMesh);
       scene.add(bareSnowMesh);
     }
+  }
+
+  // World Boundary Transparent Frosted Ice Barrier Wall
+  function buildTransparentBoundaryWall(scene) {
+    const wallH = 10.0;
+    const limit = MAP_LIMIT; // 90m
+    const wallGroup = new THREE.Group();
+    wallGroup.name = 'Transparent_World_Boundary';
+
+    // Translucent frosted glass / ice material with high specular sheen and subtle cyan shimmer
+    const glassMat = new THREE.MeshPhongMaterial({
+      color: 0x9be0f7,
+      emissive: 0x071520,
+      specular: 0xffffff,
+      shininess: 95,
+      transparent: true,
+      opacity: 0.18,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+
+    // Faint icy base rim grounded into snow
+    const baseMat = new THREE.MeshLambertMaterial({
+      color: 0x5faad6,
+      transparent: true,
+      opacity: 0.32,
+      depthWrite: false
+    });
+
+    const segments = [
+      // North Wall (z = -limit)
+      { x: 0, z: -limit, rotY: 0, len: limit * 2 },
+      // South Wall (z = limit)
+      { x: 0, z: limit, rotY: 0, len: limit * 2 },
+      // East Wall (x = limit)
+      { x: limit, z: 0, rotY: Math.PI / 2, len: limit * 2 },
+      // West Wall (x = -limit)
+      { x: -limit, z: 0, rotY: Math.PI / 2, len: limit * 2 }
+    ];
+
+    segments.forEach(seg => {
+      const step = 6.0;
+      const count = Math.ceil(seg.len / step);
+      for (let i = 0; i < count; i++) {
+        const offset = -seg.len / 2 + (i + 0.5) * step;
+        let wx, wz;
+        if (seg.rotY === 0) {
+          wx = seg.x + offset;
+          wz = seg.z;
+        } else {
+          wx = seg.x;
+          wz = seg.z + offset;
+        }
+        const gy = getTerrainHeight(wx, wz);
+
+        // Transparent glass panel
+        const panelGeo = new THREE.PlaneGeometry(step + 0.1, wallH);
+        const panel = new THREE.Mesh(panelGeo, glassMat);
+        panel.position.set(wx, gy + wallH / 2 - 0.4, wz);
+        panel.rotation.y = seg.rotY;
+        wallGroup.add(panel);
+
+        // Ground frost seam
+        const baseGeo = new THREE.BoxGeometry(step + 0.1, 0.28, 0.35);
+        const base = new THREE.Mesh(baseGeo, baseMat);
+        base.position.set(wx, gy + 0.12, wz);
+        base.rotation.y = seg.rotY;
+        wallGroup.add(base);
+      }
+    });
+
+    scene.add(wallGroup);
   }
 
   // 8. Winding Alpine Mountain River & Cascading Waterfall Generator
@@ -1643,6 +1720,9 @@ export function initWorld(scene, textures) {
   // Pure Dense Snow Forest (No road, no vehicles, only deep snow wilderness)
   buildDenseSnowForest();
 
+  // World Boundary Transparent Frosted Ice Barrier Wall
+  buildTransparentBoundaryWall(scene);
+
   // Construct Winding River, Mountain Waterfall & Wooden Bridge
   buildRiverAndWaterfall(scene, textures);
 
@@ -1742,7 +1822,7 @@ export function indexColliders() {
 }
 
 export function checkWallCollision(x, z) {
-  if (Math.abs(x) > MAP_LIMIT - 1.5 || Math.abs(z) > MAP_LIMIT - 1.5) return true;
+  if (Math.abs(x) > MAP_LIMIT - 0.5 || Math.abs(z) > MAP_LIMIT - 0.5) return true;
   const cx = Math.floor(x / GRID_CELL_SIZE);
   const cz = Math.floor(z / GRID_CELL_SIZE);
   const key = getGridKey(cx, cz);
