@@ -305,6 +305,7 @@ export function blastOpenDoor(doorObj, state, updateHUD) {
 export function initWorld(scene, textures) {
   const {
     snowTex,
+    chainlinkTex,
     houseWallTex,
     woodPlanksTex,
     brickHearthTex,
@@ -1225,76 +1226,204 @@ export function initWorld(scene, textures) {
     }
   }
 
-  // World Boundary Transparent Frosted Ice Barrier Wall
-  function buildTransparentBoundaryWall(scene) {
-    const wallH = 10.0;
+  // World Boundary Chainlink Security Perimeter Fence (PS1/PS2 Survival Horror Style)
+  function buildChainlinkBoundaryFence(scene, chainlinkTex) {
+    const fenceH = 5.2; // Tall 5.2m security perimeter
     const limit = MAP_LIMIT; // 90m
-    const wallGroup = new THREE.Group();
-    wallGroup.name = 'Transparent_World_Boundary';
+    const fenceGroup = new THREE.Group();
+    fenceGroup.name = 'World_Boundary_Chainlink_Fence';
 
-    // Translucent frosted glass / ice material with high specular sheen and subtle cyan shimmer
-    const glassMat = new THREE.MeshPhongMaterial({
-      color: 0x9be0f7,
-      emissive: 0x071520,
-      specular: 0xffffff,
-      shininess: 95,
+    // Chainlink wire mesh material with alphaTest for clean transparent diamond cutouts
+    const chainlinkMat = new THREE.MeshStandardMaterial({
+      map: chainlinkTex,
+      alphaTest: 0.35,
       transparent: true,
-      opacity: 0.18,
       side: THREE.DoubleSide,
-      depthWrite: false
+      metalness: 0.35,
+      roughness: 0.65,
+      color: 0xc8d1d8,
+      depthWrite: true
     });
 
-    // Faint icy base rim grounded into snow
-    const baseMat = new THREE.MeshLambertMaterial({
-      color: 0x5faad6,
-      transparent: true,
-      opacity: 0.32,
-      depthWrite: false
+    // Dark weathered galvanized steel for posts, top rails, and support brackets
+    const metalMat = new THREE.MeshStandardMaterial({
+      color: 0x333a40,
+      metalness: 0.6,
+      roughness: 0.55,
+      flatShading: true
     });
 
-    const segments = [
+    // Tension / barbed wire line material
+    const wireMat = new THREE.MeshBasicMaterial({
+      color: 0x22282e
+    });
+
+    // Procedural Warning / Quarantine sign texture
+    const signCanvas = document.createElement('canvas');
+    signCanvas.width = 128;
+    signCanvas.height = 64;
+    const sctx = signCanvas.getContext('2d');
+    sctx.fillStyle = '#cfc9be';
+    sctx.fillRect(0, 0, 128, 64);
+    sctx.fillStyle = '#a62626';
+    sctx.fillRect(4, 4, 120, 22);
+    sctx.fillStyle = '#ffffff';
+    sctx.font = 'bold 15px monospace';
+    sctx.textAlign = 'center';
+    sctx.textBaseline = 'middle';
+    sctx.fillText('DANGER', 64, 15);
+    sctx.fillStyle = '#1c1b18';
+    sctx.font = 'bold 10px monospace';
+    sctx.fillText('QUARANTINE ZONE', 64, 36);
+    sctx.font = '8px monospace';
+    sctx.fillText('UNAUTHORIZED ENTRY FORBIDDEN', 64, 50);
+    // Weathering scratches
+    sctx.fillStyle = 'rgba(70, 40, 20, 0.45)';
+    for (let i = 0; i < 30; i++) {
+      sctx.fillRect(Math.random() * 128, Math.random() * 64, 2, 2);
+    }
+    const signTex = new THREE.CanvasTexture(signCanvas);
+    signTex.magFilter = THREE.NearestFilter;
+    const signMat = new THREE.MeshStandardMaterial({
+      map: signTex,
+      metalness: 0.2,
+      roughness: 0.8,
+      side: THREE.DoubleSide
+    });
+    const signGeo = new THREE.PlaneGeometry(1.6, 0.8);
+
+    const step = 5.0; // 5 meters per section
+    const stepCount = Math.round((limit * 2) / step); // 36 panels per side
+    const actualStep = (limit * 2) / stepCount;
+
+    // Shared panel geometry with custom UV mapping so diamonds are realistically proportioned (~12cm diamonds)
+    const panelGeo = new THREE.PlaneGeometry(actualStep + 0.08, fenceH + 0.8);
+    const uvAttr = panelGeo.attributes.uv;
+    const uRepeat = actualStep * 2.8;
+    const vRepeat = (fenceH + 0.8) * 2.8;
+    for (let i = 0; i < uvAttr.count; i++) {
+      uvAttr.setX(i, uvAttr.getX(i) * uRepeat);
+      uvAttr.setY(i, uvAttr.getY(i) * vRepeat);
+    }
+    uvAttr.needsUpdate = true;
+
+    // Shared rail and post geometries
+    const postGeo = new THREE.CylinderGeometry(0.08, 0.08, fenceH + 1.1, 8);
+    const postCapGeo = new THREE.SphereGeometry(0.095, 6, 6);
+    const railGeo = new THREE.CylinderGeometry(0.042, 0.042, actualStep + 0.08, 8);
+    railGeo.rotateZ(Math.PI / 2);
+    const midWireGeo = new THREE.CylinderGeometry(0.02, 0.02, actualStep + 0.08, 6);
+    midWireGeo.rotateZ(Math.PI / 2);
+    const armGeo = new THREE.CylinderGeometry(0.035, 0.035, 0.75, 6);
+    const barbWireGeo = new THREE.CylinderGeometry(0.015, 0.015, actualStep + 0.08, 4);
+    barbWireGeo.rotateZ(Math.PI / 2);
+
+    const sides = [
       // North Wall (z = -limit)
-      { x: 0, z: -limit, rotY: 0, len: limit * 2 },
-      // South Wall (z = limit)
-      { x: 0, z: limit, rotY: 0, len: limit * 2 },
+      { dir: 'N', p1: { x: -limit, z: -limit }, p2: { x: limit, z: -limit }, rotY: 0, inward: { x: 0, z: 1 } },
       // East Wall (x = limit)
-      { x: limit, z: 0, rotY: Math.PI / 2, len: limit * 2 },
+      { dir: 'E', p1: { x: limit, z: -limit }, p2: { x: limit, z: limit }, rotY: -Math.PI / 2, inward: { x: -1, z: 0 } },
+      // South Wall (z = limit)
+      { dir: 'S', p1: { x: limit, z: limit }, p2: { x: -limit, z: limit }, rotY: Math.PI, inward: { x: 0, z: -1 } },
       // West Wall (x = -limit)
-      { x: -limit, z: 0, rotY: Math.PI / 2, len: limit * 2 }
+      { dir: 'W', p1: { x: -limit, z: limit }, p2: { x: -limit, z: -limit }, rotY: Math.PI / 2, inward: { x: 1, z: 0 } }
     ];
 
-    segments.forEach(seg => {
-      const step = 6.0;
-      const count = Math.ceil(seg.len / step);
-      for (let i = 0; i < count; i++) {
-        const offset = -seg.len / 2 + (i + 0.5) * step;
-        let wx, wz;
-        if (seg.rotY === 0) {
-          wx = seg.x + offset;
-          wz = seg.z;
-        } else {
-          wx = seg.x;
-          wz = seg.z + offset;
+    sides.forEach(side => {
+      const dx = (side.p2.x - side.p1.x) / stepCount;
+      const dz = (side.p2.z - side.p1.z) / stepCount;
+
+      for (let i = 0; i < stepCount; i++) {
+        // Section node 1 (post position)
+        const x1 = side.p1.x + dx * i;
+        const z1 = side.p1.z + dz * i;
+        const y1 = getTerrainHeight(x1, z1);
+
+        // Section node 2
+        const x2 = side.p1.x + dx * (i + 1);
+        const z2 = side.p1.z + dz * (i + 1);
+        const y2 = getTerrainHeight(x2, z2);
+
+        // Section center
+        const cx = (x1 + x2) / 2;
+        const cz = (z1 + z2) / 2;
+        const cy = getTerrainHeight(cx, cz);
+
+        // 1. Vertical Post at node 1
+        const post = new THREE.Mesh(postGeo, metalMat);
+        post.position.set(x1, y1 + (fenceH + 1.1) / 2 - 0.4, z1);
+        fenceGroup.add(post);
+
+        const cap = new THREE.Mesh(postCapGeo, metalMat);
+        cap.position.set(x1, y1 + fenceH + 0.45, z1);
+        fenceGroup.add(cap);
+
+        // Angled Barbed Wire Top Arm (tilted 45 degrees inwards toward map center)
+        const arm = new THREE.Mesh(armGeo, metalMat);
+        arm.position.set(
+          x1 + side.inward.x * 0.22,
+          y1 + fenceH + 0.68,
+          z1 + side.inward.z * 0.22
+        );
+        if (side.dir === 'N') arm.rotation.set(0.65, 0, 0);
+        else if (side.dir === 'S') arm.rotation.set(-0.65, 0, 0);
+        else if (side.dir === 'E') arm.rotation.set(0, 0, 0.65);
+        else if (side.dir === 'W') arm.rotation.set(0, 0, -0.65);
+        fenceGroup.add(arm);
+
+        // 2. Chainlink Mesh Panel
+        const panel = new THREE.Mesh(panelGeo, chainlinkMat);
+        panel.position.set(cx, cy + fenceH / 2, cz);
+        panel.rotation.y = side.rotY;
+        fenceGroup.add(panel);
+
+        // 3. Horizontal Top Rail Pipe
+        const topRail = new THREE.Mesh(railGeo, metalMat);
+        topRail.position.set(cx, cy + fenceH + 0.25, cz);
+        topRail.rotation.y = side.rotY;
+        fenceGroup.add(topRail);
+
+        // 4. Horizontal Bottom Rail Pipe (just above snow ground)
+        const botRail = new THREE.Mesh(railGeo, metalMat);
+        botRail.position.set(cx, cy + 0.15, cz);
+        botRail.rotation.y = side.rotY;
+        fenceGroup.add(botRail);
+
+        // 5. Middle Tension Wire
+        const midWire = new THREE.Mesh(midWireGeo, wireMat);
+        midWire.position.set(cx, cy + fenceH * 0.5, cz);
+        midWire.rotation.y = side.rotY;
+        fenceGroup.add(midWire);
+
+        // 6. Angled Barbed Wire Strands (3 strands running horizontally along fence top)
+        for (let b = 1; b <= 3; b++) {
+          const barbStrand = new THREE.Mesh(barbWireGeo, wireMat);
+          const armOffset = b * 0.14;
+          barbStrand.position.set(
+            cx + side.inward.x * armOffset,
+            cy + fenceH + 0.40 + armOffset * 0.9,
+            cz + side.inward.z * armOffset
+          );
+          barbStrand.rotation.y = side.rotY;
+          fenceGroup.add(barbStrand);
         }
-        const gy = getTerrainHeight(wx, wz);
 
-        // Transparent glass panel
-        const panelGeo = new THREE.PlaneGeometry(step + 0.1, wallH);
-        const panel = new THREE.Mesh(panelGeo, glassMat);
-        panel.position.set(wx, gy + wallH / 2 - 0.4, wz);
-        panel.rotation.y = seg.rotY;
-        wallGroup.add(panel);
-
-        // Ground frost seam
-        const baseGeo = new THREE.BoxGeometry(step + 0.1, 0.28, 0.35);
-        const base = new THREE.Mesh(baseGeo, baseMat);
-        base.position.set(wx, gy + 0.12, wz);
-        base.rotation.y = seg.rotY;
-        wallGroup.add(base);
+        // 7. Danger / Quarantine Signs (every 7 panels)
+        if (i % 7 === 3) {
+          const sign = new THREE.Mesh(signGeo, signMat);
+          // Position slightly in front of the mesh toward player
+          sign.position.set(
+            cx + side.inward.x * 0.06,
+            cy + 2.5,
+            cz + side.inward.z * 0.06
+          );
+          sign.rotation.y = side.rotY;
+          fenceGroup.add(sign);
+        }
       }
     });
 
-    scene.add(wallGroup);
+    scene.add(fenceGroup);
   }
 
   // 8. Winding Alpine Mountain River & Cascading Waterfall Generator
@@ -1720,8 +1849,8 @@ export function initWorld(scene, textures) {
   // Pure Dense Snow Forest (No road, no vehicles, only deep snow wilderness)
   buildDenseSnowForest();
 
-  // World Boundary Transparent Frosted Ice Barrier Wall
-  buildTransparentBoundaryWall(scene);
+  // World Boundary Chainlink Security Perimeter Fence
+  buildChainlinkBoundaryFence(scene, chainlinkTex);
 
   // Construct Winding River, Mountain Waterfall & Wooden Bridge
   buildRiverAndWaterfall(scene, textures);

@@ -579,6 +579,63 @@ const THREE = window.THREE;
           ctx.arc(fx, fy, fr, 0, Math.PI * 2);
           ctx.fill();
         }
+      } else if (type === 'chainlink_fence') {
+        c.width = 128;
+        c.height = 128;
+        ctx.clearRect(0, 0, 128, 128);
+
+        const step = 16;
+        // 1. Dark wire shadow/ambient occlusion
+        ctx.lineWidth = 3.6;
+        ctx.strokeStyle = 'rgba(18, 22, 26, 0.96)';
+        for (let i = -128; i <= 256; i += step) {
+          ctx.beginPath();
+          ctx.moveTo(i, 0);
+          ctx.lineTo(i + 128, 128);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(i, 128);
+          ctx.lineTo(i + 128, 0);
+          ctx.stroke();
+        }
+
+        // 2. Galvanized steel wire core
+        ctx.lineWidth = 2.2;
+        ctx.strokeStyle = '#9ca8b3';
+        for (let i = -128; i <= 256; i += step) {
+          ctx.beginPath();
+          ctx.moveTo(i, 0);
+          ctx.lineTo(i + 128, 128);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(i, 128);
+          ctx.lineTo(i + 128, 0);
+          ctx.stroke();
+        }
+
+        // 3. Highlight sheen on wire curves
+        ctx.lineWidth = 1.0;
+        ctx.strokeStyle = 'rgba(235, 245, 255, 0.75)';
+        for (let i = -128; i <= 256; i += step) {
+          ctx.beginPath();
+          ctx.moveTo(i - 0.7, 0);
+          ctx.lineTo(i + 128 - 0.7, 128);
+          ctx.stroke();
+        }
+
+        // 4. Interlocking twist knuckle knots
+        ctx.fillStyle = '#b8c5ce';
+        for (let y = 0; y <= 128; y += step) {
+          for (let x = 0; x <= 128; x += step) {
+            if ((x + y) % (step * 2) === 0) {
+              ctx.beginPath();
+              ctx.arc(x, y, 2.2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
       }
 
       const tex = new THREE.CanvasTexture(c);
@@ -688,6 +745,10 @@ const THREE = window.THREE;
     crestFoamTex.wrapT = THREE.RepeatWrapping;
     crestFoamTex.repeat.set(2, 1);
 
+    const chainlinkTex = createProceduralTexture('chainlink_fence');
+    chainlinkTex.wrapS = THREE.RepeatWrapping;
+    chainlinkTex.wrapT = THREE.RepeatWrapping;
+
 export const textures = {
   createProceduralTexture,
   snowTex,
@@ -697,6 +758,7 @@ export const textures = {
   waterfallMistTex,
   topStreamTex,
   crestFoamTex,
+  chainlinkTex,
   bloodSnowTex,
   bloodDripTex,
   houseWallTex,
@@ -728,5 +790,5 @@ export const textures = {
   concreteCurbTex
 };
 
-export { createProceduralTexture, snowTex, asphaltRoadTex, riverWaterTex, waterfallTex, waterfallMistTex, topStreamTex, crestFoamTex, bloodSnowTex, bloodDripTex, houseWallTex, woodPlanksTex, brickHearthTex, creamCabinTex, creamBarnTex, creamStoneTex, nunFaceTex, l4dFlannelTex, l4dHoodieTex, l4dPatientTex, l4dBruiserTex, l4dDenimTex, l4dDarkPantsTex, l4dFaceTex, l4dNecroticSkinTex, l4dClawsTex, andikaSweaterTex, andikaCargoTex, andikaFaceTex, andikaSneakerTex, katzSignTex, martinSignTex, parkingSignTex, drainGrateTex, storefrontBrickTex, awningFabricTex, concreteCurbTex };
+export { createProceduralTexture, snowTex, asphaltRoadTex, riverWaterTex, waterfallTex, waterfallMistTex, topStreamTex, crestFoamTex, chainlinkTex, bloodSnowTex, bloodDripTex, houseWallTex, woodPlanksTex, brickHearthTex, creamCabinTex, creamBarnTex, creamStoneTex, nunFaceTex, l4dFlannelTex, l4dHoodieTex, l4dPatientTex, l4dBruiserTex, l4dDenimTex, l4dDarkPantsTex, l4dFaceTex, l4dNecroticSkinTex, l4dClawsTex, andikaSweaterTex, andikaCargoTex, andikaFaceTex, andikaSneakerTex, katzSignTex, martinSignTex, parkingSignTex, drainGrateTex, storefrontBrickTex, awningFabricTex, concreteCurbTex };
 
