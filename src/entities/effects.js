@@ -229,7 +229,7 @@ export function spawnNonaBataviaDeathSequence(bossZombie, Sfx) {
   });
 }
 
-export function updateBossDeathEffects(dt, zombies, Sfx) {
+export function updateBossDeathEffects(dt, zombies, Sfx, state, updateHUD) {
   if (!sceneRef) return;
 
   // 1. Update active boss death sequences
@@ -374,17 +374,56 @@ export function updateBossDeathEffects(dt, zombies, Sfx) {
             const dxx = zx - seq.pos.x;
             const dzz = zz - seq.pos.z;
             const dDist = Math.sqrt(dxx * dxx + dzz * dzz) || 1;
-            if (dDist < 22.0) {
-              const push = (1.0 - dDist / 22.0) * 16.0;
-              if (zb.model && zb.model.root) {
-                zb.model.root.position.x += (dxx / dDist) * push * 0.18;
-                zb.model.root.position.z += (dzz / dDist) * push * 0.18;
-              }
-              if (zb.x !== undefined) zb.x += (dxx / dDist) * push * 0.18;
-              if (zb.z !== undefined) zb.z += (dzz / dDist) * push * 0.18;
-              if (!zb.isBoss && dDist < 12.0) {
+            const blastDirX = dxx / dDist;
+            const blastDirZ = dzz / dDist;
+
+            if (dDist < 26.0) {
+              const pushPower = Math.max(3.5, (1.0 - dDist / 26.0) * 14.0);
+
+              if (!zb.isBoss && dDist < 16.0) {
+                // Lethal shockwave impact: kill and catapult into full dynamic kinematic ragdoll
                 zb.hp = 0;
                 zb.isDead = true;
+
+                if (state) {
+                  state.kills = (state.kills || 0) + 1;
+                  state.score = (state.score || 0) + 150;
+                  if (typeof updateHUD === 'function') updateHUD();
+                }
+
+                if (zb.model && zb.model.root) {
+                  deadCorpses.push({
+                    model: zb.model,
+                    isBoss: false,
+                    isFloatingBoss: false,
+                    isVictorianBride: !!zb.isVictorianBride,
+                    style: 'backward',
+                    sideSign: Math.random() > 0.5 ? 1 : -1,
+                    age: 0,
+                    maxLife: 10.0,
+                    linVel: new THREE.Vector3(blastDirX * pushPower, 1.8, blastDirZ * pushPower),
+                    hipsY: zb.model.hips ? zb.model.hips.position.y : 0,
+                    hipsRotX: 0,
+                    hipsRotZ: 0,
+                    spineRotX: 0,
+                    neckRotX: 0,
+                    kneeAngle: 0,
+                    gutSpillDone: false,
+                    hasImpactedGround: false,
+                    settled: false,
+                    weight: 1.0
+                  });
+                  spawnBloodPoolOnSnow(zx, zz, 1.2);
+                }
+              } else {
+                // Outer shockwave: stagger and knock back, but keep alive and moving!
+                zb.staggerTimer = 1.2;
+                if (zb.model && zb.model.root) {
+                  zb.model.root.position.x += blastDirX * pushPower * 0.22;
+                  zb.model.root.position.z += blastDirZ * pushPower * 0.22;
+                }
+                if (zb.x !== undefined) zb.x += blastDirX * pushPower * 0.22;
+                if (zb.z !== undefined) zb.z += blastDirZ * pushPower * 0.22;
               }
             }
           });

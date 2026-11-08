@@ -227,7 +227,7 @@ function updateSimulation(dt) {
   }
 
   // 5b. Dramatic Boss Death Sequences, Shockwaves & Shatter Shards
-  updateBossDeathEffects(dt, zombies, Sfx);
+  updateBossDeathEffects(dt, zombies, Sfx, state, () => updateHUD(state));
 
   // 6. Player cold breath steam
   playerBreathTimer -= dt;
@@ -366,11 +366,37 @@ function updateSimulation(dt) {
     }
   }
 
-  // 13. Active Zombies & Boss Sister Valentina
+  // 13. Active Zombies & Boss
   let nearZombiesCount = 0;
   for (let i = 0; i < zombies.length; i++) {
     const z = zombies[i];
-    if (z.isDead) continue;
+    if (z.isDead) {
+      // Safety net: ensure any dead zombie never freezes in place as an immortal statue
+      if (z.model && z.model.root && !deadCorpses.some(c => c.model === z.model)) {
+        deadCorpses.push({
+          model: z.model,
+          isBoss: !!z.isBoss,
+          isFloatingBoss: !!z.isFloatingBoss,
+          isVictorianBride: !!z.isVictorianBride,
+          style: 'faceplant',
+          sideSign: 1,
+          age: 0,
+          maxLife: 8.0,
+          linVel: new THREE.Vector3(0, 0.15, 0),
+          hipsY: z.model.hips ? z.model.hips.position.y : 0,
+          hipsRotX: 0,
+          hipsRotZ: 0,
+          spineRotX: 0,
+          neckRotX: 0,
+          kneeAngle: 0,
+          gutSpillDone: false,
+          hasImpactedGround: false,
+          settled: false,
+          weight: 1.0
+        });
+      }
+      continue;
+    }
 
     const dx = playerPos.x - z.x;
     const dz = playerPos.z - z.z;
