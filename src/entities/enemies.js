@@ -6,6 +6,7 @@
 import { Sfx } from '../audio/sfx.js';
 import { showDialogSubtitle } from './andika.js';
 import { getTerrainHeight } from '../world/environment.js';
+import { startNonaBataviaCutscene } from '../core/cutscene.js';
 import {
   spawnBloodPoolOnSnow,
   spawnWalkingBloodDrip,
@@ -719,14 +720,6 @@ export function spawnSisterValentinaBoss(state) {
 export function spawnNonaBataviaBoss(state) {
   if (!sceneRef || !cameraRef) return;
 
-  if (Sfx.playNonaBataviaScream) {
-    Sfx.playNonaBataviaScream();
-  } else if (Sfx.playLadyMithrillScream) {
-    Sfx.playLadyMithrillScream();
-  } else {
-    Sfx.playNunChoirScream();
-  }
-
   // Update Boss Banner
   const nameBanner = document.getElementById('boss-name-banner');
   if (nameBanner) {
@@ -747,18 +740,16 @@ export function spawnNonaBataviaBoss(state) {
   }
 
   const hudCont = document.getElementById('boss-hud-container');
-  if (hudCont) hudCont.style.display = 'flex';
+  if (hudCont) hudCont.style.display = 'none'; // Hidden during cinematic cutscene, revealed when cutscene finishes
   const barFill = document.getElementById('boss-bar-fill');
   if (barFill) {
     barFill.style.width = '100%';
     barFill.style.background = 'linear-gradient(90deg, #b8860b, #ffd700, #ff4500)';
   }
 
-  showDialogSubtitle(`Waspada bro! Kita udah bantai ${killsCount} zombie! Nona Batavia gentayangan terbang di atas bawa pasukan!`);
-
-  // Spawns in mid-air (24m away, floating high)
-  const spawnAng = cameraRef.rotation.y + Math.PI + (Math.random() - 0.5) * 0.4;
-  const spawnDist = 24;
+  // Spawns in mid-air in front of camera view (22m away, floating high)
+  const spawnAng = cameraRef.rotation.y + Math.PI + (Math.random() - 0.5) * 0.35;
+  const spawnDist = 22;
   const bx = cameraRef.position.x + Math.sin(spawnAng) * spawnDist;
   const bz = cameraRef.position.z + Math.cos(spawnAng) * spawnDist;
   const groundY = getTerrainHeight(bx, bz);
@@ -795,18 +786,23 @@ export function spawnNonaBataviaBoss(state) {
 
   zombies.push(currentBoss);
 
-  // "bawa banyak zombie": Escort pack of 8-12 running zombies
-  const escortCount = Math.min(12, 7 + milestoneCount);
-  for (let k = 0; k < escortCount; k++) {
-    const escortAng = spawnAng + (k - escortCount / 2) * 0.28;
-    const escortDist = spawnDist - 2.5 - Math.random() * 4.0;
-    const ex = cameraRef.position.x + Math.sin(escortAng) * escortDist;
-    const ez = cameraRef.position.z + Math.cos(escortAng) * escortDist;
-    setTimeout(() => {
-      if (!state.running) return;
-      spawnWinterZombie(ex, ez, state);
-    }, k * 180);
-  }
+  // Trigger Nona Batavia Cinematic Cutscene with sound
+  startNonaBataviaCutscene(currentBoss, cameraRef, Sfx, () => {
+    showDialogSubtitle(`Waspada bro! Nona Batavia gentayangan terbang di atas bawa pasukan! Tembak jatuh!`);
+
+    // Escort pack of running zombies spawns when cutscene ends
+    const escortCount = Math.min(12, 7 + milestoneCount);
+    for (let k = 0; k < escortCount; k++) {
+      const escortAng = spawnAng + (k - escortCount / 2) * 0.28;
+      const escortDist = spawnDist - 2.5 - Math.random() * 4.0;
+      const ex = cameraRef.position.x + Math.sin(escortAng) * escortDist;
+      const ez = cameraRef.position.z + Math.cos(escortAng) * escortDist;
+      setTimeout(() => {
+        if (state && !state.running) return;
+        spawnWinterZombie(ex, ez, state);
+      }, k * 180);
+    }
+  });
 }
 export const spawnLadyMithrillBoss = spawnNonaBataviaBoss;
 
