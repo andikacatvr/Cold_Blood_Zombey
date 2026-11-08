@@ -72,18 +72,18 @@ export function toggleCompanionFollow(sfxRef = Sfx) {
 }
 
 export const STORY_CONVERSATIONS = [
-  "Woi bro! Sumpah lu beneran masih hidup?! Gua kira lu udah abis diseret monster-monster itu di hutan salju ini! Masuk cepet, kunci pintunya!",
-  "Lu liat anak-anak yang lain ga? Gua sempet liat tasnya Rian sama Fajar diseret sama orang-orang bertopeng ke arah kapel katedral kuno di puncak bukit...",
-  "Kata buku catatan harian yang gua temuin di meja ini, hutan ini dikuasai sekte sesat Ordo Valentina. Mereka yang ngebantai dan ngerubah mayat jadi monster!",
-  "Satu-satunya jalan kabur dari pulau terkutuk ini cuma perahu motor di dermaga utara. Tapi gerbangnya digembok pake rune okultis. Kita harus cari kuncinya!",
-  "Gua nemu senapan pemburu peninggalan pemilik rumah ini. Kita ga bakal mati konyol di hutan ini, kita habisi mereka bareng-bareng!"
+  "Woi bro! Sumpah lu beneran masih hidup?! Gua kira lu udah tewas kena semburan sihir gelap tadi! Hutan ini bukan sekadar lembah alam biasa...",
+  "Lu liat anggota tim riset yang lain ga? Gua sempet liat alat-alat pengukuran sama ranselnya anak-anak diseret makhluk-makhluk terkutuk ke arah hutan terlarang...",
+  "Hasil artefak dan sampel yang kita gali tadi ngebuktiin ada segel sihir hitam kuno yang terkubur ratusan tahun. Dan penggalian riset kita ga sengaja ngebangkitin itu semua!",
+  "Satu-satunya jalan kabur dari lembah terkutuk ini cuma perahu motor di dermaga utara. Tapi gerbangnya digembok pake rune okultis. Kita harus cari kuncinya!",
+  "Pegang shotgun lu erat-erat. Sebagai sesama mahasiswa peneliti, kita ga bakal mati konyol di lembah terkutuk ini. Kita habisi mereka bareng-bareng!"
 ];
 let storyConvIndex = 0;
 
 export const GESTURE_CONFIG = {
   wave: {
-    tag: '👋 TEMAN SEKOLAH',
-    text: '"Woi bro! Sumpah lu beneran masih hidup?! Gua kira lu udah abis diseret monster-monster itu di hutan salju ini! Masuk sini cepetan!"',
+    tag: '👋 REKAN RISET',
+    text: '"Woi bro! Syukurlah lu beneran sadar! Gua kira lu udah abis diseret sihir gelap pas ledakan mantra di kamp tadi!"',
     sound: (sfx) => { if (sfx && sfx.playSmallBell) sfx.playSmallBell(2400, 0.45); },
     duration: 3.8
   },

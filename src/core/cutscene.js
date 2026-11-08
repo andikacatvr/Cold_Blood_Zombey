@@ -1,17 +1,12 @@
 /* =========================================================================
    CINEMATIC INTRO CUTSCENE & STORY PRESENTATION
-   - Bus drives through dark snowy wilderness forest at night and stalls
-   - Player is discovered lying unconscious and motionless in the snow beside Kristin
-   - Kristin stands guard, leaning with concern over the unconscious survivor
+   - University student research expedition unearths ancient dark magic
+   - Dark occult shockwave erupts, leaving player unconscious in the snow
+   - Companion Kristin stands guard vigilant with shotgun against the undead horde
    - Player stirs, regains consciousness, and rises to feet into FPS perspective
    ========================================================================= */
 
 import {
-  schoolTourBus,
-  busWheelMeshes,
-  busHeadlights,
-  busHazardLights,
-  busCollider,
   getTerrainHeight
 } from '../world/environment.js';
 import { andikaModel } from '../entities/kristin.js';
@@ -101,35 +96,37 @@ const NONA_BATAVIA_STAGES = [
 const CUTSCENE_STAGES = [
   {
     start: 0.0,
-    end: 5.0,
+    end: 5.5,
     camStart: new THREE.Vector3(5.8, 3.6, 26.5),
     camEnd: new THREE.Vector3(2.6, 2.0, 18.8),
     lookStart: new THREE.Vector3(0.2, 1.2, 16.5),
     lookEnd: new THREE.Vector3(0.4, 0.65, 14.1),
-    subtitle: "Malam pekat membeku di rimba Hutan Morbida... Bus tur sekolah terperosok dan mati total di tengah badai salju buas.",
-    onEnter: (sfx) => { if (sfx && sfx.playSnowStep) sfx.playSnowStep(); }
+    subtitle: `<span style="color:#d4a5ff; font-size:22px; font-weight:bold; letter-spacing:1px; text-shadow:0 0 14px #8a2be2;">★ EKSPEDISI PENELITIAN MAHASISWA ★</span><br><span style="color:#ffffff;">Malam pekat membeku di rimba Hutan Morbida... Tim mahasiswa yang sedang meneliti daerah ini tak sengaja masuk ke wilayah terlarang yang dipenuhi sihir gelap kuno!</span>`,
+    onEnter: (sfx) => {
+      if (sfx && sfx.playChurchBellToll) sfx.playChurchBellToll();
+      if (sfx && sfx.playSnowStep) sfx.playSnowStep();
+    }
   },
   {
-    start: 5.0,
-    end: 10.0,
+    start: 5.5,
+    end: 10.5,
     camStart: new THREE.Vector3(-2.8, 1.85, 16.5),
     camEnd: new THREE.Vector3(-2.0, 1.55, 15.0),
     lookStart: new THREE.Vector3(0.45, 0.75, 13.9),
     lookEnd: new THREE.Vector3(0.55, 0.85, 14.0),
-    subtitle: "Tubuhmu terkapar kaku tak sadarkan diri di atas hamparan salju es... Di sampingmu, Kristin berjaga dengan cemas sambil mengawasi lolongan mengerikan di balik kabut tebal.",
+    subtitle: `<span style="color:#ff6b6b; font-size:20px; font-weight:bold; text-shadow:0 0 12px #900;">[KUTUKAN SIHIR GELAP BANGKIT]</span><br><span style="color:#ffffff;">Hawa sihir hitam merasuki seluruh tanah dan membangkitkan mayat-mayat terkutuk! Tubuhmu roboh tak sadarkan diri di atas salju es, sementara rekan risetmu, Kristin, berjaga dengan cemas.</span>`,
     onEnter: (sfx) => {
-      if (sfx && sfx.playChurchBellToll) sfx.playChurchBellToll();
       if (sfx && sfx.playZombieGroan) sfx.playZombieGroan();
     }
   },
   {
-    start: 10.0,
-    end: 15.0,
+    start: 10.5,
+    end: 15.5,
     camStart: new THREE.Vector3(-0.15, 0.55, 15.2),
     camEnd: new THREE.Vector3(0.0, 1.80, 14.0),
     lookStart: new THREE.Vector3(1.15, 1.45, 14.0),
     lookEnd: new THREE.Vector3(1.20, 1.50, 13.9),
-    subtitle: "Kristin: 'Woi, sadar bro! Akhirnya lu melek juga! Cepat berdiri, mereka udah mencium bau kita... Ambil senjatamu, kita habisi mereka bareng-bareng!' [IKUTI PLAYER: AKTIF]",
+    subtitle: `<span style="color:#5cf0a5; font-size:21px; font-weight:bold;">★ KRISTIN (REKAN PENELITI):</span> "Woi, sadar bro! Syukurlah lu selamat! Daerah penelitian ini ternyata dipenuhi sihir gelap... mayat-mayat pada bangkit! Cepat berdiri, ambil senjatamu, kita harus bertahan hidup!"`,
     onEnter: (sfx) => {
       if (sfx && sfx.playPumpRack) sfx.playPumpRack();
       if (sfx && sfx.playSnowThud) sfx.playSnowThud(1.0);
@@ -185,13 +182,6 @@ export function startIntroCutscene(camera, sfx, onComplete) {
   if (weaponHolder) weaponHolder.visible = false;
   if (playerFlashlight) playerFlashlight.visible = false;
 
-  // Initial bus state: rolling in from dark woods
-  if (schoolTourBus) {
-    schoolTourBus.position.set(0, 0, 48.0);
-  }
-  busHeadlights.forEach(l => l.intensity = 4.5);
-  busHazardLights.forEach(l => l.intensity = 0);
-
   // Position unconscious player lying limp on back in the snow
   setPlayerCutscenePose('unconscious');
 
@@ -214,7 +204,7 @@ export function startIntroCutscene(camera, sfx, onComplete) {
 
   const locEl = document.getElementById('cinematic-location');
   if (locEl) {
-    locEl.innerHTML = '21:45 WIB &bull; BELANTARA HUTAN SALJU MORBIDA';
+    locEl.innerHTML = '23:45 WIB &bull; EKSPEDISI RISET MAHASISWA &bull; ZONA SIHIR GELAP MORBIDA';
   }
 
   // Hide HUD while in cutscene
@@ -439,49 +429,7 @@ export function updateCutscene(dt) {
     return;
   }
 
-  // 1. Bus Movement & Driving Mechanics
-  if (schoolTourBus) {
-    if (cutsceneTime < 5.8) {
-      // Phase 1: Bus rolling forward through night snow
-      const prog = cutsceneTime / 5.8;
-      schoolTourBus.position.z = THREE.MathUtils.lerp(48.0, 26.0, prog);
-      busWheelMeshes.forEach(w => {
-        w.rotation.x += dt * 9.0;
-      });
-      busHeadlights.forEach(l => {
-        l.intensity = 4.5 + Math.sin(cutsceneTime * 20.0) * 0.3;
-      });
-    } else if (cutsceneTime < 10.5) {
-      // Phase 2: Engine failure, deceleration & skidding to a halt
-      const prog = (cutsceneTime - 5.8) / 4.7;
-      const easeStop = Math.sin(prog * Math.PI * 0.5);
-      schoolTourBus.position.z = THREE.MathUtils.lerp(26.0, 21.5, easeStop);
-      busWheelMeshes.forEach(w => {
-        w.rotation.x += dt * (1.0 - prog) * 6.0;
-      });
-      // Sputtering, flickering headlights
-      if (cutsceneTime < 9.5) {
-        busHeadlights.forEach(l => {
-          l.intensity = (Math.random() > 0.35 ? 4.2 : 0.2);
-        });
-      } else {
-        // Dead headlights, emergency hazard kicks in
-        busHeadlights.forEach(l => l.intensity = 0);
-        busHazardLights.forEach(l => {
-          l.intensity = (Math.sin(cutsceneTime * 10.0) > 0 ? 2.5 : 0.2);
-        });
-      }
-    } else {
-      // Finalized bus position
-      schoolTourBus.position.z = 21.5;
-      busHeadlights.forEach(l => l.intensity = 0);
-      busHazardLights.forEach(l => {
-        l.intensity = (Math.sin(cutsceneTime * 7.0) > 0 ? 2.5 : 0.2);
-      });
-    }
-  }
-
-  // 2. Character Posing & Dynamic Awakening Transition
+  // 1. Character Posing & Dynamic Awakening Transition
   if (cutsceneTime < 10.0) {
     // Player remains unconscious flat on the snow
     setPlayerCutscenePose('unconscious');
@@ -495,7 +443,7 @@ export function updateCutscene(dt) {
     }
   } else {
     // Stage 3: Player awakens and rises up
-    const wakeProgress = Math.min(1.0, (cutsceneTime - 10.0) / 4.2);
+    const wakeProgress = Math.min(1.0, (cutsceneTime - 10.0) / 4.5);
     setPlayerCutscenePose('waking', wakeProgress);
 
     // Kristin straightens up and welcomes player back to conscious world
@@ -517,7 +465,7 @@ export function updateCutscene(dt) {
     }
   }
 
-  if (cutsceneTime >= 15.0) {
+  if (cutsceneTime >= 15.5) {
     finishCutscene();
     return;
   }
@@ -565,16 +513,6 @@ export function finishCutscene() {
 
   // Reset player model to standard upright stance
   setPlayerCutscenePose('reset');
-
-  // Finalize bus position & collider
-  if (schoolTourBus) {
-    schoolTourBus.position.set(0, 0, 21.5);
-  }
-  busHeadlights.forEach(l => l.intensity = 0);
-  if (busCollider) {
-    busCollider.minZ = 21.5 - 5.1;
-    busCollider.maxZ = 21.5 + 4.1;
-  }
 
   // Position Kristin beside player ready for escort mode
   if (andikaModel && andikaModel.root) {
