@@ -470,10 +470,7 @@ export function startWinterWave(w) {
 
   // Boss Encounters:
   // - Nona Batavia: Spawns dynamically every 50 kills (50, 100, 150, 200, ...)
-  // - Sister Valentina (Main Boss): Spawns on wave 3, 6, 9, etc.
-  if (w >= 3 && w % 3 === 0 && !currentBoss) {
-    setTimeout(() => spawnSisterValentinaBoss(state), 1800);
-  }
+  // (Sister Valentina is disabled for now per user request)
 
   // Endless Progressive Horde scaling
   const count = 16 + w * 8;

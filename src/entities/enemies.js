@@ -874,6 +874,8 @@ export function spawnWinterZombie(x, z, state) {
 }
 
 export function spawnSisterValentinaBoss(state) {
+  // Disabled for now per user request
+  return;
   if (!sceneRef || !cameraRef) return;
 
   Sfx.playChurchBellToll();
