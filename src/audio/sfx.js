@@ -41,13 +41,6 @@ import { gameSettings } from '../config/settings.js';
             this.bossVoiceAudio.load();
           } catch (e) {}
         }
-        if (!this.nonaBataviaVoiceAudio) {
-          try {
-            this.nonaBataviaVoiceAudio = new Audio('/audio/nonabatavianoice.ogg');
-            this.nonaBataviaVoiceAudio.preload = 'auto';
-            this.nonaBataviaVoiceAudio.load();
-          } catch (e) {}
-        }
         if (this.ctx.state === 'suspended') this.ctx.resume();
       },
       dest() {
@@ -892,34 +885,11 @@ import { gameSettings } from '../config/settings.js';
         osc.stop(now + 1.85);
       },
 
-      // Voice recording & scream for Nona Batavia (Ghost Boss Cutscene)
-      playNonaBataviaVoice() {
-        try {
-          if (!this.nonaBataviaVoiceAudio) {
-            this.nonaBataviaVoiceAudio = new Audio('/audio/nonabatavianoice.ogg');
-          }
-          const vol = (gameSettings && gameSettings.volume !== undefined) ? gameSettings.volume : 0.8;
-          this.nonaBataviaVoiceAudio.volume = Math.min(1.0, Math.max(0.1, vol * 1.35));
-          this.nonaBataviaVoiceAudio.currentTime = 0;
-          const p = this.nonaBataviaVoiceAudio.play();
-          if (p && p.catch) {
-            p.catch(err => console.warn('playNonaBataviaVoice play failed:', err));
-          }
-        } catch (e) {
-          console.warn('playNonaBataviaVoice error:', e);
-        }
-      },
-      stopNonaBataviaVoice() {
-        try {
-          if (this.nonaBataviaVoiceAudio) {
-            this.nonaBataviaVoiceAudio.pause();
-            this.nonaBataviaVoiceAudio.currentTime = 0;
-          }
-        } catch (e) {}
-      },
+      // Voice for Nona Batavia - Removed per user request
+      playNonaBataviaVoice() {},
+      stopNonaBataviaVoice() {},
       // Ethereal wail for Nona Batavia (Floating Boss Selingan)
       playNonaBataviaScream() {
-        this.playNonaBataviaVoice();
         this.playLadyMithrillScream();
       },
       playLadyMithrillScream() {

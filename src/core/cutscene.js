@@ -47,9 +47,7 @@ const NONA_BATAVIA_STAGES = [
     getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 0.6, bz),
     getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 1.2, bz),
     subtitle: `<span style="color:#ffd15c; font-size:24px; font-weight:bold; letter-spacing:2px; text-shadow:0 0 14px #ff4500;">★ NONA BATAVIA BANGKIT ★</span><br><span style="color:#ffffff;">Lolongan roh gentayangan Batavia membelah kesunyian badai salju...</span>`,
-    onEnter: (sfx) => {
-      if (sfx && sfx.playNonaBataviaVoice) sfx.playNonaBataviaVoice();
-    }
+    onEnter: (sfx) => {}
   },
   {
     start: 4.5,
@@ -287,11 +285,6 @@ export function startNonaBataviaCutscene(bossZombie, camera, sfx, onComplete) {
       e.stopPropagation();
       skipActiveCutscene();
     };
-  }
-
-  // Play audio nonabatavianoice.ogg
-  if (sfx && sfx.playNonaBataviaVoice) {
-    sfx.playNonaBataviaVoice();
   }
 
   // Keyboard skip
