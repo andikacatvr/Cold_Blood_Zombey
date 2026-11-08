@@ -40,7 +40,8 @@ import {
   spawnWalkingBloodDrip,
   createAirborneBloodDrop,
   spawnBloodPoolOnSnow,
-  spawnColdBreath
+  spawnColdBreath,
+  updateBossDeathEffects
 } from './entities/effects.js';
 import {
   weaponHolder,
@@ -84,7 +85,8 @@ import {
   switchWeapon,
   hitPlayer,
   startWinterSurvive,
-  setupPlayerControls
+  setupPlayerControls,
+  nextWave
 } from './core/player.js';
 import {
   updatePlayerModelAnimation,
@@ -222,6 +224,9 @@ function updateSimulation(dt) {
       woodSplinters.splice(i, 1);
     }
   }
+
+  // 5b. Dramatic Boss Death Sequences, Shockwaves & Shatter Shards
+  updateBossDeathEffects(dt, zombies, Sfx);
 
   // 6. Player cold breath steam
   playerBreathTimer -= dt;
@@ -914,6 +919,10 @@ function init() {
     spawnNonaBatavia: () => spawnNonaBataviaBoss(state),
     spawnLadyMithrill: () => spawnNonaBataviaBoss(state),
     spawnValentina: () => spawnSisterValentinaBoss(state),
+    killBoss: () => {
+      const b = zombies.find(z => z.isBoss && !z.isDead);
+      if (b) killZombieWithKinematics(b, new THREE.Vector3(0, 0, 1), 4, false, state, () => updateHUD(state), nextWave);
+    },
     triggerKillMilestone: (k = 50) => {
       state.kills = k - 1;
       if (zombies.length > 0) {

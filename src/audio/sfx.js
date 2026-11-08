@@ -823,6 +823,75 @@ import { gameSettings } from '../config/settings.js';
           console.warn("playBossVoiceNote error:", e);
         }
       },
+      // Dramatic Boss Death Shockwave & Detonation Boom
+      playBossDeathBoom() {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+
+        // 1. Heavy Sub-Bass Cinematic Boom (180Hz drop to 28Hz)
+        const subOsc = this.ctx.createOscillator();
+        const subGain = this.ctx.createGain();
+        subOsc.type = 'sine';
+        subOsc.frequency.setValueAtTime(180, now);
+        subOsc.frequency.exponentialRampToValueAtTime(28, now + 1.6);
+        subGain.gain.setValueAtTime(0.85, now);
+        subGain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+        subOsc.connect(subGain);
+        subGain.connect(this.dest());
+        subOsc.start(now);
+        subOsc.stop(now + 1.85);
+
+        // 2. Aggressive Blast Noise & Shatter Transients
+        const bufSize = Math.floor(this.ctx.sampleRate * 1.5);
+        const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.35));
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buf;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1400, now);
+        filter.frequency.exponentialRampToValueAtTime(120, now + 1.2);
+        const noiseGain = this.ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.75, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
+        noise.connect(filter);
+        filter.connect(noiseGain);
+        noiseGain.connect(this.dest());
+        noise.start(now);
+
+        // 3. High-Pitched Glass/Crystal Spectral Shatter Burst
+        const shatterOsc = this.ctx.createOscillator();
+        const shatterGain = this.ctx.createGain();
+        shatterOsc.type = 'triangle';
+        shatterOsc.frequency.setValueAtTime(2800, now);
+        shatterOsc.frequency.exponentialRampToValueAtTime(420, now + 0.6);
+        shatterGain.gain.setValueAtTime(0.45, now);
+        shatterGain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+        shatterOsc.connect(shatterGain);
+        shatterGain.connect(this.dest());
+        shatterOsc.start(now);
+        shatterOsc.stop(now + 0.7);
+      },
+
+      // Overcharging Eerie Screech right before boss detonation
+      playNonaBataviaDeathCharge() {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.linearRampToValueAtTime(880, now + 1.7);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.linearRampToValueAtTime(0.5, now + 1.6);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+        osc.connect(gain);
+        gain.connect(this.dest());
+        osc.start(now);
+        osc.stop(now + 1.85);
+      },
+
       // Voice recording & scream for Nona Batavia (Ghost Boss Cutscene)
       playNonaBataviaVoice() {
         try {

@@ -237,6 +237,14 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
   }
 }
 
+export let screenShakeIntensity = 0;
+export let screenShakeDuration = 0;
+
+export function triggerScreenShake(intensity = 0.45, duration = 1.2) {
+  screenShakeIntensity = Math.max(screenShakeIntensity, intensity);
+  screenShakeDuration = Math.max(screenShakeDuration, duration);
+}
+
 /**
  * Updates the Third-Person Horror Camera tracking behind the player.
  */
@@ -282,6 +290,19 @@ export function updateHorrorCamera(camera, playerPos, yaw, pitch, dt) {
     camera.rotation.order = 'YXZ';
     camera.rotation.y = yaw;
     camera.rotation.x = pitch;
+  }
+
+  // Cinematic Screenshake offset for explosions, shockwaves and heavy impacts
+  if (screenShakeDuration > 0) {
+    screenShakeDuration -= dt;
+    const shakePower = screenShakeIntensity * Math.min(1.0, screenShakeDuration * 1.5);
+    camera.position.x += (Math.random() - 0.5) * shakePower * 0.45;
+    camera.position.y += (Math.random() - 0.5) * shakePower * 0.35;
+    camera.rotation.z += (Math.random() - 0.5) * shakePower * 0.06;
+    if (screenShakeDuration <= 0) {
+      screenShakeIntensity = 0;
+      camera.rotation.z = 0;
+    }
   }
 }
 

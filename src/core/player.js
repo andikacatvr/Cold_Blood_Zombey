@@ -24,7 +24,8 @@ import {
   curseProjectiles,
   woodSplinters,
   spawnBloodPoolOnSnow,
-  createAirborneBloodDrop
+  createAirborneBloodDrop,
+  clearBossDeathEffects
 } from '../entities/effects.js';
 import {
   zombies,
@@ -529,6 +530,7 @@ export function startWinterSurvive(scene) {
   curseProjectiles.length = 0;
   woodSplinters.forEach(s => scene.remove(s.mesh));
   woodSplinters.length = 0;
+  clearBossDeathEffects();
 
   state.score = 0;
   state.kills = 0;

@@ -13,7 +13,8 @@ import {
   createAirborneBloodDrop,
   spawnColdBreath,
   deadCorpses,
-  curseProjectiles
+  curseProjectiles,
+  spawnNonaBataviaDeathSequence
 } from './effects.js';
 
 const THREE = window.THREE;
@@ -857,7 +858,17 @@ export function killZombieWithKinematics(z, shotDir, hitDistance, isHeadshot, st
     if (z.isFloatingBoss) {
       if (Sfx.playNonaBataviaScream) Sfx.playNonaBataviaScream();
       else if (Sfx.playLadyMithrillScream) Sfx.playLadyMithrillScream();
-      showDialogSubtitle('Mampus lu Nona Batavia! Kerja bagus bro!');
+      showDialogSubtitle('Waspada bro! Tubuhnya kelebihan energi gaib! Dia mau meledak!');
+      setTimeout(() => {
+        showDialogSubtitle('GILA LU BRO! Hancur lebur tuh setan Batavia! Kita selamat!');
+      }, 2600);
+      spawnNonaBataviaDeathSequence(z, Sfx);
+
+      const alive = zombies.filter(m => !m.isDead);
+      if (alive.length === 0) {
+        setTimeout(nextWave, 3600);
+      }
+      return;
     } else {
       Sfx.playChurchBellToll();
     }
