@@ -68,7 +68,8 @@ import {
   preloadLadyMithrillModel,
   preloadVictorianBrideModel,
   castCurseBloodOrb,
-  killZombieWithKinematics
+  killZombieWithKinematics,
+  buildLeft4DeadInfected
 } from './entities/enemies.js';
 import {
   initAndikaCompanion,
@@ -914,6 +915,7 @@ function init() {
     camera,
     scene,
     state,
+    buildInfected: buildLeft4DeadInfected,
     spawnBride: (dist = 12) => spawnVictorianBride(playerPos.x + dist, playerPos.z + dist, state),
     triggerJumpscare: triggerBrideJumpscare,
     spawnNonaBatavia: () => spawnNonaBataviaBoss(state),

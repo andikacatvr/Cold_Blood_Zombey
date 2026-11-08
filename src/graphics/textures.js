@@ -580,58 +580,58 @@ const THREE = window.THREE;
           ctx.fill();
         }
       } else if (type === 'chainlink_fence') {
-        c.width = 128;
-        c.height = 128;
-        ctx.clearRect(0, 0, 128, 128);
+        c.width = 256;
+        c.height = 256;
+        ctx.clearRect(0, 0, 256, 256);
 
-        const step = 16;
-        // 1. Dark wire shadow/ambient occlusion
-        ctx.lineWidth = 3.6;
-        ctx.strokeStyle = 'rgba(18, 22, 26, 0.96)';
-        for (let i = -128; i <= 256; i += step) {
+        const step = 64;
+        // 1. Dark wire shadow / ambient occlusion outline
+        ctx.lineWidth = 4.6;
+        ctx.strokeStyle = 'rgba(12, 16, 20, 0.95)';
+        for (let i = -256; i <= 512; i += step) {
           ctx.beginPath();
           ctx.moveTo(i, 0);
-          ctx.lineTo(i + 128, 128);
+          ctx.lineTo(i + 256, 256);
           ctx.stroke();
 
           ctx.beginPath();
-          ctx.moveTo(i, 128);
-          ctx.lineTo(i + 128, 0);
+          ctx.moveTo(i, 256);
+          ctx.lineTo(i + 256, 0);
           ctx.stroke();
         }
 
         // 2. Galvanized steel wire core
-        ctx.lineWidth = 2.2;
-        ctx.strokeStyle = '#9ca8b3';
-        for (let i = -128; i <= 256; i += step) {
+        ctx.lineWidth = 2.8;
+        ctx.strokeStyle = '#9eb0be';
+        for (let i = -256; i <= 512; i += step) {
           ctx.beginPath();
           ctx.moveTo(i, 0);
-          ctx.lineTo(i + 128, 128);
+          ctx.lineTo(i + 256, 256);
           ctx.stroke();
 
           ctx.beginPath();
-          ctx.moveTo(i, 128);
-          ctx.lineTo(i + 128, 0);
+          ctx.moveTo(i, 256);
+          ctx.lineTo(i + 256, 0);
           ctx.stroke();
         }
 
-        // 3. Highlight sheen on wire curves
-        ctx.lineWidth = 1.0;
-        ctx.strokeStyle = 'rgba(235, 245, 255, 0.75)';
-        for (let i = -128; i <= 256; i += step) {
+        // 3. Highlight frost/metallic glint
+        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = 'rgba(235, 245, 255, 0.85)';
+        for (let i = -256; i <= 512; i += step) {
           ctx.beginPath();
-          ctx.moveTo(i - 0.7, 0);
-          ctx.lineTo(i + 128 - 0.7, 128);
+          ctx.moveTo(i - 0.8, 0);
+          ctx.lineTo(i + 256 - 0.8, 256);
           ctx.stroke();
         }
 
-        // 4. Interlocking twist knuckle knots
-        ctx.fillStyle = '#b8c5ce';
-        for (let y = 0; y <= 128; y += step) {
-          for (let x = 0; x <= 128; x += step) {
+        // 4. Interlocking knuckle twists at diamond vertex intersections
+        ctx.fillStyle = '#b8c8d4';
+        for (let y = 0; y <= 256; y += step) {
+          for (let x = 0; x <= 256; x += step) {
             if ((x + y) % (step * 2) === 0) {
               ctx.beginPath();
-              ctx.arc(x, y, 2.2, 0, Math.PI * 2);
+              ctx.arc(x, y, 3.2, 0, Math.PI * 2);
               ctx.fill();
             }
           }

@@ -1233,15 +1233,15 @@ export function initWorld(scene, textures) {
     const fenceGroup = new THREE.Group();
     fenceGroup.name = 'World_Boundary_Chainlink_Fence';
 
-    // Chainlink wire mesh material with alphaTest for clean transparent diamond cutouts
+    // Chainlink wire mesh material with alphaTest for clean transparent diamond cutouts (opaque pipeline prevents distance graying)
     const chainlinkMat = new THREE.MeshStandardMaterial({
       map: chainlinkTex,
-      alphaTest: 0.35,
-      transparent: true,
+      alphaTest: 0.45,
+      transparent: false,
       side: THREE.DoubleSide,
-      metalness: 0.35,
-      roughness: 0.65,
-      color: 0xc8d1d8,
+      metalness: 0.5,
+      roughness: 0.45,
+      color: 0xdde7ee,
       depthWrite: true
     });
 
@@ -1296,11 +1296,11 @@ export function initWorld(scene, textures) {
     const stepCount = Math.round((limit * 2) / step); // 36 panels per side
     const actualStep = (limit * 2) / stepCount;
 
-    // Shared panel geometry with custom UV mapping so diamonds are realistically proportioned (~12cm diamonds)
+    // Shared panel geometry with custom UV mapping so diamonds are realistically proportioned (~14cm diamond openings)
     const panelGeo = new THREE.PlaneGeometry(actualStep + 0.08, fenceH + 0.8);
     const uvAttr = panelGeo.attributes.uv;
-    const uRepeat = actualStep * 2.8;
-    const vRepeat = (fenceH + 0.8) * 2.8;
+    const uRepeat = actualStep * 1.5;
+    const vRepeat = (fenceH + 0.8) * 1.5;
     for (let i = 0; i < uvAttr.count; i++) {
       uvAttr.setX(i, uvAttr.getX(i) * uRepeat);
       uvAttr.setY(i, uvAttr.getY(i) * vRepeat);
