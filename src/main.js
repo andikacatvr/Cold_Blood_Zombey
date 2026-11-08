@@ -73,7 +73,7 @@ import {
 import {
   initAndikaCompanion,
   updateAndikaCompanion
-} from './entities/andika.js';
+} from './entities/kristin.js';
 import {
   state,
   keys,

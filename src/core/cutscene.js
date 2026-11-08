@@ -14,7 +14,7 @@ import {
   busCollider,
   getTerrainHeight
 } from '../world/environment.js';
-import { andikaModel } from '../entities/andika.js';
+import { andikaModel } from '../entities/kristin.js';
 import { weaponHolder } from '../entities/weapons.js';
 import { playerMeshRoot, cameraMode, setPlayerCutscenePose } from '../entities/playerModel.js';
 import { scene, playerFlashlight } from '../graphics/engine.js';

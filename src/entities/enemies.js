@@ -4,7 +4,7 @@
    ========================================================================= */
 
 import { Sfx } from '../audio/sfx.js';
-import { showDialogSubtitle } from './andika.js';
+import { showDialogSubtitle } from './kristin.js';
 import { getTerrainHeight } from '../world/environment.js';
 import { startNonaBataviaCutscene } from '../core/cutscene.js';
 import {

@@ -46,7 +46,7 @@ import {
 } from '../world/environment.js';
 import { updateHUD, showLifeLostAlert, triggerGameOver } from '../ui/hud.js';
 import { openSettings, closeSettings, isSettingsOpen } from '../ui/settingsMenu.js';
-import { triggerAndikaGesture, toggleCompanionFollow, andikaModel } from '../entities/andika.js';
+import { triggerAndikaGesture, toggleCompanionFollow, andikaModel } from '../entities/kristin.js';
 import { startIntroCutscene, isCinematicActive } from './cutscene.js';
 import {
   buildSurvivorPlayerModel,

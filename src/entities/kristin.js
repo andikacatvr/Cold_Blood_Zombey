@@ -1,5 +1,5 @@
 /* =========================================================================
-   HERO & COMPANION: ANDIKA / KRISTIN (OFFICIAL PS2 3D GLB CHARACTER ASSET)
+   HERO & COMPANION: KRISTIN (OFFICIAL PS2 3D GLB CHARACTER ASSET)
    - Rescaled & prominent heroic presence (NPC_SCALE = 1.38)
    - Real-time kinematic vertex deformation & motion control
    - Expressive 3D gestures: Wave (Sapaan), Combat Pump, Thumbs Up, Beckon
