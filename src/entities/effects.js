@@ -38,6 +38,22 @@ export function initEffects(scene, bloodSnowTex, bloodDripTex) {
   sceneRef = scene;
   bloodSnowTexRef = bloodSnowTex;
   bloodDripTexRef = bloodDripTex;
+
+  // Pre-allocate Airborne Blood Drops Pool (Zero-allocation runtime recycling)
+  if (airborneDrips.length === 0) {
+    for (let i = 0; i < 24; i++) {
+      const mesh = new THREE.Mesh(sharedAirDropGeo, sharedAirDropMat);
+      mesh.visible = false;
+      scene.add(mesh);
+      airborneDrips.push({
+        mesh,
+        active: false,
+        velY: 0,
+        vx: 0,
+        vz: 0
+      });
+    }
+  }
 }
 
 function removeDecal(d) {
@@ -122,20 +138,18 @@ export function spawnWalkingBloodDrip(x, z, scale = 0.45) {
 }
 
 export function createAirborneBloodDrop(originPos) {
-  if (!sceneRef) return;
-  if (airborneDrips.length > 25) return; // Cap maximum active drops
-  const mesh = new THREE.Mesh(sharedAirDropGeo, sharedAirDropMat);
-  mesh.position.copy(originPos);
-  mesh.position.x += (Math.random() - 0.5) * 0.3;
-  mesh.position.z += (Math.random() - 0.5) * 0.3;
-  sceneRef.add(mesh);
+  if (!sceneRef || airborneDrips.length === 0) return;
+  const item = airborneDrips.find(d => !d.active);
+  if (!item) return;
 
-  airborneDrips.push({
-    mesh,
-    velY: -(0.5 + Math.random() * 1.2),
-    vx: (Math.random() - 0.5) * 0.3,
-    vz: (Math.random() - 0.5) * 0.3
-  });
+  item.active = true;
+  item.mesh.position.copy(originPos);
+  item.mesh.position.x += (Math.random() - 0.5) * 0.3;
+  item.mesh.position.z += (Math.random() - 0.5) * 0.3;
+  item.mesh.visible = true;
+  item.velY = -(0.5 + Math.random() * 1.2);
+  item.vx = (Math.random() - 0.5) * 0.3;
+  item.vz = (Math.random() - 0.5) * 0.3;
 }
 
 export function spawnWoodSplinters(pos) {

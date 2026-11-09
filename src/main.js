@@ -346,9 +346,11 @@ function updateSimulation(dt) {
   }
   snowGeo.attributes.position.needsUpdate = true;
 
-  // 11. Airborne Blood Drops
-  for (let i = airborneDrips.length - 1; i >= 0; i--) {
+  // 11. Airborne Blood Drops (Zero Allocation Recycled Object Pool)
+  for (let i = 0; i < airborneDrips.length; i++) {
     const drop = airborneDrips[i];
+    if (!drop.active) continue;
+
     drop.velY -= 12.0 * dt;
     drop.mesh.position.y += drop.velY * dt;
     drop.mesh.position.x += drop.vx * dt;
@@ -356,8 +358,8 @@ function updateSimulation(dt) {
 
     if (drop.mesh.position.y <= 0.02) {
       spawnWalkingBloodDrip(drop.mesh.position.x, drop.mesh.position.z, 0.4);
-      scene.remove(drop.mesh);
-      airborneDrips.splice(i, 1);
+      drop.active = false;
+      drop.mesh.visible = false;
     }
   }
 
@@ -642,6 +644,11 @@ function updateSimulation(dt) {
         }
         const gy = getTerrainHeight(z.x, z.z);
         z.model.root.position.set(z.x, gy, z.z);
+
+        // Distance Fog LOD: Skip fine limb & gut joint trigonometry when obscured by dense fog (>26m)
+        if (dist > 26.0) {
+          continue;
+        }
 
         z.stepTime += dt * (z.speed * 2.8);
         const p = z.model;

@@ -567,8 +567,10 @@ export function startWinterSurvive(scene) {
   deadCorpses.length = 0;
   bloodDecals.forEach(b => scene.remove(b.mesh));
   bloodDecals.length = 0;
-  airborneDrips.forEach(d => scene.remove(d.mesh));
-  airborneDrips.length = 0;
+  airborneDrips.forEach(d => {
+    d.active = false;
+    if (d.mesh) d.mesh.visible = false;
+  });
   curseProjectiles.forEach(p => scene.remove(p.mesh));
   curseProjectiles.length = 0;
   woodSplinters.forEach(s => scene.remove(s.mesh));

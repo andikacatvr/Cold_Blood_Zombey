@@ -605,29 +605,23 @@ export function initWorld(scene, textures) {
       house.add(backRest);
     });
 
-    // Pickups in house
+    // Pickups in house (Optimized Emissive Materials: Zero PointLight Draw Call Overhead)
     const ammoBoxGroup = new THREE.Group();
     ammoBoxGroup.position.set(1.8, 0.95, -1.0);
     const ammoBoxMesh = new THREE.Mesh(
       new THREE.BoxGeometry(0.55, 0.28, 0.4),
-      new THREE.MeshLambertMaterial({ color: 0x93242b, flatShading: true })
+      new THREE.MeshLambertMaterial({ color: 0x93242b, emissive: 0xaa2222, emissiveIntensity: 0.7, flatShading: true })
     );
     ammoBoxGroup.add(ammoBoxMesh);
-    const ammoGlow = new THREE.PointLight(0xff3344, 1.2, 2.4);
-    ammoGlow.position.set(0, 0.3, 0);
-    ammoBoxGroup.add(ammoGlow);
     house.add(ammoBoxGroup);
 
     const vitalFlaskGroup = new THREE.Group();
     vitalFlaskGroup.position.set(-0.6, 2.7, -halfD + 0.6);
     const flaskMesh = new THREE.Mesh(
       new THREE.CylinderGeometry(0.12, 0.16, 0.42, 6),
-      new THREE.MeshLambertMaterial({ color: 0x33b8ff, flatShading: true })
+      new THREE.MeshLambertMaterial({ color: 0x33b8ff, emissive: 0x2288cc, emissiveIntensity: 0.7, flatShading: true })
     );
     vitalFlaskGroup.add(flaskMesh);
-    const flaskGlow = new THREE.PointLight(0x44c5ff, 1.4, 2.5);
-    flaskGlow.position.set(0, 0.2, 0);
-    vitalFlaskGroup.add(flaskGlow);
     house.add(vitalFlaskGroup);
 
     if (housePickups.length >= 2) {

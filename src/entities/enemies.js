@@ -7,6 +7,7 @@ import { Sfx } from '../audio/sfx.js';
 import { showDialogSubtitle } from './kristin.js';
 import { getTerrainHeight } from '../world/environment.js';
 import { startNonaBataviaCutscene } from '../core/cutscene.js';
+import { isMobileDevice } from '../graphics/engine.js';
 import {
   spawnBloodPoolOnSnow,
   spawnWalkingBloodDrip,
@@ -500,9 +501,11 @@ export function buildLeft4DeadInfected(variant = 0) {
   parts.rShin = rLegData.knee;
 
   parts.scale = scale;
-  // High-performance shadow casting: only main torso/pelvis casts shadow instead of 50 sub-meshes!
-  if (chest) chest.castShadow = true;
-  if (pelvis) pelvis.castShadow = true;
+  // High-performance shadow casting: only main torso/pelvis casts shadow on desktop; disabled on mobile
+  if (!isMobileDevice) {
+    if (chest) chest.castShadow = true;
+    if (pelvis) pelvis.castShadow = true;
+  }
 
   return parts;
 }
