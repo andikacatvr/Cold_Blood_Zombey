@@ -25,7 +25,7 @@
       justify-content: center;
       background: #040608;
     }
-    /* PS1 NATIVE 320x240 RETRO DOWNSCALED CANVAS */
+    /* PS1 NATIVE 320x240 RETRO DOWNSCALED CANVAS (Optimized GPU Rendering) */
     #ps1-canvas {
       width: 100vw;
       height: 100vh;
@@ -35,13 +35,11 @@
       image-rendering: pixelated;
       image-rendering: crisp-edges;
       display: block;
-      filter: contrast(115%) brightness(96%) saturate(80%) sepia(8%);
-      transition: filter 0.35s ease;
+      /* CSS filters removed to prevent heavy compositor bottlenecks on mobile/integrated GPUs */
     }
     /* PS2 2004 ENHANCED SHOCK-HORROR CANVAS (RESIDENT EVIL 4 / SILENT HILL 2 AESTHETIC) */
     #ps1-canvas.ps2-mode {
       image-rendering: auto;
-      filter: contrast(116%) brightness(96%) saturate(82%) sepia(6%);
     }
     /* GLOOMY CRT SCANLINES & COLD VIGNETTE OVERLAY */
     #crt-fx {
@@ -665,7 +663,7 @@
       font-family: 'VT323', monospace;
       animation: alertPop 0.25s ease-out;
     }
-/* SILENT HILL 2 SIGNATURE NOISE / FILM GRAIN EFFECT */
+/* SILENT HILL 2 SIGNATURE NOISE / FILM GRAIN EFFECT (GPU-Friendly) */
 #noise-filter {
   position: absolute;
   top: 0;
@@ -674,18 +672,9 @@
   height: 100%;
   pointer-events: none;
   z-index: 12;
-  opacity: 0.22;
-  mix-blend-mode: overlay;
+  opacity: 0.14;
   background: repeating-radial-gradient(#000 0 0.0001%, #fff 0 0.0002%);
   background-size: 130px 130px;
-  animation: sh2Noise 0.10s steps(2) infinite;
-}
-@keyframes sh2Noise {
-  0% { transform: translate(0, 0); }
-  25% { transform: translate(-1.5%, 1.5%); }
-  50% { transform: translate(1.5%, -1%); }
-  75% { transform: translate(-1%, -1.5%); }
-  100% { transform: translate(1%, 0.8%); }
 }
 
 /* =========================================================================

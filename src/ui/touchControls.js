@@ -335,3 +335,4 @@ export function initTouchControls() {
   // Initial visibility update
   updateTouchControlsVisibility();
 }
+

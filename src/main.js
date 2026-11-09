@@ -108,6 +108,12 @@ import {
 
 const THREE = window.THREE;
 
+// Reusable scratch vectors to prevent Garbage Collection allocation churn in 60fps render loop
+const _tempV3_1 = new THREE.Vector3();
+const _tempV3_2 = new THREE.Vector3();
+const _tempV3_3 = new THREE.Vector3();
+const _breathOffset = new THREE.Vector3(0, -0.16, 0);
+
 let lastTick = performance.now();
 let playerBreathTimer = 1.0;
 let ambientHordeTimer = 0;
@@ -119,7 +125,7 @@ function updateSimulation(dt) {
   ambientHordeTimer += dt;
   if (ambientHordeTimer >= 2.4) {
     ambientHordeTimer = 0;
-    const aliveCount = zombies.filter(m => !m.isDead).length;
+    const aliveCount = zombies.length;
     if (aliveCount < 16) {
       const a = Math.random() * Math.PI * 2;
       const r = 22 + Math.random() * 14;
@@ -241,12 +247,12 @@ function updateSimulation(dt) {
   // 5b. Dramatic Boss Death Sequences, Shockwaves & Shatter Shards
   updateBossDeathEffects(dt, zombies, Sfx, state, () => updateHUD(state));
 
-  // 6. Player cold breath steam
+  // 6. Player cold breath steam (Zero Garbage Collection allocation)
   playerBreathTimer -= dt;
   if (playerBreathTimer <= 0) {
     playerBreathTimer = 1.8 + Math.random() * 0.8;
-    const pFwd = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-    const pPos = camera.position.clone().addScaledVector(pFwd, 0.45).add(new THREE.Vector3(0, -0.16, 0));
+    const pFwd = _tempV3_1.set(0, 0, -1).applyQuaternion(camera.quaternion);
+    const pPos = _tempV3_2.copy(camera.position).addScaledVector(pFwd, 0.45).add(_breathOffset);
     spawnColdBreath(pPos, pFwd, true);
   }
 
@@ -378,9 +384,9 @@ function updateSimulation(dt) {
     }
   }
 
-  // 13. Active Zombies & Boss
+  // 13. Active Zombies & Boss (Optimized O(1) active zombie list)
   let nearZombiesCount = 0;
-  for (let i = 0; i < zombies.length; i++) {
+  for (let i = zombies.length - 1; i >= 0; i--) {
     const z = zombies[i];
     if (z.isDead) {
       // Safety net: ensure any dead zombie never freezes in place as an immortal statue
@@ -407,6 +413,8 @@ function updateSimulation(dt) {
           weight: 1.0
         });
       }
+      // Immediately remove dead zombie from active list to eliminate O(N*M) checks & raycast waste
+      zombies.splice(i, 1);
       continue;
     }
 
@@ -678,22 +686,21 @@ function updateSimulation(dt) {
         z.breathTimer = (z.breathTimer || (1.0 + Math.random() * 1.5)) - dt;
         if (z.breathTimer <= 0 && dist < 22) {
           z.breathTimer = 1.6 + Math.random() * 1.4;
-          const zFwd = new THREE.Vector3(Math.sin(ang), 0, Math.cos(ang));
-          const zHeadPos = new THREE.Vector3(z.x + zFwd.x * 0.35, 1.42, z.z + zFwd.z * 0.35);
+          const zFwd = _tempV3_1.set(Math.sin(ang), 0, Math.cos(ang));
+          const zHeadPos = _tempV3_2.set(z.x + zFwd.x * 0.35, 1.42, z.z + zFwd.z * 0.35);
           spawnColdBreath(zHeadPos, zFwd, false);
         }
 
         z.dripTimer -= dt;
         const distMoved = Math.hypot(z.x - z.lastStepPos.x, z.z - z.lastStepPos.y);
         if (z.dripTimer <= 0 || distMoved > 0.75) {
-          z.dripTimer = 0.22 + Math.random() * 0.25;
+          z.dripTimer = 0.28 + Math.random() * 0.35;
           z.lastStepPos.set(z.x, z.z);
           spawnWalkingBloodDrip(z.x, z.z, 0.45);
 
           if (p.gutAnchor) {
-            const gutPos = new THREE.Vector3();
-            p.gutAnchor.getWorldPosition(gutPos);
-            createAirborneBloodDrop(gutPos);
+            _tempV3_3.set(z.x + Math.sin(ang) * 0.15, (z.model.root.position.y || 0) + 0.65, z.z + Math.cos(ang) * 0.15);
+            createAirborneBloodDrop(_tempV3_3);
           }
         }
       } else {
@@ -827,11 +834,16 @@ function updateSimulation(dt) {
 
     if (c.age >= c.maxLife) {
       scene.remove(r);
+      r.traverse(child => {
+        if (child.isMesh && child.geometry) {
+          child.geometry.dispose();
+        }
+      });
       deadCorpses.splice(i, 1);
     }
   }
 
-  // 15. Blood Pools on Snow (10-second decay)
+  // 15. Blood Pools on Snow (10-second decay with memory disposal)
   for (let i = bloodDecals.length - 1; i >= 0; i--) {
     const b = bloodDecals[i];
     b.age += dt;
@@ -848,6 +860,7 @@ function updateSimulation(dt) {
 
     if (b.age >= b.maxLife) {
       scene.remove(b.mesh);
+      if (b.mat) b.mat.dispose();
       bloodDecals.splice(i, 1);
     }
   }

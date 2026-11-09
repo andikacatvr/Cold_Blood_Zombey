@@ -1169,9 +1169,9 @@ export function initWorld(scene, textures) {
 
       pineTrunkMesh.castShadow = true;
       pineTrunkMesh.receiveShadow = true;
-      pineFoliageMesh.castShadow = true;
+      pineFoliageMesh.castShadow = false;
       pineFoliageMesh.receiveShadow = true;
-      pineSnowMesh.castShadow = true;
+      pineSnowMesh.castShadow = false;
       pineSnowMesh.receiveShadow = true;
 
       scene.add(pineTrunkMesh);
@@ -1215,9 +1215,9 @@ export function initWorld(scene, textures) {
 
       bareTrunkMesh.castShadow = true;
       bareTrunkMesh.receiveShadow = true;
-      bareBranchMesh.castShadow = true;
+      bareBranchMesh.castShadow = false;
       bareBranchMesh.receiveShadow = true;
-      bareSnowMesh.castShadow = true;
+      bareSnowMesh.castShadow = false;
       bareSnowMesh.receiveShadow = true;
 
       scene.add(bareTrunkMesh);

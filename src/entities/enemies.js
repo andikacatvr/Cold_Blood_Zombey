@@ -500,12 +500,9 @@ export function buildLeft4DeadInfected(variant = 0) {
   parts.rShin = rLegData.knee;
 
   parts.scale = scale;
-  root.traverse(child => {
-    if (child.isMesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
-    }
-  });
+  // High-performance shadow casting: only main torso/pelvis casts shadow instead of 50 sub-meshes!
+  if (chest) chest.castShadow = true;
+  if (pelvis) pelvis.castShadow = true;
 
   return parts;
 }
@@ -613,12 +610,8 @@ export function buildSisterValentina() {
   parts.rFore = rArmData.foreArmGroup;
   parts.scale = scale;
 
-  root.traverse(child => {
-    if (child.isMesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
-    }
-  });
+  if (habitDress) habitDress.castShadow = true;
+  if (torso) torso.castShadow = true;
   return parts;
 }
 

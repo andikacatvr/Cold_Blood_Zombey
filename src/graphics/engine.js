@@ -5,6 +5,12 @@ const THREE = window.THREE;
 export const NATIVE_W = 320;
 export const NATIVE_H = 240;
 
+export const isMobileDevice = (
+  'ontouchstart' in window ||
+  navigator.maxTouchPoints > 0 ||
+  (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)
+);
+
 export const canvas = document.getElementById('ps1-canvas');
 export const renderer = new THREE.WebGLRenderer({
   canvas,
@@ -12,9 +18,9 @@ export const renderer = new THREE.WebGLRenderer({
   powerPreference: 'high-performance',
   precision: 'mediump'
 });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setPixelRatio(isMobileDevice ? 1.0 : Math.min(window.devicePixelRatio || 1, 1.25));
+renderer.shadowMap.enabled = !isMobileDevice;
+renderer.shadowMap.type = THREE.BasicShadowMap; // Authentic PS2 hard shadow: 3x faster than PCFSoftShadowMap
 
 export const FOG_COLOR = 0x828a93; // Silent Hill 2 iconic dense ash-gray mist
 renderer.setClearColor(FOG_COLOR);
@@ -26,15 +32,16 @@ export const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window
 camera.rotation.order = 'YXZ';
 
 // Ambient Lighting (Diffused cold daylight penetrating through dense fog)
-export const ambientLight = new THREE.AmbientLight(0x9aa4af, 0.80);
+export const ambientLight = new THREE.AmbientLight(0x9aa4af, 0.85);
 scene.add(ambientLight);
 
 // Pale Overcast Sky Directional Light (creates soft atmospheric shadows in mist)
 export const overcastDirLight = new THREE.DirectionalLight(0xdbe3ec, 0.68);
 overcastDirLight.position.set(18, 45, 22);
-overcastDirLight.castShadow = true;
-overcastDirLight.shadow.mapSize.width = 1024;
-overcastDirLight.shadow.mapSize.height = 1024;
+overcastDirLight.castShadow = !isMobileDevice;
+const shadowRes = isMobileDevice ? 512 : 1024;
+overcastDirLight.shadow.mapSize.width = shadowRes;
+overcastDirLight.shadow.mapSize.height = shadowRes;
 overcastDirLight.shadow.camera.near = 1;
 overcastDirLight.shadow.camera.far = 135;
 overcastDirLight.shadow.camera.left = -45;
@@ -62,14 +69,17 @@ export function applyGraphicFidelity(mode = 'ps2') {
 
   if (isPS2) {
     canvas.classList.add('ps2-mode');
-    const w = Math.min(window.innerWidth, 1280);
-    const h = Math.min(window.innerHeight, 960);
+    const maxW = isMobileDevice ? 960 : 1280;
+    const maxH = isMobileDevice ? 720 : 960;
+    const w = Math.min(window.innerWidth, maxW);
+    const h = Math.min(window.innerHeight, maxH);
     renderer.setSize(w, h, false);
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
 
-    renderer.shadowMap.enabled = true;
-    overcastDirLight.castShadow = true;
+    const enableShadow = !isMobileDevice;
+    renderer.shadowMap.enabled = enableShadow;
+    overcastDirLight.castShadow = enableShadow;
     playerFlashlight.visible = true;
   } else {
     canvas.classList.remove('ps2-mode');

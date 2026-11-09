@@ -21,6 +21,11 @@ let sceneRef = null;
 let bloodSnowTexRef = null;
 let bloodDripTexRef = null;
 
+// Reusable Shared Geometries & Materials (Zero GPU allocation churn)
+const sharedDecalGeo = new THREE.PlaneGeometry(1, 1);
+const sharedAirDropGeo = new THREE.BoxGeometry(0.06, 0.09, 0.06);
+const sharedAirDropMat = new THREE.MeshBasicMaterial({ color: 0x9e080f });
+
 const breathGeo = new THREE.PlaneGeometry(0.24, 0.24);
 const breathMat = new THREE.MeshBasicMaterial({
   color: 0xd8e8f2,
@@ -35,25 +40,29 @@ export function initEffects(scene, bloodSnowTex, bloodDripTex) {
   bloodDripTexRef = bloodDripTex;
 }
 
+function removeDecal(d) {
+  if (!d) return;
+  if (d.mesh && sceneRef) sceneRef.remove(d.mesh);
+  if (d.mat) d.mat.dispose();
+}
+
 export function spawnBloodPoolOnSnow(x, z, scale = 1.0) {
   if (!sceneRef) return;
-  if (bloodDecals.length > 50) {
+  if (bloodDecals.length >= 30) {
     const oldest = bloodDecals.shift();
-    if (oldest && oldest.mesh) sceneRef.remove(oldest.mesh);
+    removeDecal(oldest);
   }
   const finalR = (1.9 + Math.random() * 1.2) * scale;
   const initR = finalR * 0.25;
 
-  const g = new THREE.PlaneGeometry(1, 1);
-  const m = new THREE.MeshPhongMaterial({
+  // Lightweight MeshBasicMaterial: avoids expensive multi-light Phong calculation per decal
+  const m = new THREE.MeshBasicMaterial({
     map: bloodSnowTexRef,
     transparent: true,
     opacity: 0.98,
-    specular: 0x991822,
-    shininess: 90,
     depthWrite: false
   });
-  const decal = new THREE.Mesh(g, m);
+  const decal = new THREE.Mesh(sharedDecalGeo, m);
   decal.rotation.x = -Math.PI / 2;
   decal.rotation.z = Math.random() * Math.PI * 2;
   const gy = getTerrainHeight(x, z);
@@ -78,18 +87,17 @@ export function spawnBloodPoolOnSnow(x, z, scale = 1.0) {
 
 export function spawnWalkingBloodDrip(x, z, scale = 0.45) {
   if (!sceneRef) return;
-  if (bloodDecals.length > 50) {
+  if (bloodDecals.length >= 30) {
     const oldest = bloodDecals.shift();
-    if (oldest && oldest.mesh) sceneRef.remove(oldest.mesh);
+    removeDecal(oldest);
   }
-  const g = new THREE.PlaneGeometry(1, 1);
   const m = new THREE.MeshBasicMaterial({
     map: bloodDripTexRef,
     transparent: true,
     opacity: 0.94,
     depthWrite: false
   });
-  const decal = new THREE.Mesh(g, m);
+  const decal = new THREE.Mesh(sharedDecalGeo, m);
   decal.rotation.x = -Math.PI / 2;
   decal.rotation.z = Math.random() * Math.PI * 2;
   const gy = getTerrainHeight(x, z);
@@ -115,9 +123,8 @@ export function spawnWalkingBloodDrip(x, z, scale = 0.45) {
 
 export function createAirborneBloodDrop(originPos) {
   if (!sceneRef) return;
-  const g = new THREE.BoxGeometry(0.06, 0.09, 0.06);
-  const m = new THREE.MeshBasicMaterial({ color: 0x9e080f });
-  const mesh = new THREE.Mesh(g, m);
+  if (airborneDrips.length > 25) return; // Cap maximum active drops
+  const mesh = new THREE.Mesh(sharedAirDropGeo, sharedAirDropMat);
   mesh.position.copy(originPos);
   mesh.position.x += (Math.random() - 0.5) * 0.3;
   mesh.position.z += (Math.random() - 0.5) * 0.3;
