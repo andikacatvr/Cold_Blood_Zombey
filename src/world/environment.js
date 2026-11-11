@@ -984,34 +984,8 @@ export function initWorld(scene, textures) {
     return mergeGeometries(snowCaps);
   }
 
-  // 5. Frosted Forest Rocks & Fallen Timber Logs
-  const rockSnowMat = new THREE.MeshLambertMaterial({ color: 0x3d434a, flatShading: true });
-  const snowCapMat = new THREE.MeshLambertMaterial({ color: 0xdde6ed, flatShading: true });
-
-  function makeForestRock(x, z, sc = 1.0) {
-    const rGroup = new THREE.Group();
-    const gy = getTerrainHeight(x, z);
-    rGroup.position.set(x, gy, z);
-
-    const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.85 * sc, 1), rockSnowMat);
-    rock.position.y = 0.45 * sc;
-    rock.scale.set(1.2, 0.7, 1.1);
-    rock.rotation.set(Math.random() * 0.4, Math.random() * Math.PI, Math.random() * 0.3);
-    rGroup.add(rock);
-
-    const snowCap = new THREE.Mesh(new THREE.DodecahedronGeometry(0.65 * sc, 1), snowCapMat);
-    snowCap.position.y = 0.8 * sc;
-    snowCap.scale.set(1.1, 0.35, 1.0);
-    rGroup.add(snowCap);
-
-    scene.add(rGroup);
-    colliders.push({
-      minX: x - 0.7 * sc,
-      maxX: x + 0.7 * sc,
-      minZ: z - 0.7 * sc,
-      maxZ: z + 0.7 * sc
-    });
-  }
+  // 5. Fallen Timber Logs in the Snow
+  function makeForestRock(x, z, sc = 1.0) {}
 
   function makeFallenLog(x, z, rotY, len = 4.2) {
     const logGroup = new THREE.Group();
@@ -1869,17 +1843,7 @@ export function initWorld(scene, textures) {
   makeOccultTotem(36, 42);
   makeOccultTotem(-40, -45);
 
-  // Frosted Boulders & Fallen Mossy Logs in the Snow
-  makeForestRock(4.5, 10.5, 1.2);
-  makeForestRock(-5.0, 18.0, 1.0);
-  makeForestRock(8.0, -12.0, 1.4);
-  makeForestRock(-7.5, -22.0, 1.1);
-  makeForestRock(0.0, 30.0, 1.3);
-  makeForestRock(34.0, 15.0, 1.4);
-  makeForestRock(-35.0, -12.0, 1.3);
-  makeForestRock(28.0, -42.0, 1.5);
-  makeForestRock(-32.0, 40.0, 1.2);
-
+  // Fallen Mossy Logs in the Snow
   makeFallenLog(-2.5, 6.0, 0.45, 4.5);
   makeFallenLog(5.2, 1.5, -0.65, 4.0);
   makeFallenLog(-4.8, -14.0, 0.85, 4.2);
