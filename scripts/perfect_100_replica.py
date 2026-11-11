@@ -405,34 +405,49 @@ for y_px in y_body_steps:
         x_min, x_max = info['body']
         # Smoothly taper shoulder transition into chest (prevents shoulder collar shelf)
         if y_px == 380:
-            x_min, x_max = 390, 634
+            x_min, x_max = 385, 639
         elif y_px == 415:
             x_min, x_max = 410, 614
         # Eliminate hand inclusion at hip (prevents hip disc jump)
         if x_min < 370 and y_px >= 500:
             x_min = 380
     else:
-        x_min, x_max = info['min'], info['max']
+        # Neck to shoulder clavicle slope
+        if y_px == 305:
+            x_min, x_max = 440, 584  # Slender base of neck, flows seamlessly from neck
+        elif y_px == 325:
+            x_min, x_max = 400, 624  # Clavicle slope
+        else:
+            x_min, x_max = info['min'], info['max']
         
     rx = (x_max - x_min) * 0.5 * scale_x
     
-    # Anatomical depth profile
-    if y_px <= 450:
-        # Chest/bust fullness: halter gown front projection
-        rz_f = rx * 0.90
-        rz_b = rx * 0.72
-    elif y_px <= 620:
-        # Slender waist
-        rz_f = rx * 0.78
-        rz_b = rx * 0.75
-    elif y_px <= 800:
-        # Hourglass hips & buttocks
-        rz_f = rx * 0.82
-        rz_b = rx * 0.95
+    # Anatomical depth profile (NO horizontal shelf, slender neck base, full bust, slender waist, curved hips)
+    if y_px <= 350:
+        # Clavicle & shoulder slope: slender depth matching neck
+        t_cl = (y_px - 305) / 45.0
+        rz_f = 0.045 + 0.020 * t_cl
+        rz_b = 0.045 + 0.015 * t_cl
+    elif y_px <= 430:
+        # Halter bust fullness swells forward gracefully
+        t_b = (y_px - 350) / 80.0
+        rz_f = 0.065 + 0.040 * t_b
+        rz_b = 0.060 + 0.005 * t_b
+    elif y_px <= 550:
+        # Taper to natural waist
+        t_w = (y_px - 430) / 120.0
+        rz_f = 0.105 - 0.040 * t_w
+        rz_b = 0.065
+    elif y_px <= 750:
+        # Curve out to hips & buttocks
+        t_h = (y_px - 550) / 200.0
+        rz_f = 0.065 + 0.020 * t_h
+        rz_b = 0.065 + 0.035 * t_h
     else:
-        # Skirt flare
-        rz_f = rx * 0.92
-        rz_b = rx * 0.92
+        # Flowing bridal skirt
+        t_s = (y_px - 750) / (1480.0 - 750.0)
+        rz_f = 0.085 + 0.130 * t_s
+        rz_b = 0.100 + 0.115 * t_s
         
     rf, rb = [], []
     
@@ -471,7 +486,7 @@ for y_px in y_body_steps:
 
 add_smooth_column(body_rf, body_rb, cap_top=False, cap_bottom=True)
 
-# 11. BUILD ARMS WITH 100% CLEAN SKIN (NO WHITE BORDER)
+# 11. BUILD ARMS WITH 100% CLEAN SKIN & PROPER OUTWARD NORMALS
 print("4. Modeling Porcelain Bare Arms...")
 K_arm = 8
 
@@ -479,8 +494,8 @@ def build_arm(is_right=False):
     arm_rf, arm_rb = [], []
     sign = 1.0 if is_right else -1.0
     
-    # Arm height steps from shoulder Y=320 down to fingertips Y=780
-    y_arm_steps = [320, 350, 390, 435, 485, 540, 600, 660, 720, 780]
+    # Arm height steps nested inside shoulder socket
+    y_arm_steps = [335, 360, 400, 445, 495, 550, 610, 670, 730, 775]
     
     for y_px in y_arm_steps:
         norm_y = 1.0 - (y_px - ymin) / float(ymax - ymin)
@@ -497,33 +512,38 @@ def build_arm(is_right=False):
             mid_x_px = (a_min + a_max) * 0.5
             arm_w_px = (a_max - a_min) * 0.5
         else:
-            # Upper shoulder joint (Y <= 400)
-            t = (y_px - 320) / 100.0
-            mid_x_px = center_x + sign * (145.0 + 20.0 * t)
-            arm_w_px = 25.0
+            # Shoulder joint nested inside deltoid
+            t = (y_px - 335) / 65.0
+            mid_x_px = center_x + sign * (148.0 + 15.0 * t)
+            arm_w_px = 24.0
             a_min = mid_x_px - arm_w_px
             a_max = mid_x_px + arm_w_px
             
         mid_vx = (mid_x_px - center_x) * scale_x
         rx = max(0.016, arm_w_px * scale_x)
-        rz = rx * 1.08  # subtle anatomical depth
+        rz = rx * 1.05
+        
+        # Tapered feminine hand & fingertips
+        if y_px >= 730:
+            t_fin = (y_px - 730) / 45.0
+            rx = 0.016 * (1.0 - 0.40 * t_fin)
+            rz = 0.014 * (1.0 - 0.50 * t_fin)
         
         rf, rb = [], []
         
-        # Front half of arm cylinder: maps strictly across [a_min, a_max]
+        # Front half of arm cylinder (true outward unit normal [sin(th), 0, cos(th)])
         for k in range(K_arm + 1):
             th = -np.pi * 0.5 + np.pi * k / float(K_arm)
             vx = mid_vx + rx * np.sin(th)
             vz = rz * np.cos(th)
             
-            # Map th to [a_min, a_max]: strictly interior to skin!
             orig_x = mid_x_px + np.sin(th) * (arm_w_px * 0.90)
             uv = get_uv_front(orig_x, y_px)
             
             v_idx = len(all_vertices)
             all_vertices.append([vx, y_world, vz])
             all_uvs.append(uv)
-            all_normals.append([sign * np.sin(th), 0.0, np.cos(th)])
+            all_normals.append([np.sin(th), 0.0, np.cos(th)])
             rf.append(v_idx)
             
         # Back half of arm cylinder
@@ -538,7 +558,7 @@ def build_arm(is_right=False):
             v_idx = len(all_vertices)
             all_vertices.append([vx, y_world, vz])
             all_uvs.append(uv)
-            all_normals.append([sign * np.sin(th), 0.0, np.cos(th)])
+            all_normals.append([np.sin(th), 0.0, np.cos(th)])
             rb.append(v_idx)
             
         arm_rf.append(rf)
