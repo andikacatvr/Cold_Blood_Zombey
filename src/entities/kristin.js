@@ -1,21 +1,24 @@
 /* =========================================================================
-   HERO & COMPANION: KRISTIN (OFFICIAL PS2 3D GLB CHARACTER ASSET)
-   - Rescaled & prominent heroic presence (NPC_SCALE = 1.38)
+   SPECIAL AGENT COMPANION (OFFICIAL BOSSGAME.GLB CHARACTER ASSET)
+   - Real-time tactical agent companion assisting the player against zombies
+   - Automatic zombie targeting, aiming, shotgun combat firing, and defense
+   - High-velocity bullet tracer beams and muzzle flashes
    - Real-time kinematic vertex deformation & motion control
-   - Expressive 3D gestures: Wave (Sapaan), Combat Pump, Thumbs Up, Beckon
-   - Dynamic player tracking (head & eyes tilt/yaw towards player)
-   - Alive idle breathing & natural weight shifting
+   - Expressive 3D tactical gestures & cinematic dialogue subtitles
+   - Dynamic player tracking & intelligent flanking follow AI
    ========================================================================= */
 
 import { Sfx } from '../audio/sfx.js';
 import { checkWallCollision, getTerrainHeight } from '../world/environment.js';
-import { zombies } from './enemies.js';
-import { playerPos, yaw } from '../core/player.js';
+import { zombies, killZombieWithKinematics } from './enemies.js';
+import { playerPos, yaw, state, nextWave } from '../core/player.js';
+import { updateHUD } from '../ui/hud.js';
+import { createAirborneBloodDrop, spawnBloodPoolOnSnow } from './effects.js';
 
 const THREE = window.THREE;
 
 export let andikaModel = null;
-export const NPC_SCALE = 1.38; // Rescaled larger and heroic
+export const NPC_SCALE = 1.0; // 1.0 = true 1.745m height matching bossgame.glb!
 
 // Companion AI & Following State
 export let companionFollowMode = true;
@@ -65,43 +68,43 @@ export function toggleCompanionFollow(sfxRef = Sfx) {
   if (sfxRef && sfxRef.playSmallBell) sfxRef.playSmallBell(companionFollowMode ? 2600 : 1800, 0.45);
 
   const text = companionFollowMode
-    ? "Siap bro, gua ikutin lu dari belakang! Ayo jalan!"
-    : "Oke, gua jaga di sini sambil mantau musuh! Panggil kalau lu butuh!";
+    ? "Siap, formasi tempur dua arah! Gua kawal dan lindungi lu dari belakang!"
+    : "Oke, gua jaga perimeter di sini! Panggil kalau lu butuh tembakan bantuan!";
 
   showDialogSubtitle(text, 3800);
 }
 
 export const STORY_CONVERSATIONS = [
-  "Woi bro! Sumpah lu beneran masih hidup?! Gua kira lu udah tewas kena semburan sihir gelap tadi! Hutan ini bukan sekadar lembah alam biasa...",
-  "Lu liat anggota tim riset yang lain ga? Gua sempet liat alat-alat pengukuran sama ranselnya anak-anak diseret makhluk-makhluk terkutuk ke arah hutan terlarang...",
-  "Hasil artefak dan sampel yang kita gali tadi ngebuktiin ada segel sihir hitam kuno yang terkubur ratusan tahun. Dan penggalian riset kita ga sengaja ngebangkitin itu semua!",
-  "Satu-satunya jalan kabur dari lembah terkutuk ini cuma perahu motor di dermaga utara. Tapi gerbangnya digembok pake rune okultis. Kita harus cari kuncinya!",
-  "Pegang shotgun lu erat-erat. Sebagai sesama mahasiswa peneliti, kita ga bakal mati konyol di lembah terkutuk ini. Kita habisi mereka bareng-bareng!"
+  "Woi bro! Gua Agen Rekan, dikirim buat operasi pembersihan dan evakuasi di hutan salju ini! Pegang shotgun lu, kita habisi zombienya bareng-bareng!",
+  "Sensor taktis gua mendeteksi pergerakan mayat hidup di sekitar perimeter. Jangan sampai lengah, gua kawal lu dari belakang!",
+  "Sihir gelap di lembah terkutuk ini membangkitkan monster-monster haus darah. Tapi tenang, peluru shotgun tempur gua bakal melubangi kepala mereka!",
+  "Tetap di samping gua bro! Formasi silang dua arah: lu sapu depan, gua bantai yang berusaha menyergap dari samping dan belakang!",
+  "Satu-satunya jalan keluar ada di dermaga utara. Kita harus amankan area dan musnahkan semua zombie yang menghalangi!"
 ];
 let storyConvIndex = 0;
 
 export const GESTURE_CONFIG = {
   wave: {
-    tag: '👋 REKAN RISET',
-    text: '"Woi bro! Syukurlah lu beneran sadar! Gua kira lu udah abis diseret sihir gelap pas ledakan mantra di kamp tadi!"',
+    tag: '👋 AGEN REKAN',
+    text: '"Woi bro! Syukurlah lu selamat dari kecelakaan bus! Gua Agen Rekan, siap bertempur bareng lu!"',
     sound: (sfx) => { if (sfx && sfx.playSmallBell) sfx.playSmallBell(2400, 0.45); },
     duration: 3.8
   },
   pump: {
     tag: '⚔ SIAP TEMPUR',
-    text: '"Gua nemu shotgun pemburu di rumah ini. Pegang senjata lu erat-erat, kita ga bakal mati konyol di hutan ini!"',
+    text: '"Shotgun tempur gua udah terisi penuh! Monster mana pun yang mendekat bakal langsung gua tembak!"',
     sound: (sfx) => { if (sfx && sfx.playPumpRack) sfx.playPumpRack(); },
     duration: 3.5
   },
   cheer: {
-    tag: '👍 SOLIDARITAS',
-    text: '"Gokil, bidikan lu mantep juga pas kepepet! Tenang, gua jagain punggung lu. Kita harus kabur bareng-bareng!"',
+    tag: '👍 REKAN SOLID',
+    text: '"Bidikan lu mantap bro! Kerja sama tim yang solid, kita berdua pasti bisa lolos dari neraka salju ini!"',
     sound: (sfx) => { if (sfx && sfx.playSmallBell) sfx.playSmallBell(2800, 0.5); },
     duration: 3.6
   },
   beckon: {
     tag: '👉 AMBIL PELURU',
-    text: '"Amunisi peluru shells gua taro di peti samping gua nih. Ambil secukupnya, jangan sampai kehabisan di luar!"',
+    text: '"Gua punya stok amunisi cadangan di sini. Reload senjata lu sekarang, jangan biarkan peluru kosong!"',
     sound: (sfx) => { if (sfx && sfx.playShellInsert) sfx.playShellInsert(); },
     duration: 3.6
   }
@@ -122,10 +125,8 @@ export function triggerAndikaGesture(name, sfxRef = Sfx) {
   const cfg = GESTURE_CONFIG[target];
   gestureDuration = cfg.duration;
 
-  // Audio trigger
   if (cfg.sound) cfg.sound(sfxRef);
 
-  // Spoken text line
   let spokenText = cfg.text;
   if (isCycling) {
     const storyLine = STORY_CONVERSATIONS[storyConvIndex % STORY_CONVERSATIONS.length];
@@ -134,12 +135,11 @@ export function triggerAndikaGesture(name, sfxRef = Sfx) {
   }
   showDialogSubtitle(spokenText, 4800);
 
-  // Weapon switch sync for combat gesture
   if (andikaModel && andikaModel.setWeapon) {
     if (target === 'pump') {
       andikaModel.setWeapon('pump');
     } else {
-      andikaModel.setWeapon('spin');
+      andikaModel.setWeapon('pump');
     }
   }
 }
@@ -181,41 +181,92 @@ export function createMiniWeapon(type) {
     mag.rotation.x = Math.PI / 2;
     mag.position.set(0, -0.028, 0.22);
     g.add(mag);
-    const pump = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.16, 10), darkWoodMat);
-    pump.name = 'miniPumpSlide';
-    pump.rotation.x = Math.PI / 2;
-    pump.position.set(0, -0.028, 0.20);
-    g.add(pump);
-    g.pumpSlideMesh = pump;
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.08, 0.16), gunDarkMat);
-    body.position.set(0, 0, -0.06);
-    g.add(body);
-    const stock = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.075, 0.24), darkWoodMat);
-    stock.position.set(0, -0.02, -0.22);
+    const pumpSlide = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.18, 12), darkWoodMat);
+    pumpSlide.rotation.x = Math.PI / 2;
+    pumpSlide.position.set(0, -0.028, 0.20);
+    g.add(pumpSlide);
+    g.pumpSlideMesh = pumpSlide;
+    const receiver = new THREE.Mesh(new THREE.BoxGeometry(0.048, 0.075, 0.18), gunDarkMat);
+    receiver.position.set(0, 0, -0.08);
+    g.add(receiver);
+    const stock = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.078, 0.24), darkWoodMat);
+    stock.position.set(0, -0.025, -0.25);
     g.add(stock);
   } else if (type === 'golok') {
-    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.06, 0.44), golokBladeMat);
-    blade.position.set(0, 0, 0.20);
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.055, 0.44), golokBladeMat);
+    blade.position.set(0, 0.02, 0.24);
     g.add(blade);
-    const edge = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.02, 0.42), golokEdgeMat);
-    edge.position.set(0, -0.035, 0.20);
+    const edge = new THREE.Mesh(new THREE.BoxGeometry(0.005, 0.016, 0.44), golokEdgeMat);
+    edge.position.set(0, -0.012, 0.24);
     g.add(edge);
-    const guard = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.07, 0.02), golokBrassMat);
-    guard.position.set(0, 0, -0.02);
+    const guard = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.02, 8), golokBrassMat);
+    guard.rotation.x = Math.PI / 2;
+    guard.position.set(0, 0.005, 0.01);
     g.add(guard);
-    const hilt = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.16, 10), darkWoodMat);
-    hilt.rotation.x = Math.PI / 2;
-    hilt.position.set(0, 0, -0.10);
-    g.add(hilt);
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.016, 0.14, 10), darkWoodMat);
+    handle.rotation.x = Math.PI / 2;
+    handle.position.set(0, 0, -0.07);
+    g.add(handle);
   }
+
   return g;
 }
 
-// 3D rotation helper about arbitrary pivot
+function spawnAgentShotTracer(agent, targetZombie) {
+  if (!agent || !agent.root || !targetZombie) return;
+  const scene = agent.root.parent;
+  if (!scene) return;
+
+  const muzzlePos = new THREE.Vector3();
+  if (agent.weaponSocket) {
+    agent.weaponSocket.getWorldPosition(muzzlePos);
+    muzzlePos.y += 0.05;
+  } else {
+    muzzlePos.copy(agent.root.position);
+    muzzlePos.y += 1.1;
+  }
+
+  const targetPos = targetZombie.mesh
+    ? targetZombie.mesh.position.clone().add(new THREE.Vector3(0, 1.1, 0))
+    : new THREE.Vector3(targetZombie.x, 1.1, targetZombie.z);
+
+  // 1. Tracer Beam Geometry (high-visibility glowing bullet tracer)
+  const geom = new THREE.BufferGeometry().setFromPoints([muzzlePos, targetPos]);
+  const mat = new THREE.LineBasicMaterial({
+    color: 0xffe680,
+    linewidth: 2,
+    transparent: true,
+    opacity: 0.95
+  });
+  const line = new THREE.Line(geom, mat);
+  scene.add(line);
+
+  // 2. Muzzle Flash Sprite
+  const flashMat = new THREE.SpriteMaterial({
+    color: 0xffaa33,
+    transparent: true,
+    opacity: 0.95,
+    blending: THREE.AdditiveBlending
+  });
+  const flash = new THREE.Sprite(flashMat);
+  flash.position.copy(muzzlePos);
+  flash.scale.set(0.55, 0.55, 0.55);
+  scene.add(flash);
+
+  setTimeout(() => {
+    scene.remove(line);
+    geom.dispose();
+    mat.dispose();
+    scene.remove(flash);
+    flashMat.dispose();
+  }, 90);
+}
+
 function makeRotator(rx, ry, rz, px, py, pz) {
   const crx = Math.cos(rx), srx = Math.sin(rx);
   const cry = Math.cos(ry), sry = Math.sin(ry);
   const crz = Math.cos(rz), srz = Math.sin(rz);
+
   return function(x, y, z) {
     const dx = x - px, dy = y - py, dz = z - pz;
     const dy1 = dy * crx - dz * srx;
@@ -233,16 +284,16 @@ function makeRotator(rx, ry, rz, px, py, pz) {
 
 export function buildAndikaCharacter(textures) {
   const root = new THREE.Group();
-  root.name = 'Kristin_Companion_GLB';
+  root.name = 'Agent_Companion_GLB';
   root.scale.set(NPC_SCALE, NPC_SCALE, NPC_SCALE);
 
   const miniSpin = createMiniWeapon('spin');
   const miniPump = createMiniWeapon('pump');
   const miniGolok = createMiniWeapon('golok');
 
-  // Base socket position attached naturally to right hand in rest pose
+  // Base socket position attached naturally to right hand in rest pose for bossgame.glb
   const weaponSocket = new THREE.Group();
-  weaponSocket.position.set(0.46, 0.98, 0.04);
+  weaponSocket.position.set(0.31, 0.88, 0.05);
   weaponSocket.rotation.x = -Math.PI / 2.7;
   weaponSocket.rotation.y = -0.15;
   weaponSocket.add(miniSpin);
@@ -250,7 +301,6 @@ export function buildAndikaCharacter(textures) {
   weaponSocket.add(miniGolok);
   root.add(weaponSocket);
 
-  // Mesh deformation rig variables
   let charMesh = null;
   let origPositions = null;
   let vertexWeights = null;
@@ -273,27 +323,32 @@ export function buildAndikaCharacter(textures) {
       const y = origPositions[i * 3 + 1];
 
       let wHead = 0, wLArm = 0, wRArm = 0, wTorso = 0, wLLeg = 0, wRLeg = 0;
-      // Head & Hair
-      if (y > 1.32 && Math.abs(x) < 0.28) {
-        wHead = Math.min(1, Math.max(0, (y - 1.32) / 0.06));
+
+      // Head & Hair: y > 1.35
+      if (y > 1.35 && Math.abs(x) < 0.22) {
+        wHead = Math.min(1, Math.max(0, (y - 1.35) / 0.06));
       }
-      // Left Arm & Forearm
-      if (x < -0.30 && y > 0.82) {
-        wLArm = Math.min(1, Math.max(0, (-x - 0.30) / 0.05));
+
+      // Left Arm: x < -0.12 && y in [0.70..1.38]
+      if (x < -0.12 && y > 0.70 && y <= 1.38) {
+        wLArm = Math.min(1, Math.max(0, (-x - 0.12) / 0.05));
       }
-      // Right Arm & Forearm
-      if (x > 0.30 && y > 0.82) {
-        wRArm = Math.min(1, Math.max(0, (x - 0.30) / 0.05));
+
+      // Right Arm: x > 0.12 && y in [0.70..1.38]
+      if (x > 0.12 && y > 0.70 && y <= 1.38) {
+        wRArm = Math.min(1, Math.max(0, (x - 0.12) / 0.05));
       }
-      // Torso / Chest / Spine
+
+      // Torso / Bodice: |x| <= 0.16 && y in [0.70..1.38]
       const upperSum = Math.min(1, wHead + wLArm + wRArm);
-      if (y > 0.80) {
-        const torsoFactor = Math.min(1, Math.max(0, (y - 0.80) / 0.08));
+      if (y > 0.70) {
+        const torsoFactor = Math.min(1, Math.max(0, (y - 0.70) / 0.08));
         wTorso = torsoFactor * (1 - upperSum);
       }
-      // Left Leg (Pivot hip: -0.12, 0.82, 0)
-      if (y <= 0.84) {
-        const legFactor = Math.min(1, Math.max(0, (0.84 - y) / 0.06));
+
+      // Skirt & Legs: y <= 0.72
+      if (y <= 0.72) {
+        const legFactor = Math.min(1, Math.max(0, (0.72 - y) / 0.06));
         if (x <= 0) {
           wLLeg = legFactor * (x < -0.02 ? 1 : Math.max(0, -x / 0.02));
         }
@@ -311,22 +366,22 @@ export function buildAndikaCharacter(textures) {
     }
   }
 
-  // Load the 3D asset `ps2_character_asset.glb`
+  // Load official bossgame.glb asset
   const gltfLoader = new THREE.GLTFLoader();
-  const glbUrl = '/models/ps2_character_asset.glb';
+  const glbUrl = '/models/bossgame.glb';
 
   gltfLoader.load(
     glbUrl,
     (gltf) => {
       const charScene = gltf.scene;
-      charScene.name = 'Kristin_PS2_Character';
+      charScene.name = 'Agent_Companion_GLB';
 
       charScene.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
           if (child.material) {
-            child.material.roughness = 0.82;
+            child.material.roughness = 0.76;
             child.material.metalness = 0.08;
             child.material.needsUpdate = true;
           }
@@ -336,12 +391,12 @@ export function buildAndikaCharacter(textures) {
 
       charScene.position.set(0, 0, 0);
       root.add(charScene);
-      console.log('[COMPANION] Kristin PS2 Character Asset loaded with Kinematic Rigging!');
+      console.log('[AGENT COMPANION] bossgame.glb successfully loaded as tactical ally agent!');
     },
     undefined,
     (err) => {
-      console.warn('Retrying GLB load from models directory:', err);
-      gltfLoader.load('/models/ps2_character_asset.glb', (gltf) => {
+      console.warn('Retrying GLB load from bossgamerev.glb:', err);
+      gltfLoader.load('/models/bossgamerev.glb', (gltf) => {
         gltf.scene.traverse((c) => {
           if (c.isMesh) {
             c.castShadow = true;
@@ -374,13 +429,12 @@ export function buildAndikaCharacter(textures) {
 
 export function initAndikaCompanion(scene, textures) {
   andikaModel = buildAndikaCharacter(textures);
-  // Spawn companion Kristin right near player start at bus crash site
-  andikaModel.root.position.set(1.6, 0.10, 13.8);
+  // Spawn agent companion right near player start at bus crash site
+  andikaModel.root.position.set(1.4, 0.10, 13.8);
   andikaModel.root.rotation.y = -0.35;
   scene.add(andikaModel.root);
-  andikaModel.setWeapon('spin');
+  andikaModel.setWeapon('pump'); // Armed with tactical combat shotgun
 
-  // Wire up gesture buttons in DOM
   const btns = document.querySelectorAll('.andika-gesture-btn');
   btns.forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -414,7 +468,6 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
   const now = performance.now();
   const t = now * 0.002;
 
-  // Use actual survivor player position
   const targetX = (typeof playerPos !== 'undefined') ? playerPos.x : camera.position.x;
   const targetZ = (typeof playerPos !== 'undefined') ? playerPos.z : camera.position.z;
 
@@ -422,22 +475,21 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
   const dz = targetZ - andikaModel.root.position.z;
   const distToPlayer = Math.hypot(dx, dz);
 
-  // 1. Companion Following AI (Moves & Follows the Player)
+  // 1. Companion Following AI (Intelligent Tactical Following)
   let isWalking = false;
   let isSprinting = false;
 
   if (companionFollowMode) {
-    // Catch-up reposition if player runs too far
     if (distToPlayer > 32.0) {
       const pYaw = (typeof yaw !== 'undefined') ? yaw : camera.rotation.y;
       andikaModel.root.position.x = targetX - Math.sin(pYaw) * 3.5;
       andikaModel.root.position.z = targetZ - Math.cos(pYaw) * 3.5;
     }
 
-    const stopDist = 2.1;
+    const stopDist = 2.2;
     if (distToPlayer > stopDist) {
       isWalking = true;
-      isSprinting = distToPlayer > 5.5;
+      isSprinting = distToPlayer > 5.2;
       const speed = isSprinting ? 6.8 : 3.8;
 
       const dirX = dx / distToPlayer;
@@ -449,7 +501,6 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
       const curX = andikaModel.root.position.x;
       const curZ = andikaModel.root.position.z;
 
-      // Smart sliding & obstacle avoidance
       let movedX = false;
       let movedZ = false;
 
@@ -462,7 +513,6 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
         movedZ = true;
       }
 
-      // If directly blocked on both axes, try tangent lateral sliding
       if (!movedX && !movedZ) {
         const perpX = -dirZ * speed * dt;
         const perpZ = dirX * speed * dt;
@@ -475,7 +525,6 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
         }
       }
 
-      // Smoothly turn to face travel direction
       const moveYaw = Math.atan2(dirX, dirZ);
       andikaModel.root.rotation.y = THREE.MathUtils.lerp(
         andikaModel.root.rotation.y,
@@ -483,21 +532,18 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
         0.16
       );
 
-      // Walking stride & step height on undulating terrain
       walkCadence += dt * (speed * 1.8);
       const stride = Math.sin(walkCadence);
       const curGY = getTerrainHeight(andikaModel.root.position.x, andikaModel.root.position.z);
-      andikaModel.root.position.y = curGY + 0.10 + Math.abs(stride) * 0.055;
+      andikaModel.root.position.y = curGY + 0.08 + Math.abs(stride) * 0.055;
 
-      // Footsteps in snow synchronized to walk cadence
       if (Math.abs(stride) > 0.85 && now - lastFootstepTime > (isSprinting ? 260 : 370)) {
         lastFootstepTime = now;
         if (Sfx && Sfx.playSnowStep) Sfx.playSnowStep();
       }
     } else {
-      // Stopped near player, breathing on terrain height
       const curGY = getTerrainHeight(andikaModel.root.position.x, andikaModel.root.position.z);
-      andikaModel.root.position.y = curGY + 0.10 + Math.sin(t * 1.8) * 0.008;
+      andikaModel.root.position.y = curGY + 0.08 + Math.sin(t * 1.8) * 0.008;
       const targetAngle = Math.atan2(dx, dz);
       andikaModel.root.rotation.y = THREE.MathUtils.lerp(
         andikaModel.root.rotation.y,
@@ -507,9 +553,8 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
       walkCadence = THREE.MathUtils.lerp(walkCadence, 0, 0.1);
     }
   } else {
-    // Hold position mode: stays in place, breathing on terrain height
     const curGY = getTerrainHeight(andikaModel.root.position.x, andikaModel.root.position.z);
-    andikaModel.root.position.y = curGY + 0.10 + Math.sin(t * 1.8) * 0.008;
+    andikaModel.root.position.y = curGY + 0.08 + Math.sin(t * 1.8) * 0.008;
     const targetAngle = Math.atan2(dx, dz);
     andikaModel.root.rotation.y = THREE.MathUtils.lerp(
       andikaModel.root.rotation.y,
@@ -519,43 +564,84 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
     walkCadence = THREE.MathUtils.lerp(walkCadence, 0, 0.1);
   }
 
-  // 2. Combat Defense (Kristin shoots and protects player from nearby zombies)
+  // 2. COMBAT SHOOTING DEFENSE (Agent actively shoots and protects player from zombies!)
   if (zombies && zombies.length > 0) {
-    let nearestZ = null;
-    let minZDist = 7.5;
+    let targetZombie = null;
+    let minThreatScore = 20.0; // Tactical shooting range up to 20m
+
     for (let i = 0; i < zombies.length; i++) {
       const z = zombies[i];
       if (!z.isDead && z.hp > 0) {
-        const d = Math.hypot(z.x - andikaModel.root.position.x, z.z - andikaModel.root.position.z);
-        if (d < minZDist) {
-          minZDist = d;
-          nearestZ = z;
+        const dToPlayer = Math.hypot(z.x - targetX, z.z - targetZ);
+        const dToAgent = Math.hypot(z.x - andikaModel.root.position.x, z.z - andikaModel.root.position.z);
+        if (dToAgent < 20.0) {
+          // Prioritize zombies threatening the player
+          const threat = dToAgent + (dToPlayer < 7.0 ? -6.0 : 0.0);
+          if (threat < minThreatScore) {
+            minThreatScore = threat;
+            targetZombie = z;
+          }
         }
       }
     }
 
-    if (nearestZ && now > combatShootCooldown) {
-      combatShootCooldown = now + 2400; // Shotgun firing cooldown
-      const aimAngle = Math.atan2(nearestZ.x - andikaModel.root.position.x, nearestZ.z - andikaModel.root.position.z);
+    if (targetZombie && now > combatShootCooldown) {
+      combatShootCooldown = now + 1800 + Math.random() * 500; // 1.8s - 2.3s shooting cadence
+      const aimAngle = Math.atan2(targetZombie.x - andikaModel.root.position.x, targetZombie.z - andikaModel.root.position.z);
       andikaModel.root.rotation.y = aimAngle;
 
       triggerAndikaGesture('pump', Sfx);
-      nearestZ.hp -= 45;
-      if (Sfx && Sfx.playShotgun) Sfx.playShotgun();
 
-      // Show combat shout
-      const shouts = [
-        "Mampus lu monster!",
-        "Gua tembak yang di situ, awas!",
-        "Jangan deket-deket teman gua!",
-        "Rasain timah panas!"
-      ];
-      const shoutText = shouts[Math.floor(Math.random() * shouts.length)];
-      showDialogSubtitle(shoutText, 2500);
+      // Visual muzzle flash and bullet tracer beam
+      spawnAgentShotTracer(andikaModel, targetZombie);
+
+      // Deal high-impact shotgun damage
+      const damage = 55 + Math.floor(Math.random() * 25); // 55-80 damage per shot
+      targetZombie.hp -= damage;
+
+      if (Sfx && Sfx.playShotgun) Sfx.playShotgun();
+      if (Sfx && Sfx.playPumpRack) {
+        setTimeout(() => Sfx.playPumpRack(), 650);
+      }
+
+      // Spawn blood impact
+      if (targetZombie.mesh) {
+        createAirborneBloodDrop(targetZombie.mesh.position);
+      }
+
+      // Check kill
+      if (targetZombie.hp <= 0 && !targetZombie.isDead) {
+        const shotDist = Math.hypot(targetZombie.x - andikaModel.root.position.x, targetZombie.z - andikaModel.root.position.z);
+        const shotDir = new THREE.Vector3(
+          targetZombie.x - andikaModel.root.position.x,
+          0,
+          targetZombie.z - andikaModel.root.position.z
+        ).normalize();
+
+        killZombieWithKinematics(targetZombie, shotDir, shotDist, true, state, () => updateHUD(state), nextWave);
+        spawnBloodPoolOnSnow(targetZombie.x, targetZombie.z, 0.9);
+
+        const killShouts = [
+          "Target dilumpuhkan! Area ini aman!",
+          "Headshot! Satu monster lagi tumbang!",
+          "Mampus lu monster! Maju terus bro!",
+          "Beres! Jangan kasih kendor!",
+          "Satu lagi musnah! Tetap di samping gua!"
+        ];
+        showDialogSubtitle(killShouts[Math.floor(Math.random() * killShouts.length)], 2800);
+      } else {
+        const shootShouts = [
+          "Gua tembak yang di situ, awas!",
+          "Covering fire! Mundur dikit biar gua habisi!",
+          "Tembak bareng-bareng bro!",
+          "Kena telak! Hajar lagi!"
+        ];
+        showDialogSubtitle(shootShouts[Math.floor(Math.random() * shootShouts.length)], 2200);
+      }
     }
   }
 
-  // Dynamic Initial Greeting (plays greeting subtitle once when first meeting)
+  // Initial greeting
   if (!hasAutoGreeted && distToPlayer < 4.4) {
     hasAutoGreeted = true;
     triggerAndikaGesture('wave', Sfx);
@@ -568,7 +654,6 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
     const weights = andikaModel.vertexWeights;
     const posArr = andikaModel.charMesh.geometry.attributes.position.array;
 
-    // Base Rotations
     let h_rx = 0, h_ry = 0, h_rz = 0;
     let la_rx = 0, la_ry = 0, la_rz = 0;
     let ra_rx = 0, ra_ry = 0, ra_rz = 0;
@@ -576,40 +661,39 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
     let ll_rx = 0, ll_ry = 0, ll_rz = 0;
     let rl_rx = 0, rl_ry = 0, rl_rz = 0;
 
-    // Alive Idle Motion Control
+    // Alive Idle Motion
     const breath = Math.sin(t * 1.8);
-    t_rx += breath * 0.016; // Breathing chest
-    t_rz += Math.sin(t * 0.9) * 0.02; // Weight shift between feet
+    t_rx += breath * 0.016;
+    t_rz += Math.sin(t * 0.9) * 0.02;
     ra_rx += breath * 0.01;
     la_rx += breath * 0.01;
 
-    // Realistic Walking & Running Leg/Arm Strides
+    // Walking / Running Strides
     if (isWalking) {
-      const strideAmp = isSprinting ? 0.75 : 0.55;
+      const strideAmp = isSprinting ? 0.70 : 0.50;
       ll_rx += Math.sin(walkCadence) * strideAmp;
       rl_rx += -Math.sin(walkCadence) * strideAmp;
 
-      // Natural opposing arm swing
-      la_rx += -Math.sin(walkCadence) * 0.42;
-      ra_rx += Math.sin(walkCadence) * 0.14;
-      t_ry += Math.sin(walkCadence) * 0.08;
-      t_rz += -Math.sin(walkCadence) * 0.03;
+      la_rx += -Math.sin(walkCadence) * 0.38;
+      ra_rx += Math.sin(walkCadence) * 0.12;
+      t_ry += Math.sin(walkCadence) * 0.06;
+      t_rz += -Math.sin(walkCadence) * 0.025;
     }
 
-    // Head Tracking towards camera / player
+    // Head Tracking towards player
     if (distToPlayer < 7.0) {
-      const headWorldY = andikaModel.root.position.y + 1.45 * NPC_SCALE;
-      const dx = camera.position.x - andikaModel.root.position.x;
-      const dy = camera.position.y - headWorldY;
-      const dz = camera.position.z - andikaModel.root.position.z;
+      const headWorldY = andikaModel.root.position.y + 1.48 * NPC_SCALE;
+      const tdx = camera.position.x - andikaModel.root.position.x;
+      const tdy = camera.position.y - headWorldY;
+      const tdz = camera.position.z - andikaModel.root.position.z;
 
-      const worldAngle = Math.atan2(dx, dz);
+      const worldAngle = Math.atan2(tdx, tdz);
       const charAngle = andikaModel.root.rotation.y;
       let relYaw = THREE.MathUtils.euclideanModulo(worldAngle - charAngle + Math.PI, Math.PI * 2) - Math.PI;
       relYaw = Math.max(-0.6, Math.min(0.6, relYaw));
 
-      const hDist = Math.hypot(dx, dz);
-      let relPitch = -Math.atan2(dy, hDist);
+      const hDist = Math.hypot(tdx, tdz);
+      let relPitch = -Math.atan2(tdy, hDist);
       relPitch = Math.max(-0.4, Math.min(0.4, relPitch));
 
       headYaw = THREE.MathUtils.lerp(headYaw, relYaw, 0.12);
@@ -617,7 +701,6 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
       h_ry += headYaw;
       h_rx += headPitch;
     } else {
-      // Idle survey head motion
       headYaw = THREE.MathUtils.lerp(headYaw, Math.sin(t * 0.7) * 0.18, 0.05);
       headPitch = THREE.MathUtils.lerp(headPitch, 0, 0.05);
       h_ry += headYaw;
@@ -628,42 +711,35 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
     const gTime = (now - gestureStartTime) * 0.001;
     if (gTime < gestureDuration && currentGesture !== 'idle') {
       const gProg = gTime / gestureDuration;
-      const blend = Math.sin(gProg * Math.PI); // Smooth ease-in & ease-out
+      const blend = Math.sin(gProg * Math.PI);
 
       if (currentGesture === 'wave') {
-        // High enthusiastic waving left arm
         la_rx += -1.30 * blend;
         la_rz += (0.65 + Math.sin(gTime * 14) * 0.45) * blend;
         la_ry += 0.25 * blend;
         h_rz += Math.sin(gTime * 7) * 0.14 * blend;
         h_rx += 0.08 * blend;
       } else if (currentGesture === 'pump') {
-        // Aggressive forward combat stance
+        // Combat shotgun firing stance
         t_rx += 0.20 * blend;
         t_rz += -0.04 * blend;
-        // Raise shotgun to chest height
         ra_rx += -0.52 * blend;
         ra_rz += -0.16 * blend;
         const pumpSlide = Math.sin(gTime * 8);
         ra_ry += pumpSlide * 0.14 * blend;
-        // Support arm
         la_rx += -0.45 * blend;
         la_rz += -0.22 * blend;
         h_rx += (0.16 + Math.sin(gTime * 6) * 0.08) * blend;
-        // Animate mini pump slide mesh if active
         if (andikaModel.miniPump && andikaModel.miniPump.pumpSlideMesh) {
           andikaModel.miniPump.pumpSlideMesh.position.z = 0.20 + pumpSlide * 0.05 * blend;
         }
       } else if (currentGesture === 'cheer') {
-        // Thumbs up / salute forward
         la_rx += -0.80 * blend;
         la_rz += (0.38 + Math.sin(gTime * 8) * 0.12) * blend;
         la_ry += -0.35 * blend;
         t_rz += -0.06 * blend;
-        // Proud head nod
         h_rx += Math.sin(gTime * 9) * 0.18 * blend;
       } else if (currentGesture === 'beckon') {
-        // Beckoning sweep towards ammo crate
         la_rx += (-0.65 + Math.sin(gTime * 6) * 0.22) * blend;
         la_rz += (-0.32 + Math.sin(gTime * 8) * 0.32) * blend;
         la_ry += 0.45 * blend;
@@ -674,15 +750,14 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
       currentGesture = 'idle';
     }
 
-    // Build transformation rotators with exact body joint pivots
-    const rotHead = makeRotator(h_rx, h_ry, h_rz, 0, 1.35, 0);
-    const rotLArm = makeRotator(la_rx, la_ry, la_rz, -0.32, 1.25, 0);
-    const rotRArm = makeRotator(ra_rx, ra_ry, ra_rz, 0.32, 1.25, 0);
+    // Joint Rotators
+    const rotHead = makeRotator(h_rx, h_ry, h_rz, 0, 1.38, 0);
+    const rotLArm = makeRotator(la_rx, la_ry, la_rz, -0.16, 1.32, 0);
+    const rotRArm = makeRotator(ra_rx, ra_ry, ra_rz, 0.16, 1.32, 0);
     const rotTorso = makeRotator(t_rx, t_ry, t_rz, 0, 0.85, 0);
-    const rotLLeg = makeRotator(ll_rx, ll_ry, ll_rz, -0.12, 0.82, 0);
-    const rotRLeg = makeRotator(rl_rx, rl_ry, rl_rz, 0.12, 0.82, 0);
+    const rotLLeg = makeRotator(ll_rx, ll_ry, ll_rz, -0.09, 0.70, 0);
+    const rotRLeg = makeRotator(rl_rx, rl_ry, rl_rz, 0.09, 0.70, 0);
 
-    // Apply vertex deformation smoothly across all 3372 vertices
     for (let i = 0; i < vCount; i++) {
       const idx6 = i * 6;
       const wHead = weights[idx6];
@@ -743,7 +818,7 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
     andikaModel.charMesh.geometry.attributes.position.needsUpdate = true;
 
     // Attach weapon socket seamlessly to transformed right hand
-    const [rhX, rhY, rhZ] = rotRArm(0.46, 0.98, 0.04);
+    const [rhX, rhY, rhZ] = rotRArm(0.31, 0.88, 0.05);
     const [finX, finY, finZ] = rotTorso(rhX, rhY, rhZ);
     andikaModel.weaponSocket.position.set(finX, finY, finZ);
     andikaModel.weaponSocket.rotation.x = -Math.PI / 2.7 + ra_rx * 0.9 + t_rx * 0.5;
