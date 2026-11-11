@@ -73,6 +73,10 @@ import {
   updateAndikaCompanion
 } from './entities/kristin.js';
 import {
+  initNataliaAgent,
+  updateNataliaAgent
+} from './entities/natalia.js';
+import {
   state,
   keys,
   touchMove,
@@ -201,8 +205,11 @@ function updateSimulation(dt) {
     weaponHolder.visible = (cameraMode === 'fps');
   }
 
-  // 2. Andika Companion NPC update (Follows Player & Combat Support)
+  // 2. Kristin Companion NPC update (Follows Player & Support)
   updateAndikaCompanion(camera, Sfx, dt);
+
+  // 2b. Agent Natalia Combat Companion update (Flanking, Combat Defense & Shotgun Shooting)
+  updateNataliaAgent(camera, Sfx, dt);
 
   // 3. Check house pickups
   checkHousePickups(playerPos, state, () => updateHUD(state));
@@ -941,6 +948,7 @@ function init() {
   preloadVictorianBrideModel(scene);
   preloadZombieGLBModels(scene);
   initAndikaCompanion(scene, textures);
+  initNataliaAgent(scene, textures);
   initPlayer(camera, scene);
   setupPlayerControls();
   initTouchControls();

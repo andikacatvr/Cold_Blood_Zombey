@@ -47,6 +47,7 @@ import {
 import { updateHUD, showLifeLostAlert, triggerGameOver } from '../ui/hud.js';
 import { openSettings, closeSettings, isSettingsOpen } from '../ui/settingsMenu.js';
 import { triggerAndikaGesture, toggleCompanionFollow, andikaModel } from '../entities/kristin.js';
+import { triggerNataliaGesture, toggleNataliaFollow, nataliaModel } from '../entities/natalia.js';
 import { startIntroCutscene, isCinematicActive } from './cutscene.js';
 import { updateTouchControlsVisibility } from '../ui/touchControls.js';
 import {
@@ -609,18 +610,26 @@ export function setupPlayerControls() {
       triggerPlayerJump();
     }
     if (c === 'KeyR') reloadWeapon();
-    if (c === 'KeyT') toggleCompanionFollow();
+    if (c === 'KeyT') {
+      toggleCompanionFollow();
+      toggleNataliaFollow();
+    }
     if (c === 'KeyC') {
       const mode = toggleCameraMode();
       if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(mode === 'tps' ? 2800 : 1800, 0.4);
     }
     if (c === 'KeyE') {
-      if (andikaModel) {
-        const dist = playerPos.distanceTo(andikaModel.root.position);
-        if (dist < 6.5) {
+      if (nataliaModel && andikaModel) {
+        const dNatalia = playerPos.distanceTo(nataliaModel.root.position);
+        const dKristin = playerPos.distanceTo(andikaModel.root.position);
+        if (dNatalia < 6.5 && dNatalia <= dKristin) {
+          triggerNataliaGesture();
+        } else if (dKristin < 6.5) {
           triggerAndikaGesture();
         }
-      } else {
+      } else if (nataliaModel && playerPos.distanceTo(nataliaModel.root.position) < 6.5) {
+        triggerNataliaGesture();
+      } else if (andikaModel && playerPos.distanceTo(andikaModel.root.position) < 6.5) {
         triggerAndikaGesture();
       }
     }
