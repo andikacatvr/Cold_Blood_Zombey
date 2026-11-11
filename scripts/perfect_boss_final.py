@@ -4,12 +4,14 @@ from PIL import Image
 import trimesh
 import os
 
-print("=== REBUILDING 1:1 REPLICA OF BOSSGAME.PNG - PERFECT SHOULDERS, BARE ARMS & DETAILED BACK ===")
+print("=== REBUILDING 1:1 REPLICA OF BOSSGAMEREV.PNG - HALTER GOWN, CONNECTED SHOULDERS & REAL TEXTURE ===")
 
-# 1. Load source image
-src_bgr = cv2.imread('bossgame.png')
+# 1. Load source image: use bossgamerev.png!
+src_bgr = cv2.imread('bossgamerev.png')
 if src_bgr is None:
-    raise FileNotFoundError("bossgame.png not found!")
+    src_bgr = cv2.imread('bossgame.png')
+if src_bgr is None:
+    raise FileNotFoundError("bossgamerev.png or bossgame.png not found!")
 
 diff = np.abs(src_bgr.astype(float) - [253, 253, 253]).sum(axis=2)
 mask = (diff > 16).astype(np.uint8) * 255
@@ -88,14 +90,12 @@ for y in range(y_neck_px):
         base_col = np.array([24, 30, 42], dtype=np.int16) + strand_noise + bun_high
         back_resized[y, x] = np.clip(base_col, 16, 75).astype(np.uint8)
 
-# 2. Porcelain fair skin on low-cut back (Y_src: 260 to 380)
-y_strapless_back = int((380 - ymin) / bbox_h * target_h)
-for y in range(y_neck_px, y_strapless_back):
+# 2. Porcelain fair skin on low-cut back (Y_src: 260 to 320 for high halter back)
+y_halter_back = int((320 - ymin) / bbox_h * target_h)
+for y in range(y_neck_px, y_halter_back):
     for x in range(target_w):
         dx = (x - target_w // 2)
-        # Spine furrow shading down the center
         spine_shade = -int(14.0 * np.exp(-((dx / 10.0)**2)))
-        # Scapulae highlights
         scapula_high = int(9.0 * np.exp(-(((abs(dx) - 36) / 16.0)**2)))
         skin_val = np.array([115, 140, 190], dtype=np.int16) + spine_shade + scapula_high
         back_resized[y, x] = np.clip(skin_val, 80, 215).astype(np.uint8)
@@ -108,9 +108,9 @@ for dx in range(-42, 43, 4):
     back_resized[py-1:py+2, px-1:px+2] = [252, 252, 255] # pearl highlight
     back_resized[py+2, px] = [160, 165, 180] # subtle drop shadow
 
-# 4. Gown back with spine corset seam (Y_src: 380 to 1420)
+# 4. Gown back with spine corset seam (Y_src: 320 to 1420)
 y_dress_end = int((1420 - ymin) / bbox_h * target_h)
-for y in range(y_strapless_back, y_dress_end):
+for y in range(y_halter_back, y_dress_end):
     row_m = mask_resized[y] > 0
     if np.any(row_m):
         mid_x = target_w // 2
