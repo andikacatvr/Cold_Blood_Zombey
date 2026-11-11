@@ -144,59 +144,56 @@ atlas_back_w = 480
 x_b_start = 520
 back_atlas = front_atlas.copy()
 
-# Back hair: Authentic Victorian bridal hair using genuine photographic hair texture from bossgamerev.png
-y_neck_atlas = int((260 - crop_ymin) / crop_h * atlas_front_h)
-
-# Sample authentic hair texture from bossgamerev.png
-hair_source = src_bgr[30:95, 435:590].copy()
-bg_h = (hair_source[:, :, 0] > 200) & (hair_source[:, :, 1] > 200) & (hair_source[:, :, 2] > 200)
-hair_source[bg_h] = [18, 22, 26]
-
-# Seamlessly tile and mirror horizontally for natural flow
-hair_tile = np.hstack([hair_source, cv2.flip(hair_source, 1)])
-hair_base = cv2.resize(hair_tile, (atlas_back_w, y_neck_atlas), interpolation=cv2.INTER_LINEAR).astype(np.float32)
-
+# Back hair: Rich Victorian cascading dark brunette hair down to the gown neckline (eliminates empty neck & V-seam)
+y_hair_end_atlas = int((315 - crop_ymin) / crop_h * atlas_front_h)
 cx = atlas_back_w // 2
-cy = int(y_neck_atlas * 0.42)
 
-for y in range(y_neck_atlas):
-    dy = y - cy
+for y in range(y_hair_end_atlas):
+    t_len = y / float(y_hair_end_atlas)
+    t_neck = max(0.0, (y - 75) / float(y_hair_end_atlas - 75)) # 0 at head crown, 1 at collar
+    
     for x in range(atlas_back_w):
         dx = x - cx
-        dist = np.sqrt(dx**2 + (dy * 1.3)**2)
         
-        # Subtle combed vertical hair strands (fine, natural, low contrast)
-        strand = 3.5 * np.sin(x * 0.8 + np.sin(y * 0.1) * 1.5)
-        micro_grain = 2.0 * np.sin(x * 2.1) * np.cos(y * 1.8)
+        # Base dark espresso brunette tones matching original art
+        base_b = 20.0
+        base_g = 24.0
+        base_r = 29.0
         
-        # Soft volume shading for bun (gentle 3D curvature, NO spiral)
-        bun_dome = np.exp(-((dist / 70.0)**2)) * 7.0
-        bun_under_shadow = -5.0 * np.exp(-(((dy - 40.0)/20.0)**2)) if dy > 0 else 0.0
+        # 1. Cascading vertical hair strands flowing seamlessly down the head and neck
+        flow_x = dx * (1.0 - 0.22 * t_neck)
+        strand1 = 4.5 * np.sin(flow_x * 0.42 + np.sin(y * 0.07) * 2.2)
+        strand2 = 3.0 * np.sin(flow_x * 0.90 + y * 0.14)
+        fine_strands = 2.0 * np.cos(x * 1.85 + y * 0.35)
+        micro_grain = 1.6 * np.sin(x * 3.1) * np.cos(y * 2.5)
         
-        hair_base[y, x] += strand + micro_grain + bun_dome + bun_under_shadow
+        # 2. Natural 3D Volume Shading:
+        # Cranium / bun volume dome highlight (around y=45 to 75)
+        dome_dist = np.sqrt((dx * 0.75)**2 + (y - 65)**2)
+        crown_sheen = 8.5 * np.exp(-((dome_dist / 60.0)**2))
+        
+        # Neck curvature: soft central highlight along the cylindrical neck curve
+        neck_high = 5.0 * np.exp(-((dx / 45.0)**2)) * t_neck
+        
+        # Edge shading towards outer silhouette
+        edge_shade = -6.5 * (abs(dx) / (atlas_back_w * 0.5))**2
+        
+        # Soft Victorian wave
+        hair_wave = 2.5 * np.sin(y * 0.16 + np.cos(dx * 0.05) * 1.8)
+        
+        val = strand1 + strand2 + fine_strands + micro_grain + crown_sheen + neck_high + edge_shade + hair_wave
+        
+        b = np.clip(base_b + val * 0.85, 12, 58)
+        g = np.clip(base_g + val * 0.92, 15, 68)
+        r = np.clip(base_r + val * 1.00, 18, 78)
+        
+        back_atlas[y, x] = [int(b), int(g), int(r)]
 
-# Soft blend into porcelain neck skin at the bottom nape (tengkuk)
-for y in range(y_neck_atlas - 20, y_neck_atlas):
-    t = (y - (y_neck_atlas - 20)) / 20.0
-    skin = np.array([115.0, 140.0, 190.0], dtype=np.float32)
-    hair_base[y, :] = hair_base[y, :] * (1.0 - t) + skin * t
-
-# Clip hair area to natural dark values, allowing skin to reach bright tones
-for y in range(y_neck_atlas):
-    if y < y_neck_atlas - 20:
-        back_atlas[y, :] = np.clip(hair_base[y, :], 12, 60).astype(np.uint8)
-    else:
-        back_atlas[y, :] = np.clip(hair_base[y, :], 12, 220).astype(np.uint8)
-
-# Low-cut Halter Back (skin): Y=260 to 330
-y_halter_back = int((330 - crop_ymin) / crop_h * atlas_front_h)
-for y in range(y_neck_atlas, y_halter_back):
-    for x in range(atlas_back_w):
-        dx = abs(x - atlas_back_w // 2)
-        spine_shade = -int(12.0 * np.exp(-((dx / 8.0)**2)))
-        scapula_high = int(8.0 * np.exp(-(((dx - 45) / 18.0)**2)))
-        skin_val = np.array([115, 140, 190], dtype=np.int16) + spine_shade + scapula_high
-        back_atlas[y, x] = np.clip(skin_val, 0, 255).astype(np.uint8)
+# Soft transition into white bridal gown at the neckline
+for y in range(y_hair_end_atlas - 6, y_hair_end_atlas):
+    t_fade = (y - (y_hair_end_atlas - 6)) / 6.0
+    gown_tone = back_atlas[y, :].astype(np.float32) * (1.0 - t_fade) + front_atlas[y, :].astype(np.float32) * t_fade
+    back_atlas[y, :] = np.clip(gown_tone, 0, 255).astype(np.uint8)
 
 atlas[y_start:y_start+atlas_front_h, x_b_start:x_b_start+atlas_back_w] = back_atlas
 atlas_rgb = cv2.cvtColor(atlas, cv2.COLOR_BGR2RGB)
