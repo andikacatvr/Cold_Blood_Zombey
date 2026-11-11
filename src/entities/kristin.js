@@ -336,7 +336,7 @@ export function buildAndikaCharacter(textures) {
 
       charScene.position.set(0, 0, 0);
       root.add(charScene);
-      console.log('★ Kristin PS2 Character Asset loaded with Kinematic Rigging!');
+      console.log('[COMPANION] Kristin PS2 Character Asset loaded with Kinematic Rigging!');
     },
     undefined,
     (err) => {

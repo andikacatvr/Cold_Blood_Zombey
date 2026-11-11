@@ -636,14 +636,14 @@ export function preloadNonaBataviaModel(scene) {
           }
         }
       });
-      console.log('★ Nona Batavia 3D Model preloaded successfully!');
+      console.log('Nona Batavia 3D Model preloaded successfully!');
     },
     undefined,
     (err) => {
       console.warn('Retrying Nona Batavia load from fallback:', err);
       loader.load('/models/lady_mithrill.glb', (gltf) => {
         ladyMithrillTemplate = gltf.scene;
-        console.log('★ Nona Batavia loaded from fallback!');
+        console.log('Nona Batavia loaded from fallback!');
       });
     }
   );
@@ -716,7 +716,7 @@ export function preloadVictorianBrideModel(scene) {
           }
         }
       });
-      console.log('★ Victorian Bride 3D Model preloaded successfully!');
+      console.log('Victorian Bride 3D Model preloaded successfully!');
     },
     undefined,
     (err) => {
@@ -1061,7 +1061,7 @@ export function killZombieWithKinematics(z, shotDir, hitDistance, isHeadshot, st
   const milestone = Math.floor(state.kills / 50) * 50;
   if (milestone >= 50 && milestone > (state.lastLadyMithrillKills || 0)) {
     state.lastLadyMithrillKills = milestone;
-    console.log(`★ Nona Batavia Milestone Reached: ${state.kills} Kills! Spawning aerial boss...`);
+    console.log(`[BOSS] Nona Batavia Milestone Reached: ${state.kills} Kills! Spawning aerial boss...`);
     setTimeout(() => {
       if (state && state.running) {
         spawnNonaBataviaBoss(state);
