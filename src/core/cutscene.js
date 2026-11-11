@@ -201,11 +201,6 @@ export function startIntroCutscene(camera, sfx, onComplete) {
     overlay.style.opacity = '1';
   }
 
-  const locEl = document.getElementById('cinematic-location');
-  if (locEl) {
-    locEl.innerHTML = '23:45 WIB &bull; EKSPEDISI RISET MAHASISWA &bull; ZONA SIHIR GELAP MORBIDA';
-  }
-
   // Hide HUD while in cutscene
   const hud = document.getElementById('hud');
   if (hud) hud.style.display = 'none';
@@ -257,12 +252,6 @@ export function startNonaBataviaCutscene(bossZombie, camera, sfx, onComplete) {
   if (overlay) {
     overlay.style.display = 'block';
     overlay.style.opacity = '1';
-  }
-
-  // Update location banner for ghost boss arrival
-  const locEl = document.getElementById('cinematic-location');
-  if (locEl) {
-    locEl.innerHTML = '<span style="color:#ffd15c; font-weight:bold;">⚠ ANOMALI GAIB</span> &bull; NONA BATAVIA BANGKIT';
   }
 
   // Hide HUD & reticle
@@ -382,10 +371,6 @@ export function finishNonaBataviaCutscene() {
     overlay.style.opacity = '0';
     setTimeout(() => {
       overlay.style.display = 'none';
-      const locEl = document.getElementById('cinematic-location');
-      if (locEl) {
-        locEl.innerHTML = '21:45 WIB &bull; BELANTARA HUTAN SALJU MORBIDA';
-      }
     }, 400);
   }
 
