@@ -67,6 +67,7 @@ import {
   preloadNonaBataviaModel,
   preloadLadyMithrillModel,
   preloadVictorianBrideModel,
+  preloadZombieGLBModels,
   castCurseBloodOrb,
   killZombieWithKinematics,
   buildLeft4DeadInfected
@@ -962,6 +963,7 @@ function init() {
   initEnemies(scene, camera);
   preloadNonaBataviaModel(scene);
   preloadVictorianBrideModel(scene);
+  preloadZombieGLBModels(scene);
   initAndikaCompanion(scene, textures);
   initPlayer(camera, scene);
   setupPlayerControls();

@@ -753,6 +753,21 @@ const THREE = window.THREE;
     const l4dNecroticSkinTex = createProceduralTexture('l4d_necrotic_skin');
     const l4dClawsTex = createProceduralTexture('l4d_bloody_claws');
 
+    // Realistic Zombie Face Textures from User Photos (High-Res 512x512)
+    const texLoader = new THREE.TextureLoader();
+    const faceFemaleShaggyTex = texLoader.load('/textures/zombies/face_female_shaggy.jpg');
+    const faceMaleTiredTex = texLoader.load('/textures/zombies/face_male_tired.jpg');
+    const faceMaleFadeTex = texLoader.load('/textures/zombies/face_male_fade.jpg');
+    const faceFemaleSleekTex = texLoader.load('/textures/zombies/face_female_sleek.jpg');
+
+    [faceFemaleShaggyTex, faceMaleTiredTex, faceMaleFadeTex, faceFemaleSleekTex].forEach(t => {
+      if (t) {
+        t.minFilter = THREE.LinearMipmapLinearFilter;
+        t.magFilter = THREE.LinearFilter;
+        t.generateMipmaps = true;
+      }
+    });
+
     // ANDIKA (Def Jam PS2 Character) Textures
     const andikaSweaterTex = createProceduralTexture('andika_sweater');
     andikaSweaterTex.wrapS = THREE.RepeatWrapping;
@@ -844,8 +859,12 @@ export const textures = {
   drainGrateTex,
   storefrontBrickTex,
   awningFabricTex,
-  concreteCurbTex
+  concreteCurbTex,
+  faceFemaleShaggyTex,
+  faceMaleTiredTex,
+  faceMaleFadeTex,
+  faceFemaleSleekTex
 };
 
-export { createProceduralTexture, snowTex, asphaltRoadTex, riverWaterTex, waterfallTex, waterfallMistTex, topStreamTex, crestFoamTex, chainlinkTex, bloodSnowTex, bloodDripTex, houseWallTex, woodPlanksTex, brickHearthTex, creamCabinTex, creamBarnTex, creamStoneTex, nunFaceTex, l4dFlannelTex, l4dHoodieTex, l4dPatientTex, l4dBruiserTex, l4dDenimTex, l4dDarkPantsTex, l4dFaceTex, l4dNecroticSkinTex, l4dClawsTex, andikaSweaterTex, andikaCargoTex, andikaFaceTex, andikaSneakerTex, katzSignTex, martinSignTex, parkingSignTex, drainGrateTex, storefrontBrickTex, awningFabricTex, concreteCurbTex };
+export { createProceduralTexture, snowTex, asphaltRoadTex, riverWaterTex, waterfallTex, waterfallMistTex, topStreamTex, crestFoamTex, chainlinkTex, bloodSnowTex, bloodDripTex, houseWallTex, woodPlanksTex, brickHearthTex, creamCabinTex, creamBarnTex, creamStoneTex, nunFaceTex, l4dFlannelTex, l4dHoodieTex, l4dPatientTex, l4dBruiserTex, l4dDenimTex, l4dDarkPantsTex, l4dFaceTex, l4dNecroticSkinTex, l4dClawsTex, andikaSweaterTex, andikaCargoTex, andikaFaceTex, andikaSneakerTex, katzSignTex, martinSignTex, parkingSignTex, drainGrateTex, storefrontBrickTex, awningFabricTex, concreteCurbTex, faceFemaleShaggyTex, faceMaleTiredTex, faceMaleFadeTex, faceFemaleSleekTex };
 
