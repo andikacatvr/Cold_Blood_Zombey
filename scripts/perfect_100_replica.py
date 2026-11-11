@@ -373,7 +373,122 @@ for y_px, zc, rx, rz_f, rz_b in head_steps_cfg:
 # Smooth skull cap at top bun apex (fully closed, seamless neck junction down to Y=305)
 add_smooth_column(head_rf, head_rb, cap_top=True, cap_bottom=False, top_dome=False)
 
-# 10. BUILD BODY & GOWN (Y: 305 to 1480)
+# 9. BUILD 3D HAIR TENDRILS (WISPY SIDE CURLS BESIDE CHEEKS)
+print("2. Modeling 3D Hair Tendrils beside Cheeks...")
+
+def get_face_surface_z(y_px, xw):
+    y_vals = [h[0] for h in head_steps_cfg]
+    for i in range(len(y_vals) - 1):
+        if y_vals[i] <= y_px <= y_vals[i+1]:
+            t = (y_px - y_vals[i]) / float(y_vals[i+1] - y_vals[i])
+            zc = head_steps_cfg[i][1] * (1 - t) + head_steps_cfg[i+1][1] * t
+            rx = head_steps_cfg[i][2] * (1 - t) + head_steps_cfg[i+1][2] * t
+            rz_f = head_steps_cfg[i][3] * (1 - t) + head_steps_cfg[i+1][3] * t
+            sin_th = np.clip(xw / rx, -0.98, 0.98)
+            cos_th = np.sqrt(max(0.0, 1.0 - sin_th**2))
+            vz = zc + rz_f * cos_th
+            return vz
+    return 0.050
+
+def build_tendril(cfg, is_right=False):
+    sign = 1.0 if is_right else -1.0
+    front_verts = []
+    back_verts = []
+    
+    phi = 0.35 if is_right else -0.35
+    tx = np.cos(phi)
+    tz = -np.sin(phi)
+    nx = np.sin(phi)
+    nz = np.cos(phi)
+    
+    for y_px, cx_px, w_px, z_offset in cfg:
+        norm_y = 1.0 - (y_px - ymin) / float(ymax - ymin)
+        yw = norm_y * world_height
+        xw = (cx_px - center_x) * scale_x
+        
+        surf_z = get_face_surface_z(y_px, xw)
+        if y_px >= 235:
+            surf_z = max(surf_z, 0.058)
+        zw = surf_z + z_offset
+        
+        rw = (w_px * 0.5) * scale_x
+        vx_out = xw - sign * tx * rw
+        vz_out = zw - sign * tz * rw
+        vx_in = xw + sign * tx * rw
+        vz_in = zw + sign * tz * rw
+        
+        orig_x_out = cx_px - sign * (w_px * 0.5)
+        orig_x_in  = cx_px + sign * (w_px * 0.5)
+        
+        # Front vertices (authentic hair texture from bossgamerev.png)
+        idx_f_out = len(all_vertices)
+        all_vertices.append([vx_out, yw, vz_out])
+        all_uvs.append(get_uv_front(orig_x_out, y_px))
+        all_normals.append([nx, 0.0, nz])
+        
+        idx_f_in = len(all_vertices)
+        all_vertices.append([vx_in, yw, vz_in])
+        all_uvs.append(get_uv_front(orig_x_in, y_px))
+        all_normals.append([nx, 0.0, nz])
+        
+        front_verts.append((idx_f_out, idx_f_in))
+        
+        # Back vertices (dark espresso hair texture, pointing backward)
+        idx_b_out = len(all_vertices)
+        all_vertices.append([vx_out, yw, vz_out - 0.001])
+        all_uvs.append(get_uv_back(orig_x_out, y_px))
+        all_normals.append([-nx, 0.0, -nz])
+        
+        idx_b_in = len(all_vertices)
+        all_vertices.append([vx_in, yw, vz_in - 0.001])
+        all_uvs.append(get_uv_back(orig_x_in, y_px))
+        all_normals.append([-nx, 0.0, -nz])
+        
+        back_verts.append((idx_b_out, idx_b_in))
+        
+    for i in range(len(cfg) - 1):
+        fo0, fi0 = front_verts[i]
+        fo1, fi1 = front_verts[i+1]
+        if not is_right:
+            all_faces.append([fo0, fi0, fi1])
+            all_faces.append([fo0, fi1, fo1])
+        else:
+            all_faces.append([fi0, fo0, fo1])
+            all_faces.append([fi0, fo1, fi1])
+            
+        bo0, bi0 = back_verts[i]
+        bo1, bi1 = back_verts[i+1]
+        if not is_right:
+            all_faces.append([bo0, bi1, bi0])
+            all_faces.append([bo0, bo1, bi1])
+        else:
+            all_faces.append([bi0, bi1, bo1])
+            all_faces.append([bi0, bo1, bo0])
+
+# Viewer's left tendril (character's right cheek - matches user screenshot 1:1!)
+tendril_left_cfg = [
+    (135, 452, 22, 0.005),
+    (155, 451, 20, 0.006),
+    (175, 447, 16, 0.007),
+    (195, 452, 14, 0.007),
+    (215, 458, 12, 0.007),
+    (230, 450,  8, 0.006),
+    (245, 440,  4, 0.005),
+]
+build_tendril(tendril_left_cfg, is_right=False)
+
+# Viewer's right tendril (character's left cheek)
+tendril_right_cfg = [
+    (135, 571, 20, 0.005),
+    (155, 571, 18, 0.006),
+    (175, 573, 14, 0.006),
+    (195, 565, 10, 0.006),
+    (215, 562,  8, 0.006),
+    (230, 566,  5, 0.005),
+]
+build_tendril(tendril_right_cfg, is_right=True)
+
+# 10. BUILD BODY & GOWN (Y: 305 to 1425)
 print("3. Modeling Bodice & Flowing Halter Gown...")
 K_body = 12
 body_rf, body_rb = [], []
