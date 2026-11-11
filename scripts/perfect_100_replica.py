@@ -61,15 +61,28 @@ clean_front[fg_mask > 0] = src_bgr[fg_mask > 0]
 # Detect true non-white pixels (rejects anti-aliased white background fringe)
 is_true_fg = (src_bgr[:, :, 0] < 225) | (src_bgr[:, :, 1] < 220) | (src_bgr[:, :, 2] < 220)
 
+# Replace white earring patches under the ear with natural dark hair color (user request)
+hair_col = np.array([20, 24, 28], dtype=np.uint8)
+ear_mask = np.zeros((H, W), dtype=bool)
+ear_mask[165:255, 410:465] = True
+ear_mask[165:255, 555:605] = True
+is_white_ear = ear_mask & (src_bgr[:, :, 0] > 160) & (src_bgr[:, :, 1] > 160) & (src_bgr[:, :, 2] > 160)
+clean_front[is_white_ear] = hair_col
+
 for y in range(ymin, ymax + 1):
     xs = np.where(is_true_fg[y])[0]
     if len(xs) == 0:
         continue
     x_min, x_max = xs[0], xs[-1]
     
-    # Outer bleed using genuine edge color (guaranteed non-white)
-    clean_front[y, :x_min] = src_bgr[y, x_min]
-    clean_front[y, x_max+1:] = src_bgr[y, x_max]
+    if y <= 260:
+        # Head / ear region: outer bleed is always seamless dark hair
+        clean_front[y, :x_min] = hair_col
+        clean_front[y, x_max+1:] = hair_col
+    else:
+        # Outer bleed using genuine edge color (guaranteed non-white)
+        clean_front[y, :x_min] = src_bgr[y, x_min]
+        clean_front[y, x_max+1:] = src_bgr[y, x_max]
     
     # Fill internal gaps between segments (e.g. between arm and body)
     diffs = np.diff(xs)
