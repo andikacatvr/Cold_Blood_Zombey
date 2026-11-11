@@ -54,72 +54,29 @@ def analyze_row(y):
         
         return {'type': 'torso_arms', 'body': (l_body, r_body), 'left_arm': l_arm, 'right_arm': r_arm}
 
-# 4. Construct Clean Front Image with Seamless Bleed (NO WHITE BORDER ANYWHERE)
-# Start with foreground pixels only
+# 4. Construct Clean Front Image with Seamless Bleed (NO WHITE OR BLACK BORDERS)
 clean_front = np.zeros_like(src_bgr)
 clean_front[fg_mask > 0] = src_bgr[fg_mask > 0]
 
-# For rows with arms, fill the gap between arm and body with gown bleed & skin bleed
+# Full horizontal dilation on every row: extends skin/gown/hair seamlessly across canvas
 for y in range(ymin, ymax + 1):
-    info = analyze_row(y)
-    if info is None:
+    xs = np.where(fg_mask[y])[0]
+    if len(xs) == 0:
         continue
-    if info['type'] == 'torso_arms':
-        # Left gap
-        if info['left_arm'] is not None:
-            arm_r = info['left_arm'][1]
-            body_l = info['body'][0]
-            if body_l > arm_r + 1:
-                mid_gap = (arm_r + body_l) // 2
-                # Left half of gap: bleed arm skin
-                arm_col = clean_front[y, arm_r]
-                for x in range(arm_r + 1, mid_gap):
-                    clean_front[y, x] = arm_col
-                # Right half of gap: bleed body gown
-                body_col = clean_front[y, body_l]
-                for x in range(mid_gap, body_l):
-                    clean_front[y, x] = body_col
-            # Outer left of arm: bleed skin outward 15 px
-            arm_l = info['left_arm'][0]
-            col_l = clean_front[y, arm_l]
-            for x in range(max(0, arm_l - 15), arm_l):
-                clean_front[y, x] = col_l
-                
-        # Right gap
-        if info['right_arm'] is not None:
-            body_r = info['body'][1]
-            arm_l = info['right_arm'][0]
-            if arm_l > body_r + 1:
-                mid_gap = (body_r + arm_l) // 2
-                body_col = clean_front[y, body_r]
-                for x in range(body_r + 1, mid_gap):
-                    clean_front[y, x] = body_col
-                arm_col = clean_front[y, arm_l]
-                for x in range(mid_gap, arm_l):
-                    clean_front[y, x] = arm_col
-            # Outer right of arm: bleed skin outward 15 px
-            arm_r = info['right_arm'][1]
-            col_r = clean_front[y, arm_r]
-            for x in range(arm_r + 1, min(W, arm_r + 16)):
-                clean_front[y, x] = col_r
-    elif info['type'] == 'head_neck':
-        # Bleed hair/skin outward 15 px
-        x_min, x_max = info['min'], info['max']
-        c_min = clean_front[y, x_min]
-        c_max = clean_front[y, x_max]
-        for x in range(max(0, x_min - 15), x_min):
-            clean_front[y, x] = c_min
-        for x in range(x_max + 1, min(W, x_max + 16)):
-            clean_front[y, x] = c_max
-    elif info['type'] == 'skirt':
-        # Bleed skirt gown outward 15 px
-        x_min, x_max = info['min'], info['max']
-        c_min = clean_front[y, x_min]
-        c_max = clean_front[y, x_max]
-        for x in range(max(0, x_min - 15), x_min):
-            clean_front[y, x] = c_min
-        for x in range(x_max + 1, min(W, x_max + 16)):
-            clean_front[y, x] = c_max
+    x_min, x_max = xs[0], xs[-1]
+    # Bleed left edge to x=0
+    clean_front[y, :x_min] = clean_front[y, x_min]
+    # Bleed right edge to x=W
+    clean_front[y, x_max+1:] = clean_front[y, x_max]
+    # Fill internal gaps between segments (e.g. between arm and body)
+    diffs = np.diff(xs)
+    gaps = np.where(diffs > 1)[0]
+    for g in gaps:
+        x_start = xs[g]
+        x_end = xs[g+1]
+        mid = (x_start + x_end) // 2
+        clean_front[y, x_start+1:mid] = clean_front[y, x_start]
+        clean_front[y, mid:x_end] = clean_front[y, x_end]
 
 # 5. Build 1024x1024 Texture Atlas
 atlas = np.zeros((1024, 1024, 3), dtype=np.uint8)
@@ -275,31 +232,37 @@ def add_smooth_column(rings_f, rings_b, cap_top=True, cap_bottom=True, top_dome=
         all_faces.append([apex_idx, rb_bot[K], rf_bot[0]])
 
 # 8. BUILD HEAD & CRANIUM (Y: 24 to 215)
-print("1. Modeling Head & Cranium...")
+# 8. BUILD HEAD & NECK AS ONE CONTINUOUS SEAMLESS COLUMN (Y: 24 to 305)
+print("1. Modeling Seamless Head & Neck Column...")
 K_head = 8
 head_rf, head_rb = [], []
 
-y_head_steps = [24, 45, 75, 110, 140, 170, 195, 215]
+# Dense steps from top bun apex down to base of neck
+y_head_neck_steps = [24, 42, 65, 95, 130, 165, 195, 215, 235, 260, 285, 305]
 
-for y_px in y_head_steps:
+for y_px in y_head_neck_steps:
     norm_y = 1.0 - (y_px - ymin) / float(ymax - ymin)
     y_world = norm_y * world_height
     
-    info = analyze_row(y_px)
-    if info is None or 'min' not in info:
-        x_min, x_max = 470, 554
-    else:
-        x_min, x_max = info['min'], info['max']
-    rx = (x_max - x_min) * 0.5 * scale_x
-    
-    # Female head depth: cranium depth
-    if y_px < 110:
-        rz_f = rx * 0.82
+    # Anatomical head, jawline, chin, and neck radii
+    if y_px <= 95:
+        # Cranium & Rounded Feminine Hair Bun
+        t = (y_px - 24) / (95.0 - 24.0)
+        rx = 0.022 + 0.045 * np.sin(0.5 * np.pi * t) # smooth rounded dome
+        rz_f = rx * 0.88
         rz_b = rx * 1.05
-    else:
-        # Face level: profile shape
-        rz_f = rx * 0.78
+    elif y_px <= 215:
+        # Face: cheekbones (0.067m) tapering down to feminine chin (0.042m)
+        t = (y_px - 95) / (215.0 - 95.0)
+        rx = 0.067 - 0.025 * t
+        rz_f = rx * 0.85
         rz_b = rx * 0.95
+    else:
+        # Seamless neck: flows from chin (0.042m) into slender throat (0.040m) to base (0.052m)
+        t = (y_px - 215) / (305.0 - 215.0)
+        rx = 0.042 - 0.004 * np.sin(np.pi * t) + 0.012 * t
+        rz_f = rx * 0.95
+        rz_b = rx * 1.00
         
     rf, rb = [], []
     
@@ -309,13 +272,13 @@ for y_px in y_head_steps:
         vx = rx * np.sin(th)
         vz = rz_f * np.cos(th)
         
-        orig_x = center_x + np.sin(th) * (rx / scale_x)
+        orig_x = center_x + np.sin(th) * (rx / scale_x * 0.95)
         uv = get_uv_front(orig_x, y_px)
         
         v_idx = len(all_vertices)
         all_vertices.append([vx, y_world, vz])
         all_uvs.append(uv)
-        all_normals.append([np.sin(th), 0.1, np.cos(th)])
+        all_normals.append([np.sin(th), 0.05, np.cos(th)])
         rf.append(v_idx)
         
     # Back semicircle (th: pi/2 to 3pi/2)
@@ -324,66 +287,20 @@ for y_px in y_head_steps:
         vx = rx * np.sin(th)
         vz = rz_b * np.cos(th)
         
-        orig_x = center_x + np.sin(th) * (rx / scale_x)
+        orig_x = center_x + np.sin(th) * (rx / scale_x * 0.95)
         uv = get_uv_back(orig_x, y_px)
         
         v_idx = len(all_vertices)
         all_vertices.append([vx, y_world, vz])
         all_uvs.append(uv)
-        all_normals.append([np.sin(th), 0.1, np.cos(th)])
+        all_normals.append([np.sin(th), 0.05, np.cos(th)])
         rb.append(v_idx)
         
     head_rf.append(rf)
     head_rb.append(rb)
 
-# Smooth skull cap without pointy apex spike
+# Smooth skull cap at top bun apex (fully closed, seamless neck junction down to Y=305)
 add_smooth_column(head_rf, head_rb, cap_top=True, cap_bottom=False, top_dome=False)
-
-# 9. BUILD NECK (Y: 215 to 305)
-print("2. Modeling Neck...")
-K_neck = 6
-neck_rf, neck_rb = [], []
-y_neck_steps = [215, 235, 260, 285, 305]
-
-for y_px in y_neck_steps:
-    norm_y = 1.0 - (y_px - ymin) / float(ymax - ymin)
-    y_world = norm_y * world_height
-    
-    # Slender female neck radius
-    rx = 0.040 + 0.012 * ((y_px - 215) / 90.0)**2
-    rz = rx * 1.02
-    
-    rf, rb = [], []
-    for k in range(K_neck + 1):
-        th = -np.pi * 0.5 + np.pi * k / float(K_neck)
-        vx = rx * np.sin(th)
-        vz = rz * np.cos(th)
-        orig_x = center_x + np.sin(th) * 35.0
-        uv = get_uv_front(orig_x, y_px)
-        
-        v_idx = len(all_vertices)
-        all_vertices.append([vx, y_world, vz])
-        all_uvs.append(uv)
-        all_normals.append([np.sin(th), 0.0, np.cos(th)])
-        rf.append(v_idx)
-        
-    for k in range(K_neck + 1):
-        th = np.pi * 0.5 + np.pi * k / float(K_neck)
-        vx = rx * np.sin(th)
-        vz = rz * np.cos(th)
-        orig_x = center_x + np.sin(th) * 35.0
-        uv = get_uv_back(orig_x, y_px)
-        
-        v_idx = len(all_vertices)
-        all_vertices.append([vx, y_world, vz])
-        all_uvs.append(uv)
-        all_normals.append([np.sin(th), 0.0, np.cos(th)])
-        rb.append(v_idx)
-        
-    neck_rf.append(rf)
-    neck_rb.append(rb)
-
-add_smooth_column(neck_rf, neck_rb, cap_top=False, cap_bottom=False)
 
 # 10. BUILD BODY & GOWN (Y: 305 to 1480)
 print("3. Modeling Bodice & Flowing Halter Gown...")
