@@ -109,8 +109,10 @@ export function setIsGrounded(val) {
 
 export function triggerPlayerJump() {
   if (isGrounded && state.running && !state.isPaused) {
-    pVel.y = 6.8;
+    pVel.y = 7.0;
+    playerPos.y += 0.04;
     isGrounded = false;
+    if (Sfx && Sfx.playSnowStep) Sfx.playSnowStep();
   }
 }
 
@@ -603,9 +605,8 @@ export function setupPlayerControls() {
     if (c === 'KeyS') keys.s = true;
     if (c === 'KeyD') keys.d = true;
     if (c === 'ShiftLeft' || c === 'ShiftRight') keys.shift = true;
-    if (c === 'Space' && isGrounded && state.running) {
-      pVel.y = 6.8;
-      isGrounded = false;
+    if (c === 'Space') {
+      triggerPlayerJump();
     }
     if (c === 'KeyR') reloadWeapon();
     if (c === 'KeyT') toggleCompanionFollow();

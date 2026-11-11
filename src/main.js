@@ -160,17 +160,21 @@ function updateSimulation(dt) {
     targetGroundY = Math.max(targetGroundY, bridgeFloorY);
   }
 
-  if (playerPos.y > targetGroundY + 0.05) {
-    pVel.y -= 22 * dt;
+  // Jumping & Gravity Physics
+  const isInAir = (pVel.y > 0) || (playerPos.y > targetGroundY + 0.02);
+  if (isInAir) {
+    pVel.y -= 19.5 * dt; // Realistic snappy gravity
     playerPos.y += pVel.y * dt;
     if (playerPos.y <= targetGroundY) {
       playerPos.y = targetGroundY;
       pVel.y = 0;
       setIsGrounded(true);
-      Sfx.playSnowStep();
+      if (Sfx && Sfx.playSnowThud) Sfx.playSnowThud(0.65);
+    } else {
+      setIsGrounded(false);
     }
   } else {
-    // Smooth step-up climbing undulating hills & knolls
+    // Player is firmly grounded: smooth step-up climbing undulating hills & knolls
     playerPos.y = THREE.MathUtils.lerp(playerPos.y, targetGroundY, Math.min(1.0, dt * 20));
     pVel.y = 0;
     setIsGrounded(true);
