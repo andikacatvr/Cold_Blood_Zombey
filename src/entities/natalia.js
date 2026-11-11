@@ -80,8 +80,8 @@ let detachedCanopyStartTime = 0;
 
 export const NATALIA_STORY_LINES = [
   "Siapa kamu?! Apa urusanmu di sini?! ...Hah, mahasiswa tim riset yang tersesat?! Tetap waspada di samping gua!",
-  "Gua Agent Natalia dari Unit Investigasi Taktis. Gua diterjunkan lewat parasut buat netralisir wabah sihir gelap dan evakuasi penyintas!",
-  "Sensor taktis mendeteksi pergerakan gerombolan mayat hidup di hutan ini. Jangan panik, peluru shotgun tempur gua bakal melubangi kepala mereka!",
+  "Gua Agent Natalia dari Unit Investigasi Taktis. Gua diterjunkan lewat helikopter buat netralisir wabah sihir gelap dan evakuasi penyintas!",
+  "Sensor taktis mendeteksi pergerakan gerombolan mayat hidup di hutan ini. Jangan panik, peluru pistol tempur gua bakal melubangi kepala mereka!",
   "Formasi silang dua arah: kalian amankan depan, gua sapu bersih monster yang mau menyergap dari sayap dan belakang!",
   "Satu-satunya titik evakuasi ada di dermaga utara. Bergerak terus, jangan sampai terpojok!"
 ];
@@ -96,8 +96,8 @@ export const NATALIA_GESTURES = {
   },
   pump: {
     tag: '⚔ SIAP TEMPUR',
-    text: '"Combat shotgun gua udah terisi penuh! Monster mana pun yang mendekat bakal langsung gua tembak!"',
-    sound: (sfx) => { if (sfx && sfx.playPumpRack) sfx.playPumpRack(); },
+    text: '"Pistol taktis gua udah terisi penuh! Monster mana pun yang mendekat bakal langsung gua tembak!"',
+    sound: (sfx) => { if (sfx && sfx.playPistolShot) sfx.playPistolShot(); },
     duration: 3.5
   },
   cheer: {
@@ -140,33 +140,62 @@ export function triggerNataliaGesture(name, sfxRef = Sfx) {
   showNataliaSubtitle(spokenText, 4800);
 }
 
-function createMiniWeapon(type) {
+function createTacticalPistol() {
   const g = new THREE.Group();
-  const gunSteelMat = new THREE.MeshStandardMaterial({ color: 0x242c35, roughness: 0.3, metalness: 0.85 });
-  const gunDarkMat = new THREE.MeshStandardMaterial({ color: 0x161a20, roughness: 0.4, metalness: 0.7 });
-  const darkWoodMat = new THREE.MeshStandardMaterial({ color: 0x2e1e17, roughness: 0.75, metalness: 0.1 });
+  g.name = 'Agent_Tactical_Handgun';
 
-  if (type === 'pump') {
-    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.72, 10), gunSteelMat);
-    barrel.rotation.x = Math.PI / 2;
-    barrel.position.set(0, 0, 0.26);
-    g.add(barrel);
-    const mag = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.62, 10), gunSteelMat);
-    mag.rotation.x = Math.PI / 2;
-    mag.position.set(0, -0.028, 0.22);
-    g.add(mag);
-    const pumpSlide = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.18, 12), darkWoodMat);
-    pumpSlide.rotation.x = Math.PI / 2;
-    pumpSlide.position.set(0, -0.028, 0.20);
-    g.add(pumpSlide);
-    g.pumpSlideMesh = pumpSlide;
-    const receiver = new THREE.Mesh(new THREE.BoxGeometry(0.048, 0.075, 0.18), gunDarkMat);
-    receiver.position.set(0, 0, -0.08);
-    g.add(receiver);
-    const stock = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.078, 0.24), darkWoodMat);
-    stock.position.set(0, -0.025, -0.25);
-    g.add(stock);
-  }
+  const gunSteelMat = new THREE.MeshStandardMaterial({ color: 0x181c20, roughness: 0.35, metalness: 0.85 });
+  const gunFrameMat = new THREE.MeshStandardMaterial({ color: 0x121518, roughness: 0.7, metalness: 0.25 });
+  const gripPanelMat = new THREE.MeshStandardMaterial({ color: 0x0c0e10, roughness: 0.9, metalness: 0.1 });
+  const sightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+  // 1. Pistol Slide (upper slide)
+  const slideGeo = new THREE.BoxGeometry(0.034, 0.045, 0.20);
+  const slide = new THREE.Mesh(slideGeo, gunSteelMat);
+  slide.position.set(0, 0.022, 0.02);
+  g.add(slide);
+
+  // 2. Pistol Barrel
+  const barrelGeo = new THREE.CylinderGeometry(0.009, 0.009, 0.06, 8);
+  const barrel = new THREE.Mesh(barrelGeo, gunSteelMat);
+  barrel.rotation.x = Math.PI / 2;
+  barrel.position.set(0, 0.026, 0.13);
+  g.add(barrel);
+
+  // 3. Lower Frame & Tactical Rail
+  const frameGeo = new THREE.BoxGeometry(0.032, 0.036, 0.17);
+  const frame = new THREE.Mesh(frameGeo, gunFrameMat);
+  frame.position.set(0, -0.015, 0.015);
+  g.add(frame);
+
+  // 4. Ergonomic Handgun Grip
+  const gripGeo = new THREE.BoxGeometry(0.030, 0.115, 0.046);
+  const grip = new THREE.Mesh(gripGeo, gripPanelMat);
+  grip.rotation.x = -0.24; // Angled back ~104 degrees
+  grip.position.set(0, -0.075, -0.035);
+  g.add(grip);
+
+  // Magazine baseplate
+  const magBaseGeo = new THREE.BoxGeometry(0.032, 0.012, 0.052);
+  const magBase = new THREE.Mesh(magBaseGeo, gunFrameMat);
+  magBase.rotation.x = -0.24;
+  magBase.position.set(0, -0.132, -0.050);
+  g.add(magBase);
+
+  // 5. Trigger Guard
+  const guardGeo = new THREE.BoxGeometry(0.012, 0.032, 0.045);
+  const guard = new THREE.Mesh(guardGeo, gunFrameMat);
+  guard.position.set(0, -0.046, 0.025);
+  g.add(guard);
+
+  // 6. Sights (Front & Rear Sights)
+  const fSight = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.008, 0.008), sightMat);
+  fSight.position.set(0, 0.048, 0.11);
+  g.add(fSight);
+
+  const rSight = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.008, 0.006), sightMat);
+  rSight.position.set(0, 0.048, -0.07);
+  g.add(rSight);
 
   return g;
 }
@@ -179,7 +208,9 @@ function spawnNataliaShotTracer(agent, targetZombie) {
   const muzzlePos = new THREE.Vector3();
   if (agent.weaponSocket) {
     agent.weaponSocket.getWorldPosition(muzzlePos);
-    muzzlePos.y += 0.05;
+    // Align with handgun barrel tip
+    const forward = new THREE.Vector3(0, 0.02, 0.14).applyEuler(agent.weaponSocket.rotation);
+    muzzlePos.add(forward);
   } else {
     muzzlePos.copy(agent.root.position);
     muzzlePos.y += 1.1;
@@ -200,7 +231,7 @@ function spawnNataliaShotTracer(agent, targetZombie) {
   const line = new THREE.Line(geom, mat);
   scene.add(line);
 
-  // 2. Muzzle Flash Sprite
+  // 2. Muzzle Flash Sprite (compact sharp handgun flash)
   const flashMat = new THREE.SpriteMaterial({
     color: 0xffaa33,
     transparent: true,
@@ -209,7 +240,7 @@ function spawnNataliaShotTracer(agent, targetZombie) {
   });
   const flash = new THREE.Sprite(flashMat);
   flash.position.copy(muzzlePos);
-  flash.scale.set(0.55, 0.55, 0.55);
+  flash.scale.set(0.28, 0.28, 0.28);
   scene.add(flash);
 
   setTimeout(() => {
@@ -218,7 +249,7 @@ function spawnNataliaShotTracer(agent, targetZombie) {
     mat.dispose();
     scene.remove(flash);
     flashMat.dispose();
-  }, 90);
+  }, 75);
 }
 
 function makeRotator(rx, ry, rz, px, py, pz) {
@@ -246,14 +277,15 @@ export function buildNataliaCharacter(textures) {
   root.name = 'Agent_Natalia_GLB';
   root.scale.set(NATALIA_SCALE, NATALIA_SCALE, NATALIA_SCALE);
 
-  const miniPump = createMiniWeapon('pump');
+  const tacticalPistol = createTacticalPistol();
+  const miniPump = tacticalPistol;
 
   // Base socket position attached naturally to right hand in rest pose for bossgame.glb
   const weaponSocket = new THREE.Group();
   weaponSocket.position.set(0.31, 0.88, 0.05);
   weaponSocket.rotation.x = -Math.PI / 2.7;
   weaponSocket.rotation.y = -0.15;
-  weaponSocket.add(miniPump);
+  weaponSocket.add(tacticalPistol);
   root.add(weaponSocket);
 
   let charMesh = null;
@@ -735,7 +767,7 @@ export function updateNataliaAgent(camera, Sfx, dt = 0.016) {
     }
 
     if (targetZombie && now > combatShootCooldown) {
-      combatShootCooldown = now + 1700 + Math.random() * 500; // 1.7s - 2.2s shooting cadence
+      combatShootCooldown = now + 900 + Math.random() * 350; // Snappy 0.9s - 1.25s tactical pistol cadence
       const aimAngle = Math.atan2(targetZombie.x - nataliaModel.root.position.x, targetZombie.z - nataliaModel.root.position.z);
       nataliaModel.root.rotation.y = aimAngle;
 
@@ -744,14 +776,12 @@ export function updateNataliaAgent(camera, Sfx, dt = 0.016) {
       // Visual muzzle flash & bullet tracer beam
       spawnNataliaShotTracer(nataliaModel, targetZombie);
 
-      // Deal high-impact agent shotgun damage
-      const damage = 60 + Math.floor(Math.random() * 25); // 60-85 damage
+      // Deal crisp tactical pistol damage
+      const damage = 50 + Math.floor(Math.random() * 20); // 50-70 damage
       targetZombie.hp -= damage;
 
-      if (Sfx && Sfx.playShotgun) Sfx.playShotgun();
-      if (Sfx && Sfx.playPumpRack) {
-        setTimeout(() => Sfx.playPumpRack(), 600);
-      }
+      if (Sfx && Sfx.playPistolShot) Sfx.playPistolShot();
+      else if (Sfx && Sfx.playShotgun) Sfx.playShotgun();
 
       if (targetZombie.mesh) {
         createAirborneBloodDrop(targetZombie.mesh.position);
@@ -868,19 +898,16 @@ export function updateNataliaAgent(camera, Sfx, dt = 0.016) {
         h_rz += Math.sin(gTime * 7) * 0.14 * blend;
         h_rx += 0.08 * blend;
       } else if (currentGesture === 'pump') {
-        // Combat shotgun firing stance
-        t_rx += 0.20 * blend;
+        // Tactical handgun firing stance with crisp recoil kick
+        t_rx += 0.12 * blend;
         t_rz += -0.04 * blend;
-        ra_rx += -0.52 * blend;
-        ra_rz += -0.16 * blend;
-        const pumpSlide = Math.sin(gTime * 8);
-        ra_ry += pumpSlide * 0.14 * blend;
-        la_rx += -0.45 * blend;
-        la_rz += -0.22 * blend;
-        h_rx += (0.16 + Math.sin(gTime * 6) * 0.08) * blend;
-        if (nataliaModel.miniPump && nataliaModel.miniPump.pumpSlideMesh) {
-          nataliaModel.miniPump.pumpSlideMesh.position.z = 0.20 + pumpSlide * 0.05 * blend;
-        }
+        ra_rx += -0.72 * blend; // Arm raised pointing handgun directly forward
+        ra_rz += -0.10 * blend;
+        const recoil = Math.sin(gTime * 18) * Math.exp(-gTime * 3.5);
+        ra_rx += recoil * 0.14 * blend; // sharp pistol recoil kick
+        la_rx += -0.38 * blend; // support hand
+        la_rz += -0.18 * blend;
+        h_rx += (0.10 + Math.sin(gTime * 6) * 0.05) * blend;
       } else if (currentGesture === 'cheer') {
         la_rx += -0.80 * blend;
         la_rz += (0.38 + Math.sin(gTime * 8) * 0.12) * blend;

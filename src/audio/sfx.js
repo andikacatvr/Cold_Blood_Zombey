@@ -420,6 +420,67 @@ import { gameSettings } from '../config/settings.js';
         nGain.connect(this.dest());
         noise.start(now);
       },
+      playPistolShot() {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const ctx = this.ctx;
+
+        try {
+          // 1. Sharp high-pressure supersonic muzzle crack
+          const crackBufSize = Math.floor(ctx.sampleRate * 0.12);
+          const crackBuf = ctx.createBuffer(1, crackBufSize, ctx.sampleRate);
+          const crackData = crackBuf.getChannelData(0);
+          for (let i = 0; i < crackBufSize; i++) {
+            crackData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.018));
+          }
+          const crack = ctx.createBufferSource();
+          crack.buffer = crackBuf;
+
+          const crackFilter = ctx.createBiquadFilter();
+          crackFilter.type = 'highpass';
+          crackFilter.frequency.setValueAtTime(800, now);
+
+          const crackGain = ctx.createGain();
+          crackGain.gain.setValueAtTime(0.85, now);
+          crackGain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+
+          crack.connect(crackFilter);
+          crackFilter.connect(crackGain);
+          crackGain.connect(this.dest());
+          crack.start(now);
+
+          // 2. Mid-frequency chamber punch
+          const popOsc = ctx.createOscillator();
+          const popGain = ctx.createGain();
+          popOsc.type = 'triangle';
+          popOsc.frequency.setValueAtTime(320, now);
+          popOsc.frequency.exponentialRampToValueAtTime(55, now + 0.14);
+          popGain.gain.setValueAtTime(0.8, now);
+          popGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+          popOsc.connect(popGain);
+          popGain.connect(this.dest());
+          popOsc.start(now);
+          popOsc.stop(now + 0.16);
+
+          // 3. Crisp mechanical slide action click
+          setTimeout(() => {
+            if (!ctx) return;
+            const t2 = ctx.currentTime;
+            const clickOsc = ctx.createOscillator();
+            const clickGain = ctx.createGain();
+            clickOsc.type = 'sine';
+            clickOsc.frequency.setValueAtTime(2400, t2);
+            clickOsc.frequency.exponentialRampToValueAtTime(1200, t2 + 0.04);
+            clickGain.gain.setValueAtTime(0.25, t2);
+            clickGain.gain.exponentialRampToValueAtTime(0.001, t2 + 0.04);
+            clickOsc.connect(clickGain);
+            clickGain.connect(this.dest());
+            clickOsc.start(t2);
+            clickOsc.stop(t2 + 0.05);
+          }, 65);
+        } catch (e) {}
+      },
       playPumpRack() {
         if (!this.ctx) return;
         const now = this.ctx.currentTime;

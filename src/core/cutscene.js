@@ -157,11 +157,11 @@ const NATALIA_HELICOPTER_STAGES = [
   {
     start: 9.8,
     end: 14.8,
-    subtitle: `<span style="color:#f5ba42; font-size:23px; font-weight:bold;">AGENT NATALIA:</span> <i>*menodongkan combat shotgun waspada*</i> <span style="color:#ffffff; font-size:22px; font-weight:bold;">"Siapa kamu?! Apa urusanmu di sini?!"</span>`,
+    subtitle: `<span style="color:#f5ba42; font-size:23px; font-weight:bold;">AGENT NATALIA:</span> <i>*menodongkan pistol taktis waspada*</i> <span style="color:#ffffff; font-size:22px; font-weight:bold;">"Siapa kamu?! Apa urusanmu di sini?!"</span>`,
     onEnter: (sfx) => {
       if (sfx && sfx.fadeHelicopterAudio) sfx.fadeHelicopterAudio(4.5);
       if (sfx && sfx.playSnowThud) sfx.playSnowThud(1.2);
-      if (sfx && sfx.playPumpRack) setTimeout(() => sfx.playPumpRack(), 700);
+      if (sfx && sfx.playPistolShot) setTimeout(() => sfx.playPistolShot(), 800);
     }
   },
   {
@@ -750,7 +750,7 @@ function updateNataliaHelicopterCutscene(dt) {
       if (dropProg >= 0.96 && !nataliaModel._hasLandedHeli) {
         nataliaModel._hasLandedHeli = true;
         if (sfxRef && sfxRef.playSnowThud) sfxRef.playSnowThud(1.2);
-        if (sfxRef && sfxRef.playPumpRack) sfxRef.playPumpRack();
+        if (sfxRef && sfxRef.playPistolShot) sfxRef.playPistolShot();
       }
     }
 
