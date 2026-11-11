@@ -4,7 +4,7 @@ from PIL import Image
 import trimesh
 import os
 
-print("=== REBUILDING PS1 BOSS BRIDE - NATURAL ROUNDED HAIR & PERFECT FEMININE CRANIUM ===")
+print("=== REBUILDING 1:1 REPLICA OF BOSSGAME.PNG - PERFECT SHOULDERS, BARE ARMS & DETAILED BACK ===")
 
 # 1. Load source image
 src_bgr = cv2.imread('bossgame.png')
@@ -31,18 +31,15 @@ src_bled = src_bgr[nearest[:, :, 0], nearest[:, :, 1]].copy()
 brunette_hair = np.array([22, 28, 38], dtype=np.uint8)
 avg_skin = np.array([115, 140, 190], dtype=np.uint8)
 
-# 1. Clean head and keep REAL photographic hair texture
+# 1. Head top: keep real photographic hair texture with natural brunette framing
 for y in range(0, 110):
     for x in range(350, 680):
-        # Outside hair width: fill with rich brunette hair
         if x < 435 or x > 585:
             src_bled[y, x] = brunette_hair
         else:
-            # Inside hair width: if it was white veil background, fill with brunette hair
             if src_bgr[y, x].mean() > 200:
                 src_bled[y, x] = brunette_hair
             else:
-                # Keep real beautiful photographic hair texture!
                 src_bled[y, x] = src_bgr[y, x]
 
 # 2. Face & Hair (Y: 110 to 220):
@@ -78,28 +75,51 @@ mask_resized = cv2.resize(mask_crop, (target_w, target_h), interpolation=cv2.INT
 # Clean and build back view
 back_resized = front_resized.copy()
 
-# Back of head hair (Y_src: 22 to 260) -> 100% full rich brunette hair across entire width!
+# 1. Back of head hair (Y_src: 22 to 260) -> Rich photographic brunette hair with elegant bun texture
 y_neck_px = int((260 - ymin) / bbox_h * target_h)
 for y in range(y_neck_px):
-    back_resized[y, :] = brunette_hair
+    for x in range(target_w):
+        dx = abs(x - target_w // 2)
+        # Hair strand texture with subtle highlights
+        strand_noise = int(5.0 * np.sin(x * 0.45) * np.cos(y * 0.30))
+        # Center bun highlight at mid-skull
+        bun_dist = np.sqrt(dx**2 + (y - y_neck_px * 0.45)**2)
+        bun_high = int(max(0, 16 - 0.28 * bun_dist))
+        base_col = np.array([24, 30, 42], dtype=np.int16) + strand_noise + bun_high
+        back_resized[y, x] = np.clip(base_col, 16, 75).astype(np.uint8)
 
-# Porcelain fair skin on low-cut back (Y_src: 260 to 370)
-y_strapless_back = int((370 - ymin) / bbox_h * target_h)
+# 2. Porcelain fair skin on low-cut back (Y_src: 260 to 380)
+y_strapless_back = int((380 - ymin) / bbox_h * target_h)
 for y in range(y_neck_px, y_strapless_back):
-    back_resized[y, :] = avg_skin
+    for x in range(target_w):
+        dx = (x - target_w // 2)
+        # Spine furrow shading down the center
+        spine_shade = -int(14.0 * np.exp(-((dx / 10.0)**2)))
+        # Scapulae highlights
+        scapula_high = int(9.0 * np.exp(-(((abs(dx) - 36) / 16.0)**2)))
+        skin_val = np.array([115, 140, 190], dtype=np.int16) + spine_shade + scapula_high
+        back_resized[y, x] = np.clip(skin_val, 80, 215).astype(np.uint8)
 
-# Pearl necklace at collarbone / neck base (Y_src: 288)
-y_pearl = int((288 - ymin) / bbox_h * target_h)
-for px in range(target_w // 2 - 35, target_w // 2 + 35, 4):
-    back_resized[y_pearl-1:y_pearl+3, px-1:px+3] = [245, 245, 250]
+# 3. Pearl necklace curved naturally at base of neck (nape)
+for dx in range(-42, 43, 4):
+    dy_curve = int(4.0 * (1.0 - (abs(dx) / 42.0)**2))
+    px = target_w // 2 + dx
+    py = int((285 - ymin) / bbox_h * target_h) - dy_curve
+    back_resized[py-1:py+2, px-1:px+2] = [252, 252, 255] # pearl highlight
+    back_resized[py+2, px] = [160, 165, 180] # subtle drop shadow
 
-# Gown back with spine corset seam (Y_src: 370 to 1420)
+# 4. Gown back with spine corset seam (Y_src: 380 to 1420)
 y_dress_end = int((1420 - ymin) / bbox_h * target_h)
 for y in range(y_strapless_back, y_dress_end):
     row_m = mask_resized[y] > 0
     if np.any(row_m):
         mid_x = target_w // 2
-        back_resized[y, mid_x-1:mid_x+2] = [170, 175, 185]
+        # Spine corset line
+        back_resized[y, mid_x-1:mid_x+2] = [160, 165, 180]
+        # Delicate eyelets every 8 pixels
+        if y % 8 == 0:
+            back_resized[y, mid_x-3:mid_x-1] = [120, 125, 140]
+            back_resized[y, mid_x+2:mid_x+4] = [120, 125, 140]
 
 back_mirrored = cv2.flip(back_resized, 1)
 
@@ -174,7 +194,7 @@ def add_smooth_column(rings_f, rings_b, cap_top=True, cap_bottom=True, top_dome=
         top_rb = rings_b[-1]
         top_pts = [all_vertices[idx] for idx in top_rf]
         mid_x = np.mean([p[0] for p in top_pts])
-        top_y = top_pts[0][1] + (0.006 if top_dome else 0.003)
+        top_y = top_pts[0][1] + (0.005 if top_dome else 0.002)
 
         top_uv_f = all_uvs[top_rf[K_seg // 2]]
         af_idx = len(all_vertices)
@@ -221,14 +241,12 @@ def add_smooth_column(rings_f, rings_b, cap_top=True, cap_bottom=True, top_dome=
 print("1. Modeling Head (Natural Rounded Skull, No Conehead, Beautiful Hair)...")
 head_rf, head_rb = [], []
 K_head = 10
-# Natural head height: from neck base (280) to rounded crown (72) - NO TALL POINTY CONE!
 head_y_steps = np.linspace(280, 72, 32).astype(int)
 
 for y_px in head_y_steps:
     norm_y = 1.0 - (y_px - ymin) / bbox_h
     y_world = norm_y * world_height
 
-    # Calculate smooth anatomical head and neck contours
     if y_px < 95:
         # Rounded crown dome of the head
         t = (y_px - 72) / (95 - 72)
@@ -318,9 +336,9 @@ for y_px in head_y_steps:
 add_smooth_column(head_rf, head_rb, cap_top=True, cap_bottom=False, top_dome=True)
 
 # ==============================================================================
-# 2. TORSO & ELEGANT FLARED GOWN (With Solid Interior Lining - Zero Transparency!)
+# 2. TORSO & ELEGANT FLARED GOWN (Continuous Natural Shoulders, Slit & Lining)
 # ==============================================================================
-print("2. Modeling Torso & Flared Gown with Interior Solid Lining...")
+print("2. Modeling Torso & Flared Gown with Natural Shoulders...")
 torso_y_steps = np.linspace(1420, 280, 60).astype(int)
 body_rf, body_rb = [], []
 K_body = 8
@@ -330,24 +348,30 @@ for y_px in torso_y_steps:
     y_world = norm_y * world_height
     row = mask[y_px, :]
 
-    if y_px < 340:
-        # Deltoid shoulder slope
-        t_sh = (y_px - 280) / (340 - 280)
-        rx = 0.054 * (1 - t_sh) + 0.138 * t_sh
-        rz_front = 0.045 * (1 - t_sh) + 0.052 * t_sh
-        rz_back = 0.046 * (1 - t_sh) + 0.055 * t_sh
+    if y_px < 305:
+        # Rapid shoulder flare from neck base (280) to acromion shoulder tip (305)
+        t_sh = (y_px - 280) / (305 - 280)
+        rx = 0.054 * (1 - t_sh) + 0.175 * t_sh
+        rz_front = 0.045 * (1 - t_sh) + 0.055 * t_sh
+        rz_back = 0.046 * (1 - t_sh) + 0.058 * t_sh
+    elif y_px < 350:
+        # Shoulder tip to underarm / bustline
+        t_u = (y_px - 305) / (350 - 305)
+        rx = 0.175 * (1 - t_u) + 0.125 * t_u
+        rz_front = 0.055 * (1 - t_u) + 0.072 * t_u
+        rz_back = 0.058 * (1 - t_u) + 0.060 * t_u
     elif y_px < 420:
-        # Bust
-        t_b = (y_px - 340) / (420 - 340)
-        rx = 0.138 * (1 - t_b) + 0.118 * t_b
-        rz_front = 0.052 * (1 - t_b) + 0.068 * t_b
-        rz_back = 0.055 * (1 - t_b) + 0.058 * t_b
+        # Sweetheart bust curve
+        t_b = (y_px - 350) / (420 - 350)
+        rx = 0.125
+        rz_front = 0.072 * (1 - 0.05 * t_b)
+        rz_back = 0.060
     elif y_px < 520:
         # Slender waist
         t_w = (y_px - 420) / (520 - 420)
-        rx = 0.118 * (1 - t_w) + 0.096 * t_w
-        rz_front = 0.068 * (1 - t_w) + 0.052 * t_w
-        rz_back = 0.058 * (1 - t_w) + 0.055 * t_w
+        rx = 0.125 * (1 - t_w) + 0.096 * t_w
+        rz_front = 0.072 * (1 - t_w) + 0.052 * t_w
+        rz_back = 0.060 * (1 - t_w) + 0.055 * t_w
     elif y_px < 750:
         # Hourglass hips & upper thighs
         t_h = (y_px - 520) / (750 - 520)
@@ -436,44 +460,45 @@ for k in range(K_body):
 add_smooth_column(body_rf, body_rb, cap_top=True, cap_bottom=False)
 
 # ==============================================================================
-# 3. SEAMLESS CONNECTED SHOULDERS & ARMS
+# 3. SEAMLESS CONNECTED SHOULDERS & BARE ARMS (No Severed Caps)
 # ==============================================================================
-print("3. Modeling Seamless Connected Shoulders & Bare Arms...")
+print("3. Modeling Seamless Connected Shoulders & Bare Porcelain Arms...")
 K_arm = 6
 
 def build_connected_arm(is_right=False):
     sign = -1.0 if is_right else 1.0
     arm_rf, arm_rb = [], []
-    y_steps = np.linspace(290, 770, 26).astype(int)
+    # Progress from fingertips (780) up to shoulder (305) so normals point outward!
+    y_steps = np.linspace(780, 305, 25).astype(int)
 
     for y_px in y_steps:
         norm_y = 1.0 - (y_px - ymin) / bbox_h
         y_world = norm_y * world_height
 
         if y_px <= 340:
-            # Upper shoulder joint connecting directly flush with torso shoulder
-            t = (y_px - 290) / (340 - 290)
-            mid_x = sign * (0.130 + 0.018 * t)
-            rx = 0.024 + 0.005 * t
-            rz = 0.026 + 0.004 * t
+            # Upper shoulder joint: seamlessly merges into torso shoulder
+            t = (y_px - 305) / (340 - 305)
+            mid_x = sign * (0.165 + 0.005 * t)
+            rx = 0.026 + 0.003 * t
+            rz = 0.028 + 0.003 * t
         elif y_px <= 540:
             # Upper arm to elbow
             t = (y_px - 340) / (540 - 340)
-            mid_x = sign * (0.148 + 0.072 * t)
+            mid_x = sign * (0.170 + 0.052 * t)
             rx = 0.029 * (1 - 0.12 * t)
-            rz = 0.030 * (1 - 0.12 * t)
+            rz = 0.031 * (1 - 0.12 * t)
         elif y_px <= 710:
             # Forearm
             t = (y_px - 540) / (710 - 540)
-            mid_x = sign * (0.220 + 0.080 * t)
-            rx = 0.025 * (1 - 0.22 * t)
-            rz = 0.026 * (1 - 0.22 * t)
+            mid_x = sign * (0.222 + 0.058 * t)
+            rx = 0.025 * (1 - 0.20 * t)
+            rz = 0.027 * (1 - 0.20 * t)
         else:
             # Hand & fingers
-            t = (y_px - 710) / (770 - 710)
-            mid_x = sign * (0.300 + 0.020 * t)
-            rx = 0.020 * (1 - 0.30 * t)
-            rz = 0.021 * (1 - 0.30 * t)
+            t = (y_px - 710) / (780 - 710)
+            mid_x = sign * (0.280 + 0.015 * t)
+            rx = 0.020 * (1 - 0.35 * t)
+            rz = 0.021 * (1 - 0.35 * t)
 
         img_x_center = center_x + (mid_x / scale_x)
         half_w_px = (rx / scale_x)
@@ -484,6 +509,7 @@ def build_connected_arm(is_right=False):
             th = np.pi * k / K_arm
             vx = mid_x + rx * np.cos(th)
             vz = rz * np.sin(th)
+
             norm_px_x = np.clip(((img_x_center + np.cos(th) * half_w_px) - xmin) / bbox_w, 0.0, 1.0)
             norm_atlas_y = (y_start + (1.0 - norm_y) * target_h) / 1024.0
             u = (x_f_start + norm_px_x * target_w) / 1024.0
@@ -499,6 +525,7 @@ def build_connected_arm(is_right=False):
             th = np.pi + np.pi * k / K_arm
             vx = mid_x + rx * np.cos(th)
             vz = rz * np.sin(th)
+
             norm_px_x = np.clip(((img_x_center + np.cos(th) * half_w_px) - xmin) / bbox_w, 0.0, 1.0)
             norm_atlas_y = (y_start + (1.0 - norm_y) * target_h) / 1024.0
             u = (x_b_start + (1.0 - norm_px_x) * target_w) / 1024.0
@@ -620,4 +647,4 @@ for p in out_files:
         f.write(glb_bytes)
     print(f"Exported {p} ({len(glb_bytes)} bytes)")
 
-print("=== NATURAL HAIR REBUILD COMPLETE ===")
+print("=== 1:1 REPLICA REBUILD COMPLETE ===")
