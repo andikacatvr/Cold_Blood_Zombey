@@ -18,7 +18,7 @@ export const renderer = new THREE.WebGLRenderer({
   powerPreference: 'high-performance',
   precision: 'mediump'
 });
-renderer.setPixelRatio(isMobileDevice ? 1.0 : Math.min(window.devicePixelRatio || 1, 1.25));
+renderer.setPixelRatio(1.0);
 renderer.shadowMap.enabled = !isMobileDevice;
 renderer.shadowMap.type = THREE.BasicShadowMap; // Authentic PS2 hard shadow: 3x faster than PCFSoftShadowMap
 
@@ -39,7 +39,7 @@ scene.add(ambientLight);
 export const overcastDirLight = new THREE.DirectionalLight(0xdbe3ec, 0.68);
 overcastDirLight.position.set(18, 45, 22);
 overcastDirLight.castShadow = !isMobileDevice;
-const shadowRes = isMobileDevice ? 512 : 1024;
+const shadowRes = 512;
 overcastDirLight.shadow.mapSize.width = shadowRes;
 overcastDirLight.shadow.mapSize.height = shadowRes;
 overcastDirLight.shadow.camera.near = 1;

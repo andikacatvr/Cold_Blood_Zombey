@@ -34,10 +34,98 @@ const breathMat = new THREE.MeshBasicMaterial({
   depthWrite: false
 });
 
+let sharedBloodSnowMat = null;
+let sharedBloodDripMat = null;
+const sharedSplinterGeo = new THREE.BoxGeometry(0.1, 0.3, 0.08);
+const sharedSplinterMat1 = new THREE.MeshLambertMaterial({ color: 0x825332, flatShading: true });
+const sharedSplinterMat2 = new THREE.MeshLambertMaterial({ color: 0x4a2e1d, flatShading: true });
+
+let decalCursor = 0;
+const MAX_DECALS = 32;
+
+let breathCursor = 0;
+const MAX_BREATH = 16;
+
+let splinterCursor = 0;
+const MAX_SPLINTERS = 24;
+
 export function initEffects(scene, bloodSnowTex, bloodDripTex) {
   sceneRef = scene;
   bloodSnowTexRef = bloodSnowTex;
   bloodDripTexRef = bloodDripTex;
+
+  sharedBloodSnowMat = new THREE.MeshBasicMaterial({
+    map: bloodSnowTexRef,
+    transparent: true,
+    opacity: 0.98,
+    depthWrite: false
+  });
+  sharedBloodDripMat = new THREE.MeshBasicMaterial({
+    map: bloodDripTexRef,
+    transparent: true,
+    opacity: 0.94,
+    depthWrite: false
+  });
+
+  // Pre-allocate Decal Pool (Zero runtime allocation or deletion)
+  if (bloodDecals.length === 0) {
+    for (let i = 0; i < MAX_DECALS; i++) {
+      const decal = new THREE.Mesh(sharedDecalGeo, sharedBloodDripMat);
+      decal.rotation.x = -Math.PI / 2;
+      decal.visible = false;
+      scene.add(decal);
+      bloodDecals.push({
+        mesh: decal,
+        mat: sharedBloodDripMat,
+        age: 0,
+        maxLife: 10.0,
+        curScale: 0.3,
+        targetScale: 0.5,
+        spreadSpeed: 0.4,
+        active: false
+      });
+    }
+  }
+
+  // Pre-allocate Breath Puffs Pool
+  if (breathPuffs.length === 0) {
+    for (let i = 0; i < MAX_BREATH; i++) {
+      const mesh = new THREE.Mesh(breathGeo, breathMat);
+      mesh.visible = false;
+      scene.add(mesh);
+      breathPuffs.push({
+        mesh,
+        age: 0,
+        maxLife: 1.0,
+        vx: 0,
+        vy: 0,
+        vz: 0,
+        initialScale: 0.25,
+        targetScale: 1.0,
+        active: false
+      });
+    }
+  }
+
+  // Pre-allocate Wood Splinters Pool
+  if (woodSplinters.length === 0) {
+    for (let i = 0; i < MAX_SPLINTERS; i++) {
+      const mesh = new THREE.Mesh(sharedSplinterGeo, i % 2 === 0 ? sharedSplinterMat1 : sharedSplinterMat2);
+      mesh.visible = false;
+      scene.add(mesh);
+      woodSplinters.push({
+        mesh,
+        vx: 0,
+        vy: 0,
+        vz: 0,
+        rotX: 0,
+        rotZ: 0,
+        age: 0,
+        maxLife: 4.0,
+        active: false
+      });
+    }
+  }
 
   // Pre-allocate Airborne Blood Drops Pool (Zero-allocation runtime recycling)
   if (airborneDrips.length === 0) {
@@ -56,85 +144,58 @@ export function initEffects(scene, bloodSnowTex, bloodDripTex) {
   }
 }
 
-function removeDecal(d) {
-  if (!d) return;
-  if (d.mesh && sceneRef) sceneRef.remove(d.mesh);
-  if (d.mat) d.mat.dispose();
-}
-
 export function spawnBloodPoolOnSnow(x, z, scale = 1.0) {
-  if (!sceneRef) return;
-  if (bloodDecals.length >= 30) {
-    const oldest = bloodDecals.shift();
-    removeDecal(oldest);
-  }
+  if (!sceneRef || bloodDecals.length === 0) return;
+  const d = bloodDecals[decalCursor];
+  decalCursor = (decalCursor + 1) % MAX_DECALS;
+
   const finalR = (1.9 + Math.random() * 1.2) * scale;
   const initR = finalR * 0.25;
 
-  // Lightweight MeshBasicMaterial: avoids expensive multi-light Phong calculation per decal
-  const m = new THREE.MeshBasicMaterial({
-    map: bloodSnowTexRef,
-    transparent: true,
-    opacity: 0.98,
-    depthWrite: false
-  });
-  const decal = new THREE.Mesh(sharedDecalGeo, m);
-  decal.rotation.x = -Math.PI / 2;
-  decal.rotation.z = Math.random() * Math.PI * 2;
+  d.mesh.material = sharedBloodSnowMat;
+  d.mesh.rotation.z = Math.random() * Math.PI * 2;
   const gy = getTerrainHeight(x, z);
-  decal.position.set(
+  d.mesh.position.set(
     x + (Math.random() - 0.5) * 0.2,
-    gy + 0.02 + (bloodDecals.length % 35) * 0.001,
+    gy + 0.02 + (decalCursor % 32) * 0.001,
     z + (Math.random() - 0.5) * 0.2
   );
-  decal.scale.set(initR, initR, 1);
-  sceneRef.add(decal);
+  d.mesh.scale.set(initR, initR, 1);
+  d.mesh.visible = true;
 
-  bloodDecals.push({
-    mesh: decal,
-    mat: m,
-    age: 0,
-    maxLife: 10.0, // EXACTLY 10 SECONDS
-    curScale: initR,
-    targetScale: finalR,
-    spreadSpeed: 2.8
-  });
+  d.mat = sharedBloodSnowMat;
+  d.age = 0;
+  d.maxLife = 10.0;
+  d.curScale = initR;
+  d.targetScale = finalR;
+  d.spreadSpeed = 2.8;
+  d.active = true;
 }
 
 export function spawnWalkingBloodDrip(x, z, scale = 0.45) {
-  if (!sceneRef) return;
-  if (bloodDecals.length >= 30) {
-    const oldest = bloodDecals.shift();
-    removeDecal(oldest);
-  }
-  const m = new THREE.MeshBasicMaterial({
-    map: bloodDripTexRef,
-    transparent: true,
-    opacity: 0.94,
-    depthWrite: false
-  });
-  const decal = new THREE.Mesh(sharedDecalGeo, m);
-  decal.rotation.x = -Math.PI / 2;
-  decal.rotation.z = Math.random() * Math.PI * 2;
+  if (!sceneRef || bloodDecals.length === 0) return;
+  const d = bloodDecals[decalCursor];
+  decalCursor = (decalCursor + 1) % MAX_DECALS;
+
+  d.mesh.material = sharedBloodDripMat;
+  d.mesh.rotation.z = Math.random() * Math.PI * 2;
   const gy = getTerrainHeight(x, z);
-  decal.position.set(
+  d.mesh.position.set(
     x + (Math.random() - 0.5) * 0.28,
-    gy + 0.015 + (bloodDecals.length % 35) * 0.001,
+    gy + 0.015 + (decalCursor % 32) * 0.001,
     z + (Math.random() - 0.5) * 0.28
   );
   const r = (0.35 + Math.random() * 0.35) * scale;
-  decal.scale.set(r, r, 1);
-  sceneRef.add(decal);
+  d.mesh.scale.set(r, r, 1);
+  d.mesh.visible = true;
 
-  bloodDecals.push({
-    mesh: decal,
-    mat: m,
-    age: 0,
-    maxLife: 10.0,
-    curScale: r,
-    targetScale: r * 1.15,
-    spreadSpeed: 0.4
-  });
+  d.mat = sharedBloodDripMat;
+  d.age = 0;
+  d.maxLife = 10.0;
+  d.curScale = r;
+  d.targetScale = r * 1.15;
+  d.spreadSpeed = 0.4;
+  d.active = true;
 }
 
 export function createAirborneBloodDrop(originPos) {
@@ -153,55 +214,49 @@ export function createAirborneBloodDrop(originPos) {
 }
 
 export function spawnWoodSplinters(pos) {
-  if (!sceneRef) return;
-  const splinterMat1 = new THREE.MeshLambertMaterial({ color: 0x825332, flatShading: true });
-  const splinterMat2 = new THREE.MeshLambertMaterial({ color: 0x4a2e1d, flatShading: true });
+  if (!sceneRef || woodSplinters.length === 0) return;
+  for (let i = 0; i < 8; i++) {
+    const sp = woodSplinters[splinterCursor];
+    splinterCursor = (splinterCursor + 1) % MAX_SPLINTERS;
 
-  for (let i = 0; i < 16; i++) {
-    const sw = 0.08 + Math.random() * 0.12;
-    const sh = 0.22 + Math.random() * 0.45;
-    const sd = 0.06 + Math.random() * 0.08;
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(sw, sh, sd), i % 2 === 0 ? splinterMat1 : splinterMat2);
-    mesh.position.set(
-      pos.x + (Math.random() - 0.5) * 0.7,
-      pos.y + (Math.random() - 0.5) * 0.7,
-      pos.z + (Math.random() - 0.5) * 0.7
+    sp.mesh.position.set(
+      pos.x + (Math.random() - 0.5) * 0.6,
+      pos.y + (Math.random() - 0.5) * 0.6,
+      pos.z + (Math.random() - 0.5) * 0.6
     );
-    mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-    sceneRef.add(mesh);
+    sp.mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+    sp.mesh.visible = true;
 
     const a = Math.random() * Math.PI * 2;
-    const spd = 3.2 + Math.random() * 4.6;
-    woodSplinters.push({
-      mesh: mesh,
-      vx: Math.cos(a) * spd,
-      vy: 2.8 + Math.random() * 3.6,
-      vz: Math.sin(a) * spd,
-      rotX: (Math.random() - 0.5) * 14,
-      rotZ: (Math.random() - 0.5) * 14,
-      age: 0,
-      maxLife: 6.5
-    });
+    const spd = 3.2 + Math.random() * 3.6;
+    sp.vx = Math.cos(a) * spd;
+    sp.vy = 2.4 + Math.random() * 2.8;
+    sp.vz = Math.sin(a) * spd;
+    sp.rotX = (Math.random() - 0.5) * 12;
+    sp.rotZ = (Math.random() - 0.5) * 12;
+    sp.age = 0;
+    sp.maxLife = 3.5;
+    sp.active = true;
   }
 }
 
 export function spawnColdBreath(pos, dir, isPlayer = false) {
-  if (!sceneRef) return;
-  const mesh = new THREE.Mesh(breathGeo, breathMat.clone());
-  mesh.position.copy(pos);
-  mesh.rotation.z = Math.random() * Math.PI * 2;
-  sceneRef.add(mesh);
+  if (!sceneRef || breathPuffs.length === 0) return;
+  const b = breathPuffs[breathCursor];
+  breathCursor = (breathCursor + 1) % MAX_BREATH;
 
-  breathPuffs.push({
-    mesh,
-    age: 0,
-    maxLife: isPlayer ? 1.4 : 0.95,
-    vx: dir.x * 0.45 + (Math.random() - 0.5) * 0.08,
-    vy: 0.16 + Math.random() * 0.10,
-    vz: dir.z * 0.45 + (Math.random() - 0.5) * 0.08,
-    initialScale: isPlayer ? 0.28 : 0.22,
-    targetScale: isPlayer ? 1.15 : 0.8
-  });
+  b.mesh.position.copy(pos);
+  b.mesh.rotation.z = Math.random() * Math.PI * 2;
+  b.mesh.visible = true;
+
+  b.age = 0;
+  b.maxLife = isPlayer ? 1.4 : 0.95;
+  b.vx = dir.x * 0.45 + (Math.random() - 0.5) * 0.08;
+  b.vy = 0.16 + Math.random() * 0.10;
+  b.vz = dir.z * 0.45 + (Math.random() - 0.5) * 0.08;
+  b.initialScale = isPlayer ? 0.28 : 0.22;
+  b.targetScale = isPlayer ? 1.15 : 0.8;
+  b.active = true;
 }
 
 /**

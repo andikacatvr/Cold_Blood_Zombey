@@ -1025,15 +1025,15 @@ export function spawnNonaBataviaBoss(state) {
 }
 export const spawnLadyMithrillBoss = spawnNonaBataviaBoss;
 
+const sharedCurseOrbGeo = new THREE.DodecahedronGeometry(0.35, 1);
+const sharedCurseOrbMat = new THREE.MeshBasicMaterial({ color: 0xff1122 });
+
 export function castCurseBloodOrb(origin, target) {
   if (!sceneRef) return;
   Sfx.playCurseOrbCast();
 
   const dir = new THREE.Vector3().subVectors(target, origin).normalize();
-  const orbMesh = new THREE.Mesh(
-    new THREE.DodecahedronGeometry(0.35, 1),
-    new THREE.MeshBasicMaterial({ color: 0xff1122 })
-  );
+  const orbMesh = new THREE.Mesh(sharedCurseOrbGeo, sharedCurseOrbMat);
   orbMesh.position.copy(origin);
   sceneRef.add(orbMesh);
 

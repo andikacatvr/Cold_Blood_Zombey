@@ -1161,7 +1161,7 @@ export function initWorld(scene, textures) {
       pineFoliageMesh.instanceMatrix.needsUpdate = true;
       pineSnowMesh.instanceMatrix.needsUpdate = true;
 
-      pineTrunkMesh.castShadow = true;
+      pineTrunkMesh.castShadow = false;
       pineTrunkMesh.receiveShadow = true;
       pineFoliageMesh.castShadow = false;
       pineFoliageMesh.receiveShadow = true;
@@ -1207,7 +1207,7 @@ export function initWorld(scene, textures) {
       bareBranchMesh.instanceMatrix.needsUpdate = true;
       bareSnowMesh.instanceMatrix.needsUpdate = true;
 
-      bareTrunkMesh.castShadow = true;
+      bareTrunkMesh.castShadow = false;
       bareTrunkMesh.receiveShadow = true;
       bareBranchMesh.castShadow = false;
       bareBranchMesh.receiveShadow = true;

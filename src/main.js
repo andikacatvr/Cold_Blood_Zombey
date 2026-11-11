@@ -113,6 +113,7 @@ const _tempV3_1 = new THREE.Vector3();
 const _tempV3_2 = new THREE.Vector3();
 const _tempV3_3 = new THREE.Vector3();
 const _breathOffset = new THREE.Vector3(0, -0.16, 0);
+const _golokRestPos = new THREE.Vector3(0.28, -0.26, -0.52);
 
 let lastTick = performance.now();
 let playerBreathTimer = 1.0;
@@ -221,9 +222,10 @@ function updateSimulation(dt) {
     }
   }
 
-  // 5. Wood splinter debris from breached doors
-  for (let i = woodSplinters.length - 1; i >= 0; i--) {
+  // 5. Wood splinter debris from breached doors (Zero-allocation pool)
+  for (let i = 0; i < woodSplinters.length; i++) {
     const sp = woodSplinters[i];
+    if (!sp.active) continue;
     sp.age += dt;
     sp.vy -= 15.0 * dt;
     sp.mesh.position.x += sp.vx * dt;
@@ -239,8 +241,8 @@ function updateSimulation(dt) {
     }
 
     if (sp.age >= sp.maxLife) {
-      scene.remove(sp.mesh);
-      woodSplinters.splice(i, 1);
+      sp.active = false;
+      sp.mesh.visible = false;
     }
   }
 
@@ -256,13 +258,14 @@ function updateSimulation(dt) {
     spawnColdBreath(pPos, pFwd, true);
   }
 
-  for (let i = breathPuffs.length - 1; i >= 0; i--) {
+  for (let i = 0; i < breathPuffs.length; i++) {
     const b = breathPuffs[i];
+    if (!b.active) continue;
     b.age += dt;
     const progress = b.age / b.maxLife;
     if (progress >= 1.0) {
-      scene.remove(b.mesh);
-      breathPuffs.splice(i, 1);
+      b.active = false;
+      b.mesh.visible = false;
       continue;
     }
     b.mesh.position.x += b.vx * dt;
@@ -272,7 +275,6 @@ function updateSimulation(dt) {
 
     const curScale = THREE.MathUtils.lerp(b.initialScale, b.targetScale, progress);
     b.mesh.scale.set(curScale, curScale, 1);
-    b.mesh.material.opacity = (1.0 - progress) * 0.38;
   }
 
   // 7. Weapon Recoil Recovery
@@ -308,7 +310,7 @@ function updateSimulation(dt) {
       slashTrailMat.opacity = Math.max(0, (1.0 - sub) * 0.85);
     } else {
       const sub = (prog - 0.72) / 0.28;
-      golokGroup.position.lerp(new THREE.Vector3(0.28, -0.26, -0.52), sub);
+      golokGroup.position.lerp(_golokRestPos, sub);
       golokGroup.rotation.x = THREE.MathUtils.lerp(golokGroup.rotation.x, 0.18, sub);
       golokGroup.rotation.y = THREE.MathUtils.lerp(golokGroup.rotation.y, -0.22, sub);
       golokGroup.rotation.z = THREE.MathUtils.lerp(golokGroup.rotation.z, 0.26, sub);
@@ -841,18 +843,14 @@ function updateSimulation(dt) {
 
     if (c.age >= c.maxLife) {
       scene.remove(r);
-      r.traverse(child => {
-        if (child.isMesh && child.geometry) {
-          child.geometry.dispose();
-        }
-      });
       deadCorpses.splice(i, 1);
     }
   }
 
-  // 15. Blood Pools on Snow (10-second decay with memory disposal)
-  for (let i = bloodDecals.length - 1; i >= 0; i--) {
+  // 15. Blood Pools on Snow (Pooled zero-allocation decay)
+  for (let i = 0; i < bloodDecals.length; i++) {
     const b = bloodDecals[i];
+    if (!b.active) continue;
     b.age += dt;
 
     if (b.curScale < b.targetScale) {
@@ -860,15 +858,9 @@ function updateSimulation(dt) {
       b.mesh.scale.set(b.curScale, b.curScale, 1);
     }
 
-    if (b.age > 8.0) {
-      const fade = (10.0 - b.age) / 2.0;
-      b.mat.opacity = Math.max(0, fade * 0.98);
-    }
-
     if (b.age >= b.maxLife) {
-      scene.remove(b.mesh);
-      if (b.mat) b.mat.dispose();
-      bloodDecals.splice(i, 1);
+      b.active = false;
+      b.mesh.visible = false;
     }
   }
 }
@@ -922,8 +914,9 @@ function frameLoop(t) {
     waterfallInnerSplash.rotation.z += dt * 0.45;
   }
 
-  // Rising Waterfall Mist / Spray particles simulation
-  if (waterfallMistParticles && waterfallMistVel.length > 0) {
+  // Rising Waterfall Mist / Spray particles simulation (Distance culled beyond fog visibility)
+  const distToWaterfall = Math.hypot(playerPos.x - 42.0, playerPos.z - (-55.8));
+  if (distToWaterfall < 38.0 && waterfallMistParticles && waterfallMistVel.length > 0) {
     const mPos = waterfallMistParticles.geometry.attributes.position.array;
     for (let i = 0; i < waterfallMistVel.length; i++) {
       const v = waterfallMistVel[i];

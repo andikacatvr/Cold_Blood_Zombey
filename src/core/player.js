@@ -60,6 +60,18 @@ import {
 
 const THREE = window.THREE;
 
+// High-performance reusable scratch instances (Zero garbage collection churn)
+const _sharedRaycaster = new THREE.Raycaster();
+const _tempOrigin = new THREE.Vector3();
+const _tempDir = new THREE.Vector3();
+const _tempHeadWorld = new THREE.Vector3();
+const _tempTorsoWorld = new THREE.Vector3();
+const _tempPushDir = new THREE.Vector3();
+const _tempPPos = new THREE.Vector3();
+const _tempFwd = new THREE.Vector3();
+const _tempToZ = new THREE.Vector3();
+const _tempNorm = new THREE.Vector3();
+
 export const state = {
   running: false,
   isPaused: false,
@@ -192,19 +204,20 @@ export function performGolokSlash(isQuick = false) {
   pitch -= 0.02;
 
   if (!cameraRef) return;
-  const pPos = new THREE.Vector3(playerPos.x, playerPos.y + 1.2, playerPos.z);
-  const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(cameraRef.quaternion);
+  const pPos = _tempPPos.set(playerPos.x, playerPos.y + 1.2, playerPos.z);
+  const fwd = _tempFwd.set(0, 0, -1).applyQuaternion(cameraRef.quaternion);
 
   for (let i = 0; i < zombies.length; i++) {
     const z = zombies[i];
     if (z.isDead) continue;
 
     const zPos = z.model.root.position;
-    const toZ = new THREE.Vector3(zPos.x - pPos.x, (zPos.y + 1.2) - pPos.y, zPos.z - pPos.z);
+    const toZ = _tempToZ.set(zPos.x - pPos.x, (zPos.y + 1.2) - pPos.y, zPos.z - pPos.z);
     const dist = toZ.length();
 
     if (dist <= 2.9) {
-      const dot = fwd.dot(toZ.clone().normalize());
+      const normToZ = _tempNorm.copy(toZ).normalize();
+      const dot = fwd.dot(normToZ);
       if (dot > 0.35) {
         Sfx.playBladeCleave();
 
@@ -221,12 +234,13 @@ export function performGolokSlash(isQuick = false) {
           if (bar) bar.style.width = `${pct}%`;
         }
 
-        const pushDir = new THREE.Vector3(fwd.x, 0, fwd.z).normalize();
+        const pushDir = _tempPushDir.set(fwd.x, 0, fwd.z).normalize();
         z.x += pushDir.x * (z.isBoss ? 0.25 : 0.70);
         z.z += pushDir.z * (z.isBoss ? 0.25 : 0.70);
 
         spawnBloodPoolOnSnow(zPos.x, zPos.z, 0.85);
-        createAirborneBloodDrop(new THREE.Vector3(zPos.x, zPos.y + 1.2, zPos.z));
+        _tempHeadWorld.set(zPos.x, zPos.y + 1.2, zPos.z);
+        createAirborneBloodDrop(_tempHeadWorld);
 
         if (z.hp <= 0 && !z.isDead) {
           killZombieWithKinematics(z, pushDir, dist, isHead, state, () => updateHUD(state), nextWave);
@@ -314,18 +328,18 @@ export function fireCombatShotgun() {
   }
 
   if (!cameraRef) return;
-  const raycaster = new THREE.Raycaster();
+  const raycaster = _sharedRaycaster;
   const pelletCount = isSpin ? 8 : 7;
   const spreadAngle = isSpin ? 0.088 : 0.075;
 
   const originPos = cameraMode === 'tps'
-    ? new THREE.Vector3(playerPos.x, playerPos.y + 1.25, playerPos.z)
-    : cameraRef.position;
+    ? _tempOrigin.set(playerPos.x, playerPos.y + 1.25, playerPos.z)
+    : _tempOrigin.copy(cameraRef.position);
 
   for (let pellet = 0; pellet < pelletCount; pellet++) {
     const sprX = (Math.random() - 0.5) * spreadAngle;
     const sprY = (Math.random() - 0.5) * spreadAngle;
-    const dir = new THREE.Vector3(sprX, sprY, -1).normalize().applyQuaternion(cameraRef.quaternion);
+    const dir = _tempDir.set(sprX, sprY, -1).normalize().applyQuaternion(cameraRef.quaternion);
 
     raycaster.set(originPos, dir);
     raycaster.far = isSpin ? 46 : 42;
@@ -349,7 +363,7 @@ export function fireCombatShotgun() {
       const zPos = z.model.root.position;
       const hitDist = originPos.distanceTo(zPos);
 
-      const headWorld = new THREE.Vector3();
+      const headWorld = _tempHeadWorld;
       if (z.model.head) {
         z.model.head.getWorldPosition(headWorld);
       } else {
@@ -358,7 +372,8 @@ export function fireCombatShotgun() {
       const distToHead = raycaster.ray.distanceToPoint(headWorld);
 
       const torsoY = zPos.y + (z.isFloatingBoss ? (0.85 * (z.model.scale || 1.0)) : (z.isBoss ? 1.6 : 1.15));
-      const distToTorso = raycaster.ray.distanceToPoint(new THREE.Vector3(zPos.x, torsoY, zPos.z));
+      const torsoPos = _tempTorsoWorld.set(zPos.x, torsoY, zPos.z);
+      const distToTorso = raycaster.ray.distanceToPoint(torsoPos);
 
       const zScale = z.model.scale || 1.0;
       let isHeadshot = false;
@@ -515,16 +530,20 @@ export function startWinterSurvive(scene) {
 
   deadCorpses.forEach(c => scene.remove(c.model.root));
   deadCorpses.length = 0;
-  bloodDecals.forEach(b => scene.remove(b.mesh));
-  bloodDecals.length = 0;
+  bloodDecals.forEach(b => {
+    b.active = false;
+    if (b.mesh) b.mesh.visible = false;
+  });
   airborneDrips.forEach(d => {
     d.active = false;
     if (d.mesh) d.mesh.visible = false;
   });
   curseProjectiles.forEach(p => scene.remove(p.mesh));
   curseProjectiles.length = 0;
-  woodSplinters.forEach(s => scene.remove(s.mesh));
-  woodSplinters.length = 0;
+  woodSplinters.forEach(s => {
+    s.active = false;
+    if (s.mesh) s.mesh.visible = false;
+  });
   clearBossDeathEffects();
 
   state.score = 0;
