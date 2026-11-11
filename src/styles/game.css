@@ -29,7 +29,7 @@
     #ps1-canvas {
       width: 100vw;
       height: 100vh;
-      object-fit: cover;
+      object-fit: contain;
       image-rendering: -moz-crisp-edges;
       image-rendering: -webkit-crisp-edges;
       image-rendering: pixelated;

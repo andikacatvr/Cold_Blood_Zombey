@@ -67,12 +67,9 @@ export function applyGraphicFidelity(mode = 'ps1') {
   gameSettings.graphicMode = 'ps1';
   canvas.classList.remove('ps2-mode');
 
-  // Authentic PS1 1997 Pixelated Rendering (320px downscaled resolution)
-  const aspect = window.innerWidth / window.innerHeight;
-  const w = 320;
-  const h = Math.max(180, Math.round(320 / aspect));
-  renderer.setSize(w, h, false);
-  camera.aspect = aspect;
+  // Authentic PS1 1997 4:3 Aspect Ratio (Native 320x240 with Pillarbox Black Bars)
+  renderer.setSize(320, 240, false);
+  camera.aspect = 320 / 240;
   camera.updateProjectionMatrix();
 
   renderer.shadowMap.enabled = false;
