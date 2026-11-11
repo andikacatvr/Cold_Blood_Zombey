@@ -4,7 +4,7 @@ from PIL import Image
 import trimesh
 import os
 
-print("=== REBUILDING PERFECT PS1 BOSS BRIDE - PERFECT HEAD, PROFILE, HAIR & BODY ===")
+print("=== REBUILDING PS1 BOSS BRIDE - NATURAL ROUNDED HAIR & PERFECT FEMININE CRANIUM ===")
 
 # 1. Load source image
 src_bgr = cv2.imread('bossgame.png')
@@ -28,23 +28,29 @@ fg_pts = np.argwhere(mask > 0)
 nearest = fg_pts[labels - 1]
 src_bled = src_bgr[nearest[:, :, 0], nearest[:, :, 1]].copy()
 
-brunette_hair = np.array([20, 26, 35], dtype=np.uint8)
+brunette_hair = np.array([22, 28, 38], dtype=np.uint8)
 avg_skin = np.array([115, 140, 190], dtype=np.uint8)
 
-# 1. Top of head (Y: 0 to 110): 100% pure rich brunette hair across entire width
+# 1. Clean head and keep REAL photographic hair texture
 for y in range(0, 110):
     for x in range(350, 680):
-        src_bled[y, x] = brunette_hair
+        # Outside hair width: fill with rich brunette hair
+        if x < 435 or x > 585:
+            src_bled[y, x] = brunette_hair
+        else:
+            # Inside hair width: if it was white veil background, fill with brunette hair
+            if src_bgr[y, x].mean() > 200:
+                src_bled[y, x] = brunette_hair
+            else:
+                # Keep real beautiful photographic hair texture!
+                src_bled[y, x] = src_bgr[y, x]
 
 # 2. Face & Hair (Y: 110 to 220):
-# Fill hair outside central face so sides of head are 100% rich brunette hair
 for y in range(110, 220):
     for x in range(350, 680):
-        # Keep face inside [465, 555]
         if x < 465 or x > 555:
             src_bled[y, x] = brunette_hair
         else:
-            # If bright white veil ribbon inside face, clean it
             if src_bgr[y, x].mean() > 215:
                 if x < 475 or x > 545:
                     src_bled[y, x] = brunette_hair
@@ -55,11 +61,9 @@ for y in range(110, 220):
 for y in range(220, 285):
     for x in range(350, 680):
         if 470 <= x <= 555:
-            # In neck: ensure smooth porcelain skin without white veil ribbons
             if src_bgr[y, x].mean() > 200 or src_bgr[y, x].mean() < 70:
                 src_bled[y, x] = avg_skin
         else:
-            # Outside neck: brunette hair
             src_bled[y, x] = brunette_hair
 
 target_h = 960
@@ -74,12 +78,12 @@ mask_resized = cv2.resize(mask_crop, (target_w, target_h), interpolation=cv2.INT
 # Clean and build back view
 back_resized = front_resized.copy()
 
-# 1. Back of head hair (Y_src: 22 to 260) -> 100% full rich brunette hair across entire width!
+# Back of head hair (Y_src: 22 to 260) -> 100% full rich brunette hair across entire width!
 y_neck_px = int((260 - ymin) / bbox_h * target_h)
 for y in range(y_neck_px):
     back_resized[y, :] = brunette_hair
 
-# 2. Porcelain fair skin on low-cut back (Y_src: 260 to 370)
+# Porcelain fair skin on low-cut back (Y_src: 260 to 370)
 y_strapless_back = int((370 - ymin) / bbox_h * target_h)
 for y in range(y_neck_px, y_strapless_back):
     back_resized[y, :] = avg_skin
@@ -89,7 +93,7 @@ y_pearl = int((288 - ymin) / bbox_h * target_h)
 for px in range(target_w // 2 - 35, target_w // 2 + 35, 4):
     back_resized[y_pearl-1:y_pearl+3, px-1:px+3] = [245, 245, 250]
 
-# 3. Gown back with spine corset seam (Y_src: 370 to 1420)
+# Gown back with spine corset seam (Y_src: 370 to 1420)
 y_dress_end = int((1420 - ymin) / bbox_h * target_h)
 for y in range(y_strapless_back, y_dress_end):
     row_m = mask_resized[y] > 0
@@ -99,8 +103,8 @@ for y in range(y_strapless_back, y_dress_end):
 
 back_mirrored = cv2.flip(back_resized, 1)
 
-# Assemble 1024x1024 Atlas with neutral dark brunette background to prevent any white bleeding
-atlas_bgr = np.full((1024, 1024, 3), [20, 26, 35], dtype=np.uint8)
+# Assemble 1024x1024 Atlas with dark brunette padding
+atlas_bgr = np.full((1024, 1024, 3), [22, 28, 38], dtype=np.uint8)
 x_f_start = 256 - target_w // 2
 x_b_start = 768 - target_w // 2
 y_start = (1024 - target_h) // 2
@@ -170,9 +174,8 @@ def add_smooth_column(rings_f, rings_b, cap_top=True, cap_bottom=True, top_dome=
         top_rb = rings_b[-1]
         top_pts = [all_vertices[idx] for idx in top_rf]
         mid_x = np.mean([p[0] for p in top_pts])
-        top_y = top_pts[0][1] + (0.003 if top_dome else 0.006)
+        top_y = top_pts[0][1] + (0.006 if top_dome else 0.003)
 
-        # Front cap apex vertex MUST use FRONT UV
         top_uv_f = all_uvs[top_rf[K_seg // 2]]
         af_idx = len(all_vertices)
         all_vertices.append([mid_x, top_y, 0.002])
@@ -181,7 +184,6 @@ def add_smooth_column(rings_f, rings_b, cap_top=True, cap_bottom=True, top_dome=
         for k in range(K_seg):
             all_faces.append([af_idx, top_rf[k], top_rf[k + 1]])
 
-        # Back cap apex vertex MUST use BACK UV
         top_uv_b = all_uvs[top_rb[K_seg // 2]]
         ab_idx = len(all_vertices)
         all_vertices.append([mid_x, top_y, -0.002])
@@ -214,36 +216,37 @@ def add_smooth_column(rings_f, rings_b, cap_top=True, cap_bottom=True, top_dome=
             all_faces.append([bb_idx, bot_rb[k + 1], bot_rb[k]])
 
 # ==============================================================================
-# 1. HEAD & BEAUTIFUL ANATOMICAL FACE PROFILE (Seamless Oval Cranium & Hair)
+# 1. HEAD & BEAUTIFUL ANATOMICAL FACE PROFILE (Natural Rounded Feminine Cranium)
 # ==============================================================================
-print("1. Modeling Head (Smooth Feminine Skull, Natural Profile, Seamless Hair)...")
+print("1. Modeling Head (Natural Rounded Skull, No Conehead, Beautiful Hair)...")
 head_rf, head_rb = [], []
 K_head = 10
-head_y_steps = np.linspace(280, 25, 36).astype(int)
+# Natural head height: from neck base (280) to rounded crown (72) - NO TALL POINTY CONE!
+head_y_steps = np.linspace(280, 72, 32).astype(int)
 
 for y_px in head_y_steps:
     norm_y = 1.0 - (y_px - ymin) / bbox_h
     y_world = norm_y * world_height
 
     # Calculate smooth anatomical head and neck contours
-    if y_px < 90:
-        # Hair bun & crown top
-        t = (y_px - 25) / (90 - 25)
-        rx = 0.024 * (1 - t) + 0.070 * t
-        rz_front = rx * 0.88
-        rz_back = rx * 1.05
-    elif y_px < 160:
-        # Forehead & temples
-        t = (y_px - 90) / (160 - 90)
-        rx = 0.070 * (1 - t) + 0.078 * t
-        rz_front = rx * 0.90
-        rz_back = rx * 1.06
+    if y_px < 95:
+        # Rounded crown dome of the head
+        t = (y_px - 72) / (95 - 72)
+        rx = 0.040 * (1 - t) + 0.068 * t
+        rz_front = 0.038 * (1 - t) + 0.062 * t
+        rz_back = 0.042 * (1 - t) + 0.068 * t
+    elif y_px < 140:
+        # Upper forehead & temples
+        t = (y_px - 95) / (140 - 95)
+        rx = 0.068 * (1 - t) + 0.076 * t
+        rz_front = 0.062 * (1 - t) + 0.068 * t
+        rz_back = 0.068 * (1 - t) + 0.076 * t
     elif y_px < 205:
         # Cheeks to jawline
-        t = (y_px - 160) / (205 - 160)
-        rx = 0.078 * (1 - t) + 0.058 * t
-        rz_front = 0.070 * (1 - t) + 0.050 * t
-        rz_back = 0.082 * (1 - t) + 0.056 * t
+        t = (y_px - 140) / (205 - 140)
+        rx = 0.076 * (1 - t) + 0.058 * t
+        rz_front = 0.068 * (1 - t) + 0.050 * t
+        rz_back = 0.076 * (1 - t) + 0.056 * t
     elif y_px < 240:
         # Chin to mid-neck
         t = (y_px - 205) / (240 - 205)
@@ -267,14 +270,11 @@ for y_px in head_y_steps:
 
     # Natural subtle PS1 facial profile (nose tip +3.5mm, lips +2.5mm, chin +3mm)
     if 162 <= y_px <= 184:
-        # Nose bridge and tip
         t_n = (y_px - 162) / (184 - 162)
         z_feature = 0.001 + 0.0035 * np.sin(np.pi * t_n)
     elif 192 <= y_px <= 202:
-        # Lips
         z_feature = 0.0025
     elif 205 <= y_px <= 214:
-        # Chin
         z_feature = 0.003
     else:
         z_feature = 0.0
@@ -285,7 +285,6 @@ for y_px in head_y_steps:
     for k in range(K_head + 1):
         th = np.pi * k / K_head
         vx = vx_mid + rx * np.cos(th)
-        # Falloff rapidly away from center so cheeks remain smooth
         central_weight = np.exp(-((vx / 0.018) ** 2))
         vz = rz_front * np.sin(th) + z_feature * central_weight
 
@@ -332,6 +331,7 @@ for y_px in torso_y_steps:
     row = mask[y_px, :]
 
     if y_px < 340:
+        # Deltoid shoulder slope
         t_sh = (y_px - 280) / (340 - 280)
         rx = 0.054 * (1 - t_sh) + 0.138 * t_sh
         rz_front = 0.045 * (1 - t_sh) + 0.052 * t_sh
@@ -620,4 +620,4 @@ for p in out_files:
         f.write(glb_bytes)
     print(f"Exported {p} ({len(glb_bytes)} bytes)")
 
-print("=== PERFECT BOSS BRIDE REBUILD COMPLETE ===")
+print("=== NATURAL HAIR REBUILD COMPLETE ===")
