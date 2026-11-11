@@ -759,8 +759,9 @@ const THREE = window.THREE;
     const faceMaleTiredTex = texLoader.load('/textures/zombies/face_male_tired.jpg');
     const faceMaleFadeTex = texLoader.load('/textures/zombies/face_male_fade.jpg');
     const faceFemaleSleekTex = texLoader.load('/textures/zombies/face_female_sleek.jpg');
+    const faceFemaleMeghanTex = texLoader.load('/textures/zombies/face_female_meghan.jpg');
 
-    [faceFemaleShaggyTex, faceMaleTiredTex, faceMaleFadeTex, faceFemaleSleekTex].forEach(t => {
+    [faceFemaleShaggyTex, faceMaleTiredTex, faceMaleFadeTex, faceFemaleSleekTex, faceFemaleMeghanTex].forEach(t => {
       if (t) {
         t.minFilter = THREE.LinearMipmapLinearFilter;
         t.magFilter = THREE.LinearFilter;
@@ -863,8 +864,9 @@ export const textures = {
   faceFemaleShaggyTex,
   faceMaleTiredTex,
   faceMaleFadeTex,
-  faceFemaleSleekTex
+  faceFemaleSleekTex,
+  faceFemaleMeghanTex
 };
 
-export { createProceduralTexture, snowTex, asphaltRoadTex, riverWaterTex, waterfallTex, waterfallMistTex, topStreamTex, crestFoamTex, chainlinkTex, bloodSnowTex, bloodDripTex, houseWallTex, woodPlanksTex, brickHearthTex, creamCabinTex, creamBarnTex, creamStoneTex, nunFaceTex, l4dFlannelTex, l4dHoodieTex, l4dPatientTex, l4dBruiserTex, l4dDenimTex, l4dDarkPantsTex, l4dFaceTex, l4dNecroticSkinTex, l4dClawsTex, andikaSweaterTex, andikaCargoTex, andikaFaceTex, andikaSneakerTex, katzSignTex, martinSignTex, parkingSignTex, drainGrateTex, storefrontBrickTex, awningFabricTex, concreteCurbTex, faceFemaleShaggyTex, faceMaleTiredTex, faceMaleFadeTex, faceFemaleSleekTex };
+export { createProceduralTexture, snowTex, asphaltRoadTex, riverWaterTex, waterfallTex, waterfallMistTex, topStreamTex, crestFoamTex, chainlinkTex, bloodSnowTex, bloodDripTex, houseWallTex, woodPlanksTex, brickHearthTex, creamCabinTex, creamBarnTex, creamStoneTex, nunFaceTex, l4dFlannelTex, l4dHoodieTex, l4dPatientTex, l4dBruiserTex, l4dDenimTex, l4dDarkPantsTex, l4dFaceTex, l4dNecroticSkinTex, l4dClawsTex, andikaSweaterTex, andikaCargoTex, andikaFaceTex, andikaSneakerTex, katzSignTex, martinSignTex, parkingSignTex, drainGrateTex, storefrontBrickTex, awningFabricTex, concreteCurbTex, faceFemaleShaggyTex, faceMaleTiredTex, faceMaleFadeTex, faceFemaleSleekTex, faceFemaleMeghanTex };
 

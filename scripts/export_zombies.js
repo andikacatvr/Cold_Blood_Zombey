@@ -232,30 +232,42 @@ function buildFemaleShaggyZombie() {
   headGroup.position.y = 0.12 * scale;
   neck.add(headGroup);
 
-  // 3D Shaggy Bob Hair (Matches photo 5: layered bob hair framing face)
+  const goldMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.3, metalness: 0.85 });
+
+  // 3D Sleek Pulled-Back Ponytail Hair & Jewelry (Matches uploaded Meghan Markle photo)
   const hairGroup = new THREE.Group();
   hairGroup.name = 'hair';
   headGroup.add(hairGroup);
 
-  const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.125 * scale, 12, 10), hairMat);
-  hairTop.scale.set(1.05, 0.85, 1.15);
-  hairTop.position.set(0, 0.05 * scale, -0.01 * scale);
+  const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.122 * scale, 16, 12), hairMat);
+  hairTop.scale.set(1.02, 0.88, 1.10);
+  hairTop.position.set(0, 0.046 * scale, -0.015 * scale);
   hairGroup.add(hairTop);
 
-  // Layered shaggy side bangs
-  [-0.10, 0.10].forEach(bx => {
-    const bang = new THREE.Mesh(new THREE.CylinderGeometry(0.02 * scale, 0.045 * scale, 0.24 * scale, 6), hairMat);
-    bang.position.set(bx * scale, -0.02 * scale, 0.04 * scale);
-    bang.rotation.z = (bx > 0 ? -0.15 : 0.15);
-    bang.rotation.x = 0.1;
-    hairGroup.add(bang);
-  });
+  const bun = new THREE.Mesh(new THREE.SphereGeometry(0.046 * scale, 10, 8), hairMat);
+  bun.position.set(0, 0.015 * scale, -0.122 * scale);
+  hairGroup.add(bun);
 
-  // Shaggy back curtain
-  const hairBack = new THREE.Mesh(new THREE.BoxGeometry(0.22 * scale, 0.26 * scale, 0.08 * scale), hairMat);
-  hairBack.position.set(0, -0.06 * scale, -0.09 * scale);
-  hairBack.rotation.x = -0.15;
-  hairGroup.add(hairBack);
+  const ponytail = new THREE.Mesh(new THREE.CylinderGeometry(0.022 * scale, 0.036 * scale, 0.18 * scale, 6), hairMat);
+  ponytail.position.set(0, -0.06 * scale, -0.135 * scale);
+  ponytail.rotation.x = 0.25;
+  hairGroup.add(ponytail);
+
+  // Delicate gold chain necklace
+  const necklace = new THREE.Mesh(
+    new THREE.TorusGeometry(0.076 * scale, 0.0035 * scale, 4, 16, Math.PI * 0.82),
+    goldMat
+  );
+  necklace.position.set(0, -0.08 * scale, 0.035 * scale);
+  necklace.rotation.x = Math.PI * 0.42;
+  headGroup.add(necklace);
+
+  // Stud earrings
+  [-0.102, 0.102].forEach(ex => {
+    const earring = new THREE.Mesh(new THREE.SphereGeometry(0.005 * scale, 6, 6), goldMat);
+    earring.position.set(ex * scale, 0, 0);
+    headGroup.add(earring);
+  });
 
   // 4. Arms
   [-1, 1].forEach(sign => {

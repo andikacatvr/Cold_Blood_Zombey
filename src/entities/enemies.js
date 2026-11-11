@@ -32,8 +32,8 @@ let cameraRef = null;
 // Materials
 let l4dFlannelMat, l4dHoodieMat, l4dPatientMat, l4dBruiserMat, l4dDenimMat, l4dDarkPantsMat;
 let l4dFaceMat, l4dNecroticSkinMat, l4dClawsMat, l4dBootMat, l4dHairMat;
-let ps1FemaleHairMat, ps1MaleHairMat, ps1TieMat, ps1FormalShoeMat, ps1DarkBeltMat;
-let faceFemaleShaggyMat, faceMaleTiredMat, faceMaleFadeMat, faceFemaleSleekMat;
+let ps1FemaleHairMat, ps1MaleHairMat, ps1TieMat, ps1FormalShoeMat, ps1DarkBeltMat, goldJewelryMat;
+let faceFemaleShaggyMat, faceMaleTiredMat, faceMaleFadeMat, faceFemaleSleekMat, faceFemaleMeghanMat;
 export const zombieGLBCache = { femaleShaggy: null, maleVest: null, maleSuit: null, femaleSleek: null };
 let fleshRawCrimsonMat, fleshDarkClotMat, intestineWetPinkMat, exposedWhiteRibMat, feralGlowingEyesMat;
 let nunHabitMat, nunVeilMat, nunMantleMat, silverCrossMat, bloodyHandsMat, paleFleshMat, nunFaceMat;
@@ -86,6 +86,15 @@ export function initEnemyMaterials(textures) {
     map: textures.faceFemaleSleekTex || l4dFaceTex,
     flatShading: false
   });
+  faceFemaleMeghanMat = new THREE.MeshLambertMaterial({
+    map: textures.faceFemaleMeghanTex || textures.faceFemaleSleekTex || l4dFaceTex,
+    flatShading: false
+  });
+  goldJewelryMat = new THREE.MeshStandardMaterial({
+    color: 0xd4af37,
+    roughness: 0.3,
+    metalness: 0.85
+  });
 
   fleshRawCrimsonMat = new THREE.MeshLambertMaterial({ color: 0x990b14, flatShading: false });
   fleshDarkClotMat = new THREE.MeshLambertMaterial({ color: 0x480307, flatShading: false });
@@ -137,9 +146,9 @@ function createRealisticContouredHead(variant, scale) {
   const head = new THREE.Group();
   
   // Select realistic photo face material
-  let faceMat = faceFemaleShaggyMat || l4dFaceMat;
-  let hairMat = ps1FemaleHairMat;
   const isFemale = (variant === 0 || variant === 3);
+  let faceMat = (faceFemaleMeghanMat || faceFemaleSleekMat || l4dFaceMat);
+  let hairMat = ps1FemaleHairMat;
 
   if (variant === 1) {
     faceMat = faceMaleTiredMat || l4dFaceMat;     // tired sunken eyes man (Photo 4)
@@ -147,8 +156,8 @@ function createRealisticContouredHead(variant, scale) {
   } else if (variant === 2) {
     faceMat = faceMaleFadeMat || l4dFaceMat;      // Asian fade man (Photo 2)
     hairMat = ps1MaleHairMat;
-  } else if (variant === 3) {
-    faceMat = faceFemaleSleekMat || l4dFaceMat;   // sleek pulled-back hair lady (Photo 3)
+  } else if (isFemale) {
+    faceMat = faceFemaleMeghanMat || faceFemaleSleekMat || l4dFaceMat; // Meghan Markle uploaded photo
     hairMat = ps1FemaleHairMat;
   }
 
@@ -258,7 +267,7 @@ function createRealisticContouredHead(variant, scale) {
   chin.position.set(0, -0.024 * scale, 0.054 * scale);
   jaw.add(chin);
 
-  // 8. Anatomical 3D Ears
+  // 8. Anatomical 3D Ears & Earrings
   [-0.102, 0.102].forEach((earX, idx) => {
     const earGroup = new THREE.Group();
     earGroup.position.set(earX * scale, 0.015 * scale, -0.01 * scale);
@@ -268,31 +277,47 @@ function createRealisticContouredHead(variant, scale) {
     const earHelix = new THREE.Mesh(new THREE.TorusGeometry(0.020 * scale, 0.005 * scale, 5, 8, Math.PI * 1.3), l4dNecroticSkinMat);
     earHelix.rotation.z = Math.PI * 0.45;
     earGroup.add(earHelix);
+
+    // Small stud earring for female zombie (matches uploaded photo)
+    if (isFemale && goldJewelryMat) {
+      const earring = new THREE.Mesh(new THREE.SphereGeometry(0.005 * scale, 6, 6), goldJewelryMat);
+      earring.position.set(0, -0.015 * scale, 0.002 * scale);
+      earGroup.add(earring);
+    }
   });
+
+  // Delicate gold chain necklace for female zombie (matches uploaded photo)
+  if (isFemale && goldJewelryMat) {
+    const necklace = new THREE.Mesh(
+      new THREE.TorusGeometry(0.076 * scale, 0.0035 * scale, 4, 16, Math.PI * 0.82),
+      goldJewelryMat
+    );
+    necklace.position.set(0, -0.08 * scale, 0.035 * scale);
+    necklace.rotation.x = Math.PI * 0.42;
+    head.add(necklace);
+  }
 
   // 9. 3D Hairstyling matching user photos
   const hairGroup = new THREE.Group();
   head.add(hairGroup);
 
-  if (variant === 0) {
-    // Female Shaggy (Photo 5: Layered bob bangs framing face)
-    const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.124 * scale, 14, 10), hairMat);
-    hairTop.scale.set(1.05, 0.85, 1.15);
-    hairTop.position.set(0, 0.048 * scale, -0.012 * scale);
-    hairGroup.add(hairTop);
+  if (variant === 0 || variant === 3) {
+    // Female: Sleek pulled-back ponytail & neat bun (Matches uploaded Meghan Markle photo)
+    const hairSleek = new THREE.Mesh(new THREE.SphereGeometry(0.122 * scale, 16, 12), hairMat);
+    hairSleek.scale.set(1.02, 0.88, 1.10);
+    hairSleek.position.set(0, 0.046 * scale, -0.015 * scale);
+    hairGroup.add(hairSleek);
 
-    [-0.098, 0.098].forEach(bx => {
-      const bang = new THREE.Mesh(new THREE.CylinderGeometry(0.018 * scale, 0.042 * scale, 0.24 * scale, 6), hairMat);
-      bang.position.set(bx * scale, -0.02 * scale, 0.04 * scale);
-      bang.rotation.z = (bx > 0 ? -0.15 : 0.15);
-      bang.rotation.x = 0.1;
-      hairGroup.add(bang);
-    });
+    // Neat bun / gathered hair at nape of neck
+    const bun = new THREE.Mesh(new THREE.SphereGeometry(0.046 * scale, 10, 8), hairMat);
+    bun.position.set(0, 0.015 * scale, -0.122 * scale);
+    hairGroup.add(bun);
 
-    const hairBack = new THREE.Mesh(new THREE.BoxGeometry(0.22 * scale, 0.24 * scale, 0.08 * scale), hairMat);
-    hairBack.position.set(0, -0.05 * scale, -0.088 * scale);
-    hairBack.rotation.x = -0.15;
-    hairGroup.add(hairBack);
+    // Sleek ponytail / gathered tail hanging down back
+    const ponytail = new THREE.Mesh(new THREE.CylinderGeometry(0.022 * scale, 0.036 * scale, 0.18 * scale, 6), hairMat);
+    ponytail.position.set(0, -0.06 * scale, -0.135 * scale);
+    ponytail.rotation.x = 0.25;
+    hairGroup.add(ponytail);
   } else if (variant === 1) {
     // Male Tired (Photo 4: Messy wavy hair with loose forehead fringe)
     const hairBase = new THREE.Mesh(new THREE.SphereGeometry(0.122 * scale, 14, 10), hairMat);
