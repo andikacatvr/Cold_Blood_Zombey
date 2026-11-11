@@ -351,3 +351,4 @@ content = content.replace(oldHeadCreation, newHeadCreation);
 
 fs.writeFileSync(filePath, content, 'utf-8');
 console.log('Successfully updated enemies.js with realistic contoured human heads and GLB caching!');
+

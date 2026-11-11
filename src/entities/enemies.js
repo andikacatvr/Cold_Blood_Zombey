@@ -340,7 +340,8 @@ export function buildLeft4DeadInfected(variant = 0) {
   const isSuitMale = (variant === 2);
   const isVestMale = (variant === 1);
 
-  const scale = isFemale ? 0.98 : (isSuitMale ? 1.05 : 1.02);
+  // Scaled to match Kristin's companion height (NPC_SCALE = 1.38)
+  const scale = isFemale ? 1.34 : (isSuitMale ? 1.40 : 1.38);
 
   // Material selection based on archetypes
   let torsoMat = l4dFlannelMat; // female dirty blouse

@@ -174,7 +174,7 @@ function createRealisticHeadGeometry(scale = 1.0, isFemale = false) {
 function buildFemaleShaggyZombie() {
   const root = new THREE.Group();
   root.name = 'Zombie_Female_Shaggy';
-  const scale = 0.98;
+  const scale = 1.34; // Scaled to match Kristin (NPC_SCALE = 1.38)
 
   const blouseMat = new THREE.MeshStandardMaterial({ color: 0xd8d6cc, roughness: 0.88 });
   const skirtMat = new THREE.MeshStandardMaterial({ color: 0x242426, roughness: 0.92 });
@@ -320,7 +320,7 @@ function buildFemaleShaggyZombie() {
 function buildMaleVestZombie() {
   const root = new THREE.Group();
   root.name = 'Zombie_Male_Vest';
-  const scale = 1.02;
+  const scale = 1.38; // Scaled to match Kristin (NPC_SCALE = 1.38)
 
   const shirtMat = new THREE.MeshStandardMaterial({ color: 0xd2d5d8, roughness: 0.88 });
   const vestMat = new THREE.MeshStandardMaterial({ color: 0xb5ad9e, roughness: 0.85 }); // cream/beige waistcoat
@@ -454,7 +454,7 @@ function buildMaleVestZombie() {
 function buildMaleSuitZombie() {
   const root = new THREE.Group();
   root.name = 'Zombie_Male_Suit';
-  const scale = 1.05;
+  const scale = 1.40; // Scaled to match Kristin (NPC_SCALE = 1.38)
 
   const suitMat = new THREE.MeshStandardMaterial({ color: 0x181a1d, roughness: 0.88 }); // dark charcoal/black suit
   const shirtMat = new THREE.MeshStandardMaterial({ color: 0xe0e2e5, roughness: 0.85 });
@@ -590,7 +590,7 @@ function buildMaleSuitZombie() {
 function buildFemaleSleekZombie() {
   const root = new THREE.Group();
   root.name = 'Zombie_Female_Sleek';
-  const scale = 0.99;
+  const scale = 1.35; // Scaled to match Kristin (NPC_SCALE = 1.38)
 
   const blouseMat = new THREE.MeshStandardMaterial({ color: 0xedebe4, roughness: 0.88 });
   const skirtMat = new THREE.MeshStandardMaterial({ color: 0x1c1d1f, roughness: 0.92 });

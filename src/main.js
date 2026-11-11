@@ -702,7 +702,13 @@ function updateSimulation(dt) {
         if (z.breathTimer <= 0 && dist < 22) {
           z.breathTimer = 1.6 + Math.random() * 1.4;
           const zFwd = _tempV3_1.set(Math.sin(ang), 0, Math.cos(ang));
-          const zHeadPos = _tempV3_2.set(z.x + zFwd.x * 0.35, 1.42, z.z + zFwd.z * 0.35);
+          const zHeadPos = _tempV3_2;
+          if (p.head) {
+            p.head.getWorldPosition(zHeadPos);
+            zHeadPos.addScaledVector(zFwd, 0.15);
+          } else {
+            zHeadPos.set(z.x + zFwd.x * 0.35, 1.95, z.z + zFwd.z * 0.35);
+          }
           spawnColdBreath(zHeadPos, zFwd, false);
         }
 
