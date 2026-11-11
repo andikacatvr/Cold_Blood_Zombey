@@ -381,7 +381,7 @@ body_rf, body_rb = [], []
 # Dense steps along body for perfect silhouette curve
 y_body_steps = [
     305, 325, 350, 380, 415, 450, 490, 530, 570, 620,
-    670, 720, 770, 830, 900, 980, 1070, 1170, 1280, 1390, 1480
+    670, 720, 770, 830, 900, 980, 1070, 1170, 1260, 1345, 1420
 ]
 
 for y_px in y_body_steps:
@@ -432,8 +432,8 @@ for y_px in y_body_steps:
         rz_f = 0.065 + 0.020 * t_h
         rz_b = 0.065 + 0.035 * t_h
     else:
-        # Flowing bridal skirt
-        t_s = (y_px - 750) / (1480.0 - 750.0)
+        # Flowing bridal skirt with continuous bell flare down to hem at Y=1420
+        t_s = (y_px - 750) / (1420.0 - 750.0)
         rz_f = 0.085 + 0.130 * t_s
         rz_b = 0.100 + 0.115 * t_s
         
@@ -559,16 +559,20 @@ uv_sole = [510.0 / 1024.0, 1.0 - 1010.0 / 1024.0]
 
 def build_leg_and_heel(is_right=False):
     sign = 1.0 if is_right else -1.0
-    x_mid = sign * 0.072
+    # In bossgamerev.png:
+    # Left shoe (viewer left, sign=-1.0): center X = 387.5, width [360..415]
+    # Right shoe (viewer right, sign=+1.0): center X = 637.5, width [610..665]
+    orig_center_x = 637.5 if is_right else 387.5
+    x_mid = (orig_center_x - center_x) * scale_x
     
-    # 1. Porcelain Leg (Calf & Ankle inside hollow underskirt)
+    # 1. Porcelain Leg (Calf & Ankle inside hollow underskirt, ending neatly at shoe opening)
     leg_rf, leg_rb = [], []
     leg_steps = [
-        (0.350, 0.026, 0.028, 0.005),  # Upper calf inside skirt
-        (0.270, 0.023, 0.025, 0.007),  # Mid calf
-        (0.190, 0.019, 0.021, 0.008),  # Lower calf
-        (0.125, 0.016, 0.018, 0.009),  # Slender ankle & malleolus bone
-        (0.080, 0.015, 0.016, 0.010),  # Ankle joint entering shoe
+        (0.350, 0.024, 0.026, 0.000),  # Upper calf inside skirt
+        (0.260, 0.021, 0.023, 0.002),  # Mid calf
+        (0.180, 0.018, 0.020, 0.004),  # Lower calf
+        (0.130, 0.015, 0.017, 0.006),  # Slender ankle & malleolus bone
+        (0.108, 0.014, 0.016, 0.008),  # Ankle joint entering shoe under hem
     ]
     
     for yw, rx, rz, zm in leg_steps:
@@ -577,24 +581,24 @@ def build_leg_and_heel(is_right=False):
             th = -np.pi * 0.5 + np.pi * k / float(K_leg)
             vx = x_mid + rx * np.sin(th)
             vz = zm + rz * np.cos(th)
-            orig_x = center_x + sign * (30.0 + 15.0 * np.sin(th))
-            uv = get_uv_front(orig_x, 275) # Porcelain skin
+            uv = get_uv_front(center_x, 275) # Pure porcelain skin
             
             v_idx = len(all_vertices)
             all_vertices.append([vx, yw, vz])
             all_uvs.append(uv)
+            all_normals.append([np.sin(th), 0.0, np.cos(th)])
             rf.append(v_idx)
             
         for k in range(K_leg + 1):
             th = np.pi * 0.5 + np.pi * k / float(K_leg)
             vx = x_mid + rx * np.sin(th)
             vz = zm + rz * np.cos(th)
-            orig_x = center_x + sign * (30.0 + 15.0 * np.sin(th))
-            uv = get_uv_back(orig_x, 275)
+            uv = get_uv_back(center_x, 275)
             
             v_idx = len(all_vertices)
             all_vertices.append([vx, yw, vz])
             all_uvs.append(uv)
+            all_normals.append([np.sin(th), 0.0, np.cos(th)])
             rb.append(v_idx)
             
         leg_rf.append(rf)
@@ -602,40 +606,46 @@ def build_leg_and_heel(is_right=False):
         
     add_smooth_column(leg_rf, leg_rb, cap_top=True, cap_bottom=False)
     
-    # 2. Victorian Bridal Pointed High-Heeled Pump
+    # 2. Victorian Bridal Pointed High-Heeled Pump (Matches bossgamerev.png 1:1)
+    # The gown hem hangs at Y_px = 1420 (yw = 0.115m).
+    # The shoe arches forward from under the hem (Y_px = 1425) down to the floor (Y_px = 1515, yw = 0.003m).
     shoe_rf, shoe_rb = [], []
     shoe_steps = [
-        (0.080, 0.018, 0.022, 0.010),  # Shoe collar opening around ankle
-        (0.055, 0.020, 0.028, 0.022),  # Instep / arched vamp curve
-        (0.030, 0.020, 0.034, 0.038),  # Ball of foot / metatarsal
-        (0.012, 0.014, 0.026, 0.056),  # Tapering to pointed toe
-        (0.002, 0.005, 0.010, 0.072),  # Pointed toe on floor
+        # yw, y_px, rx, rz, zm
+        (0.108, 1425, 0.018, 0.020, 0.010),  # Top collar / instep opening under skirt hem
+        (0.085, 1445, 0.019, 0.022, 0.018),  # Arched vamp curve
+        (0.060, 1465, 0.019, 0.024, 0.028),  # Metatarsal curve
+        (0.038, 1485, 0.017, 0.022, 0.040),  # Ball of foot
+        (0.018, 1502, 0.013, 0.018, 0.054),  # Tapering to pointed toe
+        (0.003, 1515, 0.006, 0.008, 0.066),  # Pointed toe tip resting on floor
     ]
     
-    for yw, rx, rz, zm in shoe_steps:
+    for yw, y_px, rx, rz, zm in shoe_steps:
         rf, rb = [], []
         for k in range(K_shoe + 1):
             th = -np.pi * 0.5 + np.pi * k / float(K_shoe)
             vx = x_mid + rx * np.sin(th)
             vz = zm + rz * np.cos(th)
-            orig_x = center_x + sign * (60.0 + 20.0 * np.sin(th))
-            uv = get_uv_front(orig_x, 1475) # Clean white bridal satin
+            orig_x = orig_center_x + np.sin(th) * 26.0
+            uv = get_uv_front(orig_x, y_px) # Exact 1:1 authentic shoe texture
             
             v_idx = len(all_vertices)
             all_vertices.append([vx, yw, vz])
             all_uvs.append(uv)
+            all_normals.append([np.sin(th), 0.1, np.cos(th)])
             rf.append(v_idx)
             
         for k in range(K_shoe + 1):
             th = np.pi * 0.5 + np.pi * k / float(K_shoe)
             vx = x_mid + rx * np.sin(th)
             vz = zm + rz * np.cos(th)
-            orig_x = center_x + sign * (60.0 + 20.0 * np.sin(th))
-            uv = get_uv_back(orig_x, 1475)
+            orig_x = orig_center_x + np.sin(th) * 26.0
+            uv = get_uv_front(orig_x, y_px)
             
             v_idx = len(all_vertices)
             all_vertices.append([vx, yw, vz])
             all_uvs.append(uv)
+            all_normals.append([np.sin(th), 0.1, np.cos(th)])
             rb.append(v_idx)
             
         shoe_rf.append(rf)
@@ -643,11 +653,11 @@ def build_leg_and_heel(is_right=False):
         
     add_smooth_column(shoe_rf, shoe_rb, cap_top=False, cap_bottom=True)
     
-    # 3. Stiletto / Kitten Heel Post (Hak Sepatu)
+    # 3. Slender Victorian Stiletto Heel Post (Hak Sepatu)
     heel_rf, heel_rb = [], []
-    heel_z = -0.006
-    heel_r = 0.004
-    heel_steps = [0.058, 0.030, 0.000]
+    heel_z = 0.000
+    heel_r = 0.0035
+    heel_steps = [0.055, 0.028, 0.000]
     
     for yw in heel_steps:
         rf, rb = [], []
@@ -655,22 +665,24 @@ def build_leg_and_heel(is_right=False):
             th = -np.pi * 0.5 + np.pi * k / float(K_heel)
             vx = x_mid + heel_r * np.sin(th)
             vz = heel_z + heel_r * np.cos(th)
-            uv = uv_sole if yw == 0.000 else get_uv_front(512, 1475)
+            uv = uv_sole if yw == 0.000 else get_uv_front(orig_center_x, 1485)
             
             v_idx = len(all_vertices)
             all_vertices.append([vx, yw, vz])
             all_uvs.append(uv)
+            all_normals.append([np.sin(th), 0.0, np.cos(th)])
             rf.append(v_idx)
             
         for k in range(K_heel + 1):
             th = np.pi * 0.5 + np.pi * k / float(K_heel)
             vx = x_mid + heel_r * np.sin(th)
             vz = heel_z + heel_r * np.cos(th)
-            uv = uv_sole if yw == 0.000 else get_uv_front(512, 1475)
+            uv = uv_sole if yw == 0.000 else get_uv_front(orig_center_x, 1485)
             
             v_idx = len(all_vertices)
             all_vertices.append([vx, yw, vz])
             all_uvs.append(uv)
+            all_normals.append([np.sin(th), 0.0, np.cos(th)])
             rb.append(v_idx)
             
         heel_rf.append(rf)
