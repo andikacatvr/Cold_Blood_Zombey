@@ -109,16 +109,58 @@ atlas_back_w = 480
 x_b_start = 520
 back_atlas = front_atlas.copy()
 
-# Back hair (bun) in upper region:
+# Back hair (bridal chignon / bun) with woven braided details, combed strands, and specular sheen
 y_neck_atlas = int((260 - crop_ymin) / crop_h * atlas_front_h)
+cx = atlas_back_w // 2
+cy = int(y_neck_atlas * 0.45)
+
 for y in range(y_neck_atlas):
+    dy = y - cy
     for x in range(atlas_back_w):
-        dx = abs(x - atlas_back_w // 2)
-        strand_noise = int(4.0 * np.sin(x * 0.45) * np.cos(y * 0.30))
-        bun_dist = np.sqrt(dx**2 + (y - y_neck_atlas * 0.45)**2)
-        bun_high = int(max(0, 18 - 0.25 * bun_dist))
-        base_col = np.array([24, 30, 42], dtype=np.int16) + strand_noise + bun_high
-        back_atlas[y, x] = np.clip(base_col, 16, 75).astype(np.uint8)
+        dx = x - cx
+        dist = np.sqrt(dx**2 + (dy * 1.25)**2)
+        angle = np.arctan2(dy, dx)
+        
+        # Base rich brunette/espresso tones matching front hair
+        base_b = 68.0
+        base_g = 74.0
+        base_r = 84.0
+        
+        if dist < 85:
+            # Central Chignon / Bun: coiled braided spirals and specular sheen ring
+            swirl = np.sin(dist * 0.32 + angle * 4.0) * 16.0
+            coils = np.cos(dist * 0.18) * 10.0
+            sheen = np.exp(-(((dist - 42.0) / 18.0)**2)) * 36.0
+            fine_strands = np.sin(angle * 55.0) * 5.0 + np.sin(dist * 0.9 + np.cos(angle * 6.0) * 2.0) * 4.0
+            val = swirl + coils + sheen + fine_strands
+        else:
+            # Swept-up hair from nape and sides curving into bun
+            side_curve = np.sin((dx / 40.0) + (dy / 50.0)) * 14.0
+            swept_strands = 7.0 * np.sin(dx * 0.45 + np.sin(y * 0.12) * 2.5)
+            fine_flow = 5.0 * np.cos(x * 0.65 + y * 0.25)
+            crown_sheen = np.exp(-(((y - cy * 0.5) / 22.0)**2)) * 28.0 * np.exp(-((abs(dx) / 100.0)**2))
+            bun_shadow = -18.0 * np.exp(-(((dist - 90.0) / 16.0)**2))
+            val = side_curve + swept_strands + fine_flow + crown_sheen + bun_shadow
+            
+        grain = 3.5 * np.sin(x * 1.7) * np.cos(y * 1.9)
+        total_val = val + grain
+        
+        b_val = np.clip(base_b + total_val * 0.85, 22, 145)
+        g_val = np.clip(base_g + total_val * 0.90, 25, 155)
+        r_val = np.clip(base_r + total_val * 1.00, 28, 175)
+        
+        # Soft, natural nape hairline transition into neck skin
+        if y > y_neck_atlas - 22:
+            fade = (y - (y_neck_atlas - 22)) / 22.0
+            skin_b, skin_g, skin_r = 115.0, 140.0, 190.0
+            wisp = 0.15 * np.sin(dx * 0.3)
+            fade_wisp = np.clip(fade + wisp, 0.0, 1.0)
+            
+            b_val = b_val * (1.0 - fade_wisp) + skin_b * fade_wisp
+            g_val = g_val * (1.0 - fade_wisp) + skin_g * fade_wisp
+            r_val = r_val * (1.0 - fade_wisp) + skin_r * fade_wisp
+            
+        back_atlas[y, x] = [int(b_val), int(g_val), int(r_val)]
 
 # Low-cut Halter Back (skin): Y=260 to 330
 y_halter_back = int((330 - crop_ymin) / crop_h * atlas_front_h)
