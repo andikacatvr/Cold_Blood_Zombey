@@ -235,42 +235,39 @@ def add_smooth_column(rings_f, rings_b, cap_top=True, cap_bottom=True, top_dome=
         all_faces.append([apex_idx, rb_bot[K], rf_bot[0]])
 
 # 8. BUILD HEAD & NECK AS ONE CONTINUOUS SEAMLESS COLUMN (Y: 28 to 305)
-print("1. Modeling Seamless Head & Neck Column with Forward Chin Projection...")
+print("1. Modeling Seamless Head & Neck Column with Anatomical Forward Chin...")
 K_head = 8
 head_rf, head_rb = [], []
 
-# Dense steps from top bun apex down to base of neck
-# 28: bun top, 50: bun crown, 75: cranium/hairline, 105: brow/eyes, 140: nose, 175: lips, 205: chin projection, 225: under-chin throat, 250: mid-neck, 280: lower neck, 305: neck base
-y_head_neck_steps = [28, 50, 75, 105, 140, 175, 205, 225, 250, 280, 305]
+# Dense steps based on true facial landmarks in bossgamerev.png:
+# 28: bun apex
+# 55: bun cranium
+# 85: hairline / upper cranium
+# 115: forehead
+# 155: eyes & brow
+# 185: nose tip
+# 210: lips / mouth
+# 240: TRUE CHIN (DAGU - precisely positioned & projected forward)
+# 260: under-chin / throat (jawline undercut)
+# 285: neck & necklace
+# 305: neck base / clavicle junction
+head_steps_cfg = [
+    (28,  -0.015, 0.048, 0.040, 0.040),
+    (55,  -0.010, 0.070, 0.065, 0.065),
+    (85,  -0.003, 0.090, 0.078, 0.079),
+    (115, -0.001, 0.098, 0.083, 0.084),
+    (155,  0.002, 0.094, 0.083, 0.082),
+    (185,  0.007, 0.085, 0.083, 0.082),
+    (210,  0.008, 0.075, 0.077, 0.076),
+    (240,  0.018, 0.055, 0.074, 0.074), # TRUE CHIN at Y=240, projected forward (+0.092m)
+    (260, -0.002, 0.046, 0.050, 0.050), # Under-chin throat (+0.048m, creates ~4.4 cm jaw undercut)
+    (285, -0.001, 0.048, 0.049, 0.049),
+    (305,  0.000, 0.058, 0.050, 0.050)
+]
 
-for y_px in y_head_neck_steps:
+for y_px, zc, rx, rz_f, rz_b in head_steps_cfg:
     norm_y = 1.0 - (y_px - ymin) / float(ymax - ymin)
     y_world = norm_y * world_height
-    
-    # Anatomical profile with forward chin projection (dagu dimajukan)
-    if y_px == 28:
-        zc, rx, rz_f, rz_b = -0.010, 0.048, 0.045, 0.055
-    elif y_px == 50:
-        zc, rx, rz_f, rz_b = -0.005, 0.070, 0.065, 0.075
-    elif y_px == 75:
-        zc, rx, rz_f, rz_b = 0.005, 0.090, 0.080, 0.090
-    elif y_px == 105: # Forehead & Eyes
-        zc, rx, rz_f, rz_b = 0.012, 0.098, 0.082, 0.095
-    elif y_px == 140: # Nose bridge & Cheeks
-        zc, rx, rz_f, rz_b = 0.022, 0.088, 0.078, 0.085
-    elif y_px == 175: # Lips & Philtrum
-        zc, rx, rz_f, rz_b = 0.026, 0.075, 0.072, 0.075
-    elif y_px == 205: # Prominent Forward Chin (Dagu Maju)
-        zc, rx, rz_f, rz_b = 0.038, 0.058, 0.068, 0.065
-    elif y_px == 225: # Under-chin / Throat (tucked in creating sharp jawline shelf)
-        zc, rx, rz_f, rz_b = -0.005, 0.048, 0.045, 0.058
-    elif y_px == 250: # Mid Neck
-        zc, rx, rz_f, rz_b = -0.005, 0.050, 0.046, 0.055
-    elif y_px == 280: # Lower Neck
-        zc, rx, rz_f, rz_b = -0.002, 0.055, 0.050, 0.058
-    else: # y_px == 305: Neck base / Collar junction
-        zc, rx, rz_f, rz_b = 0.000, 0.065, 0.050, 0.055
-        
     rf, rb = [], []
     
     # Front semicircle (th: -pi/2 to pi/2)
@@ -285,10 +282,9 @@ for y_px in y_head_neck_steps:
         v_idx = len(all_vertices)
         all_vertices.append([vx, y_world, vz])
         all_uvs.append(uv)
-        all_normals.append([np.sin(th), 0.05, np.cos(th)])
         rf.append(v_idx)
         
-    # Back semicircle (th: pi/2 to 3pi/2)
+    # Back semicircle (th: pi/2 to 3pi/2) - smoothly curves into nape of neck
     for k in range(K_head + 1):
         th = np.pi * 0.5 + np.pi * k / float(K_head)
         vx = rx * np.sin(th)
@@ -300,7 +296,6 @@ for y_px in y_head_neck_steps:
         v_idx = len(all_vertices)
         all_vertices.append([vx, y_world, vz])
         all_uvs.append(uv)
-        all_normals.append([np.sin(th), 0.05, np.cos(th)])
         rb.append(v_idx)
         
     head_rf.append(rf)
