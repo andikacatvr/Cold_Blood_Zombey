@@ -73,36 +73,41 @@ export function toggleNataliaFollow(sfxRef = Sfx) {
   showNataliaSubtitle(text, 3800);
 }
 
+export let isParachuting = false;
+let activeParachuteRig = null;
+let detachedCanopy = null;
+let detachedCanopyStartTime = 0;
+
 export const NATALIA_STORY_LINES = [
-  "Survivor, gua Agent Natalia dari Unit Investigasi Taktis! Gua dikirim buat netralisir wabah sihir gelap dan evakuasi tim yang tersisa!",
-  "Sensor taktis mendeteksi sinyal infeksi berkumpul di sekitar pemukiman. Pegang senjata lu, kita bergerak dalam formasi silang!",
-  "Makhluk-makhluk ini bukan zombie biasa, ada energi kutukan kuno yang mengendalikan mereka. Tapi peluru shotgun gua lebih dari cukup buat hancurin mereka!",
-  "Tetap di belakang gua saat menerobos lorong sempit. Lu fokus ke depan, gua habisi monster yang berusaha menyergap dari belakang!",
-  "Dermaga di utara adalah titik ekstraksi kita. Bersihkan jalan dan jangan biarkan zombie menyentuh kita!"
+  "Siapa kamu?! Apa urusanmu di sini?! ...Hah, mahasiswa tim riset yang tersesat?! Tetap waspada di samping gua!",
+  "Gua Agent Natalia dari Unit Investigasi Taktis. Gua diterjunkan lewat parasut buat netralisir wabah sihir gelap dan evakuasi penyintas!",
+  "Sensor taktis mendeteksi pergerakan gerombolan mayat hidup di hutan ini. Jangan panik, peluru shotgun tempur gua bakal melubangi kepala mereka!",
+  "Formasi silang dua arah: kalian amankan depan, gua sapu bersih monster yang mau menyergap dari sayap dan belakang!",
+  "Satu-satunya titik evakuasi ada di dermaga utara. Bergerak terus, jangan sampai terpojok!"
 ];
 let nataliaStoryIdx = 0;
 
 export const NATALIA_GESTURES = {
   wave: {
     tag: '🎯 AGENT NATALIA',
-    text: '"Agent Natalia siap bertugas! Syukurlah lu masih hidup, kita habisi zombie-zombie ini bersama!"',
+    text: '"Siapa kamu?! Apa urusanmu di sini?! Tetap di belakang gua, kita habisi zombie-zombie ini bersama!"',
     sound: (sfx) => { if (sfx && sfx.playSmallBell) sfx.playSmallBell(2800, 0.45); },
     duration: 3.8
   },
   pump: {
     tag: '⚔ SIAP TEMPUR',
-    text: '"Combat shotgun gua terkunci dan terisi penuh. Zombie mana pun yang mendekat bakal langsung gua tembak!"',
+    text: '"Combat shotgun gua udah terisi penuh! Monster mana pun yang mendekat bakal langsung gua tembak!"',
     sound: (sfx) => { if (sfx && sfx.playPumpRack) sfx.playPumpRack(); },
     duration: 3.5
   },
   cheer: {
     tag: '👍 EXCELLENT SHOT',
-    text: '"Tembakan lu akurat bro! Pertahankan bidikan lu, kita pasti bisa tembus ke dermaga!"',
+    text: '"Tembakan bagus! Jangan kendur, pertahankan formasi, kita pasti bisa tembus ke dermaga!"',
     sound: (sfx) => { if (sfx && sfx.playSmallBell) sfx.playSmallBell(3000, 0.5); },
     duration: 3.6
   },
   beckon: {
-    tag: '👉 AMMO RESUPPLY',
+    tag: '👉 KAWAL PERIMETER',
     text: '"Gua bawa amunisi cadangan taktis. Isi ulang senjatamu sebelum gelombang berikutnya datang!"',
     sound: (sfx) => { if (sfx && sfx.playShellInsert) sfx.playShellInsert(); },
     duration: 3.6
@@ -370,11 +375,230 @@ export function buildNataliaCharacter(textures) {
   };
 }
 
+/**
+ * Build 3D tactical military parachute with domed canopy, suspension cords, and flare
+ */
+export function createParachuteRig() {
+  const pGroup = new THREE.Group();
+
+  // 1. Procedural tactical military canopy texture
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#212d24'; // Tactical dark olive
+  ctx.fillRect(0, 0, 512, 256);
+
+  const panels = 16;
+  const pw = 512 / panels;
+  for (let i = 0; i < panels; i++) {
+    if (i % 2 === 0) {
+      ctx.fillStyle = '#2b3a2e';
+      ctx.fillRect(i * pw, 0, pw, 256);
+    }
+    // High-vis tactical safety bands (orange & cream)
+    if (i === 3 || i === 4 || i === 11 || i === 12) {
+      ctx.fillStyle = '#d35400';
+      ctx.fillRect(i * pw, 70, pw, 100);
+      ctx.fillStyle = '#f5f0e6';
+      ctx.fillRect(i * pw, 105, pw, 30);
+    }
+  }
+
+  // Dark border trim
+  ctx.fillStyle = '#141c16';
+  ctx.fillRect(0, 240, 512, 16);
+
+  // Stencil markings
+  ctx.fillStyle = '#ecd8c2';
+  ctx.font = 'bold 22px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('TACTICAL // UNIT-NATALIA', 256, 60);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+
+  // 2. Parachute dome canopy mesh
+  const canopyGeo = new THREE.SphereGeometry(2.35, 20, 14, 0, Math.PI * 2, 0, Math.PI * 0.48);
+  const canopyMat = new THREE.MeshStandardMaterial({
+    map: tex,
+    roughness: 0.85,
+    metalness: 0.1,
+    side: THREE.DoubleSide
+  });
+  const canopyMesh = new THREE.Mesh(canopyGeo, canopyMat);
+  canopyMesh.position.set(0, 3.6, 0);
+  pGroup.add(canopyMesh);
+
+  // Top vent ring
+  const ventGeo = new THREE.TorusGeometry(0.24, 0.04, 8, 16);
+  const ventMat = new THREE.MeshBasicMaterial({ color: 0x111612 });
+  const ventMesh = new THREE.Mesh(ventGeo, ventMat);
+  ventMesh.rotation.x = Math.PI / 2;
+  ventMesh.position.set(0, 5.95, 0);
+  pGroup.add(ventMesh);
+
+  // 3. Suspension cords (Braided military rigging lines)
+  const lineCoords = [];
+  const numLines = 12;
+  const rimRadius = 2.30;
+  const rimY = 3.65;
+  for (let i = 0; i < numLines; i++) {
+    const angle = i * (Math.PI * 2 / numLines);
+    const rx = Math.cos(angle) * rimRadius;
+    const rz = Math.sin(angle) * rimRadius;
+
+    // Attach to left or right harness riser on shoulders
+    const hx = (rx < 0) ? -0.18 : 0.18;
+    const hy = 1.35;
+    const hz = 0.0;
+
+    lineCoords.push(rx, rimY, rz);
+    lineCoords.push(hx, hy, hz);
+  }
+
+  const linesGeo = new THREE.BufferGeometry();
+  linesGeo.setAttribute('position', new THREE.Float32BufferAttribute(lineCoords, 3));
+  const linesMat = new THREE.LineBasicMaterial({ color: 0xcccccc, linewidth: 2 });
+  const linesMesh = new THREE.LineSegments(linesGeo, linesMat);
+  pGroup.add(linesMesh);
+
+  // 4. Tactical beacon / distress flare (creates dramatic atmospheric lighting)
+  const beaconLight = new THREE.PointLight(0xff7722, 2.2, 16);
+  beaconLight.position.set(0, 1.2, 0.15);
+  pGroup.add(beaconLight);
+
+  const flareMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.06, 8, 8),
+    new THREE.MeshBasicMaterial({ color: 0xffaa44 })
+  );
+  flareMesh.position.set(0, 1.2, 0.15);
+  pGroup.add(flareMesh);
+
+  return {
+    group: pGroup,
+    canopy: canopyMesh,
+    lines: linesMesh,
+    light: beaconLight,
+    flare: flareMesh
+  };
+}
+
+export function setupNataliaParachuteDrop(sceneRef) {
+  if (!nataliaModel || !nataliaModel.root) return;
+
+  // Clean up any old rigs
+  if (activeParachuteRig) {
+    if (activeParachuteRig.group.parent) {
+      activeParachuteRig.group.parent.remove(activeParachuteRig.group);
+    }
+    activeParachuteRig = null;
+  }
+  if (detachedCanopy) {
+    if (detachedCanopy.parent) detachedCanopy.parent.remove(detachedCanopy);
+    detachedCanopy = null;
+  }
+
+  isParachuting = true;
+  activeParachuteRig = createParachuteRig();
+  nataliaModel.root.add(activeParachuteRig.group);
+
+  // Position Natalia high in the night sky above the bus crash clearing
+  nataliaModel.root.position.set(2.8, 26.0, 14.5);
+  nataliaModel.root.rotation.set(0.12, -Math.PI / 2 - 0.45, 0.08);
+}
+
+export function updateNataliaParachuteDrop(progress, sfxRef = Sfx, dt = 0.016) {
+  if (!nataliaModel || !nataliaModel.root) return;
+
+  const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(2.8, 14.2) : 0.1;
+  const clampedProg = Math.max(0.0, Math.min(1.0, progress));
+
+  if (clampedProg < 0.96) {
+    isParachuting = true;
+    const curY = THREE.MathUtils.lerp(26.0, gy, clampedProg);
+    const sway = Math.sin(clampedProg * Math.PI * 5.0) * 0.22;
+    const forwardSway = Math.cos(clampedProg * Math.PI * 3.5) * 0.15;
+
+    nataliaModel.root.position.set(2.8 + sway, curY, 14.2 + forwardSway);
+    nataliaModel.root.rotation.set(
+      Math.cos(clampedProg * Math.PI * 4.0) * 0.08,
+      -Math.PI / 2 - 0.45 + Math.sin(clampedProg * Math.PI * 2.0) * 0.15,
+      Math.sin(clampedProg * Math.PI * 5.0) * 0.12
+    );
+
+    if (activeParachuteRig && activeParachuteRig.light) {
+      activeParachuteRig.light.intensity = 2.0 + Math.random() * 0.8;
+    }
+  } else {
+    // Touchdown on snow!
+    if (isParachuting) {
+      isParachuting = false;
+      nataliaModel.root.position.set(2.8, gy, 14.2);
+      nataliaModel.root.rotation.set(0, -Math.PI / 2 - 0.35, 0);
+
+      if (sfxRef && sfxRef.playSnowThud) sfxRef.playSnowThud(1.1);
+
+      // Detach parachute canopy and let it fold/deflate into the snow
+      if (activeParachuteRig) {
+        const scene = nataliaModel.root.parent;
+        if (scene) {
+          activeParachuteRig.group.parent.remove(activeParachuteRig.group);
+          detachedCanopy = activeParachuteRig.canopy;
+          detachedCanopy.position.set(2.8, gy + 0.35, 14.2);
+          detachedCanopy.scale.set(1.0, 0.45, 1.0);
+          detachedCanopyStartTime = performance.now();
+          scene.add(detachedCanopy);
+        }
+        activeParachuteRig = null;
+      }
+
+      // Raise combat shotgun in alert defensive stance
+      triggerNataliaGesture('pump', sfxRef);
+    }
+  }
+
+  // Update collapsing detached canopy fade out
+  if (detachedCanopy) {
+    const elapsed = (performance.now() - detachedCanopyStartTime) * 0.001;
+    if (elapsed > 4.0) {
+      if (detachedCanopy.parent) detachedCanopy.parent.remove(detachedCanopy);
+      detachedCanopy = null;
+    } else if (elapsed > 1.5 && detachedCanopy.material) {
+      detachedCanopy.material.transparent = true;
+      detachedCanopy.material.opacity = Math.max(0, 1.0 - (elapsed - 1.5) / 2.5);
+      detachedCanopy.position.y -= dt * 0.08;
+    }
+  }
+}
+
+export function finishNataliaParachuteLanding(sceneRef) {
+  isParachuting = false;
+  if (activeParachuteRig) {
+    if (activeParachuteRig.group.parent) {
+      activeParachuteRig.group.parent.remove(activeParachuteRig.group);
+    }
+    activeParachuteRig = null;
+  }
+  if (detachedCanopy) {
+    if (detachedCanopy.parent) detachedCanopy.parent.remove(detachedCanopy);
+    detachedCanopy = null;
+  }
+
+  if (nataliaModel && nataliaModel.root) {
+    const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(2.8, 14.2) : 0.1;
+    nataliaModel.root.position.set(2.8, gy, 14.2);
+    nataliaModel.root.rotation.set(0, -Math.PI / 2 - 0.35, 0);
+  }
+}
+
 export function initNataliaAgent(scene, textures) {
   nataliaModel = buildNataliaCharacter(textures);
   // Spawn Agent Natalia on tactical flanking position near bus crash site
-  nataliaModel.root.position.set(3.2, 0.10, 14.2);
-  nataliaModel.root.rotation.y = -0.45;
+  nataliaModel.root.position.set(2.8, 0.10, 14.2);
+  nataliaModel.root.rotation.y = -Math.PI / 2 - 0.35;
   scene.add(nataliaModel.root);
 
   const bannerEl = document.getElementById('natalia-npc-banner');
@@ -387,6 +611,7 @@ export function initNataliaAgent(scene, textures) {
 
 export function updateNataliaAgent(camera, Sfx, dt = 0.016) {
   if (!nataliaModel) return;
+  if (isParachuting) return; // Skip walking/following AI while in mid-air parachute descent!
 
   const now = performance.now();
   const t = now * 0.002;

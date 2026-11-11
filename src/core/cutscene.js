@@ -10,6 +10,13 @@ import {
   getTerrainHeight
 } from '../world/environment.js';
 import { andikaModel } from '../entities/kristin.js';
+import {
+  nataliaModel,
+  setupNataliaParachuteDrop,
+  updateNataliaParachuteDrop,
+  finishNataliaParachuteLanding,
+  showNataliaSubtitle
+} from '../entities/natalia.js';
 import { weaponHolder } from '../entities/weapons.js';
 import { playerMeshRoot, cameraMode, setPlayerCutscenePose } from '../entities/playerModel.js';
 import { scene, playerFlashlight } from '../graphics/engine.js';
@@ -120,15 +127,39 @@ const CUTSCENE_STAGES = [
   },
   {
     start: 9.8,
-    end: 15.5,
+    end: 14.5,
     camStart: new THREE.Vector3(-0.15, 0.55, 14.6),
     camEnd: new THREE.Vector3(0.0, 1.80, 14.0),
     lookStart: new THREE.Vector3(0.80, 0.85, 13.9),
     lookEnd: new THREE.Vector3(0.85, 1.65, 13.9),
-    subtitle: `<span style="color:#5cf0a5; font-size:22px; font-weight:bold;">KRISTIN:</span> "Woii bangun! Syukurlah lu selamat bro! Mayat-mayat pada bangkit karena kutukan sihir gelap! Cepat berdiri, ambil senjatamu, kita harus bertahan hidup!"`,
+    subtitle: `<span style="color:#5cf0a5; font-size:22px; font-weight:bold;">KRISTIN:</span> "Woii bangun! Syukurlah lu selamat bro! Mayat-mayat pada bangkit karena kutukan sihir gelap! Cepat berdiri, ambil senjatamu!"`,
     onEnter: (sfx) => {
       if (sfx && sfx.playPumpRack) sfx.playPumpRack();
       if (sfx && sfx.playSnowThud) sfx.playSnowThud(1.0);
+    }
+  },
+  {
+    start: 14.5,
+    end: 20.2,
+    camStart: new THREE.Vector3(0.0, 1.75, 14.0),
+    camEnd: new THREE.Vector3(1.2, 1.55, 15.4),
+    lookStart: new THREE.Vector3(2.8, 16.0, 14.5), // Pan up to stormy sky and descending flare!
+    lookEnd: new THREE.Vector3(2.8, 1.25, 14.2),   // Follow down to snow landing!
+    subtitle: `<span style="color:#f5ba42; font-size:23px; font-weight:bold;">AGENT NATALIA:</span> <i>*menerobos badai dengan parasut taktis & menodongkan shotgun*</i> <span style="color:#ffffff; font-size:22px; font-weight:bold;">"Siapa kamu?! Apa urusanmu di sini?!"</span>`,
+    onEnter: (sfx) => {
+      if (sfx && sfx.playTeleportWhoosh) sfx.playTeleportWhoosh();
+    }
+  },
+  {
+    start: 20.2,
+    end: 26.0,
+    camStart: new THREE.Vector3(1.2, 1.55, 15.4),
+    camEnd: new THREE.Vector3(0.1, 1.80, 14.0),
+    lookStart: new THREE.Vector3(2.8, 1.25, 14.2),
+    lookEnd: new THREE.Vector3(2.2, 1.40, 14.1),
+    subtitle: `<span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN:</span> "Woi tahan, jangan tembak! Kita mahasiswa tim riset, bus kami hancur!"<br><span style="color:#f5ba42; font-size:21px; font-weight:bold;">AGENT NATALIA:</span> "Warga sipil?! Area ini zona merah kutukan biologis! Tetap di belakang gua, kita bantai zombienya!"`,
+    onEnter: (sfx) => {
+      if (sfx && sfx.playPumpRack) sfx.playPumpRack();
     }
   }
 ];
@@ -186,6 +217,9 @@ export function startIntroCutscene(camera, sfx, onComplete) {
 
   // Spawn dropped shotgun in the snow next to player's outstretched hand
   createDroppedShotgun();
+
+  // Prepare Agent Natalia for dramatic tactical parachute drop
+  setupNataliaParachuteDrop(scene);
 
   // Position Kristin crouching down beside the unconscious player
   if (andikaModel && andikaModel.root) {
@@ -447,7 +481,13 @@ export function updateCutscene(dt) {
     }
   }
 
-  if (cutsceneTime >= 15.5) {
+  // 2. Dynamic Agent Natalia Parachute Drop & Touchdown Animation
+  if (cutsceneTime >= 14.5 && cutsceneTime < 20.2) {
+    const dropProgress = (cutsceneTime - 14.5) / (19.4 - 14.5);
+    updateNataliaParachuteDrop(dropProgress, sfxRef, dt);
+  }
+
+  if (cutsceneTime >= 26.0) {
     finishCutscene();
     return;
   }
@@ -496,12 +536,25 @@ export function finishCutscene() {
   // Reset player model to standard upright stance
   setPlayerCutscenePose('reset');
 
+  // Finish Natalia parachute landing and clean up canopy
+  finishNataliaParachuteLanding(scene);
+
   // Position Kristin beside player ready for escort mode
   if (andikaModel && andikaModel.root) {
     const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.2, 13.8) : 0.1;
     andikaModel.root.position.set(1.2, gy, 13.8);
     andikaModel.root.rotation.set(0, -0.35, 0);
   }
+
+  // Position Agent Natalia on the player's flank in alert combat stance
+  if (nataliaModel && nataliaModel.root) {
+    const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(2.8, 14.2) : 0.1;
+    nataliaModel.root.position.set(2.8, gy, 14.2);
+    nataliaModel.root.rotation.set(0, -Math.PI / 2 - 0.35, 0);
+  }
+
+  // Show Agent Natalia's initial speech banner
+  showNataliaSubtitle("Siapa kamu?! Apa urusanmu di sini?! Tetap di belakang gua, kita habisi zombienya bareng-bareng!", 6000);
 
   // Restore camera to default player eye-level spawn
   if (cameraRef) {
