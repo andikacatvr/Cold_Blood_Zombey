@@ -196,6 +196,10 @@ for y in range(y_hair_end_atlas - 6, y_hair_end_atlas):
     back_atlas[y, :] = np.clip(gown_tone, 0, 255).astype(np.uint8)
 
 atlas[y_start:y_start+atlas_front_h, x_b_start:x_b_start+atlas_back_w] = back_atlas
+
+# Dark leather sole patch for shoe bottoms & heels
+atlas[1000:1020, 500:520] = [45, 45, 52]
+
 atlas_rgb = cv2.cvtColor(atlas, cv2.COLOR_BGR2RGB)
 atlas_pil = Image.fromarray(atlas_rgb)
 atlas_pil.save('bossgamerev_perfect_atlas.png')
@@ -468,7 +472,8 @@ for y_px in y_body_steps:
     body_rf.append(rf)
     body_rb.append(rb)
 
-add_smooth_column(body_rf, body_rb, cap_top=False, cap_bottom=True)
+# Hollow underskirt: cap_bottom=False leaves the skirt open and hollow underneath
+add_smooth_column(body_rf, body_rb, cap_top=False, cap_bottom=False)
 
 # 11. BUILD ARMS WITH 100% CLEAN SKIN & SMOOTH RELAXED DRAPE
 print("4. Modeling Porcelain Bare Arms with True Anatomical Outward Flare...")
@@ -544,61 +549,137 @@ def build_arm(is_right=False):
 build_arm(is_right=False)
 build_arm(is_right=True)
 
-# 12. BUILD POINTED WHITE BRIDAL PUMPS
-print("5. Modeling Pointed White Bridal Pumps...")
-K_shoe = 6
+# 12. BUILD PORCELAIN LEGS & VICTORIAN BRIDAL HIGH HEELS
+print("5. Modeling Porcelain Legs, Hollow Underskirt & Victorian Bridal High Heels...")
+K_leg = 8
+K_shoe = 8
+K_heel = 6
 
-def build_pump(is_right=False):
+uv_sole = [510.0 / 1024.0, 1.0 - 1010.0 / 1024.0]
+
+def build_leg_and_heel(is_right=False):
     sign = 1.0 if is_right else -1.0
-    shoe_rf, shoe_rb = [], []
-    y_steps = np.linspace(1440, 1515, 6).astype(int)
-    shoe_x_mid = sign * 0.080
+    x_mid = sign * 0.072
     
-    for y_px in y_steps:
-        norm_y = 1.0 - (y_px - ymin) / float(ymax - ymin)
-        y_world = norm_y * world_height
-        t_foot = (y_px - 1440) / 75.0
+    # 1. Porcelain Leg (Calf & Ankle inside hollow underskirt)
+    leg_rf, leg_rb = [], []
+    leg_steps = [
+        (0.350, 0.026, 0.028, 0.005),  # Upper calf inside skirt
+        (0.270, 0.023, 0.025, 0.007),  # Mid calf
+        (0.190, 0.019, 0.021, 0.008),  # Lower calf
+        (0.125, 0.016, 0.018, 0.009),  # Slender ankle & malleolus bone
+        (0.080, 0.015, 0.016, 0.010),  # Ankle joint entering shoe
+    ]
+    
+    for yw, rx, rz, zm in leg_steps:
+        rf, rb = [], []
+        for k in range(K_leg + 1):
+            th = -np.pi * 0.5 + np.pi * k / float(K_leg)
+            vx = x_mid + rx * np.sin(th)
+            vz = zm + rz * np.cos(th)
+            orig_x = center_x + sign * (30.0 + 15.0 * np.sin(th))
+            uv = get_uv_front(orig_x, 275) # Porcelain skin
+            
+            v_idx = len(all_vertices)
+            all_vertices.append([vx, yw, vz])
+            all_uvs.append(uv)
+            rf.append(v_idx)
+            
+        for k in range(K_leg + 1):
+            th = np.pi * 0.5 + np.pi * k / float(K_leg)
+            vx = x_mid + rx * np.sin(th)
+            vz = zm + rz * np.cos(th)
+            orig_x = center_x + sign * (30.0 + 15.0 * np.sin(th))
+            uv = get_uv_back(orig_x, 275)
+            
+            v_idx = len(all_vertices)
+            all_vertices.append([vx, yw, vz])
+            all_uvs.append(uv)
+            rb.append(v_idx)
+            
+        leg_rf.append(rf)
+        leg_rb.append(rb)
         
-        rx = 0.024 * (1.0 - 0.45 * t_foot)
-        rz = 0.038 * (1.0 - 0.35 * t_foot)
-        z_offset = 0.015 + 0.040 * t_foot  # pointed toe forward
-        
+    add_smooth_column(leg_rf, leg_rb, cap_top=True, cap_bottom=False)
+    
+    # 2. Victorian Bridal Pointed High-Heeled Pump
+    shoe_rf, shoe_rb = [], []
+    shoe_steps = [
+        (0.080, 0.018, 0.022, 0.010),  # Shoe collar opening around ankle
+        (0.055, 0.020, 0.028, 0.022),  # Instep / arched vamp curve
+        (0.030, 0.020, 0.034, 0.038),  # Ball of foot / metatarsal
+        (0.012, 0.014, 0.026, 0.056),  # Tapering to pointed toe
+        (0.002, 0.005, 0.010, 0.072),  # Pointed toe on floor
+    ]
+    
+    for yw, rx, rz, zm in shoe_steps:
         rf, rb = [], []
         for k in range(K_shoe + 1):
             th = -np.pi * 0.5 + np.pi * k / float(K_shoe)
-            vx = shoe_x_mid + rx * np.sin(th)
-            vz = z_offset + rz * np.cos(th)
-            
+            vx = x_mid + rx * np.sin(th)
+            vz = zm + rz * np.cos(th)
             orig_x = center_x + sign * (60.0 + 20.0 * np.sin(th))
-            uv = get_uv_front(orig_x, y_px)
+            uv = get_uv_front(orig_x, 1475) # Clean white bridal satin
             
             v_idx = len(all_vertices)
-            all_vertices.append([vx, y_world, vz])
+            all_vertices.append([vx, yw, vz])
             all_uvs.append(uv)
-            all_normals.append([np.sin(th), 0.0, np.cos(th)])
             rf.append(v_idx)
             
         for k in range(K_shoe + 1):
             th = np.pi * 0.5 + np.pi * k / float(K_shoe)
-            vx = shoe_x_mid + rx * np.sin(th)
-            vz = z_offset + rz * np.cos(th)
-            
+            vx = x_mid + rx * np.sin(th)
+            vz = zm + rz * np.cos(th)
             orig_x = center_x + sign * (60.0 + 20.0 * np.sin(th))
-            uv = get_uv_back(orig_x, y_px)
+            uv = get_uv_back(orig_x, 1475)
             
             v_idx = len(all_vertices)
-            all_vertices.append([vx, y_world, vz])
+            all_vertices.append([vx, yw, vz])
             all_uvs.append(uv)
-            all_normals.append([np.sin(th), 0.0, np.cos(th)])
             rb.append(v_idx)
             
         shoe_rf.append(rf)
         shoe_rb.append(rb)
         
-    add_smooth_column(shoe_rf, shoe_rb, cap_top=False, cap_bottom=True, bottom_apex=True)
+    add_smooth_column(shoe_rf, shoe_rb, cap_top=False, cap_bottom=True)
+    
+    # 3. Stiletto / Kitten Heel Post (Hak Sepatu)
+    heel_rf, heel_rb = [], []
+    heel_z = -0.006
+    heel_r = 0.004
+    heel_steps = [0.058, 0.030, 0.000]
+    
+    for yw in heel_steps:
+        rf, rb = [], []
+        for k in range(K_heel + 1):
+            th = -np.pi * 0.5 + np.pi * k / float(K_heel)
+            vx = x_mid + heel_r * np.sin(th)
+            vz = heel_z + heel_r * np.cos(th)
+            uv = uv_sole if yw == 0.000 else get_uv_front(512, 1475)
+            
+            v_idx = len(all_vertices)
+            all_vertices.append([vx, yw, vz])
+            all_uvs.append(uv)
+            rf.append(v_idx)
+            
+        for k in range(K_heel + 1):
+            th = np.pi * 0.5 + np.pi * k / float(K_heel)
+            vx = x_mid + heel_r * np.sin(th)
+            vz = heel_z + heel_r * np.cos(th)
+            uv = uv_sole if yw == 0.000 else get_uv_front(512, 1475)
+            
+            v_idx = len(all_vertices)
+            all_vertices.append([vx, yw, vz])
+            all_uvs.append(uv)
+            rb.append(v_idx)
+            
+        heel_rf.append(rf)
+        heel_rb.append(rb)
+        
+    add_smooth_column(heel_rf, heel_rb, cap_top=True, cap_bottom=True)
 
-build_pump(is_right=False)
-build_pump(is_right=True)
+build_leg_and_heel(is_right=False)
+build_leg_and_heel(is_right=True)
 
 # 13. Convert to numpy arrays & compute mathematically exact smooth normals
 all_vertices = np.array(all_vertices, dtype=np.float32)
