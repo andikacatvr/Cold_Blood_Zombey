@@ -69,6 +69,9 @@ ear_mask[165:255, 555:605] = True
 is_white_ear = ear_mask & (src_bgr[:, :, 0] > 160) & (src_bgr[:, :, 1] > 160) & (src_bgr[:, :, 2] > 160)
 clean_front[is_white_ear] = hair_col
 
+# Strict skin detector for arms: avoids selecting white background or gown fringe
+is_skin = (src_bgr[:, :, 2] > src_bgr[:, :, 0] + 15) & (src_bgr[:, :, 0] < 195)
+
 for y in range(ymin, ymax + 1):
     xs = np.where(is_true_fg[y])[0]
     if len(xs) == 0:
@@ -79,8 +82,27 @@ for y in range(ymin, ymax + 1):
         # Head / ear region: outer bleed is always seamless dark hair
         clean_front[y, :x_min] = hair_col
         clean_front[y, x_max+1:] = hair_col
+    elif y >= 335 and y <= 800:
+        # Arm & torso region: bleed genuine skin tones for both arms
+        # Left arm (x < 420)
+        xs_l = np.where(is_skin[y, :420])[0]
+        if len(xs_l) > 0:
+            gaps_l = np.where(np.diff(xs_l) > 5)[0]
+            l_arm = xs_l[:gaps_l[0]+1] if len(gaps_l) > 0 else xs_l
+            l_min, l_max = l_arm[0], l_arm[-1]
+            clean_front[y, :l_min] = src_bgr[y, l_min]
+            clean_front[y, l_max+1:l_max+45] = src_bgr[y, l_max]
+            
+        # Right arm (x > 580)
+        xs_r = np.where(is_skin[y, 580:])[0] + 580
+        if len(xs_r) > 0:
+            gaps_r = np.where(np.diff(xs_r) > 5)[0]
+            r_arm = xs_r[gaps_r[-1]+1:] if len(gaps_r) > 0 else xs_r
+            r_min, r_max = r_arm[0], r_arm[-1]
+            clean_front[y, max(0, r_min-45):r_min] = src_bgr[y, r_min]
+            clean_front[y, r_max+1:] = src_bgr[y, r_max]
     else:
-        # Outer bleed using genuine edge color (guaranteed non-white)
+        # Skirt / lower hem outer bleed
         clean_front[y, :x_min] = src_bgr[y, x_min]
         clean_front[y, x_max+1:] = src_bgr[y, x_max]
     
@@ -452,37 +474,40 @@ for y_px in y_body_steps:
 add_smooth_column(body_rf, body_rb, cap_top=False, cap_bottom=True)
 
 # 11. BUILD ARMS WITH 100% CLEAN SKIN & SMOOTH RELAXED DRAPE
-print("4. Modeling Porcelain Bare Arms...")
+print("4. Modeling Porcelain Bare Arms with True Anatomical Outward Flare...")
 K_arm = 8
 
 def build_arm(is_right=False):
     arm_rf, arm_rb = [], []
     sign = 1.0 if is_right else -1.0
     
-    # Smooth continuous arm drape alongside gown
-    y_arm_steps = [335, 365, 410, 465, 525, 590, 655, 715, 755, 780]
+    # Accurate outward flare matching bossgamerev.png 1:1:
+    # Starts nested in shoulder (0.138m) and flares outward naturally to fingertips (0.311m)
+    arm_steps_cfg = [
+        # y_px, dist_m, rx_m, rz_m
+        (335, 0.138, 0.024, 0.024),  # Nested shoulder joint under halter shoulder
+        (365, 0.146, 0.025, 0.025),  # Deltoid
+        (410, 0.158, 0.026, 0.026),  # Mid bicep
+        (465, 0.176, 0.026, 0.026),  # Lower bicep / elbow junction
+        (525, 0.200, 0.024, 0.024),  # Elbow
+        (590, 0.230, 0.023, 0.023),  # Forearm upper
+        (655, 0.263, 0.020, 0.020),  # Forearm lower
+        (715, 0.291, 0.017, 0.017),  # Wrist
+        (755, 0.303, 0.013, 0.012),  # Palm / hand
+        (780, 0.311, 0.009, 0.007),  # Tapered feminine fingertips
+    ]
     
-    for y_px in y_arm_steps:
+    for y_px, dist_m, rx, rz in arm_steps_cfg:
         norm_y = 1.0 - (y_px - ymin) / float(ymax - ymin)
         y_world = norm_y * world_height
         
-        # Smooth anatomical arm centerline (nested in shoulder, falls naturally alongside gown)
-        mid_vx = sign * float(np.interp(y_px, [335, 410, 500, 600, 700, 780], [0.168, 0.174, 0.184, 0.196, 0.208, 0.215]))
+        mid_vx = sign * dist_m
         mid_x_px = center_x + (mid_vx / scale_x)
-        
-        # Arm width
-        arm_w_px = float(np.interp(y_px, [335, 410, 500, 600, 700, 780], [24.0, 23.0, 20.0, 18.0, 15.0, 10.0]))
-        rx = arm_w_px * scale_x
-        rz = rx * 1.05
-        
-        # Tapered feminine hand & fingertips
-        if y_px >= 740:
-            rx = float(np.interp(y_px, [740, 780], [0.014, 0.007]))
-            rz = float(np.interp(y_px, [740, 780], [0.011, 0.005]))
+        arm_w_px = rx / scale_x
         
         rf, rb = [], []
         
-        # Front half of arm cylinder (true outward unit normal [sin(th), 0, cos(th)])
+        # Front half of arm cylinder
         for k in range(K_arm + 1):
             th = -np.pi * 0.5 + np.pi * k / float(K_arm)
             vx = mid_vx + rx * np.sin(th)
@@ -494,7 +519,6 @@ def build_arm(is_right=False):
             v_idx = len(all_vertices)
             all_vertices.append([vx, y_world, vz])
             all_uvs.append(uv)
-            all_normals.append([np.sin(th), 0.0, np.cos(th)])
             rf.append(v_idx)
             
         # Back half of arm cylinder
@@ -509,7 +533,6 @@ def build_arm(is_right=False):
             v_idx = len(all_vertices)
             all_vertices.append([vx, y_world, vz])
             all_uvs.append(uv)
-            all_normals.append([np.sin(th), 0.0, np.cos(th)])
             rb.append(v_idx)
             
         arm_rf.append(rf)
