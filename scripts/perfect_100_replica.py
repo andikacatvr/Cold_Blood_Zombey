@@ -373,8 +373,8 @@ for y_px, zc, rx, rz_f, rz_b in head_steps_cfg:
 # Smooth skull cap at top bun apex (fully closed, seamless neck junction down to Y=305)
 add_smooth_column(head_rf, head_rb, cap_top=True, cap_bottom=False, top_dome=False)
 
-# 9. BUILD 3D HAIR TENDRILS (WISPY SIDE CURLS BESIDE CHEEKS)
-print("2. Modeling 3D Hair Tendrils beside Cheeks...")
+# 9. BUILD 3D HAIR TENDRILS (RICH LAYERED WISPY STRANDS BESIDE CHEEKS & TEMPLES)
+print("2. Modeling Rich Layered 3D Hair Strands beside Cheeks...")
 
 def get_face_surface_z(y_px, xw):
     y_vals = [h[0] for h in head_steps_cfg]
@@ -401,7 +401,7 @@ def build_tendril(cfg, is_right=False):
     nx = np.sin(phi)
     nz = np.cos(phi)
     
-    for y_px, cx_px, w_px, z_offset in cfg:
+    for y_px, cx_px, half_w_m, z_offset in cfg:
         norm_y = 1.0 - (y_px - ymin) / float(ymax - ymin)
         yw = norm_y * world_height
         xw = (cx_px - center_x) * scale_x
@@ -411,37 +411,43 @@ def build_tendril(cfg, is_right=False):
             surf_z = max(surf_z, 0.058)
         zw = surf_z + z_offset
         
-        rw = (w_px * 0.5) * scale_x
+        rw = half_w_m
         vx_out = xw - sign * tx * rw
         vz_out = zw - sign * tz * rw
         vx_in = xw + sign * tx * rw
         vz_in = zw + sign * tz * rw
         
-        orig_x_out = cx_px - sign * (w_px * 0.5)
-        orig_x_in  = cx_px + sign * (w_px * 0.5)
+        orig_x_out = cx_px - sign * (rw / scale_x)
+        orig_x_in  = cx_px + sign * (rw / scale_x)
         
-        # Front vertices (authentic hair texture from bossgamerev.png)
+        # Authentic rich dark hair UVs (samples dark hair texture directly)
+        uv_f_out = get_uv_front(orig_x_out, y_px)
+        uv_f_in  = get_uv_front(orig_x_in, y_px)
+        uv_b_out = get_uv_back(orig_x_out, y_px)
+        uv_b_in  = get_uv_back(orig_x_in, y_px)
+        
+        # Front vertices (facing forward-outward)
         idx_f_out = len(all_vertices)
         all_vertices.append([vx_out, yw, vz_out])
-        all_uvs.append(get_uv_front(orig_x_out, y_px))
+        all_uvs.append(uv_f_out)
         all_normals.append([nx, 0.0, nz])
         
         idx_f_in = len(all_vertices)
         all_vertices.append([vx_in, yw, vz_in])
-        all_uvs.append(get_uv_front(orig_x_in, y_px))
+        all_uvs.append(uv_f_in)
         all_normals.append([nx, 0.0, nz])
         
         front_verts.append((idx_f_out, idx_f_in))
         
-        # Back vertices (dark espresso hair texture, pointing backward)
+        # Back vertices (facing backward-inward)
         idx_b_out = len(all_vertices)
         all_vertices.append([vx_out, yw, vz_out - 0.001])
-        all_uvs.append(get_uv_back(orig_x_out, y_px))
+        all_uvs.append(uv_b_out)
         all_normals.append([-nx, 0.0, -nz])
         
         idx_b_in = len(all_vertices)
         all_vertices.append([vx_in, yw, vz_in - 0.001])
-        all_uvs.append(get_uv_back(orig_x_in, y_px))
+        all_uvs.append(uv_b_in)
         all_normals.append([-nx, 0.0, -nz])
         
         back_verts.append((idx_b_out, idx_b_in))
@@ -465,28 +471,55 @@ def build_tendril(cfg, is_right=False):
             all_faces.append([bi0, bi1, bo1])
             all_faces.append([bi0, bo1, bo0])
 
-# Viewer's left tendril (character's right cheek - matches user screenshot 1:1!)
-tendril_left_cfg = [
-    (135, 452, 22, 0.005),
-    (155, 451, 20, 0.006),
-    (175, 447, 16, 0.007),
-    (195, 452, 14, 0.007),
-    (215, 458, 12, 0.007),
-    (230, 450,  8, 0.006),
-    (245, 440,  4, 0.005),
+# --- LAYERED 3D HAIR STRANDS (NATURAL TWIN WISPY STRANDS BESIDE CHEEKS) ---
+# Character's Right Cheek (Viewer's Left - matches user screenshot 1:1!)
+# 1. Main Iconic S-Curve Cheek Tendril (Prominent, wide, clearly separated 3D curl)
+tendril_L1 = [
+    # y_px, cx_px, half_w_m, z_offset_m
+    (125, 452, 0.008, 0.012),
+    (145, 450, 0.008, 0.013),
+    (165, 446, 0.007, 0.014),
+    (185, 444, 0.006, 0.014),
+    (205, 450, 0.005, 0.012),
+    (220, 454, 0.004, 0.010),
+    (235, 448, 0.003, 0.008),
 ]
-build_tendril(tendril_left_cfg, is_right=False)
+build_tendril(tendril_L1, is_right=False)
 
-# Viewer's right tendril (character's left cheek)
-tendril_right_cfg = [
-    (135, 571, 20, 0.005),
-    (155, 571, 18, 0.006),
-    (175, 573, 14, 0.006),
-    (195, 565, 10, 0.006),
-    (215, 562,  8, 0.006),
-    (230, 566,  5, 0.005),
+# 2. Secondary Wispy Strand (Runs alongside Strand 1 for rich layered volume)
+tendril_L2 = [
+    (130, 438, 0.006, 0.009),
+    (150, 436, 0.006, 0.010),
+    (170, 434, 0.005, 0.011),
+    (190, 436, 0.004, 0.010),
+    (210, 440, 0.003, 0.008),
+    (225, 444, 0.002, 0.006),
 ]
-build_tendril(tendril_right_cfg, is_right=True)
+build_tendril(tendril_L2, is_right=False)
+
+# Character's Left Cheek (Viewer's Right)
+# 1. Main Cheek Tendril
+tendril_R1 = [
+    (125, 570, 0.008, 0.012),
+    (145, 572, 0.008, 0.013),
+    (165, 574, 0.007, 0.014),
+    (185, 568, 0.006, 0.014),
+    (205, 566, 0.005, 0.012),
+    (220, 562, 0.004, 0.010),
+    (235, 566, 0.003, 0.008),
+]
+build_tendril(tendril_R1, is_right=True)
+
+# 2. Secondary Wispy Strand
+tendril_R2 = [
+    (130, 584, 0.006, 0.009),
+    (150, 586, 0.006, 0.010),
+    (170, 588, 0.005, 0.011),
+    (190, 584, 0.004, 0.010),
+    (210, 580, 0.003, 0.008),
+    (225, 576, 0.002, 0.006),
+]
+build_tendril(tendril_R2, is_right=True)
 
 # 10. BUILD BODY & GOWN (Y: 305 to 1425)
 print("3. Modeling Bodice & Flowing Halter Gown...")
