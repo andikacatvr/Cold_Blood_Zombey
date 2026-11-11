@@ -82,8 +82,8 @@ for y in range(ymin, ymax + 1):
         # Head / ear region: outer bleed is always seamless dark hair
         clean_front[y, :x_min] = hair_col
         clean_front[y, x_max+1:] = hair_col
-    elif y >= 335 and y <= 800:
-        # Arm & torso region: bleed genuine skin tones for both arms
+    elif y >= 335 and y <= 806:
+        # Arm & torso region: bleed genuine skin tones for both arms and hands
         # Left arm (x < 420)
         xs_l = np.where(is_skin[y, :420])[0]
         if len(xs_l) > 0:
@@ -481,8 +481,8 @@ def build_arm(is_right=False):
     arm_rf, arm_rb = [], []
     sign = 1.0 if is_right else -1.0
     
-    # Accurate outward flare matching bossgamerev.png 1:1:
-    # Starts nested in shoulder (0.138m) and flares outward naturally to fingertips (0.311m)
+    # Accurate outward flare & true anatomical hand/finger geometry matching bossgamerev.png 1:1:
+    # Shoulder joint (Y=335) down to wrist (Y=715), widening palm & thumb (Y=735..755), and individual fingers (Y=772..803)
     arm_steps_cfg = [
         # y_px, dist_m, rx_m, rz_m
         (335, 0.138, 0.024, 0.024),  # Nested shoulder joint under halter shoulder
@@ -491,10 +491,14 @@ def build_arm(is_right=False):
         (465, 0.176, 0.026, 0.026),  # Lower bicep / elbow junction
         (525, 0.200, 0.024, 0.024),  # Elbow
         (590, 0.230, 0.023, 0.023),  # Forearm upper
-        (655, 0.263, 0.020, 0.020),  # Forearm lower
-        (715, 0.291, 0.017, 0.017),  # Wrist
-        (755, 0.303, 0.013, 0.012),  # Palm / hand
-        (780, 0.311, 0.009, 0.007),  # Tapered feminine fingertips
+        (655, 0.263, 0.020, 0.019),  # Forearm lower
+        (715, 0.289, 0.018, 0.014),  # Slender wrist
+        (735, 0.296, 0.023, 0.012),  # Base of palm & thenar eminence (widens for thumb)
+        (755, 0.302, 0.026, 0.011),  # Palm & knuckles (broad flattened feminine hand)
+        (772, 0.306, 0.022, 0.009),  # Four fingers fan
+        (785, 0.307, 0.016, 0.007),  # Mid phalanges
+        (796, 0.306, 0.010, 0.005),  # Distal fingertips
+        (803, 0.305, 0.004, 0.003),  # Apex tip of longest middle finger
     ]
     
     for y_px, dist_m, rx, rz in arm_steps_cfg:
