@@ -647,8 +647,8 @@ function updateSimulation(dt) {
         const gy = getTerrainHeight(z.x, z.z);
         z.model.root.position.set(z.x, gy, z.z);
 
-        // Distance Fog LOD: Skip fine limb & gut joint trigonometry when obscured by dense fog (>26m)
-        if (dist > 26.0) {
+        // Distance Fog LOD: Skip fine limb & gut joint trigonometry when obscured by dense fog (>18.5m)
+        if (dist > 18.5) {
           continue;
         }
 

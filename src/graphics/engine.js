@@ -26,7 +26,7 @@ export const FOG_COLOR = 0x828a93; // Silent Hill 2 iconic dense ash-gray mist
 renderer.setClearColor(FOG_COLOR);
 
 export const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(FOG_COLOR, 2.5, 26.0); // Dense volumetric fog cutting off beyond ~22m
+scene.fog = new THREE.Fog(FOG_COLOR, 1.0, 18.0); // Extra dense atmospheric fog (engulfs horizon beyond 18m)
 
 export const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 48.0);
 camera.rotation.order = 'YXZ';
