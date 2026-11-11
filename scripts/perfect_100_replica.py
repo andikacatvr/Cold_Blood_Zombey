@@ -381,7 +381,7 @@ body_rf, body_rb = [], []
 # Dense steps along body for perfect silhouette curve
 y_body_steps = [
     305, 325, 350, 380, 415, 450, 490, 530, 570, 620,
-    670, 720, 770, 830, 900, 980, 1070, 1170, 1260, 1345, 1420
+    670, 720, 770, 830, 900, 980, 1070, 1170, 1260, 1345, 1425
 ]
 
 for y_px in y_body_steps:
@@ -432,8 +432,8 @@ for y_px in y_body_steps:
         rz_f = 0.065 + 0.020 * t_h
         rz_b = 0.065 + 0.035 * t_h
     else:
-        # Flowing bridal skirt with continuous bell flare down to hem at Y=1420
-        t_s = (y_px - 750) / (1420.0 - 750.0)
+        # Flowing bridal skirt with continuous bell flare down to hem at Y=1425
+        t_s = (y_px - 750) / (1425.0 - 750.0)
         rz_f = 0.085 + 0.130 * t_s
         rz_b = 0.100 + 0.115 * t_s
         
@@ -560,19 +560,19 @@ uv_sole = [510.0 / 1024.0, 1.0 - 1010.0 / 1024.0]
 def build_leg_and_heel(is_right=False):
     sign = 1.0 if is_right else -1.0
     # In bossgamerev.png:
-    # Left shoe (viewer left, sign=-1.0): center X = 387.5, width [360..415]
-    # Right shoe (viewer right, sign=+1.0): center X = 637.5, width [610..665]
+    # Left shoe (viewer left, sign=-1.0): center X = 387.5, width [355..415] (width ~60 px)
+    # Right shoe (viewer right, sign=+1.0): center X = 637.5, width [605..665] (width ~60 px)
     orig_center_x = 637.5 if is_right else 387.5
     x_mid = (orig_center_x - center_x) * scale_x
     
     # 1. Porcelain Leg (Calf & Ankle inside hollow underskirt, ending neatly at shoe opening)
     leg_rf, leg_rb = [], []
     leg_steps = [
-        (0.350, 0.024, 0.026, 0.000),  # Upper calf inside skirt
-        (0.260, 0.021, 0.023, 0.002),  # Mid calf
-        (0.180, 0.018, 0.020, 0.004),  # Lower calf
-        (0.130, 0.015, 0.017, 0.006),  # Slender ankle & malleolus bone
-        (0.108, 0.014, 0.016, 0.008),  # Ankle joint entering shoe under hem
+        (0.350, 0.026, 0.028, 0.000),  # Upper calf inside skirt
+        (0.260, 0.023, 0.025, 0.002),  # Mid calf
+        (0.180, 0.020, 0.022, 0.005),  # Lower calf
+        (0.125, 0.018, 0.020, 0.008),  # Slender ankle & malleolus bone
+        (0.095, 0.017, 0.019, 0.012),  # Ankle joint entering shoe
     ]
     
     for yw, rx, rz, zm in leg_steps:
@@ -606,18 +606,17 @@ def build_leg_and_heel(is_right=False):
         
     add_smooth_column(leg_rf, leg_rb, cap_top=True, cap_bottom=False)
     
-    # 2. Victorian Bridal Pointed High-Heeled Pump (Matches bossgamerev.png 1:1)
-    # The gown hem hangs at Y_px = 1420 (yw = 0.115m).
-    # The shoe arches forward from under the hem (Y_px = 1425) down to the floor (Y_px = 1515, yw = 0.003m).
+    # 2. Victorian Bridal High-Heeled Pump (True anatomical width, elegant almond toe, NOT needles/thorns)
+    # Forward sloping arch (zm moves forward from +0.014m to +0.098m), with broad toe box resting along floor
     shoe_rf, shoe_rb = [], []
     shoe_steps = [
         # yw, y_px, rx, rz, zm
-        (0.108, 1425, 0.018, 0.020, 0.010),  # Top collar / instep opening under skirt hem
-        (0.085, 1445, 0.019, 0.022, 0.018),  # Arched vamp curve
-        (0.060, 1465, 0.019, 0.024, 0.028),  # Metatarsal curve
-        (0.038, 1485, 0.017, 0.022, 0.040),  # Ball of foot
-        (0.018, 1502, 0.013, 0.018, 0.054),  # Tapering to pointed toe
-        (0.003, 1515, 0.006, 0.008, 0.066),  # Pointed toe tip resting on floor
+        (0.095, 1435, 0.021, 0.022, 0.014),  # Shoe collar opening / instep under skirt
+        (0.075, 1455, 0.022, 0.025, 0.026),  # Arched vamp / dorsum of foot
+        (0.052, 1475, 0.023, 0.028, 0.044),  # Metatarsal arch / shoe neckline
+        (0.030, 1492, 0.024, 0.028, 0.065),  # Ball of foot / broad toe box (4.8 cm wide)
+        (0.012, 1506, 0.021, 0.024, 0.086),  # Elegant almond toe cap (4.2 cm wide)
+        (0.003, 1515, 0.014, 0.015, 0.098),  # Rounded almond toe tip resting flat on floor (2.8 cm wide)
     ]
     
     for yw, y_px, rx, rz, zm in shoe_steps:
@@ -626,7 +625,7 @@ def build_leg_and_heel(is_right=False):
             th = -np.pi * 0.5 + np.pi * k / float(K_shoe)
             vx = x_mid + rx * np.sin(th)
             vz = zm + rz * np.cos(th)
-            orig_x = orig_center_x + np.sin(th) * 26.0
+            orig_x = orig_center_x + np.sin(th) * 28.0
             uv = get_uv_front(orig_x, y_px) # Exact 1:1 authentic shoe texture
             
             v_idx = len(all_vertices)
@@ -639,7 +638,7 @@ def build_leg_and_heel(is_right=False):
             th = np.pi * 0.5 + np.pi * k / float(K_shoe)
             vx = x_mid + rx * np.sin(th)
             vz = zm + rz * np.cos(th)
-            orig_x = orig_center_x + np.sin(th) * 26.0
+            orig_x = orig_center_x + np.sin(th) * 28.0
             uv = get_uv_front(orig_x, y_px)
             
             v_idx = len(all_vertices)
@@ -655,9 +654,9 @@ def build_leg_and_heel(is_right=False):
     
     # 3. Slender Victorian Stiletto Heel Post (Hak Sepatu)
     heel_rf, heel_rb = [], []
-    heel_z = 0.000
-    heel_r = 0.0035
-    heel_steps = [0.055, 0.028, 0.000]
+    heel_z = 0.010
+    heel_r = 0.004
+    heel_steps = [0.060, 0.030, 0.000]
     
     for yw in heel_steps:
         rf, rb = [], []
