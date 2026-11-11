@@ -189,3 +189,4 @@ with open('view_boss.html', 'w', encoding='utf-8') as f:
     f.write(html_content)
 
 print('Successfully created view_boss.html!')
+
