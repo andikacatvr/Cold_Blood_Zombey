@@ -682,6 +682,11 @@ function updateSimulation(dt) {
         if (p.lShin) p.lShin.rotation.x = Math.max(0, -Math.sin(z.stepTime) * 0.85);
         if (p.rShin) p.rShin.rotation.x = Math.max(0, Math.sin(z.stepTime) * 0.85);
 
+        if (p.skirt) {
+          p.skirt.rotation.x = Math.sin(z.stepTime) * 0.12;
+          p.skirt.rotation.z = Math.cos(z.stepTime * 0.8) * 0.05;
+        }
+
         if (p.danglingGuts) {
           p.danglingGuts.forEach(g => {
             const sway = Math.sin(z.stepTime + g.phase) * 0.35;

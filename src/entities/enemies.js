@@ -32,6 +32,7 @@ let cameraRef = null;
 // Materials
 let l4dFlannelMat, l4dHoodieMat, l4dPatientMat, l4dBruiserMat, l4dDenimMat, l4dDarkPantsMat;
 let l4dFaceMat, l4dNecroticSkinMat, l4dClawsMat, l4dBootMat, l4dHairMat;
+let ps1FemaleHairMat, ps1MaleHairMat, ps1TieMat, ps1FormalShoeMat, ps1DarkBeltMat;
 let fleshRawCrimsonMat, fleshDarkClotMat, intestineWetPinkMat, exposedWhiteRibMat, feralGlowingEyesMat;
 let nunHabitMat, nunVeilMat, nunMantleMat, silverCrossMat, bloodyHandsMat, paleFleshMat, nunFaceMat;
 
@@ -49,17 +50,23 @@ export function initEnemyMaterials(textures) {
     nunFaceTex
   } = textures;
 
-  l4dFlannelMat = new THREE.MeshLambertMaterial({ map: l4dFlannelTex, flatShading: false });
-  l4dHoodieMat = new THREE.MeshLambertMaterial({ map: l4dHoodieTex, flatShading: false });
-  l4dPatientMat = new THREE.MeshLambertMaterial({ map: l4dPatientTex, flatShading: false });
-  l4dBruiserMat = new THREE.MeshLambertMaterial({ map: l4dBruiserTex, flatShading: false });
-  l4dDenimMat = new THREE.MeshLambertMaterial({ map: l4dDenimTex, flatShading: false });
-  l4dDarkPantsMat = new THREE.MeshLambertMaterial({ map: l4dDarkPantsTex, flatShading: false });
-  l4dFaceMat = new THREE.MeshLambertMaterial({ map: l4dFaceTex, flatShading: false });
-  l4dNecroticSkinMat = new THREE.MeshLambertMaterial({ map: l4dNecroticSkinTex, flatShading: false });
-  l4dClawsMat = new THREE.MeshLambertMaterial({ map: l4dClawsTex, flatShading: false });
-  l4dBootMat = new THREE.MeshLambertMaterial({ color: 0x181311, flatShading: false });
-  l4dHairMat = new THREE.MeshLambertMaterial({ color: 0x1c1715, flatShading: false });
+  l4dFlannelMat = new THREE.MeshLambertMaterial({ map: l4dFlannelTex, flatShading: true });
+  l4dHoodieMat = new THREE.MeshLambertMaterial({ map: l4dHoodieTex, flatShading: true });
+  l4dPatientMat = new THREE.MeshLambertMaterial({ map: l4dPatientTex, flatShading: true });
+  l4dBruiserMat = new THREE.MeshLambertMaterial({ map: l4dBruiserTex, flatShading: true });
+  l4dDenimMat = new THREE.MeshLambertMaterial({ map: l4dDenimTex, flatShading: true });
+  l4dDarkPantsMat = new THREE.MeshLambertMaterial({ map: l4dDarkPantsTex, flatShading: true });
+  l4dFaceMat = new THREE.MeshLambertMaterial({ map: l4dFaceTex, flatShading: true });
+  l4dNecroticSkinMat = new THREE.MeshLambertMaterial({ map: l4dNecroticSkinTex, flatShading: true });
+  l4dClawsMat = new THREE.MeshLambertMaterial({ map: l4dClawsTex, flatShading: true });
+  l4dBootMat = new THREE.MeshLambertMaterial({ color: 0x181311, flatShading: true });
+  l4dHairMat = new THREE.MeshLambertMaterial({ color: 0x1c1715, flatShading: true });
+
+  ps1FemaleHairMat = new THREE.MeshLambertMaterial({ color: 0x4a3224, flatShading: true });
+  ps1MaleHairMat = new THREE.MeshLambertMaterial({ color: 0x221e1a, flatShading: true });
+  ps1TieMat = new THREE.MeshLambertMaterial({ color: 0x141618, flatShading: true });
+  ps1FormalShoeMat = new THREE.MeshLambertMaterial({ color: 0x181412, flatShading: true });
+  ps1DarkBeltMat = new THREE.MeshLambertMaterial({ color: 0x16181a, flatShading: true });
 
   fleshRawCrimsonMat = new THREE.MeshLambertMaterial({ color: 0x990b14, flatShading: false });
   fleshDarkClotMat = new THREE.MeshLambertMaterial({ color: 0x480307, flatShading: false });
@@ -83,337 +90,286 @@ export function initEnemies(scene, camera) {
 
 export function buildLeft4DeadInfected(variant = 0) {
   const root = new THREE.Group();
-  const parts = { root, variant };
+  const parts = { root, variant, danglingGuts: [] };
 
-  const scale = (variant === 3) ? 1.14 : ((variant === 1) ? 0.94 : 1.0);
+  const isFemale = (variant === 0 || variant === 3);
+  const isSuitMale = (variant === 2);
+  const isVestMale = (variant === 1);
 
-  let shirtMat = l4dFlannelMat;
-  let pantsMat = l4dDenimMat;
-  if (variant === 1) {
-    shirtMat = l4dHoodieMat;
-    pantsMat = l4dDarkPantsMat;
-  } else if (variant === 2) {
-    shirtMat = l4dPatientMat;
-    pantsMat = l4dPatientMat;
-  } else if (variant === 3) {
-    shirtMat = l4dBruiserMat;
-    pantsMat = l4dDenimMat;
+  const scale = isFemale ? 0.98 : (isSuitMale ? 1.05 : 1.02);
+
+  // Material selection based on archetypes
+  let torsoMat = l4dFlannelMat; // female dirty blouse
+  let legMat = l4dDenimMat;     // female dark flared skirt
+  let shoeMat = ps1FormalShoeMat;
+
+  if (isVestMale) {
+    torsoMat = l4dBruiserMat;   // cream/beige formal vest
+    legMat = l4dDarkPantsMat;   // ash grey trousers
+  } else if (isSuitMale) {
+    torsoMat = l4dHoodieMat;    // dark suit blazer
+    legMat = l4dPatientMat;     // black suit slacks
   }
 
-  // 1. Hips & Anatomical Pelvic Girdle
+  // 1. Hips / Pelvis
   const hips = new THREE.Group();
-  hips.position.y = 0.96 * scale;
+  hips.position.y = 0.95 * scale;
   root.add(hips);
   parts.hips = hips;
 
-  const pelvis = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.24 * scale, 0.17 * scale, 0.28 * scale, 7),
-    pantsMat
-  );
-  pelvis.scale.set(1.15, 1.0, 0.85);
+  const pelvisGeo = new THREE.BoxGeometry(0.26 * scale, 0.20 * scale, 0.20 * scale);
+  const pelvis = new THREE.Mesh(pelvisGeo, legMat);
+  pelvis.position.y = -0.02 * scale;
   hips.add(pelvis);
 
-  // Shredded cloth rags hanging from waist
-  [-0.12, 0, 0.12].forEach((tx, idx) => {
-    const rag = new THREE.Mesh(
-      new THREE.ConeGeometry(0.05 * scale, 0.18 * scale, 3),
-      pantsMat
-    );
-    rag.position.set(tx * scale, -0.16 * scale, (idx === 1 ? 0.12 : -0.10) * scale);
-    rag.rotation.x = idx === 1 ? 0.4 : -0.3;
-    rag.rotation.z = (idx - 1) * 0.2;
-    hips.add(rag);
-  });
+  // Female Long Vintage Flared Skirt (Reference Left)
+  if (isFemale) {
+    // Elegant flared PS1 polygon skirt tapering down from hips to ankles
+    const skirtGeo = new THREE.CylinderGeometry(0.20 * scale, 0.44 * scale, 0.74 * scale, 8, 1, true);
+    const skirtMesh = new THREE.Mesh(skirtGeo, legMat);
+    skirtMesh.position.y = -0.37 * scale;
+    hips.add(skirtMesh);
+    parts.skirt = skirtMesh;
 
-  // 2. Spine & Gaunt Anatomical Torso
+    // Waistband
+    const waistBand = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.21 * scale, 0.21 * scale, 0.05 * scale, 8),
+      ps1DarkBeltMat
+    );
+    waistBand.position.y = 0.02 * scale;
+    hips.add(waistBand);
+  } else {
+    // Belt for male zombies
+    const belt = new THREE.Mesh(
+      new THREE.BoxGeometry(0.28 * scale, 0.04 * scale, 0.21 * scale),
+      ps1DarkBeltMat
+    );
+    belt.position.y = 0.08 * scale;
+    hips.add(belt);
+  }
+
+  // 2. Spine & Torso
   const spine = new THREE.Group();
-  spine.position.y = 0.16 * scale;
-  spine.rotation.x = 0.32;
+  spine.position.y = 0.12 * scale;
+  // Natural posture tilts matching PS1 Resident Evil eerie stance
+  if (isFemale) {
+    spine.rotation.x = 0.10;
+    spine.rotation.z = -0.06;
+  } else if (isVestMale) {
+    spine.rotation.x = 0.24;
+    spine.rotation.z = 0.08;
+  } else {
+    // Suit male: aggressive forward hunch
+    spine.rotation.x = 0.30;
+    spine.rotation.z = -0.04;
+  }
   hips.add(spine);
   parts.spine = spine;
 
-  // Gaunt, emaciated ribcage tapered at the waist and flared at the clavicles
-  const chestGeo = new THREE.CylinderGeometry(0.31 * scale, 0.21 * scale, 0.52 * scale, 8);
-  const chest = new THREE.Mesh(chestGeo, shirtMat);
-  chest.position.y = 0.48 * scale;
-  chest.scale.set(1.18, 1.0, 0.76);
+  // Chest / Upper Torso
+  const chest = new THREE.Group();
+  chest.position.y = 0.22 * scale;
   spine.add(chest);
   parts.chest = chest;
 
-  // Hollow gaping wound cavity in the chest
-  const cavity = new THREE.Mesh(
-    new THREE.DodecahedronGeometry(0.16 * scale, 0),
-    fleshDarkClotMat
-  );
-  cavity.position.set(0.04 * scale, 0.46 * scale, 0.16 * scale);
-  cavity.scale.set(1.1, 1.5, 0.7);
-  spine.add(cavity);
+  const chestWidth = isFemale ? 0.28 * scale : 0.34 * scale;
+  const chestHeight = 0.32 * scale;
+  const chestDepth = isFemale ? 0.18 * scale : 0.22 * scale;
+  const chestGeo = new THREE.BoxGeometry(chestWidth, chestHeight, chestDepth);
+  const chestMesh = new THREE.Mesh(chestGeo, torsoMat);
+  chest.add(chestMesh);
 
-  // 4 pairs of 3D curved anatomical ribs piercing through torn flesh and clothes
-  [-1, 1].forEach((sideSign) => {
-    for (let r = 0; r < 4; r++) {
-      const ribR = (0.16 - r * 0.015) * scale;
-      const ribTube = 0.018 * scale;
-      const rib = new THREE.Mesh(
-        new THREE.TorusGeometry(ribR, ribTube, 4, 8, Math.PI * 0.72),
-        exposedWhiteRibMat
-      );
-      rib.position.set(sideSign * 0.07 * scale, (0.58 - r * 0.08) * scale, 0.12 * scale);
-      rib.rotation.y = sideSign * 0.35;
-      rib.rotation.x = 0.25 - r * 0.05;
-      rib.rotation.z = sideSign * (-0.3 + r * 0.08);
-      spine.add(rib);
+  // Clothing details for male archetypes: Collar & Necktie
+  if (!isFemale) {
+    // White shirt inner collar
+    const collarGeo = new THREE.BoxGeometry(0.12 * scale, 0.07 * scale, 0.08 * scale);
+    const collar = new THREE.Mesh(collarGeo, l4dFlannelMat);
+    collar.position.set(0, 0.16 * scale, 0.07 * scale);
+    chest.add(collar);
+
+    // Hanging necktie
+    const tieGeo = new THREE.BoxGeometry(0.05 * scale, 0.22 * scale, 0.02 * scale);
+    const tie = new THREE.Mesh(tieGeo, ps1TieMat);
+    tie.position.set(0, 0.04 * scale, 0.12 * scale);
+    tie.rotation.x = -0.05;
+    chest.add(tie);
+
+    // Suit lapels for suit male
+    if (isSuitMale) {
+      const lapelL = new THREE.Mesh(new THREE.BoxGeometry(0.04 * scale, 0.20 * scale, 0.02 * scale), torsoMat);
+      lapelL.position.set(-0.06 * scale, 0.06 * scale, 0.12 * scale);
+      lapelL.rotation.z = -0.2;
+      chest.add(lapelL);
+
+      const lapelR = new THREE.Mesh(new THREE.BoxGeometry(0.04 * scale, 0.20 * scale, 0.02 * scale), torsoMat);
+      lapelR.position.set(0.06 * scale, 0.06 * scale, 0.12 * scale);
+      lapelR.rotation.z = 0.2;
+      chest.add(lapelR);
     }
-  });
-
-  // Protruding rotting vertebral column along the spine on the back
-  for (let v = 0; v < 5; v++) {
-    const vert = new THREE.Mesh(
-      new THREE.DodecahedronGeometry(0.034 * scale, 0),
-      exposedWhiteRibMat
-    );
-    vert.position.set(0, (0.32 + v * 0.08) * scale, -0.16 * scale);
-    vert.scale.set(0.9, 1.1, 1.4);
-    spine.add(vert);
+  } else {
+    // Female blouse folded lapel
+    const fCollar = new THREE.Mesh(new THREE.BoxGeometry(0.16 * scale, 0.06 * scale, 0.06 * scale), torsoMat);
+    fCollar.position.set(0, 0.15 * scale, 0.07 * scale);
+    chest.add(fCollar);
   }
 
-  // Visceral clotted gore blobs
-  const goreSplatter = new THREE.Mesh(
-    new THREE.DodecahedronGeometry(0.08 * scale, 0),
-    fleshRawCrimsonMat
-  );
-  goreSplatter.position.set(-0.06 * scale, 0.38 * scale, 0.18 * scale);
-  goreSplatter.scale.set(1.3, 0.7, 0.8);
-  spine.add(goreSplatter);
-
-  // Intestinal coils & dangling entrails
-  const gutAnchor = new THREE.Group();
-  gutAnchor.position.set(0, 0.18 * scale, 0.20 * scale);
-  spine.add(gutAnchor);
-  parts.gutAnchor = gutAnchor;
-
-  for (let i = 0; i < 4; i++) {
-    const loopR = (0.06 + (i % 2) * 0.03) * scale;
-    const loop = new THREE.Mesh(
-      new THREE.TorusGeometry(loopR, 0.035 * scale, 5, 8),
-      i % 2 === 0 ? intestineWetPinkMat : fleshDarkClotMat
-    );
-    loop.position.set(((i % 3 - 1) * 0.08) * scale, (-Math.floor(i / 3) * 0.06) * scale, (i * 0.02) * scale);
-    gutAnchor.add(loop);
-  }
-
-  const danglingGuts = [];
-  for (let s = 0; s < 2; s++) {
-    const strand = new THREE.Group();
-    strand.position.set((s * 0.12 - 0.06) * scale, -0.04 * scale, 0.02 * scale);
-    let parentJoint = strand;
-    const segments = [];
-    for (let k = 0; k < 3; k++) {
-      const segGeo = new THREE.CylinderGeometry(0.034 * scale, 0.030 * scale, 0.14 * scale, 5);
-      const segMesh = new THREE.Mesh(segGeo, k % 2 === 0 ? intestineWetPinkMat : fleshDarkClotMat);
-      segMesh.position.y = -0.07 * scale;
-      const joint = new THREE.Group();
-      joint.add(segMesh);
-      if (k > 0) joint.position.y = -0.13 * scale;
-      parentJoint.add(joint);
-      parentJoint = joint;
-      segments.push(joint);
-    }
-    gutAnchor.add(strand);
-    danglingGuts.push({ root: strand, segments, phase: s * 1.4 });
-  }
-  parts.danglingGuts = danglingGuts;
-
-  // 3. Neck, Anatomical Horror Skull & Distended Mandible
+  // 3. Neck & Head
   const neck = new THREE.Group();
-  neck.position.set(0, 0.74 * scale, 0.04 * scale);
-  neck.rotation.x = -0.18;
-  spine.add(neck);
+  neck.position.y = 0.20 * scale;
+  // Sideways broken head tilt for female zombie (reference image)
+  if (isFemale) {
+    neck.rotation.x = -0.12;
+    neck.rotation.z = 0.28; // creepy sideways tilt
+  } else if (isVestMale) {
+    neck.rotation.x = 0.16;
+    neck.rotation.z = -0.22; // tilted head to other side
+  } else {
+    neck.rotation.x = 0.22; // forward jutting skull
+  }
+  chest.add(neck);
   parts.neck = neck;
 
-  // Necrotic cervical column with torn gristle
-  const neckMesh = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.085 * scale, 0.11 * scale, 0.22 * scale, 6),
-    l4dNecroticSkinMat
-  );
-  neckMesh.position.y = 0.08 * scale;
-  neck.add(neckMesh);
+  const neckGeo = new THREE.CylinderGeometry(0.05 * scale, 0.065 * scale, 0.10 * scale, 5);
+  neck.add(new THREE.Mesh(neckGeo, l4dNecroticSkinMat));
 
-  // Organic low-poly horror skull with recessed temples and rotting brow ridge
-  const skullGroup = new THREE.Group();
-  skullGroup.position.y = 0.22 * scale;
-  neck.add(skullGroup);
-  parts.head = skullGroup;
+  const head = new THREE.Group();
+  head.position.y = 0.12 * scale;
+  neck.add(head);
+  parts.head = head;
 
-  const cranium = new THREE.Mesh(
-    new THREE.SphereGeometry(0.22 * scale, 8, 7),
-    l4dNecroticSkinMat
-  );
-  cranium.scale.set(0.92, 1.14, 1.06);
-  skullGroup.add(cranium);
+  // PS1 low-poly angular cranium
+  const craniumGeo = new THREE.BoxGeometry(0.18 * scale, 0.22 * scale, 0.19 * scale);
+  const craniumMesh = new THREE.Mesh(craniumGeo, l4dFaceMat);
+  head.add(craniumMesh);
 
-  // Rotting exposed parietal bone cap
-  const exposedBone = new THREE.Mesh(
-    new THREE.SphereGeometry(0.14 * scale, 6, 5),
-    exposedWhiteRibMat
-  );
-  exposedBone.position.set(-0.04 * scale, 0.12 * scale, -0.04 * scale);
-  exposedBone.scale.set(1.1, 0.6, 1.0);
-  skullGroup.add(exposedBone);
+  // Hair styling according to reference
+  if (isFemale) {
+    // Classic retro bob hair (brown/brunette)
+    const hairTopGeo = new THREE.BoxGeometry(0.20 * scale, 0.09 * scale, 0.21 * scale);
+    const hairTop = new THREE.Mesh(hairTopGeo, ps1FemaleHairMat);
+    hairTop.position.set(0, 0.08 * scale, 0.01 * scale);
+    head.add(hairTop);
 
-  // Sunken eye sockets & feral glowing pinpoints
-  [-0.085, 0.085].forEach((eyeX) => {
-    // Sunken orbital cavity
-    const socket = new THREE.Mesh(
-      new THREE.SphereGeometry(0.052 * scale, 6, 5),
-      fleshDarkClotMat
+    const hairBackGeo = new THREE.BoxGeometry(0.21 * scale, 0.20 * scale, 0.10 * scale);
+    const hairBack = new THREE.Mesh(hairBackGeo, ps1FemaleHairMat);
+    hairBack.position.set(0, -0.02 * scale, -0.07 * scale);
+    head.add(hairBack);
+
+    // Side strands hanging down
+    [-0.10, 0.10].forEach((hx) => {
+      const strand = new THREE.Mesh(new THREE.BoxGeometry(0.03 * scale, 0.18 * scale, 0.12 * scale), ps1FemaleHairMat);
+      strand.position.set(hx * scale, -0.02 * scale, 0.02 * scale);
+      head.add(strand);
+    });
+  } else if (isSuitMale) {
+    // Neat parted dark hair
+    const hairTop = new THREE.Mesh(
+      new THREE.BoxGeometry(0.19 * scale, 0.07 * scale, 0.20 * scale),
+      ps1MaleHairMat
     );
-    socket.position.set(eyeX * scale, 0.04 * scale, 0.18 * scale);
-    socket.scale.set(1.0, 0.8, 0.6);
-    skullGroup.add(socket);
-
-    // Feral glowing pupil (piercing evil red gaze)
-    const pupil = new THREE.Mesh(
-      new THREE.SphereGeometry(0.024 * scale, 5, 4),
-      feralGlowingEyesMat
+    hairTop.position.set(0, 0.09 * scale, -0.01 * scale);
+    head.add(hairTop);
+  } else {
+    // Vest male: Receding/messy disheveled hair
+    const hairSide = new THREE.Mesh(
+      new THREE.BoxGeometry(0.20 * scale, 0.05 * scale, 0.18 * scale),
+      ps1MaleHairMat
     );
-    pupil.position.set(eyeX * scale, 0.04 * scale, 0.21 * scale);
-    skullGroup.add(pupil);
-  });
+    hairSide.position.set(0, 0.07 * scale, -0.03 * scale);
+    head.add(hairSide);
+  }
 
-  // Rotting stringy hair clumps hanging from scalp
-  [-0.14, 0.12, -0.02].forEach((hx, hidx) => {
-    const hairStrand = new THREE.Mesh(
-      new THREE.ConeGeometry(0.055 * scale, 0.24 * scale, 3),
-      l4dHairMat
-    );
-    hairStrand.position.set(hx * scale, 0.10 * scale, (hidx === 2 ? -0.16 : -0.08) * scale);
-    hairStrand.rotation.x = hidx === 2 ? -0.5 : 0.3;
-    hairStrand.rotation.z = (hx > 0 ? 0.35 : -0.35);
-    skullGroup.add(hairStrand);
-  });
-
-  // Upper jaw maxilla with sharp needle fangs
-  [-0.06, -0.02, 0.02, 0.06].forEach((tx) => {
-    const tooth = new THREE.Mesh(
-      new THREE.ConeGeometry(0.014 * scale, 0.052 * scale, 3),
-      exposedWhiteRibMat
-    );
-    tooth.position.set(tx * scale, -0.10 * scale, 0.18 * scale);
-    tooth.rotation.x = Math.PI;
-    skullGroup.add(tooth);
-  });
-
-  // Distended Jaw / Lower Mandible
+  // Jaw for biting / groaning animation
   const jaw = new THREE.Group();
-  jaw.position.set(0, 0.06 * scale, 0.08 * scale);
-  jaw.rotation.x = 0.38;
-  neck.add(jaw);
+  jaw.position.set(0, -0.08 * scale, 0.04 * scale);
+  head.add(jaw);
   parts.jaw = jaw;
 
-  const mandible = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.13 * scale, 0.07 * scale, 0.14 * scale, 5),
-    fleshDarkClotMat
-  );
-  mandible.position.set(0, -0.06 * scale, 0.04 * scale);
-  mandible.scale.set(1.15, 0.7, 1.4);
-  jaw.add(mandible);
+  const jawGeo = new THREE.BoxGeometry(0.12 * scale, 0.06 * scale, 0.12 * scale);
+  const jawMesh = new THREE.Mesh(jawGeo, l4dNecroticSkinMat);
+  jaw.add(jawMesh);
 
-  // Lower needle fangs pointing upwards
-  [-0.05, -0.015, 0.015, 0.05].forEach((tx) => {
-    const tooth = new THREE.Mesh(
-      new THREE.ConeGeometry(0.014 * scale, 0.048 * scale, 3),
-      exposedWhiteRibMat
+  // Eerie dead eyes (dark sunken sockets with tiny glowing pinpricks)
+  [-0.045, 0.045].forEach((ex) => {
+    const eyeSocket = new THREE.Mesh(
+      new THREE.BoxGeometry(0.035 * scale, 0.025 * scale, 0.02 * scale),
+      fleshDarkClotMat
     );
-    tooth.position.set(tx * scale, 0.02 * scale, 0.11 * scale);
-    jaw.add(tooth);
+    eyeSocket.position.set(ex * scale, 0.02 * scale, 0.10 * scale);
+    head.add(eyeSocket);
+
+    const pupil = new THREE.Mesh(
+      new THREE.BoxGeometry(0.012 * scale, 0.012 * scale, 0.01 * scale),
+      feralGlowingEyesMat
+    );
+    pupil.position.set(ex * scale, 0.02 * scale, 0.11 * scale);
+    head.add(pupil);
   });
 
-  // Stretched bloody cheek tendon cords
-  [-0.10, 0.10].forEach((sx) => {
-    const tendon = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.012 * scale, 0.012 * scale, 0.12 * scale, 4),
-      fleshRawCrimsonMat
-    );
-    tendon.position.set(sx * scale, 0.01 * scale, 0.04 * scale);
-    jaw.add(tendon);
-  });
-
-  // 4. Arms & Gaunt Horror Claws
+  // 4. Arms & Hands
   const makeArm = (isRight) => {
-    const sSign = isRight ? 1 : -1;
-    const isBruiserRight = (variant === 3 && isRight);
-    const armThick = isBruiserRight ? 1.5 : 1.0;
-
     const shoulder = new THREE.Group();
-    shoulder.position.set(sSign * 0.40 * scale, 0.62 * scale, 0);
+    const sign = isRight ? 1 : -1;
+    shoulder.position.set(sign * (chestWidth * 0.58), 0.10 * scale, 0);
 
-    // Anatomical shoulder deltoid
-    const deltoid = new THREE.Mesh(
-      new THREE.DodecahedronGeometry(0.12 * armThick * scale, 0),
-      shirtMat
-    );
-    deltoid.scale.set(1.1, 1.2, 1.0);
-    shoulder.add(deltoid);
-
-    // Upper arm / bicep
-    const bicep = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.11 * armThick * scale, 0.09 * armThick * scale, 0.44 * scale, 6),
-      shirtMat
-    );
-    bicep.position.set(0, -0.20 * scale, 0);
-    shoulder.add(bicep);
-
-    const elbow = new THREE.Group();
-    elbow.position.set(0, -0.42 * scale, 0);
-    shoulder.add(elbow);
-
-    // Forearm with torn necrotic flesh
-    const forearm = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.095 * armThick * scale, 0.075 * armThick * scale, 0.42 * scale, 6),
-      isBruiserRight ? fleshDarkClotMat : l4dNecroticSkinMat
-    );
-    forearm.position.set(0, -0.19 * scale, 0);
-    elbow.add(forearm);
-
-    // Bruiser mutated bone spikes on elbow/forearm
-    if (isBruiserRight) {
-      for (let sp = 0; sp < 3; sp++) {
-        const spike = new THREE.Mesh(
-          new THREE.ConeGeometry(0.035 * scale, 0.18 * scale, 4),
-          exposedWhiteRibMat
-        );
-        spike.position.set(0.08 * scale, (-0.08 - sp * 0.11) * scale, -0.06 * scale);
-        spike.rotation.z = -0.7;
-        spike.rotation.x = 0.3;
-        elbow.add(spike);
-      }
+    // Asymmetric unsettling zombie arm pose matching PS1 reference
+    if (isFemale) {
+      shoulder.rotation.x = 0.25 + (isRight ? 0.10 : -0.05);
+      shoulder.rotation.z = sign * (isRight ? -0.15 : -0.22);
+    } else if (isVestMale) {
+      shoulder.rotation.x = 0.40 + (isRight ? 0.15 : 0.0);
+      shoulder.rotation.z = sign * -0.18;
+    } else {
+      // Suit male reaching forward
+      shoulder.rotation.x = 0.55 + (isRight ? -0.10 : 0.10);
+      shoulder.rotation.z = sign * -0.12;
     }
 
-    // Hand & Gaunt Horror Claws (curved palm + 4 elongated skeletal talons)
-    const handGroup = new THREE.Group();
-    handGroup.position.set(0, -0.42 * scale, 0);
-    elbow.add(handGroup);
+    // Upper Arm Sleeve
+    const sleeveLength = 0.24 * scale;
+    const sleeveGeo = new THREE.BoxGeometry(0.09 * scale, sleeveLength, 0.09 * scale);
+    const sleeve = new THREE.Mesh(sleeveGeo, torsoMat);
+    sleeve.position.y = -sleeveLength * 0.45;
+    shoulder.add(sleeve);
 
-    // Flattened palm
-    const palm = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.065 * armThick * scale, 0.045 * armThick * scale, 0.11 * scale, 5),
-      l4dClawsMat
-    );
-    palm.scale.set(1.2, 1.0, 0.6);
-    palm.position.y = -0.04 * scale;
-    handGroup.add(palm);
+    // Elbow / Forearm
+    const elbow = new THREE.Group();
+    elbow.position.y = -sleeveLength;
+    elbow.rotation.x = 0.25 + (isRight ? 0.10 : 0.05);
+    shoulder.add(elbow);
 
-    // 4 needle claw fingers
-    [-0.04, -0.013, 0.013, 0.04].forEach((fx, fidx) => {
-      const clawLen = (isBruiserRight ? 0.22 : (0.13 + (1 - Math.abs(fidx - 1.5)) * 0.03)) * scale;
-      const claw = new THREE.Mesh(
-        new THREE.ConeGeometry(0.015 * armThick * scale, clawLen, 4),
+    const foreArmLength = 0.22 * scale;
+    // Forearm sleeve (shirt/blouse/suit)
+    const foreSleeveGeo = new THREE.BoxGeometry(0.08 * scale, foreArmLength * 0.6, 0.08 * scale);
+    const foreSleeve = new THREE.Mesh(foreSleeveGeo, torsoMat);
+    foreSleeve.position.y = -foreArmLength * 0.25;
+    elbow.add(foreSleeve);
+
+    // Exposed necrotic wrist & hand
+    const wristGeo = new THREE.BoxGeometry(0.065 * scale, foreArmLength * 0.45, 0.065 * scale);
+    const wrist = new THREE.Mesh(wristGeo, l4dNecroticSkinMat);
+    wrist.position.y = -foreArmLength * 0.70;
+    elbow.add(wrist);
+
+    // PS1 Clawed Hand
+    const hand = new THREE.Group();
+    hand.position.y = -foreArmLength;
+    hand.rotation.x = 0.2;
+    elbow.add(hand);
+
+    const palmGeo = new THREE.BoxGeometry(0.07 * scale, 0.08 * scale, 0.03 * scale);
+    const palm = new THREE.Mesh(palmGeo, isFemale ? bloodyHandsMat : l4dNecroticSkinMat);
+    hand.add(palm);
+
+    // Twisted curled fingers
+    [-0.02, 0, 0.02].forEach((fx) => {
+      const finger = new THREE.Mesh(
+        new THREE.BoxGeometry(0.015 * scale, 0.05 * scale, 0.015 * scale),
         l4dClawsMat
       );
-      claw.position.set(fx * armThick * scale, (-0.08 - clawLen * 0.4) * scale, 0.015 * scale);
-      claw.rotation.x = 0.25;
-      handGroup.add(claw);
+      finger.position.set(fx * scale, -0.05 * scale, 0.01 * scale);
+      finger.rotation.x = 0.3;
+      hand.add(finger);
     });
 
     return { shoulder, elbow };
@@ -421,72 +377,53 @@ export function buildLeft4DeadInfected(variant = 0) {
 
   const lArmData = makeArm(false);
   const rArmData = makeArm(true);
-  spine.add(lArmData.shoulder);
-  spine.add(rArmData.shoulder);
+  chest.add(lArmData.shoulder);
+  chest.add(rArmData.shoulder);
   parts.lArm = lArmData.shoulder;
   parts.rArm = rArmData.shoulder;
   parts.lFore = lArmData.elbow;
   parts.rFore = rArmData.elbow;
 
-  // 5. Legs & Decaying Combat Boots
+  // 5. Legs & Feet
   const makeLeg = (isRight) => {
-    const sSign = isRight ? 1 : -1;
     const hip = new THREE.Group();
-    hip.position.set(sSign * 0.18 * scale, -0.10 * scale, 0);
+    const sign = isRight ? 1 : -1;
+    hip.position.set(sign * 0.10 * scale, -0.08 * scale, 0);
 
-    // Thigh
-    const thigh = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.13 * scale, 0.10 * scale, 0.46 * scale, 6),
-      pantsMat
-    );
-    thigh.position.set(0, -0.22 * scale, 0);
+    const legLength = 0.42 * scale;
+
+    // Upper Leg (Thigh)
+    const thighGeo = new THREE.BoxGeometry(0.12 * scale, legLength, 0.12 * scale);
+    const thigh = new THREE.Mesh(thighGeo, legMat);
+    thigh.position.y = -legLength * 0.5;
     hip.add(thigh);
 
+    // Knee / Shin
     const knee = new THREE.Group();
-    knee.position.set(0, -0.44 * scale, 0);
+    knee.position.y = -legLength;
     hip.add(knee);
 
-    // Knee joint cap
-    const kneeCap = new THREE.Mesh(
-      new THREE.DodecahedronGeometry(0.09 * scale, 0),
-      pantsMat
-    );
-    kneeCap.position.set(0, 0, 0.04 * scale);
-    knee.add(kneeCap);
-
-    // Shin
-    const shin = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.095 * scale, 0.08 * scale, 0.44 * scale, 6),
-      pantsMat
-    );
-    shin.position.set(0, -0.20 * scale, 0);
+    const shinLength = 0.42 * scale;
+    const shinGeo = new THREE.BoxGeometry(0.105 * scale, shinLength, 0.105 * scale);
+    const shin = new THREE.Mesh(shinGeo, legMat);
+    shin.position.y = -shinLength * 0.5;
     knee.add(shin);
 
-    // Anatomical Decayed Boot (heel + tapered foot wedge + clawed toes)
-    const bootGroup = new THREE.Group();
-    bootGroup.position.set(0, -0.43 * scale, 0.03 * scale);
-    knee.add(bootGroup);
+    // PS1 Formal Dress Shoe (Black/Dark Brown Leather)
+    const shoeGroup = new THREE.Group();
+    shoeGroup.position.set(0, -shinLength, 0.03 * scale);
+    knee.add(shoeGroup);
 
-    // Boot ankle & foot body
-    const bootFoot = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.085 * scale, 0.065 * scale, 0.22 * scale, 6),
-      l4dBootMat
-    );
-    bootFoot.rotation.x = Math.PI / 2.2;
-    bootFoot.position.set(0, -0.02 * scale, 0.05 * scale);
-    bootFoot.scale.set(0.9, 1.2, 0.6);
-    bootGroup.add(bootFoot);
+    const shoeGeo = new THREE.BoxGeometry(0.10 * scale, 0.08 * scale, 0.20 * scale);
+    const shoe = new THREE.Mesh(shoeGeo, shoeMat);
+    shoe.position.set(0, 0, 0.02 * scale);
+    shoeGroup.add(shoe);
 
-    // Rotting exposed toe claws protruding from torn boot tip
-    [-0.025, 0, 0.025].forEach((tx) => {
-      const toeClaw = new THREE.Mesh(
-        new THREE.ConeGeometry(0.012 * scale, 0.055 * scale, 3),
-        fleshDarkClotMat
-      );
-      toeClaw.position.set(tx * scale, -0.04 * scale, 0.16 * scale);
-      toeClaw.rotation.x = Math.PI / 2.3;
-      bootGroup.add(toeClaw);
-    });
+    // Shoe heel & toe tip
+    const toeGeo = new THREE.BoxGeometry(0.09 * scale, 0.06 * scale, 0.06 * scale);
+    const toe = new THREE.Mesh(toeGeo, shoeMat);
+    toe.position.set(0, -0.01 * scale, 0.11 * scale);
+    shoeGroup.add(toe);
 
     return { hip, knee };
   };
@@ -501,10 +438,12 @@ export function buildLeft4DeadInfected(variant = 0) {
   parts.rShin = rLegData.knee;
 
   parts.scale = scale;
-  // High-performance shadow casting: only main torso/pelvis casts shadow on desktop; disabled on mobile
+
+  // PS1 Flat Shading Optimization
   if (!isMobileDevice) {
-    if (chest) chest.castShadow = true;
+    if (chestMesh) chestMesh.castShadow = true;
     if (pelvis) pelvis.castShadow = true;
+    if (parts.skirt) parts.skirt.castShadow = true;
   }
 
   return parts;

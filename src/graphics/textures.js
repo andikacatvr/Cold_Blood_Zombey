@@ -145,111 +145,168 @@ const THREE = window.THREE;
           ctx.fillRect(Math.random() * 64, Math.random() * 64, 1, 2);
         }
       } else if (type === 'l4d_flannel_red') {
-        // Classic Left 4 Dead Lumberjack / Survivor Flannel Shirt (Red & Charcoal Buffalo Check)
-        ctx.fillStyle = '#8f1a22';
+        // PS1 Female Zombie Blouse: Off-white dirty collared blouse with blood stains
+        ctx.fillStyle = '#d2d6d8';
         ctx.fillRect(0, 0, 64, 64);
-        ctx.fillStyle = '#1e1619';
-        for (let y = 0; y < 64; y += 8) {
-          for (let x = 0; x < 64; x += 8) {
-            if ((Math.floor(x / 8) + Math.floor(y / 8)) % 2 === 0) {
-              ctx.fillRect(x, y, 8, 8);
-            }
-          }
-        }
-        // Frayed tears & dried arterial blood splatter
-        ctx.fillStyle = '#520308';
-        for (let i = 0; i < 70; i++) {
-          ctx.fillRect(Math.random() * 64, Math.random() * 64, 2, 3);
-        }
-        ctx.fillStyle = '#c7242e';
-        for (let i = 0; i < 30; i++) {
-          ctx.fillRect(Math.random() * 64, Math.random() * 64, 1, 1);
-        }
-      } else if (type === 'l4d_hoodie_grey') {
-        // Athletic street runner heather-grey hoodie with grime & blood
-        ctx.fillStyle = '#3a3f45';
-        ctx.fillRect(0, 0, 64, 64);
-        ctx.fillStyle = '#2a2e33';
-        for (let i = 0; i < 200; i++) {
-          ctx.fillRect(Math.random() * 64, Math.random() * 64, 2, 1);
-        }
-        // Collar & chest blood drips
-        ctx.fillStyle = '#6e070e';
-        for (let y = 0; y < 32; y += 4) {
-          ctx.fillRect(18 + (y % 6) * 4, y, 3, 12);
-        }
-      } else if (type === 'l4d_patient_white') {
-        // Soiled hospital patient gown with bile stains & blood smears
-        ctx.fillStyle = '#b2c4ba';
-        ctx.fillRect(0, 0, 64, 64);
-        ctx.fillStyle = '#7a856a';
-        for (let i = 0; i < 80; i++) {
-          ctx.fillRect(Math.random() * 64, Math.random() * 64, 3, 2);
-        }
-        ctx.fillStyle = '#7a050d';
-        for (let i = 0; i < 60; i++) {
-          ctx.fillRect(Math.random() * 64, Math.random() * 64, 2, 4);
-        }
-      } else if (type === 'l4d_bruiser_work') {
-        // Heavy worker / mechanic canvas vest with grease & gore
-        ctx.fillStyle = '#8a5c36';
-        ctx.fillRect(0, 0, 64, 64);
-        ctx.fillStyle = '#241a14';
-        for (let i = 0; i < 150; i++) {
-          ctx.fillRect(Math.random() * 64, Math.random() * 64, 2, 2);
-        }
-        ctx.fillStyle = '#61060c';
-        for (let i = 0; i < 40; i++) {
-          ctx.fillRect(Math.random() * 64, Math.random() * 64, 3, 3);
-        }
-      } else if (type === 'l4d_denim_blue') {
-        // Worn denim jeans with torn knee threads
-        ctx.fillStyle = '#263b4f';
-        ctx.fillRect(0, 0, 64, 64);
-        ctx.fillStyle = '#162330';
-        for (let y = 0; y < 64; y += 4) {
-          ctx.fillRect(0, y, 64, 1);
-        }
-        ctx.fillStyle = '#3f5870';
-        for (let i = 0; i < 120; i++) {
-          ctx.fillRect(Math.random() * 64, Math.random() * 64, 1, 2);
-        }
-        // Dirt & knee scuffs
-        ctx.fillStyle = '#473a2e';
-        ctx.fillRect(16, 24, 14, 16);
-        ctx.fillRect(36, 28, 14, 14);
-      } else if (type === 'l4d_dark_jeans') {
-        // Charcoal tattered pants
-        ctx.fillStyle = '#222528';
-        ctx.fillRect(0, 0, 64, 64);
-        ctx.fillStyle = '#141618';
+        ctx.fillStyle = '#b8bec2';
         for (let i = 0; i < 180; i++) {
           ctx.fillRect(Math.random() * 64, Math.random() * 64, 2, 1);
         }
-      } else if (type === 'l4d_zombie_face') {
-        // Left 4 Dead Common Infected snarling undead face
-        ctx.fillStyle = '#6b7d70';
-        ctx.fillRect(0, 0, 64, 64);
-        // Dark sunken hollow eye sockets
-        ctx.fillStyle = '#161d18';
-        ctx.fillRect(14, 18, 12, 10);
-        ctx.fillRect(38, 18, 12, 10);
-        // Glaring diseased milky cataracts / feverish white-yellow pupils
-        ctx.fillStyle = '#fffae0';
-        ctx.fillRect(18, 21, 5, 5);
-        ctx.fillRect(42, 21, 5, 5);
-        // Exposed snarling mouth & jagged rotting teeth
-        ctx.fillStyle = '#2b0206';
-        ctx.fillRect(16, 42, 32, 16);
-        ctx.fillStyle = '#ddd8b8'; // Teeth
-        for (let x = 18; x < 46; x += 4) {
-          ctx.fillRect(x, 43, 2.5, 3.5); // Top teeth
-          ctx.fillRect(x, 52, 2.5, 3.5); // Bottom teeth
+        // Button placket down center & collar lines
+        ctx.fillStyle = '#8b9296';
+        ctx.fillRect(30, 0, 4, 64);
+        ctx.fillRect(20, 0, 24, 6);
+        for (let y = 8; y < 60; y += 10) {
+          ctx.fillStyle = '#50565a';
+          ctx.fillRect(31, y, 2, 2);
         }
-        // Dripping blood from mouth & chin
-        ctx.fillStyle = '#820811';
-        ctx.fillRect(20, 56, 8, 8);
-        ctx.fillRect(36, 56, 8, 8);
+        // Grime & dried blood splatter on chest
+        ctx.fillStyle = '#5a070e';
+        for (let i = 0; i < 45; i++) {
+          ctx.fillRect(24 + (Math.random() - 0.5) * 22, 12 + Math.random() * 38, 2, 3);
+        }
+        ctx.fillStyle = '#3a0205';
+        for (let i = 0; i < 25; i++) {
+          ctx.fillRect(22 + (Math.random() - 0.5) * 18, 16 + Math.random() * 28, 1, 2);
+        }
+      } else if (type === 'l4d_hoodie_grey') {
+        // PS1 Male Zombie Dark Suit: Charcoal black blazer jacket with white collar & dark tie
+        ctx.fillStyle = '#1e2124';
+        ctx.fillRect(0, 0, 64, 64);
+        ctx.fillStyle = '#121416';
+        for (let i = 0; i < 200; i++) {
+          ctx.fillRect(Math.random() * 64, Math.random() * 64, 2, 1);
+        }
+        // V-neck white dress shirt opening
+        ctx.fillStyle = '#e2e6ea';
+        ctx.beginPath();
+        ctx.moveTo(22, 0);
+        ctx.lineTo(32, 28);
+        ctx.lineTo(42, 0);
+        ctx.fill();
+        // Dark necktie running down from collar
+        ctx.fillStyle = '#0a0c0e';
+        ctx.fillRect(29, 4, 6, 42);
+        // Jacket lapels & buttons
+        ctx.fillStyle = '#141618';
+        ctx.fillRect(20, 0, 4, 34);
+        ctx.fillRect(40, 0, 4, 34);
+        ctx.fillStyle = '#0e1011';
+        ctx.fillRect(31, 38, 2, 2);
+        ctx.fillRect(31, 48, 2, 2);
+        // Subtle mud & dirt scuffs
+        ctx.fillStyle = '#383228';
+        for (let i = 0; i < 30; i++) {
+          ctx.fillRect(Math.random() * 64, 30 + Math.random() * 34, 2, 2);
+        }
+      } else if (type === 'l4d_patient_white') {
+        // PS1 Male Zombie Suit Slacks: Dark formal trousers with dirt
+        ctx.fillStyle = '#1c1e21';
+        ctx.fillRect(0, 0, 64, 64);
+        ctx.fillStyle = '#101214';
+        for (let y = 0; y < 64; y += 4) {
+          ctx.fillRect(0, y, 64, 1);
+        }
+        ctx.fillStyle = '#3a342a';
+        for (let i = 0; i < 40; i++) {
+          ctx.fillRect(Math.random() * 64, 20 + Math.random() * 44, 2, 2);
+        }
+      } else if (type === 'l4d_bruiser_work') {
+        // PS1 Male Zombie Vest: Light cream/beige vest over white shirt with dark tie
+        ctx.fillStyle = '#c8c2b5';
+        ctx.fillRect(0, 0, 64, 64);
+        // White shirt side sleeves
+        ctx.fillStyle = '#e6e9ec';
+        ctx.fillRect(0, 0, 10, 64);
+        ctx.fillRect(54, 0, 10, 64);
+        // V-neck white dress shirt
+        ctx.fillStyle = '#e6e9ec';
+        ctx.beginPath();
+        ctx.moveTo(22, 0);
+        ctx.lineTo(32, 22);
+        ctx.lineTo(42, 0);
+        ctx.fill();
+        // Dark necktie hanging down
+        ctx.fillStyle = '#1a1c1e';
+        ctx.fillRect(29, 4, 6, 38);
+        // Vest buttons & texture
+        ctx.fillStyle = '#7a7468';
+        for (let i = 0; i < 100; i++) {
+          ctx.fillRect(10 + Math.random() * 44, Math.random() * 64, 2, 1);
+        }
+        ctx.fillStyle = '#3e3a34';
+        ctx.fillRect(31, 28, 2, 2);
+        ctx.fillRect(31, 38, 2, 2);
+        ctx.fillRect(31, 48, 2, 2);
+        // Dirt & grime
+        ctx.fillStyle = '#423a30';
+        for (let i = 0; i < 35; i++) {
+          ctx.fillRect(10 + Math.random() * 44, 20 + Math.random() * 44, 2, 2);
+        }
+      } else if (type === 'l4d_denim_blue') {
+        // PS1 Female Zombie Long Skirt: Charcoal dark flared vintage skirt
+        ctx.fillStyle = '#222528';
+        ctx.fillRect(0, 0, 64, 64);
+        ctx.fillStyle = '#16181a';
+        // Vertical pleats & drape shadows
+        for (let x = 6; x < 64; x += 10) {
+          ctx.fillRect(x, 0, 3, 64);
+        }
+        ctx.fillStyle = '#2c3034';
+        for (let i = 0; i < 150; i++) {
+          ctx.fillRect(Math.random() * 64, Math.random() * 64, 1, 2);
+        }
+        // Grime & mud along bottom hem
+        ctx.fillStyle = '#383228';
+        for (let i = 0; i < 70; i++) {
+          ctx.fillRect(Math.random() * 64, 48 + Math.random() * 16, 2, 2);
+        }
+      } else if (type === 'l4d_dark_jeans') {
+        // PS1 Male Zombie Trousers: Light grey / ash suit slacks with mud & grime
+        ctx.fillStyle = '#82878c';
+        ctx.fillRect(0, 0, 64, 64);
+        ctx.fillStyle = '#6e7276';
+        for (let i = 0; i < 180; i++) {
+          ctx.fillRect(Math.random() * 64, Math.random() * 64, 2, 1);
+        }
+        // Creases & dirt stains
+        ctx.fillStyle = '#484238';
+        for (let i = 0; i < 90; i++) {
+          ctx.fillRect(Math.random() * 64, 16 + Math.random() * 48, 3, 2);
+        }
+      } else if (type === 'l4d_zombie_face') {
+        // PS1 Classic Horror Zombie Face: Pale gaunt face, sunken eyes, bruised jaw
+        ctx.fillStyle = '#8f9692';
+        ctx.fillRect(0, 0, 64, 64);
+        // Dark sunken hollow orbital eye sockets
+        ctx.fillStyle = '#1c1a1b';
+        ctx.fillRect(14, 16, 12, 11);
+        ctx.fillRect(38, 16, 12, 11);
+        // Pallid sickly eyes
+        ctx.fillStyle = '#eceee2';
+        ctx.fillRect(17, 19, 5, 5);
+        ctx.fillRect(41, 19, 5, 5);
+        ctx.fillStyle = '#4a080c';
+        ctx.fillRect(19, 21, 2, 2);
+        ctx.fillRect(43, 21, 2, 2);
+        // Sunken hollow cheeks & nasal cavity
+        ctx.fillStyle = '#5c6460';
+        ctx.fillRect(30, 26, 4, 7);
+        ctx.fillRect(8, 28, 6, 14);
+        ctx.fillRect(50, 28, 6, 14);
+        // Dark bruised mouth with dried blood
+        ctx.fillStyle = '#260408';
+        ctx.fillRect(18, 41, 28, 14);
+        ctx.fillStyle = '#c5beae'; // Pale teeth
+        for (let x = 20; x < 44; x += 4) {
+          ctx.fillRect(x, 42, 2.5, 3);
+          ctx.fillRect(x, 49, 2.5, 3);
+        }
+        // Dripping dried blood down chin
+        ctx.fillStyle = '#5c060d';
+        ctx.fillRect(22, 54, 4, 8);
+        ctx.fillRect(32, 53, 5, 10);
+        ctx.fillRect(38, 54, 4, 7);
       } else if (type === 'l4d_necrotic_skin') {
         // Necrotic decaying pale skin with purple veins & scabs
         ctx.fillStyle = '#6e7e72';
