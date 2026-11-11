@@ -1646,108 +1646,6 @@ export function initWorld(scene, textures) {
     topRiverCrestFoam.position.set(cliffX, cliffTopY + 0.02, crestZ + 0.4);
     scene.add(topRiverCrestFoam);
 
-    // 3. Wide Churning Foam Splash Ring at Waterfall Foot
-    const foamGeo = new THREE.RingGeometry(1.2, 7.5, 24);
-    foamGeo.rotateX(-Math.PI / 2);
-    const foamMat = new THREE.MeshBasicMaterial({
-      map: waterfallMistTex || null,
-      color: 0xebf7fc,
-      transparent: true,
-      opacity: 0.85,
-      depthWrite: false,
-      side: THREE.DoubleSide
-    });
-    waterfallSplashRing = new THREE.Mesh(foamGeo, foamMat);
-    waterfallSplashRing.position.set(cliffX, plungeWaterY + 0.04, poolZ + 1.2);
-    scene.add(waterfallSplashRing);
-
-    // Inner turbulent impact splash ring
-    const innerFoamGeo = new THREE.RingGeometry(0.2, 4.2, 20);
-    innerFoamGeo.rotateX(-Math.PI / 2);
-    const innerFoamMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0.90,
-      depthWrite: false,
-      side: THREE.DoubleSide
-    });
-    waterfallInnerSplash = new THREE.Mesh(innerFoamGeo, innerFoamMat);
-    waterfallInnerSplash.position.set(cliffX, plungeWaterY + 0.06, poolZ + 0.8);
-    scene.add(waterfallInnerSplash);
-
-    // 4. Rising Waterfall Mist Particles
-    const MIST_COUNT = 40;
-    const mistGeo = new THREE.BufferGeometry();
-    const mistPositions = new Float32Array(MIST_COUNT * 3);
-
-    for (let i = 0; i < MIST_COUNT; i++) {
-      mistPositions[i * 3 + 0] = cliffX + (Math.random() - 0.5) * 10.5;
-      mistPositions[i * 3 + 1] = plungeWaterY + Math.random() * 2.5;
-      mistPositions[i * 3 + 2] = poolZ + 0.5 + Math.random() * 3.5;
-      waterfallMistVel.push({
-        vy: 0.6 + Math.random() * 1.1,
-        vx: (Math.random() - 0.5) * 0.35,
-        vz: 0.2 + Math.random() * 0.45,
-        life: Math.random() * 3.0,
-        maxLife: 3.0
-      });
-    }
-
-    mistGeo.setAttribute('position', new THREE.BufferAttribute(mistPositions, 3));
-    const mistMat = new THREE.PointsMaterial({
-      map: waterfallMistTex || null,
-      color: 0xdff4fc,
-      size: 2.4,
-      transparent: true,
-      opacity: 0.45,
-      depthWrite: false
-    });
-    waterfallMistParticles = new THREE.Points(mistGeo, mistMat);
-    scene.add(waterfallMistParticles);
-
-    // 5. Alpine Rocky Canyon Gorge Framing (SIDEWALLS ONLY — FRONT IS 100% CLEAR)
-    const canyonRockMat = new THREE.MeshLambertMaterial({ color: 0x2e353c, flatShading: true });
-    const canyonSnowMat = new THREE.MeshLambertMaterial({ color: 0xdde7ee, flatShading: true });
-
-    const gorgeRocks = [
-      // Left Canyon Wall (Well to the left of the waterfall: x <= 33.0)
-      { x: 32.5, z: -57.0, sc: 2.2, y: 3.2 },
-      { x: 31.8, z: -58.5, sc: 2.6, y: 5.5 },
-      { x: 33.5, z: -55.5, sc: 1.6, y: 1.2 },
-      { x: 32.0, z: -64.0, sc: 2.0, y: 8.8 },
-      { x: 31.5, z: -72.0, sc: 2.3, y: 9.3 },
-
-      // Right Canyon Wall (Well to the right of the waterfall: x >= 51.0)
-      { x: 51.5, z: -57.0, sc: 2.2, y: 3.2 },
-      { x: 52.2, z: -58.5, sc: 2.6, y: 5.5 },
-      { x: 50.5, z: -55.5, sc: 1.6, y: 1.2 },
-      { x: 52.0, z: -64.0, sc: 2.0, y: 8.8 },
-      { x: 52.5, z: -72.0, sc: 2.3, y: 9.3 }
-    ];
-
-    gorgeRocks.forEach(rc => {
-      const rkGroup = new THREE.Group();
-      rkGroup.position.set(rc.x, rc.y, rc.z);
-
-      const rkMesh = new THREE.Mesh(new THREE.DodecahedronGeometry(rc.sc, 1), canyonRockMat);
-      rkMesh.scale.set(1.1, 1.3, 1.05);
-      rkMesh.rotation.set(0.2, Math.random() * Math.PI, 0.1);
-      rkGroup.add(rkMesh);
-
-      const rkSnow = new THREE.Mesh(new THREE.DodecahedronGeometry(rc.sc * 0.85, 1), canyonSnowMat);
-      rkSnow.position.y = rc.sc * 0.55;
-      rkSnow.scale.set(1.1, 0.4, 1.0);
-      rkGroup.add(rkSnow);
-
-      scene.add(rkGroup);
-      colliders.push({
-        minX: rc.x - rc.sc * 0.85,
-        maxX: rc.x + rc.sc * 0.85,
-        minZ: rc.z - rc.sc * 0.85,
-        maxZ: rc.z + rc.sc * 0.85
-      });
-    });
-
     // C. Rustic Wooden Forest Bridge over the River (at z = 4.0)
     const bridgeZ = 4.0;
     const bridgeCenterX = getRiverCenterX(bridgeZ);
@@ -1795,23 +1693,6 @@ export function initWorld(scene, textures) {
     });
 
     scene.add(bridgeGroup);
-
-    // Natural Riverbed Stepping Stones & Rocks
-    const riverRockSpots = [
-      { z: -32.0, sc: 1.1 },
-      { z: -15.0, sc: 0.9 },
-      { z: 22.0, sc: 1.2 },
-      { z: 45.0, sc: 1.0 },
-      { z: 72.0, sc: 1.15 }
-    ];
-    riverRockSpots.forEach(rs => {
-      const rx = getRiverCenterX(rs.z) + (Math.random() - 0.5) * 3.2;
-      const ry = getRiverWaterY(rs.z) + 0.12;
-      const rMesh = new THREE.Mesh(new THREE.DodecahedronGeometry(rs.sc, 1), new THREE.MeshLambertMaterial({ color: 0x333b42, flatShading: true }));
-      rMesh.position.set(rx, ry, rs.z);
-      rMesh.scale.set(1.2, 0.6, 1.1);
-      scene.add(rMesh);
-    });
   }
 
   // Pure Dense Snow Forest (No road, no vehicles, only deep snow wilderness)

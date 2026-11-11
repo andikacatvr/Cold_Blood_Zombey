@@ -12,11 +12,7 @@ import {
   getTerrainHeight,
   getRiverCenterX,
   getRiverWaterY,
-  waterfallSplashRing,
   waterfallVeilMesh,
-  waterfallInnerSplash,
-  waterfallMistParticles,
-  waterfallMistVel,
   topRiverMesh,
   topRiverCrestFoam,
   lockedDoors,
@@ -915,36 +911,6 @@ function frameLoop(t) {
   }
   if (textures.waterfallTex) {
     textures.waterfallTex.offset.y -= dt * 1.95;
-  }
-  if (waterfallSplashRing) {
-    const splashPulse = 1.0 + Math.sin(performance.now() * 0.008) * 0.12;
-    waterfallSplashRing.scale.set(splashPulse, splashPulse, 1);
-  }
-  if (waterfallInnerSplash) {
-    const innerPulse = 1.0 + Math.cos(performance.now() * 0.012) * 0.18;
-    waterfallInnerSplash.scale.set(innerPulse, innerPulse, 1);
-    waterfallInnerSplash.rotation.z += dt * 0.45;
-  }
-
-  // Rising Waterfall Mist / Spray particles simulation (Distance culled beyond fog visibility)
-  const distToWaterfall = Math.hypot(playerPos.x - 42.0, playerPos.z - (-55.8));
-  if (distToWaterfall < 38.0 && waterfallMistParticles && waterfallMistVel.length > 0) {
-    const mPos = waterfallMistParticles.geometry.attributes.position.array;
-    for (let i = 0; i < waterfallMistVel.length; i++) {
-      const v = waterfallMistVel[i];
-      v.life += dt;
-      mPos[i * 3 + 0] += v.vx * dt;
-      mPos[i * 3 + 1] += v.vy * dt;
-      mPos[i * 3 + 2] += v.vz * dt;
-
-      if (v.life >= v.maxLife || mPos[i * 3 + 1] > 6.0) {
-        v.life = 0;
-        mPos[i * 3 + 0] = 42.0 + (Math.random() - 0.5) * 10.5;
-        mPos[i * 3 + 1] = 0.85 + Math.random() * 0.4;
-        mPos[i * 3 + 2] = -55.8 + Math.random() * 2.5;
-      }
-    }
-    waterfallMistParticles.geometry.attributes.position.needsUpdate = true;
   }
 
   // Update Spatial Waterfall Roar sound
