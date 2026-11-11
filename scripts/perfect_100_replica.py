@@ -521,6 +521,126 @@ tendril_R2 = [
 ]
 build_tendril(tendril_R2, is_right=True)
 
+# --- 3D VOLUMETRIC BACK HAIR STRANDS (CASCADING WAVES DOWN NAPE & BUN) ---
+print("2b. Modeling 3D Volumetric Cascading Hair Strands down Back of Head & Neck...")
+
+def get_back_surface_z(y_px, xw):
+    y_vals = [h[0] for h in head_steps_cfg]
+    for i in range(len(y_vals) - 1):
+        if y_vals[i] <= y_px <= y_vals[i+1]:
+            t = (y_px - y_vals[i]) / float(y_vals[i+1] - y_vals[i])
+            zc = head_steps_cfg[i][1] * (1 - t) + head_steps_cfg[i+1][1] * t
+            rx = head_steps_cfg[i][2] * (1 - t) + head_steps_cfg[i+1][2] * t
+            rz_b = head_steps_cfg[i][4] * (1 - t) + head_steps_cfg[i+1][4] * t
+            sin_th = np.clip(xw / rx, -0.98, 0.98)
+            cos_th = np.sqrt(max(0.0, 1.0 - sin_th**2))
+            vz = zc - rz_b * cos_th
+            return vz
+    return -0.050
+
+def build_back_tendril(cfg):
+    front_verts = []
+    back_verts = []
+    
+    for y_px, xw, rw, z_offset in cfg:
+        norm_y = 1.0 - (y_px - ymin) / float(ymax - ymin)
+        yw = norm_y * world_height
+        
+        surf_z = get_back_surface_z(y_px, xw)
+        zw = surf_z - z_offset
+        
+        vx_left  = xw - rw
+        vx_right = xw + rw
+        
+        orig_x_left  = center_x + (vx_left / scale_x)
+        orig_x_right = center_x + (vx_right / scale_x)
+        
+        idx_out_l = len(all_vertices)
+        all_vertices.append([vx_left, yw, zw])
+        all_uvs.append(get_uv_back(orig_x_left, y_px))
+        all_normals.append([0.0, 0.0, -1.0])
+        
+        idx_out_r = len(all_vertices)
+        all_vertices.append([vx_right, yw, zw])
+        all_uvs.append(get_uv_back(orig_x_right, y_px))
+        all_normals.append([0.0, 0.0, -1.0])
+        
+        front_verts.append((idx_out_l, idx_out_r))
+        
+        idx_in_l = len(all_vertices)
+        all_vertices.append([vx_left, yw, zw + 0.001])
+        all_uvs.append(get_uv_back(orig_x_left, y_px))
+        all_normals.append([0.0, 0.0, 1.0])
+        
+        idx_in_r = len(all_vertices)
+        all_vertices.append([vx_right, yw, zw + 0.001])
+        all_uvs.append(get_uv_back(orig_x_right, y_px))
+        all_normals.append([0.0, 0.0, 1.0])
+        
+        back_verts.append((idx_in_l, idx_in_r))
+        
+    for i in range(len(cfg) - 1):
+        fl0, fr0 = front_verts[i]
+        fl1, fr1 = front_verts[i+1]
+        all_faces.append([fr0, fl0, fl1])
+        all_faces.append([fr0, fl1, fr1])
+        
+        bl0, br0 = back_verts[i]
+        bl1, br1 = back_verts[i+1]
+        all_faces.append([bl0, br0, br1])
+        all_faces.append([bl0, br1, bl1])
+
+# 1. Back Center Cascading Wave down Nape
+strand_B_center = [
+    (140,  0.000, 0.008, 0.006),
+    (170, -0.004, 0.008, 0.007),
+    (200, -0.006, 0.007, 0.008),
+    (230,  0.002, 0.007, 0.007),
+    (260,  0.005, 0.006, 0.006),
+    (285,  0.002, 0.005, 0.005),
+    (305,  0.000, 0.004, 0.004),
+]
+build_back_tendril(strand_B_center)
+
+# 2. Back Left Cascading Wave down Nape
+strand_B_left = [
+    (150, -0.022, 0.007, 0.005),
+    (180, -0.025, 0.007, 0.006),
+    (210, -0.027, 0.006, 0.006),
+    (240, -0.024, 0.005, 0.005),
+    (270, -0.020, 0.004, 0.004),
+    (300, -0.016, 0.003, 0.003),
+]
+build_back_tendril(strand_B_left)
+
+# 3. Back Right Cascading Wave down Nape
+strand_B_right = [
+    (150,  0.022, 0.007, 0.005),
+    (180,  0.025, 0.007, 0.006),
+    (210,  0.027, 0.006, 0.006),
+    (240,  0.024, 0.005, 0.005),
+    (270,  0.020, 0.004, 0.004),
+    (300,  0.016, 0.003, 0.003),
+]
+build_back_tendril(strand_B_right)
+
+# 4. Occipital Bun Under-Loops (Left & Right)
+strand_B_bun_L = [
+    (70,  -0.030, 0.007, 0.005),
+    (95,  -0.038, 0.008, 0.006),
+    (120, -0.032, 0.007, 0.006),
+    (145, -0.018, 0.005, 0.005),
+]
+build_back_tendril(strand_B_bun_L)
+
+strand_B_bun_R = [
+    (70,   0.030, 0.007, 0.005),
+    (95,   0.038, 0.008, 0.006),
+    (120,  0.032, 0.007, 0.006),
+    (145,  0.018, 0.005, 0.005),
+]
+build_back_tendril(strand_B_bun_R)
+
 # 10. BUILD BODY & GOWN (Y: 305 to 1425)
 print("3. Modeling Bodice & Flowing Halter Gown...")
 K_body = 12
