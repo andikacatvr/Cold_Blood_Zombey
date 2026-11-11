@@ -47,7 +47,7 @@ const NONA_BATAVIA_STAGES = [
     },
     getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 0.6, bz),
     getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 1.2, bz),
-    subtitle: `<span style="color:#ffd15c; font-size:24px; font-weight:bold; letter-spacing:2px; text-shadow:0 0 14px #ff4500;">NONA BATAVIA BANGKIT</span><br><span style="color:#ffffff;">Lolongan roh gentayangan Batavia membelah kesunyian badai salju...</span>`,
+    subtitle: `<span style="color:#ffffff;">Lolongan roh gentayangan Batavia membelah kesunyian badai salju...</span>`,
     onEnter: (sfx) => {}
   },
   {
@@ -100,7 +100,7 @@ const CUTSCENE_STAGES = [
     camEnd: new THREE.Vector3(2.6, 2.0, 18.8),
     lookStart: new THREE.Vector3(0.2, 1.2, 16.5),
     lookEnd: new THREE.Vector3(0.4, 0.65, 14.1),
-    subtitle: `<span style="color:#d4a5ff; font-size:22px; font-weight:bold; letter-spacing:1px; text-shadow:0 0 14px #8a2be2;">EKSPEDISI PENELITIAN MAHASISWA</span><br><span style="color:#ffffff;">Malam pekat membeku di rimba Hutan Morbida... Tim mahasiswa yang sedang meneliti daerah ini tak sengaja masuk ke wilayah terlarang yang dipenuhi sihir gelap kuno!</span>`,
+    subtitle: `<span style="color:#ffffff;">Malam pekat membeku di rimba Hutan Morbida... Tim mahasiswa yang sedang meneliti daerah ini tak sengaja masuk ke wilayah terlarang yang dipenuhi sihir gelap kuno!</span>`,
     onEnter: (sfx) => {
       if (sfx && sfx.playChurchBellToll) sfx.playChurchBellToll();
       if (sfx && sfx.playSnowStep) sfx.playSnowStep();
@@ -113,7 +113,7 @@ const CUTSCENE_STAGES = [
     camEnd: new THREE.Vector3(-2.0, 1.55, 15.0),
     lookStart: new THREE.Vector3(0.45, 0.75, 13.9),
     lookEnd: new THREE.Vector3(0.55, 0.85, 14.0),
-    subtitle: `<span style="color:#ff6b6b; font-size:20px; font-weight:bold; text-shadow:0 0 12px #900;">[KUTUKAN SIHIR GELAP BANGKIT]</span><br><span style="color:#ffffff;">Hawa sihir hitam merasuki seluruh tanah dan membangkitkan mayat-mayat terkutuk! Tubuhmu roboh tak sadarkan diri di atas salju es, sementara rekan risetmu, Kristin, berjaga dengan cemas.</span>`,
+    subtitle: `<span style="color:#ffffff;">Hawa sihir hitam merasuki seluruh tanah dan membangkitkan mayat-mayat terkutuk! Tubuhmu roboh tak sadarkan diri di atas salju es, sementara rekan risetmu, Kristin, berjaga dengan cemas.</span>`,
     onEnter: (sfx) => {
       if (sfx && sfx.playZombieGroan) sfx.playZombieGroan();
     }
