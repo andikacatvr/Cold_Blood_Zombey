@@ -100,7 +100,7 @@ const CUTSCENE_STAGES = [
     camEnd: new THREE.Vector3(2.6, 2.0, 18.8),
     lookStart: new THREE.Vector3(0.2, 1.2, 16.5),
     lookEnd: new THREE.Vector3(0.4, 0.65, 14.1),
-    subtitle: `<span style="color:#ffffff;">Malam pekat membeku di rimba Hutan Morbida... Tim mahasiswa yang sedang meneliti daerah ini tak sengaja masuk ke wilayah terlarang yang dipenuhi sihir gelap kuno!</span>`,
+    subtitle: `<span style="color:#ffffff;">Malam pekat membeku di rimba Hutan Long Way Hill... Tim mahasiswa yang sedang meneliti daerah ini tak sengaja masuk ke wilayah terlarang yang dipenuhi sihir gelap kuno!</span>`,
     onEnter: (sfx) => {
       if (sfx && sfx.playChurchBellToll) sfx.playChurchBellToll();
       if (sfx && sfx.playSnowStep) sfx.playSnowStep();
