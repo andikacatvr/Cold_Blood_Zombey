@@ -230,7 +230,7 @@ export function setupSettingsListeners(context) {
       Object.assign(gameSettings, DEFAULT_SETTINGS);
       saveSettings();
       Sfx.setVolume(gameSettings.volume);
-      applyGraphicFidelity(gameSettings.graphicMode || 'ps2');
+      applyGraphicFidelity(gameSettings.graphicMode || 'ps1');
       syncSettingsUI(gameSettings, state);
       switchWeapon(gameSettings.weapon);
     });

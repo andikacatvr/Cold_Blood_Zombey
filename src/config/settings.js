@@ -4,7 +4,7 @@
 export const DEFAULT_SETTINGS = {
   volume: 0.8,
   sensitivity: 1.0,
-  graphicMode: 'ps2',
+  graphicMode: 'ps1',
   crtEnabled: false,
   difficulty: 'normal',
   crosshairColor: '#c5d5e2',
@@ -17,6 +17,7 @@ export let gameSettings = Object.assign({}, DEFAULT_SETTINGS);
 try {
   const saved = localStorage.getItem('cold_blood_ps1_settings');
   if (saved) gameSettings = Object.assign({}, DEFAULT_SETTINGS, JSON.parse(saved));
+  gameSettings.graphicMode = 'ps1';
   gameSettings.weapon = 'spin';
 } catch (e) {
   console.warn('Failed reading settings:', e);

@@ -63,35 +63,22 @@ camera.add(flashTarget);
 playerFlashlight.target = flashTarget;
 scene.add(camera);
 
-export function applyGraphicFidelity(mode = 'ps2') {
-  gameSettings.graphicMode = mode;
-  const isPS2 = (mode === 'ps2');
+export function applyGraphicFidelity(mode = 'ps1') {
+  gameSettings.graphicMode = 'ps1';
+  canvas.classList.remove('ps2-mode');
 
-  if (isPS2) {
-    canvas.classList.add('ps2-mode');
-    const maxW = isMobileDevice ? 960 : 1280;
-    const maxH = isMobileDevice ? 720 : 960;
-    const w = Math.min(window.innerWidth, maxW);
-    const h = Math.min(window.innerHeight, maxH);
-    renderer.setSize(w, h, false);
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
+  // Authentic PS1 1997 Pixelated Rendering (320px downscaled resolution)
+  const aspect = window.innerWidth / window.innerHeight;
+  const w = 320;
+  const h = Math.max(180, Math.round(320 / aspect));
+  renderer.setSize(w, h, false);
+  camera.aspect = aspect;
+  camera.updateProjectionMatrix();
 
-    const enableShadow = !isMobileDevice;
-    renderer.shadowMap.enabled = enableShadow;
-    overcastDirLight.castShadow = enableShadow;
-    playerFlashlight.visible = true;
-  } else {
-    canvas.classList.remove('ps2-mode');
-    renderer.setSize(320, 240, false);
-    camera.aspect = 320 / 240;
-    camera.updateProjectionMatrix();
-
-    renderer.shadowMap.enabled = false;
-    overcastDirLight.castShadow = false;
-  }
+  renderer.shadowMap.enabled = false;
+  overcastDirLight.castShadow = false;
 }
 
 window.addEventListener('resize', () => {
-  applyGraphicFidelity(gameSettings.graphicMode || 'ps2');
+  applyGraphicFidelity('ps1');
 });

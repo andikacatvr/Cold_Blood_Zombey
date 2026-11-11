@@ -29,17 +29,12 @@
     #ps1-canvas {
       width: 100vw;
       height: 100vh;
-      object-fit: contain;
+      object-fit: cover;
       image-rendering: -moz-crisp-edges;
       image-rendering: -webkit-crisp-edges;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
       display: block;
-      /* CSS filters removed to prevent heavy compositor bottlenecks on mobile/integrated GPUs */
-    }
-    /* PS2 2004 ENHANCED SHOCK-HORROR CANVAS (RESIDENT EVIL 4 / SILENT HILL 2 AESTHETIC) */
-    #ps1-canvas.ps2-mode {
-      image-rendering: auto;
     }
     /* GLOOMY CRT SCANLINES & COLD VIGNETTE OVERLAY */
     #crt-fx {

@@ -1,12 +1,12 @@
 # 🩸 COLD BLOOD ZOMBEY
-> **Retro 3D Survival Horror (PS1 1997 / PS2 2004 Aesthetic)**
+> **Retro 3D Survival Horror (PS1 1997 Aesthetic)**
 
-Game survival horror 3D bergaya retro PlayStation 1 & 2 yang dibangun menggunakan **Three.js** dan **Vite**. Pemain bertahan hidup dari serbuan gerombolan zombie di tengah badai salju Hutan Long Way Hill bersama teman bernama Kristin.
+Game survival horror 3D bergaya retro PlayStation 1 yang dibangun menggunakan **Three.js** dan **Vite**. Pemain bertahan hidup dari serbuan gerombolan zombie di tengah badai salju Hutan Long Way Hill bersama teman bernama Kristin.
 
 ---
 
 ## 🌟 Fitur Utama
-- **Retro PS1/PS2 Aesthetic**: Visual 3D retro dengan tekstur terdistorsi, filter CRT scanlines, dan kabut tebal bersalju.
+- **Retro PS1 1997 Aesthetic**: Visual 3D retro otentik dengan resolusi pixelated downscaled, filter CRT scanlines, dan kabut tebal bersalju.
 - **Companion AI Kristin**: Sahabat yang mendampingi, memberikan dialog interaktif situasional, dan mendukung pertarungan.
 - **Arsenal Senjata Taktis**:
   - **Shotgun Putar M1887**: Magazine kapasitas besar (60 Shells) tanpa repot bolak-balik reload.

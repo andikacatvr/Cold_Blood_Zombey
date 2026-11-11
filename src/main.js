@@ -1005,7 +1005,7 @@ function init() {
   const btnRestart = document.getElementById('btn-restart');
   if (btnRestart) btnRestart.addEventListener('click', () => startWinterSurvive(scene));
 
-  applyGraphicFidelity(gameSettings.graphicMode || 'ps2');
+  applyGraphicFidelity(gameSettings.graphicMode || 'ps1');
   switchWeapon(gameSettings.weapon || 'spin');
   syncSettingsUI(gameSettings, state);
 
