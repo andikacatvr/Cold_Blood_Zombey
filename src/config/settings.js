@@ -17,6 +17,7 @@ export let gameSettings = Object.assign({}, DEFAULT_SETTINGS);
 try {
   const saved = localStorage.getItem('cold_blood_ps1_settings');
   if (saved) gameSettings = Object.assign({}, DEFAULT_SETTINGS, JSON.parse(saved));
+  gameSettings.weapon = 'spin';
 } catch (e) {
   console.warn('Failed reading settings:', e);
 }

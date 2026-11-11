@@ -104,11 +104,7 @@ export function triggerPlayerJump() {
 
 export function triggerPlayerAttack() {
   if (!state.running || state.isPaused || isSettingsOpen) return;
-  if (state.player.weapon === 'golok') {
-    performGolokSlash();
-  } else {
-    fireCombatShotgun();
-  }
+  fireCombatShotgun();
 }
 
 export function addLookDelta(dx, dy) {
@@ -148,68 +144,22 @@ export function initPlayer(camera, scene) {
   }
 }
 
-export function switchWeapon(type) {
-  if (state.player.isReloading && !type) return;
-  if (state.player.isReloading) {
-    state.player.isReloading = false;
-  }
-  if (meleeSwing.active && !type) return;
-
-  const weapons = ['pump', 'spin', 'golok'];
-  let target = type;
-  if (!target) {
-    const curIdx = weapons.indexOf(state.player.weapon);
-    target = weapons[(curIdx + 1) % weapons.length];
-  }
-
-  state.player.weapon = target;
-  gameSettings.weapon = target;
+export function switchWeapon() {
+  state.player.weapon = 'spin';
+  gameSettings.weapon = 'spin';
   saveSettings();
 
-  const isPump = (target === 'pump');
-  const isSpin = (target === 'spin');
-  const isGolok = (target === 'golok');
+  pumpShotgunGroup.visible = false;
+  spinShotgunGroup.visible = true;
+  golokGroup.visible = false;
 
-  pumpShotgunGroup.visible = isPump;
-  spinShotgunGroup.visible = isSpin;
-  golokGroup.visible = isGolok;
-
-  if (isPump) {
-    state.player.maxClip = 60;
-    if (state.player.clip > 60) state.player.clip = 60;
-    pumpShotgunGroup.position.z = -0.42;
-    Sfx.playPumpRack();
-  } else if (isSpin) {
-    state.player.maxClip = 60;
-    if (state.player.clip > 60) state.player.clip = 60;
-    weaponSpin.active = true;
-    weaponSpin.startTime = performance.now();
-    weaponSpin.duration = 340;
-    Sfx.playSpinCock();
-  } else if (isGolok) {
-    Sfx.playBladeWhoosh();
-    golokGroup.position.set(0.28, -0.22, -0.45);
-  }
+  state.player.maxClip = 60;
+  if (state.player.clip > 60) state.player.clip = 60;
 
   const nameEl = document.getElementById('hud-weapon-name');
   if (nameEl) {
-    if (isGolok) {
-      nameEl.innerText = '[3] GOLOK RIMBA (MELEE)';
-      nameEl.style.color = '#ff3344';
-    } else if (isSpin) {
-      nameEl.innerText = '[2] SHOTGUN PUTAR M1887';
-      nameEl.style.color = '#ff9933';
-    } else {
-      nameEl.innerText = '[1] SHOTGUN POMPA';
-      nameEl.style.color = '#a2d2ff';
-    }
-  }
-
-  const wGroup = document.getElementById('group-weapon');
-  if (wGroup) {
-    wGroup.querySelectorAll('.btn-opt').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.weapon === target);
-    });
+    nameEl.innerText = 'SHOTGUN PUTAR M1887';
+    nameEl.style.color = '#ff9933';
   }
 
   updateHUD(state);
@@ -654,11 +604,6 @@ export function setupPlayerControls() {
         triggerAndikaGesture();
       }
     }
-    if (c === 'KeyF' || c === 'KeyV') performGolokSlash(true);
-    if (c === 'Digit1') switchWeapon('pump');
-    if (c === 'Digit2') switchWeapon('spin');
-    if (c === 'Digit3') switchWeapon('golok');
-    if (c === 'KeyQ') switchWeapon();
   });
 
   window.addEventListener('keyup', (e) => {
@@ -669,11 +614,6 @@ export function setupPlayerControls() {
     if (c === 'KeyD') keys.d = false;
     if (c === 'ShiftLeft' || c === 'ShiftRight') keys.shift = false;
   });
-
-  window.addEventListener('wheel', () => {
-    if (!state.running || state.isPaused || isSettingsOpen) return;
-    switchWeapon();
-  }, { passive: true });
 
   document.addEventListener('mousemove', (e) => {
     if (document.pointerLockElement !== document.body || !state.running || state.isPaused || !cameraRef) return;
@@ -693,20 +633,19 @@ export function setupPlayerControls() {
       } catch (err) {}
     }
     if (e.button === 0) {
-      if (state.player.weapon === 'golok') {
-        performGolokSlash();
-      } else {
-        fireCombatShotgun();
-      }
+      fireCombatShotgun();
     }
   });
 
-  // HUD badge clicks
+  // HUD badge clicks - triggers shotgun putar cocking spin
   const hudBadge = document.getElementById('hud-weapon-badge');
   if (hudBadge) {
     hudBadge.addEventListener('click', (e) => {
       e.stopPropagation();
-      switchWeapon();
+      weaponSpin.active = true;
+      weaponSpin.startTime = performance.now();
+      weaponSpin.duration = 380;
+      Sfx.playSpinCock();
     });
   }
 
