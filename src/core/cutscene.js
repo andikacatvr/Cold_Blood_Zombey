@@ -12,21 +12,19 @@ import {
 import { andikaModel } from '../entities/kristin.js';
 import {
   nataliaModel,
-  setupNataliaParachuteDrop,
-  updateNataliaParachuteDrop,
-  finishNataliaParachuteLanding,
   showNataliaSubtitle
 } from '../entities/natalia.js';
+import { createTacticalHelicopter } from '../entities/helicopter.js';
 import { weaponHolder } from '../entities/weapons.js';
 import { playerMeshRoot, cameraMode, setPlayerCutscenePose } from '../entities/playerModel.js';
 import { scene, playerFlashlight } from '../graphics/engine.js';
-import { playerPos } from './player.js';
+import { playerPos, state } from './player.js';
 import { updateTouchControlsVisibility } from '../ui/touchControls.js';
 
 const THREE = window.THREE;
 
 export let isCinematicActive = false;
-export let activeCutsceneType = null; // 'intro' | 'nona_batavia'
+export let activeCutsceneType = null; // 'intro' | 'nona_batavia' | 'natalia_helicopter'
 let cutsceneTime = 0;
 let cameraRef = null;
 let onCompleteCallback = null;
@@ -34,6 +32,7 @@ let currentStageIndex = -1;
 let sfxRef = null;
 let cutsceneDroppedShotgun = null;
 let activeBossRef = null;
+let activeHelicopter = null;
 
 const NONA_BATAVIA_STAGES = [
   {
@@ -127,37 +126,48 @@ const CUTSCENE_STAGES = [
   },
   {
     start: 9.8,
-    end: 14.5,
+    end: 15.5,
     camStart: new THREE.Vector3(-0.15, 0.55, 14.6),
     camEnd: new THREE.Vector3(0.0, 1.80, 14.0),
     lookStart: new THREE.Vector3(0.80, 0.85, 13.9),
     lookEnd: new THREE.Vector3(0.85, 1.65, 13.9),
-    subtitle: `<span style="color:#5cf0a5; font-size:22px; font-weight:bold;">KRISTIN:</span> "Woii bangun! Syukurlah lu selamat bro! Mayat-mayat pada bangkit karena kutukan sihir gelap! Cepat berdiri, ambil senjatamu!"`,
+    subtitle: `<span style="color:#5cf0a5; font-size:22px; font-weight:bold;">KRISTIN:</span> "Woii bangun! Syukurlah lu selamat bro! Mayat-mayat pada bangkit karena kutukan sihir gelap! Cepat berdiri, ambil senjatamu, kita harus bertahan hidup!"`,
     onEnter: (sfx) => {
       if (sfx && sfx.playPumpRack) sfx.playPumpRack();
       if (sfx && sfx.playSnowThud) sfx.playSnowThud(1.0);
     }
-  },
+  }
+];
+
+const NATALIA_HELICOPTER_STAGES = [
   {
-    start: 14.5,
-    end: 20.2,
-    camStart: new THREE.Vector3(0.0, 1.75, 14.0),
-    camEnd: new THREE.Vector3(1.2, 1.55, 15.4),
-    lookStart: new THREE.Vector3(2.8, 16.0, 14.5), // Pan up to stormy sky and descending flare!
-    lookEnd: new THREE.Vector3(2.8, 1.25, 14.2),   // Follow down to snow landing!
-    subtitle: `<span style="color:#f5ba42; font-size:23px; font-weight:bold;">AGENT NATALIA:</span> <i>*menerobos badai dengan parasut taktis & menodongkan shotgun*</i> <span style="color:#ffffff; font-size:22px; font-weight:bold;">"Siapa kamu?! Apa urusanmu di sini?!"</span>`,
+    start: 0.0,
+    end: 4.8,
+    subtitle: `<span style="color:#f5ba42; font-size:22px; font-weight:bold;">HQ AIR SUPPORT:</span> <i>*suara baling-baling helikopter membelah badai salju*</i> <span style="color:#ffffff; font-size:21px; font-weight:bold;">"Milestone 100 mayat hidup terverifikasi! Helikopter taktis Unit Khusus tiba di sektor!"</span>`,
     onEnter: (sfx) => {
-      if (sfx && sfx.playTeleportWhoosh) sfx.playTeleportWhoosh();
+      if (sfx && sfx.startHelicopterAudio) sfx.startHelicopterAudio();
     }
   },
   {
-    start: 20.2,
-    end: 26.0,
-    camStart: new THREE.Vector3(1.2, 1.55, 15.4),
-    camEnd: new THREE.Vector3(0.1, 1.80, 14.0),
-    lookStart: new THREE.Vector3(2.8, 1.25, 14.2),
-    lookEnd: new THREE.Vector3(2.2, 1.40, 14.1),
-    subtitle: `<span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN:</span> "Woi tahan, jangan tembak! Kita mahasiswa tim riset, bus kami hancur!"<br><span style="color:#f5ba42; font-size:21px; font-weight:bold;">AGENT NATALIA:</span> "Warga sipil?! Area ini zona merah kutukan biologis! Tetap di belakang gua, kita bantai zombienya!"`,
+    start: 4.8,
+    end: 9.8,
+    subtitle: `<span style="color:#f5ba42; font-size:22px; font-weight:bold;">AGENT NATALIA:</span> <i>*terjun dari helikopter menembus badai salju*</i> <span style="color:#ffffff; font-size:21px; font-weight:bold;">"Drop zone aman! Touching down in three... two... one!"</span>`,
+    onEnter: (sfx) => {}
+  },
+  {
+    start: 9.8,
+    end: 14.8,
+    subtitle: `<span style="color:#f5ba42; font-size:23px; font-weight:bold;">AGENT NATALIA:</span> <i>*menodongkan combat shotgun waspada*</i> <span style="color:#ffffff; font-size:22px; font-weight:bold;">"Siapa kamu?! Apa urusanmu di sini?!"</span>`,
+    onEnter: (sfx) => {
+      if (sfx && sfx.fadeHelicopterAudio) sfx.fadeHelicopterAudio(4.5);
+      if (sfx && sfx.playSnowThud) sfx.playSnowThud(1.2);
+      if (sfx && sfx.playPumpRack) setTimeout(() => sfx.playPumpRack(), 700);
+    }
+  },
+  {
+    start: 14.8,
+    end: 20.2,
+    subtitle: `<span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN:</span> "Woi tahan, jangan tembak! Kita mahasiswa tim riset yang selamat! Bus kami hancur!"<br><span style="color:#f5ba42; font-size:21px; font-weight:bold;">AGENT NATALIA:</span> "Warga sipil yang berhasil bantai 100 zombie sendirian?! Luar biasa... Skuadron taktis mendeteksi sinyal kalian dari udara. Mulai sekarang, gua kawal kalian sampai ke dermaga!"`,
     onEnter: (sfx) => {
       if (sfx && sfx.playPumpRack) sfx.playPumpRack();
     }
@@ -194,6 +204,8 @@ function skipActiveCutscene() {
   if (!isCinematicActive) return;
   if (activeCutsceneType === 'nona_batavia') {
     finishNonaBataviaCutscene();
+  } else if (activeCutsceneType === 'natalia_helicopter') {
+    finishNataliaHelicopterCutscene();
   } else {
     finishCutscene();
   }
@@ -217,9 +229,6 @@ export function startIntroCutscene(camera, sfx, onComplete) {
 
   // Spawn dropped shotgun in the snow next to player's outstretched hand
   createDroppedShotgun();
-
-  // Prepare Agent Natalia for dramatic tactical parachute drop
-  setupNataliaParachuteDrop(scene);
 
   // Position Kristin crouching down beside the unconscious player
   if (andikaModel && andikaModel.root) {
@@ -445,6 +454,11 @@ export function updateCutscene(dt) {
     return;
   }
 
+  if (activeCutsceneType === 'natalia_helicopter') {
+    updateNataliaHelicopterCutscene(dt);
+    return;
+  }
+
   // 1. Character Posing & Dynamic Awakening Transition
   if (cutsceneTime < 9.8) {
     // Player remains unconscious flat on the snow
@@ -481,13 +495,7 @@ export function updateCutscene(dt) {
     }
   }
 
-  // 2. Dynamic Agent Natalia Parachute Drop & Touchdown Animation
-  if (cutsceneTime >= 14.5 && cutsceneTime < 20.2) {
-    const dropProgress = (cutsceneTime - 14.5) / (19.4 - 14.5);
-    updateNataliaParachuteDrop(dropProgress, sfxRef, dt);
-  }
-
-  if (cutsceneTime >= 26.0) {
+  if (cutsceneTime >= 15.5) {
     finishCutscene();
     return;
   }
@@ -536,25 +544,12 @@ export function finishCutscene() {
   // Reset player model to standard upright stance
   setPlayerCutscenePose('reset');
 
-  // Finish Natalia parachute landing and clean up canopy
-  finishNataliaParachuteLanding(scene);
-
   // Position Kristin beside player ready for escort mode
   if (andikaModel && andikaModel.root) {
     const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.2, 13.8) : 0.1;
     andikaModel.root.position.set(1.2, gy, 13.8);
     andikaModel.root.rotation.set(0, -0.35, 0);
   }
-
-  // Position Agent Natalia on the player's flank in alert combat stance
-  if (nataliaModel && nataliaModel.root) {
-    const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(2.8, 14.2) : 0.1;
-    nataliaModel.root.position.set(2.8, gy, 14.2);
-    nataliaModel.root.rotation.set(0, -Math.PI / 2 - 0.35, 0);
-  }
-
-  // Show Agent Natalia's initial speech banner
-  showNataliaSubtitle("Siapa kamu?! Apa urusanmu di sini?! Tetap di belakang gua, kita habisi zombienya bareng-bareng!", 6000);
 
   // Restore camera to default player eye-level spawn
   if (cameraRef) {
@@ -595,4 +590,309 @@ export function finishCutscene() {
   }
 
   updateTouchControlsVisibility();
+}
+
+/**
+ * -----------------------------------------------------------------------------
+ * AGENT NATALIA HELICOPTER ARRIVAL CUTSCENE (TRIGGERS AT 100 KILLS)
+ * -----------------------------------------------------------------------------
+ */
+export function startNataliaHelicopterCutscene(camera, sfx, onComplete) {
+  if (isCinematicActive) return;
+
+  cameraRef = camera;
+  sfxRef = sfx;
+  onCompleteCallback = onComplete;
+  activeCutsceneType = 'natalia_helicopter';
+  cutsceneTime = 0;
+  currentStageIndex = -1;
+  isCinematicActive = true;
+
+  // Hide hands viewmodel & flashlight
+  if (weaponHolder) weaponHolder.visible = false;
+  if (playerFlashlight) playerFlashlight.visible = false;
+
+  // Show cinema overlay & letterbox
+  const overlay = document.getElementById('cinematic-overlay');
+  if (overlay) {
+    overlay.style.display = 'block';
+    overlay.style.opacity = '1';
+  }
+
+  // Hide HUD & reticle
+  const hud = document.getElementById('hud');
+  if (hud) hud.style.display = 'none';
+  const reticle = document.getElementById('reticle');
+  if (reticle) reticle.style.display = 'none';
+  updateTouchControlsVisibility();
+
+  // Create tactical helicopter in scene
+  if (!activeHelicopter && scene) {
+    activeHelicopter = createTacticalHelicopter();
+    scene.add(activeHelicopter.root);
+  }
+
+  const px = (typeof playerPos !== 'undefined' && playerPos) ? playerPos.x : (cameraRef ? cameraRef.position.x : 0);
+  const pz = (typeof playerPos !== 'undefined' && playerPos) ? playerPos.z : (cameraRef ? cameraRef.position.z : 14.0);
+  const pgy = (typeof getTerrainHeight === 'function' ? getTerrainHeight(px, pz) : 0);
+
+  // Position helicopter starting far away in the stormy sky
+  if (activeHelicopter) {
+    activeHelicopter.root.position.set(px - 40, pgy + 32, pz + 42);
+    activeHelicopter.root.rotation.set(-0.15, Math.PI / 4, 0.12);
+  }
+
+  // Position Natalia hidden initially
+  if (nataliaModel && nataliaModel.root) {
+    nataliaModel.root.visible = false;
+    nataliaModel._hasLandedHeli = false;
+  }
+
+  // Start synthesized helicopter rotor sound
+  if (sfxRef && sfxRef.startHelicopterAudio) sfxRef.startHelicopterAudio();
+
+  // Wire skip button
+  const skipBtn = document.getElementById('cinematic-skip-btn');
+  if (skipBtn) {
+    skipBtn.onclick = (e) => {
+      e.stopPropagation();
+      skipActiveCutscene();
+    };
+  }
+
+  // Keyboard skip
+  const handleKeySkip = (e) => {
+    if (!isCinematicActive || activeCutsceneType !== 'natalia_helicopter') {
+      window.removeEventListener('keydown', handleKeySkip);
+      return;
+    }
+    if (e.code === 'Space' || e.code === 'Escape' || e.code === 'KeyE') {
+      skipActiveCutscene();
+      window.removeEventListener('keydown', handleKeySkip);
+    }
+  };
+  window.addEventListener('keydown', handleKeySkip);
+}
+
+function updateNataliaHelicopterCutscene(dt) {
+  const px = (typeof playerPos !== 'undefined' && playerPos) ? playerPos.x : (cameraRef ? cameraRef.position.x : 0);
+  const pz = (typeof playerPos !== 'undefined' && playerPos) ? playerPos.z : (cameraRef ? cameraRef.position.z : 14.0);
+  const pgy = (typeof getTerrainHeight === 'function' ? getTerrainHeight(px, pz) : 0);
+
+  const dropX = px + 2.5;
+  const dropZ = pz + 1.8;
+  const dropGY = (typeof getTerrainHeight === 'function' ? getTerrainHeight(dropX, dropZ) : 0);
+
+  const hoverX = dropX;
+  const hoverY = dropGY + 13.0;
+  const hoverZ = dropZ;
+
+  if (activeHelicopter) {
+    activeHelicopter.update(dt);
+  }
+
+  if (cutsceneTime < 4.8) {
+    // Stage 0: Helicopter approaches rapidly from sky
+    const p = cutsceneTime / 4.8;
+    const ease = 0.5 - 0.5 * Math.cos(p * Math.PI);
+
+    if (activeHelicopter) {
+      activeHelicopter.root.position.set(
+        THREE.MathUtils.lerp(px - 40, hoverX, ease),
+        THREE.MathUtils.lerp(pgy + 32, hoverY, ease),
+        THREE.MathUtils.lerp(pz + 42, hoverZ, ease)
+      );
+      activeHelicopter.root.rotation.set(
+        THREE.MathUtils.lerp(-0.15, -0.05, ease),
+        THREE.MathUtils.lerp(Math.PI / 4, -0.35, ease),
+        THREE.MathUtils.lerp(0.12, 0.02, ease)
+      );
+      if (activeHelicopter.searchlight && activeHelicopter.searchlight.target) {
+        activeHelicopter.searchlight.target.position.set(dropX, dropGY, dropZ);
+      }
+    }
+
+    // Camera looks up from player position toward incoming helicopter
+    if (cameraRef) {
+      cameraRef.position.set(px, pgy + 1.8, pz);
+      const camTarget = new THREE.Vector3(
+        activeHelicopter ? activeHelicopter.root.position.x : dropX,
+        activeHelicopter ? activeHelicopter.root.position.y : hoverY,
+        activeHelicopter ? activeHelicopter.root.position.z : dropZ
+      );
+      cameraRef.lookAt(camTarget);
+    }
+  } else if (cutsceneTime < 9.8) {
+    // Stage 1: Helicopter hovers, Natalia drops down to snow
+    const dropProg = Math.min(1.0, (cutsceneTime - 4.8) / 4.2);
+    const dropEase = dropProg * dropProg * (3 - 2 * dropProg);
+
+    if (activeHelicopter) {
+      const hoverSway = Math.sin(cutsceneTime * 2.5) * 0.15;
+      activeHelicopter.root.position.set(hoverX + hoverSway * 0.4, hoverY + hoverSway, hoverZ);
+      activeHelicopter.root.rotation.set(
+        -0.05 + Math.sin(cutsceneTime * 2.0) * 0.02,
+        -0.35,
+        Math.cos(cutsceneTime * 2.2) * 0.02
+      );
+      if (activeHelicopter.searchlight && activeHelicopter.searchlight.target) {
+        activeHelicopter.searchlight.target.position.set(dropX, dropGY, dropZ);
+      }
+    }
+
+    if (nataliaModel && nataliaModel.root) {
+      nataliaModel.root.visible = true;
+      const curY = THREE.MathUtils.lerp(hoverY - 1.2, dropGY, dropEase);
+      nataliaModel.root.position.set(dropX, curY, dropZ);
+      nataliaModel.root.rotation.set(0, -Math.PI / 2 - 0.35, 0);
+
+      // On impact touchdown
+      if (dropProg >= 0.96 && !nataliaModel._hasLandedHeli) {
+        nataliaModel._hasLandedHeli = true;
+        if (sfxRef && sfxRef.playSnowThud) sfxRef.playSnowThud(1.2);
+        if (sfxRef && sfxRef.playPumpRack) sfxRef.playPumpRack();
+      }
+    }
+
+    // Camera follows Natalia down as she descends
+    if (cameraRef) {
+      const camProg = Math.min(1.0, (cutsceneTime - 4.8) / 4.8);
+      cameraRef.position.set(
+        THREE.MathUtils.lerp(px, px + 0.6, camProg),
+        THREE.MathUtils.lerp(pgy + 1.8, pgy + 1.6, camProg),
+        THREE.MathUtils.lerp(pz, pz + 0.5, camProg)
+      );
+      const lookY = THREE.MathUtils.lerp(hoverY - 1.0, dropGY + 1.3, camProg);
+      cameraRef.lookAt(dropX, lookY, dropZ);
+    }
+  } else if (cutsceneTime < 14.8) {
+    // Stage 2: Helicopter flies off into distance, Natalia aims shotgun
+    const departProg = (cutsceneTime - 9.8) / 5.0;
+    const departEase = departProg * departProg;
+
+    if (activeHelicopter) {
+      activeHelicopter.root.position.set(
+        hoverX + departEase * 55,
+        hoverY + departEase * 35,
+        hoverZ - departEase * 48
+      );
+      activeHelicopter.root.rotation.set(-0.25, -0.65, 0.22);
+    }
+
+    if (nataliaModel && nataliaModel.root) {
+      nataliaModel.root.visible = true;
+      nataliaModel.root.position.set(dropX, dropGY, dropZ);
+      nataliaModel.root.rotation.set(0, -Math.PI / 2 - 0.35, 0);
+    }
+
+    // Camera frames Natalia standing alert in the snow
+    if (cameraRef) {
+      cameraRef.position.set(px + 0.8, pgy + 1.65, pz + 0.6);
+      cameraRef.lookAt(dropX, dropGY + 1.45, dropZ);
+    }
+  } else {
+    // Stage 3: Kristin and Natalia dialogue
+    if (nataliaModel && nataliaModel.root) {
+      nataliaModel.root.visible = true;
+      nataliaModel.root.position.set(dropX, dropGY, dropZ);
+      nataliaModel.root.rotation.set(0, -Math.PI / 2 - 0.35, 0);
+    }
+
+    // Camera frames both Natalia and player/Kristin
+    if (cameraRef) {
+      cameraRef.position.set(px + 0.4, pgy + 1.7, pz);
+      cameraRef.lookAt(dropX, dropGY + 1.4, dropZ);
+    }
+  }
+
+  if (cutsceneTime >= 20.2) {
+    finishNataliaHelicopterCutscene();
+    return;
+  }
+
+  // Update subtitles
+  for (let i = 0; i < NATALIA_HELICOPTER_STAGES.length; i++) {
+    const s = NATALIA_HELICOPTER_STAGES[i];
+    if (cutsceneTime >= s.start && cutsceneTime < s.end) {
+      if (i !== currentStageIndex) {
+        currentStageIndex = i;
+        if (s.onEnter) s.onEnter(sfxRef);
+        const subEl = document.getElementById('cinematic-subtitles');
+        if (subEl) subEl.innerHTML = s.subtitle;
+      }
+      break;
+    }
+  }
+}
+
+export function finishNataliaHelicopterCutscene() {
+  if (!isCinematicActive || activeCutsceneType !== 'natalia_helicopter') return;
+  isCinematicActive = false;
+  activeCutsceneType = null;
+
+  // Remove helicopter from scene
+  if (activeHelicopter && scene) {
+    scene.remove(activeHelicopter.root);
+    activeHelicopter = null;
+  }
+
+  // Stop helicopter audio
+  if (sfxRef && sfxRef.stopHelicopterAudio) {
+    sfxRef.stopHelicopterAudio();
+  }
+
+  const px = (typeof playerPos !== 'undefined' && playerPos) ? playerPos.x : (cameraRef ? cameraRef.position.x : 0);
+  const pz = (typeof playerPos !== 'undefined' && playerPos) ? playerPos.z : (cameraRef ? cameraRef.position.z : 14.0);
+  const dropX = px + 2.5;
+  const dropZ = pz + 1.8;
+  const dropGY = (typeof getTerrainHeight === 'function' ? getTerrainHeight(dropX, dropZ) : 0);
+
+  // Position Natalia firmly beside player in escort mode
+  if (nataliaModel && nataliaModel.root) {
+    nataliaModel.root.visible = true;
+    nataliaModel.root.position.set(dropX, dropGY, dropZ);
+    nataliaModel.root.rotation.set(0, -Math.PI / 2 - 0.35, 0);
+    nataliaModel._hasLandedHeli = false;
+  }
+
+  state.nataliaSpawned = true;
+
+  // Restore camera
+  if (cameraRef) {
+    cameraRef.position.set(px, (typeof getTerrainHeight === 'function' ? getTerrainHeight(px, pz) : 0) + 1.8, pz);
+    cameraRef.lookAt(dropX, dropGY + 1.4, dropZ);
+  }
+
+  // Fade out & hide cinema overlay
+  const overlay = document.getElementById('cinematic-overlay');
+  if (overlay) {
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+      overlay.style.display = 'none';
+    }, 400);
+  }
+
+  // Reveal HUD, reticle
+  const hud = document.getElementById('hud');
+  if (hud) hud.style.display = 'flex';
+  const reticle = document.getElementById('reticle');
+  if (reticle) reticle.style.display = 'block';
+  updateTouchControlsVisibility();
+
+  // Restore flashlight and viewmodels
+  if (playerFlashlight) playerFlashlight.visible = true;
+  if (playerMeshRoot) playerMeshRoot.visible = (cameraMode === 'tps');
+  if (weaponHolder) weaponHolder.visible = (cameraMode === 'fps');
+
+  // Show Agent Natalia's speech banner
+  showNataliaSubtitle("Siapa kamu?! Apa urusanmu di sini?! ...Tetap di belakang gua, kita habisi zombienya bareng-bareng!", 6000);
+
+  try {
+    document.body.requestPointerLock();
+  } catch (e) {}
+
+  if (typeof onCompleteCallback === 'function') {
+    onCompleteCallback();
+    onCompleteCallback = null;
+  }
 }

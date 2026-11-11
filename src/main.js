@@ -77,6 +77,9 @@ import {
   updateNataliaAgent
 } from './entities/natalia.js';
 import {
+  startNataliaHelicopterCutscene
+} from './core/cutscene.js';
+import {
   state,
   keys,
   touchMove,
@@ -977,7 +980,19 @@ function init() {
         updateHUD(state);
         spawnLadyMithrillBoss(state);
       }
+    },
+    spawnNataliaHelicopter: () => {
+      state.kills = 100;
+      state.nataliaSpawned = false;
+      startNataliaHelicopterCutscene(camera, Sfx, () => {});
     }
+  };
+
+  // Expose convenient global helper for testing 100-kills Natalia helicopter drop
+  window.spawnNataliaNow = () => {
+    state.kills = 100;
+    state.nataliaSpawned = false;
+    startNataliaHelicopterCutscene(camera, Sfx, () => {});
   };
 
   setupSettingsListeners({

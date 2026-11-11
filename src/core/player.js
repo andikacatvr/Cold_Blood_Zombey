@@ -79,6 +79,7 @@ export const state = {
   score: 0,
   kills: 0,
   lastLadyMithrillKills: 0,
+  nataliaSpawned: false,
   wave: 1,
   player: {
     lives: 3,
@@ -612,14 +613,14 @@ export function setupPlayerControls() {
     if (c === 'KeyR') reloadWeapon();
     if (c === 'KeyT') {
       toggleCompanionFollow();
-      toggleNataliaFollow();
+      if (state.nataliaSpawned) toggleNataliaFollow();
     }
     if (c === 'KeyC') {
       const mode = toggleCameraMode();
       if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(mode === 'tps' ? 2800 : 1800, 0.4);
     }
     if (c === 'KeyE') {
-      if (nataliaModel && andikaModel) {
+      if (state.nataliaSpawned && nataliaModel && andikaModel) {
         const dNatalia = playerPos.distanceTo(nataliaModel.root.position);
         const dKristin = playerPos.distanceTo(andikaModel.root.position);
         if (dNatalia < 6.5 && dNatalia <= dKristin) {
@@ -627,7 +628,7 @@ export function setupPlayerControls() {
         } else if (dKristin < 6.5) {
           triggerAndikaGesture();
         }
-      } else if (nataliaModel && playerPos.distanceTo(nataliaModel.root.position) < 6.5) {
+      } else if (state.nataliaSpawned && nataliaModel && playerPos.distanceTo(nataliaModel.root.position) < 6.5) {
         triggerNataliaGesture();
       } else if (andikaModel && playerPos.distanceTo(andikaModel.root.position) < 6.5) {
         triggerAndikaGesture();

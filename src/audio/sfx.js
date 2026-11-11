@@ -1008,6 +1008,99 @@ import { gameSettings } from '../config/settings.js';
         subGain.connect(this.dest());
         subOsc.start(now);
         subOsc.stop(now + 0.50);
+      },
+
+      helicopterSource: null,
+      helicopterGain: null,
+
+      startHelicopterAudio() {
+        if (!this.ctx) return;
+        this.stopHelicopterAudio();
+
+        const ctx = this.ctx;
+        try {
+          const bufferSize = ctx.sampleRate * 2.0;
+          const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const output = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+          }
+
+          const whiteNoise = ctx.createBufferSource();
+          whiteNoise.buffer = noiseBuffer;
+          whiteNoise.loop = true;
+
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.value = 360;
+
+          const modGain = ctx.createGain();
+          modGain.gain.value = 0.5;
+
+          const lfo = ctx.createOscillator();
+          lfo.type = 'sawtooth';
+          lfo.frequency.value = 11.5;
+
+          const lfoGain = ctx.createGain();
+          lfoGain.gain.value = 0.45;
+          lfo.connect(lfoGain);
+          lfoGain.connect(modGain.gain);
+
+          whiteNoise.connect(filter);
+          filter.connect(modGain);
+
+          const turbine = ctx.createOscillator();
+          turbine.type = 'triangle';
+          turbine.frequency.value = 54;
+          const turbineGain = ctx.createGain();
+          turbineGain.gain.value = 0.18;
+          turbine.connect(turbineGain);
+
+          const masterHeliGain = ctx.createGain();
+          masterHeliGain.gain.setValueAtTime(0.01, ctx.currentTime);
+          masterHeliGain.gain.linearRampToValueAtTime(0.75, ctx.currentTime + 3.0);
+
+          modGain.connect(masterHeliGain);
+          turbineGain.connect(masterHeliGain);
+
+          masterHeliGain.connect(this.dest());
+
+          whiteNoise.start();
+          lfo.start();
+          turbine.start();
+
+          this.helicopterSource = { whiteNoise, lfo, turbine };
+          this.helicopterGain = masterHeliGain;
+        } catch (e) {
+          console.warn('Helicopter audio error:', e);
+        }
+      },
+
+      fadeHelicopterAudio(duration = 3.5) {
+        if (this.helicopterGain && this.ctx) {
+          try {
+            const now = this.ctx.currentTime;
+            this.helicopterGain.gain.setValueAtTime(this.helicopterGain.gain.value, now);
+            this.helicopterGain.gain.linearRampToValueAtTime(0.001, now + duration);
+            setTimeout(() => this.stopHelicopterAudio(), duration * 1000 + 100);
+          } catch (e) {
+            this.stopHelicopterAudio();
+          }
+        } else {
+          this.stopHelicopterAudio();
+        }
+      },
+
+      stopHelicopterAudio() {
+        if (this.helicopterSource) {
+          try {
+            if (this.helicopterSource.whiteNoise) this.helicopterSource.whiteNoise.stop();
+            if (this.helicopterSource.lfo) this.helicopterSource.lfo.stop();
+            if (this.helicopterSource.turbine) this.helicopterSource.turbine.stop();
+          } catch (e) {}
+          this.helicopterSource = null;
+        }
+        this.helicopterGain = null;
       }
     };
 

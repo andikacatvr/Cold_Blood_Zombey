@@ -596,9 +596,10 @@ export function finishNataliaParachuteLanding(sceneRef) {
 
 export function initNataliaAgent(scene, textures) {
   nataliaModel = buildNataliaCharacter(textures);
-  // Spawn Agent Natalia on tactical flanking position near bus crash site
+  // Hidden initially until summoned at 100 kills milestone via helicopter drop!
   nataliaModel.root.position.set(2.8, 0.10, 14.2);
   nataliaModel.root.rotation.y = -Math.PI / 2 - 0.35;
+  nataliaModel.root.visible = false;
   scene.add(nataliaModel.root);
 
   const bannerEl = document.getElementById('natalia-npc-banner');
@@ -610,8 +611,8 @@ export function initNataliaAgent(scene, textures) {
 }
 
 export function updateNataliaAgent(camera, Sfx, dt = 0.016) {
-  if (!nataliaModel) return;
-  if (isParachuting) return; // Skip walking/following AI while in mid-air parachute descent!
+  if (!nataliaModel || !nataliaModel.root.visible || !state.nataliaSpawned) return;
+  if (isParachuting) return; // Skip walking/following AI while in mid-air descent!
 
   const now = performance.now();
   const t = now * 0.002;

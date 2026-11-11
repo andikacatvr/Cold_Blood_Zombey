@@ -6,7 +6,7 @@
 import { Sfx } from '../audio/sfx.js';
 import { showDialogSubtitle } from './kristin.js';
 import { getTerrainHeight } from '../world/environment.js';
-import { startNonaBataviaCutscene } from '../core/cutscene.js';
+import { startNonaBataviaCutscene, startNataliaHelicopterCutscene } from '../core/cutscene.js';
 import { isMobileDevice } from '../graphics/engine.js';
 import {
   spawnBloodPoolOnSnow,
@@ -1198,6 +1198,19 @@ export function killZombieWithKinematics(z, shotDir, hitDistance, isHeadshot, st
   }
   if (updateHUD) updateHUD();
 
+  // Agent Natalia Helicopter Arrival Milestone: Triggers at 100 zombie kills!
+  if (state.kills >= 100 && !state.nataliaSpawned) {
+    state.nataliaSpawned = true;
+    console.log(`[AGENT NATALIA] 100 Kills Milestone Reached (${state.kills} kills)! Launching tactical helicopter arrival cutscene...`);
+    setTimeout(() => {
+      if (state && state.running) {
+        startNataliaHelicopterCutscene(cameraRef, Sfx, () => {
+          console.log('[AGENT NATALIA] Tactical arrival complete! Natalia joins as armed companion.');
+        });
+      }
+    }, 600);
+  }
+
   // Nona Batavia Boss Encounter: Triggers every 50 kills (50, 100, 150, 200, ...)
   const milestone = Math.floor(state.kills / 50) * 50;
   if (milestone >= 50 && milestone > (state.lastLadyMithrillKills || 0)) {
@@ -1205,7 +1218,12 @@ export function killZombieWithKinematics(z, shotDir, hitDistance, isHeadshot, st
     console.log(`[BOSS] Nona Batavia Milestone Reached: ${state.kills} Kills! Spawning aerial boss...`);
     setTimeout(() => {
       if (state && state.running) {
-        spawnNonaBataviaBoss(state);
+        // Delay slightly if helicopter cutscene is running
+        if (state.kills === 100) {
+          setTimeout(() => spawnNonaBataviaBoss(state), 21000);
+        } else {
+          spawnNonaBataviaBoss(state);
+        }
       }
     }, 700);
   }
