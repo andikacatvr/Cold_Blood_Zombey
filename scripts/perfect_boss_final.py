@@ -37,27 +37,16 @@ for y in range(0, 110):
         src_bled[y, x] = brunette_hair
 
 # 2. Face & Hair (Y: 110 to 220):
-# Detect facial skin and clean all outer veil ribbons to pure brunette hair
+# Fill hair outside central face so sides of head are 100% rich brunette hair
 for y in range(110, 220):
-    # Compute skin boundary for this row
-    row_skin_xs = []
-    for x in range(435, 585):
-        b, g, r = src_bgr[y, x].astype(float)
-        if r > b + 10 and g > b and b < 215 and r > 110:
-            row_skin_xs.append(x)
-    
-    if len(row_skin_xs) > 0:
-        min_sk, max_sk = min(row_skin_xs), max(row_skin_xs)
-    else:
-        min_sk, max_sk = 470, 550
-        
     for x in range(350, 680):
-        if x < min_sk or x > max_sk:
+        # Keep face inside [465, 555]
+        if x < 465 or x > 555:
             src_bled[y, x] = brunette_hair
         else:
-            # Inside face: if there is a bright white veil ribbon pixel, replace with brunette hair if near edge, or skin if near center
+            # If bright white veil ribbon inside face, clean it
             if src_bgr[y, x].mean() > 215:
-                if x < 460 or x > 560:
+                if x < 475 or x > 545:
                     src_bled[y, x] = brunette_hair
                 else:
                     src_bled[y, x] = avg_skin
@@ -345,23 +334,38 @@ for y_px in torso_y_steps:
     if y_px < 340:
         t_sh = (y_px - 280) / (340 - 280)
         rx = 0.054 * (1 - t_sh) + 0.138 * t_sh
-        rz_front = 0.045 * (1 - t_sh) + 0.075 * t_sh
-        rz_back = 0.046 * (1 - t_sh) + 0.082 * t_sh
+        rz_front = 0.045 * (1 - t_sh) + 0.052 * t_sh
+        rz_back = 0.046 * (1 - t_sh) + 0.055 * t_sh
+    elif y_px < 420:
+        # Bust
+        t_b = (y_px - 340) / (420 - 340)
+        rx = 0.138 * (1 - t_b) + 0.118 * t_b
+        rz_front = 0.052 * (1 - t_b) + 0.068 * t_b
+        rz_back = 0.055 * (1 - t_b) + 0.058 * t_b
+    elif y_px < 520:
+        # Slender waist
+        t_w = (y_px - 420) / (520 - 420)
+        rx = 0.118 * (1 - t_w) + 0.096 * t_w
+        rz_front = 0.068 * (1 - t_w) + 0.052 * t_w
+        rz_back = 0.058 * (1 - t_w) + 0.055 * t_w
+    elif y_px < 750:
+        # Hourglass hips & upper thighs
+        t_h = (y_px - 520) / (750 - 520)
+        rx = 0.096 * (1 - t_h) + 0.155 * t_h
+        rz_front = 0.052 * (1 - t_h) + 0.068 * t_h
+        rz_back = 0.055 * (1 - t_h) + 0.082 * t_h
+    elif y_px < 900:
+        # Lower thighs to knees
+        t_k = (y_px - 750) / (900 - 750)
+        rx = 0.155 * (1 - t_k) + 0.177 * t_k
+        rz_front = 0.068 * (1 - t_k) + 0.075 * t_k
+        rz_back = 0.082 * (1 - t_k) + 0.090 * t_k
     else:
-        # Extract central body column (excluding detached arms/hands)
-        num, labeled = cv2.connectedComponents((row > 0).astype(np.uint8).reshape(1, -1))
-        c_label = labeled[0, int(center_x)]
-        if c_label > 0:
-            body_xs = np.where(labeled[0] == c_label)[0]
-        else:
-            # Fallback to closest component to center
-            body_xs = np.where((row > 0) & (np.arange(len(row)) >= 380) & (np.arange(len(row)) <= 655))[0]
-
-        if len(body_xs) == 0:
-            continue
-        rx = ((body_xs.max() - body_xs.min()) / 2.0) * scale_x
-        rz_front = rx * 0.70
-        rz_back = rx * 0.80
+        # Flared mermaid gown skirt to floor hem
+        t_g = (y_px - 900) / (1420 - 900)
+        rx = 0.177 * (1 - t_g) + 0.285 * t_g
+        rz_front = 0.075 * (1 - t_g) + 0.155 * t_g
+        rz_back = 0.090 * (1 - t_g) + 0.175 * t_g
 
     vx_mid = 0.0
     rf, rb = [], []
@@ -440,36 +444,36 @@ K_arm = 6
 def build_connected_arm(is_right=False):
     sign = -1.0 if is_right else 1.0
     arm_rf, arm_rb = [], []
-    y_steps = np.linspace(310, 770, 24).astype(int)
+    y_steps = np.linspace(290, 770, 26).astype(int)
 
     for y_px in y_steps:
         norm_y = 1.0 - (y_px - ymin) / bbox_h
         y_world = norm_y * world_height
 
         if y_px <= 340:
-            # Upper shoulder joint
-            t = (y_px - 310) / (340 - 310)
-            mid_x = sign * (0.138 + 0.016 * t)
-            rx = 0.028 + 0.004 * t
-            rz = 0.030 + 0.003 * t
+            # Upper shoulder joint connecting directly flush with torso shoulder
+            t = (y_px - 290) / (340 - 290)
+            mid_x = sign * (0.130 + 0.018 * t)
+            rx = 0.024 + 0.005 * t
+            rz = 0.026 + 0.004 * t
         elif y_px <= 540:
             # Upper arm to elbow
             t = (y_px - 340) / (540 - 340)
-            mid_x = sign * (0.154 + 0.076 * t)
-            rx = 0.032 * (1 - 0.10 * t)
-            rz = 0.033 * (1 - 0.10 * t)
+            mid_x = sign * (0.148 + 0.072 * t)
+            rx = 0.029 * (1 - 0.12 * t)
+            rz = 0.030 * (1 - 0.12 * t)
         elif y_px <= 710:
             # Forearm
             t = (y_px - 540) / (710 - 540)
-            mid_x = sign * (0.230 + 0.085 * t)
-            rx = 0.028 * (1 - 0.25 * t)
-            rz = 0.029 * (1 - 0.25 * t)
+            mid_x = sign * (0.220 + 0.080 * t)
+            rx = 0.025 * (1 - 0.22 * t)
+            rz = 0.026 * (1 - 0.22 * t)
         else:
             # Hand & fingers
             t = (y_px - 710) / (770 - 710)
-            mid_x = sign * (0.315 + 0.020 * t)
-            rx = 0.021 * (1 - 0.30 * t)
-            rz = 0.022 * (1 - 0.30 * t)
+            mid_x = sign * (0.300 + 0.020 * t)
+            rx = 0.020 * (1 - 0.30 * t)
+            rz = 0.021 * (1 - 0.30 * t)
 
         img_x_center = center_x + (mid_x / scale_x)
         half_w_px = (rx / scale_x)
