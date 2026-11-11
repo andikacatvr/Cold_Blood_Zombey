@@ -235,36 +235,41 @@ def add_smooth_column(rings_f, rings_b, cap_top=True, cap_bottom=True, top_dome=
         all_faces.append([apex_idx, rb_bot[K], rf_bot[0]])
 
 # 8. BUILD HEAD & NECK AS ONE CONTINUOUS SEAMLESS COLUMN (Y: 28 to 305)
-print("1. Modeling Seamless Head & Neck Column...")
+print("1. Modeling Seamless Head & Neck Column with Forward Chin Projection...")
 K_head = 8
 head_rf, head_rb = [], []
 
 # Dense steps from top bun apex down to base of neck
+# 28: bun top, 50: bun crown, 75: cranium/hairline, 105: brow/eyes, 140: nose, 175: lips, 205: chin projection, 225: under-chin throat, 250: mid-neck, 280: lower neck, 305: neck base
 y_head_neck_steps = [28, 50, 75, 105, 140, 175, 205, 225, 250, 280, 305]
 
 for y_px in y_head_neck_steps:
     norm_y = 1.0 - (y_px - ymin) / float(ymax - ymin)
     y_world = norm_y * world_height
     
-    # Anatomical head, jawline, chin, and neck radii
-    if y_px <= 105:
-        # Rounded bun & cranium crown (starts at 0.048m, curves to full 0.098m)
-        t = (y_px - 28) / (105.0 - 28.0)
-        rx = 0.048 + 0.050 * np.sin(0.5 * np.pi * t)
-        rz_f = rx * 0.82
-        rz_b = rx * 1.05
-    elif y_px <= 205:
-        # Beautiful feminine oval face: cheekbones (0.098m) tapering down to chin (0.053m)
-        t = (y_px - 105) / (205.0 - 105.0)
-        rx = 0.098 - 0.045 * (t**0.85)
-        rz_f = rx * 0.85
-        rz_b = rx * 0.95
-    else:
-        # Neck: curves gracefully under chin into collar (0.050m throat to 0.068m collar base)
-        t = (y_px - 205) / (305.0 - 205.0)
-        rx = 0.053 - 0.010 * np.sin(np.pi * t) + 0.015 * t
-        rz_f = rx * 0.92
-        rz_b = rx * 0.96
+    # Anatomical profile with forward chin projection (dagu dimajukan)
+    if y_px == 28:
+        zc, rx, rz_f, rz_b = -0.010, 0.048, 0.045, 0.055
+    elif y_px == 50:
+        zc, rx, rz_f, rz_b = -0.005, 0.070, 0.065, 0.075
+    elif y_px == 75:
+        zc, rx, rz_f, rz_b = 0.005, 0.090, 0.080, 0.090
+    elif y_px == 105: # Forehead & Eyes
+        zc, rx, rz_f, rz_b = 0.012, 0.098, 0.082, 0.095
+    elif y_px == 140: # Nose bridge & Cheeks
+        zc, rx, rz_f, rz_b = 0.022, 0.088, 0.078, 0.085
+    elif y_px == 175: # Lips & Philtrum
+        zc, rx, rz_f, rz_b = 0.026, 0.075, 0.072, 0.075
+    elif y_px == 205: # Prominent Forward Chin (Dagu Maju)
+        zc, rx, rz_f, rz_b = 0.038, 0.058, 0.068, 0.065
+    elif y_px == 225: # Under-chin / Throat (tucked in creating sharp jawline shelf)
+        zc, rx, rz_f, rz_b = -0.005, 0.048, 0.045, 0.058
+    elif y_px == 250: # Mid Neck
+        zc, rx, rz_f, rz_b = -0.005, 0.050, 0.046, 0.055
+    elif y_px == 280: # Lower Neck
+        zc, rx, rz_f, rz_b = -0.002, 0.055, 0.050, 0.058
+    else: # y_px == 305: Neck base / Collar junction
+        zc, rx, rz_f, rz_b = 0.000, 0.065, 0.050, 0.055
         
     rf, rb = [], []
     
@@ -272,7 +277,7 @@ for y_px in y_head_neck_steps:
     for k in range(K_head + 1):
         th = -np.pi * 0.5 + np.pi * k / float(K_head)
         vx = rx * np.sin(th)
-        vz = rz_f * np.cos(th)
+        vz = zc + rz_f * np.cos(th)
         
         orig_x = center_x + np.sin(th) * (rx / scale_x * 0.90)
         uv = get_uv_front(orig_x, y_px)
@@ -287,7 +292,7 @@ for y_px in y_head_neck_steps:
     for k in range(K_head + 1):
         th = np.pi * 0.5 + np.pi * k / float(K_head)
         vx = rx * np.sin(th)
-        vz = rz_b * np.cos(th)
+        vz = zc + rz_b * np.cos(th)
         
         orig_x = center_x + np.sin(th) * (rx / scale_x * 0.90)
         uv = get_uv_back(orig_x, y_px)
@@ -530,11 +535,23 @@ def build_pump(is_right=False):
 build_pump(is_right=False)
 build_pump(is_right=True)
 
-# 13. Convert to numpy arrays & trimesh
+# 13. Convert to numpy arrays & compute mathematically exact smooth normals
 all_vertices = np.array(all_vertices, dtype=np.float32)
 all_uvs = np.array(all_uvs, dtype=np.float32)
-all_normals = np.array(all_normals, dtype=np.float32)
 all_faces = np.array(all_faces, dtype=np.int32)
+
+# Compute area-weighted smooth vertex normals across all quad connections
+fn = np.cross(all_vertices[all_faces[:, 1]] - all_vertices[all_faces[:, 0]], all_vertices[all_faces[:, 2]] - all_vertices[all_faces[:, 0]])
+fn_len = np.linalg.norm(fn, axis=1, keepdims=True)
+fn_len[fn_len == 0] = 1.0
+fn_norm = fn / fn_len
+
+smooth_normals = np.zeros_like(all_vertices)
+for i in range(3):
+    np.add.at(smooth_normals, all_faces[:, i], fn_norm)
+vn_len = np.linalg.norm(smooth_normals, axis=1, keepdims=True)
+vn_len[vn_len == 0] = 1.0
+all_normals = (smooth_normals / vn_len).astype(np.float32)
 
 print(f"Total Mesh Geometry: {len(all_vertices)} vertices, {len(all_faces)} faces")
 
