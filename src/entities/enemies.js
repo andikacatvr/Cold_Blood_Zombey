@@ -838,31 +838,31 @@ export function preloadVictorianBrideModel(scene) {
   if (typeof THREE === 'undefined' || !THREE.GLTFLoader) return;
   const loader = new THREE.GLTFLoader();
   loader.load(
-    '/models/victorian_bride.glb',
+    '/models/bossgame.glb',
     (gltf) => {
       victorianBrideTemplate = gltf.scene;
       victorianBrideTemplate.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
-          if (child.name === 'Lace_Veil' || (child.material && child.material.name === 'Mat_Lace_Veil_Transparent')) {
-            child.material.transparent = true;
-            child.material.alphaTest = 0.12;
-            child.material.side = THREE.DoubleSide;
-            child.material.depthWrite = true;
-            child.material.needsUpdate = true;
-          }
           if (child.material) {
             child.material.roughness = 0.78;
             child.material.metalness = 0.05;
           }
         }
       });
-      console.log('Victorian Bride 3D Model preloaded successfully!');
+      console.log('Bossgame (PS1 Bride) 3D Model preloaded successfully!');
     },
     undefined,
     (err) => {
-      console.warn('Failed preloading Victorian Bride model:', err);
+      console.warn('Failed preloading /models/bossgame.glb, retrying fallback:', err);
+      loader.load('/models/boss_bride.glb', (gltf) => {
+        victorianBrideTemplate = gltf.scene;
+      }, undefined, () => {
+        loader.load('/models/victorian_bride.glb', (gltf) => {
+          victorianBrideTemplate = gltf.scene;
+        });
+      });
     }
   );
 }
@@ -889,19 +889,18 @@ export function buildVictorianBride() {
     modelHolder.add(clone);
   } else {
     const loader = new THREE.GLTFLoader();
-    loader.load('/models/victorian_bride.glb', (gltf) => {
+    loader.load('/models/bossgame.glb', (gltf) => {
       gltf.scene.traverse(c => {
         if (c.isMesh) {
           c.castShadow = true;
           c.receiveShadow = true;
-          if (c.name === 'Lace_Veil' || (c.material && c.material.name === 'Mat_Lace_Veil_Transparent')) {
-            c.material.transparent = true;
-            c.material.alphaTest = 0.12;
-            c.material.side = THREE.DoubleSide;
-          }
         }
       });
       modelHolder.add(gltf.scene);
+    }, undefined, () => {
+      loader.load('/models/victorian_bride.glb', (gltf) => {
+        modelHolder.add(gltf.scene);
+      });
     });
   }
 
