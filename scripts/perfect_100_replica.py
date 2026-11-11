@@ -279,22 +279,25 @@ print("1. Modeling Head & Cranium...")
 K_head = 8
 head_rf, head_rb = [], []
 
-y_head_steps = [28, 48, 75, 110, 140, 170, 195, 215]
+y_head_steps = [24, 45, 75, 110, 140, 170, 195, 215]
 
 for y_px in y_head_steps:
     norm_y = 1.0 - (y_px - ymin) / float(ymax - ymin)
     y_world = norm_y * world_height
     
-    # Smooth head radius from 2D silhouette
-    t_head = (y_px - 28) / (215 - 28)
-    # Natural feminine skull: narrow chin (0.040), wide cheek/temple (0.052), rounded skull (0.048)
-    rx = 0.038 + 0.022 * np.sin(np.pi * (t_head**0.75))
+    info = analyze_row(y_px)
+    if info is None or 'min' not in info:
+        x_min, x_max = 470, 554
+    else:
+        x_min, x_max = info['min'], info['max']
+    rx = (x_max - x_min) * 0.5 * scale_x
     
-    # Cranium depth vs face depth
+    # Female head depth: cranium depth
     if y_px < 110:
-        rz_f = rx * 0.85
+        rz_f = rx * 0.82
         rz_b = rx * 1.05
     else:
+        # Face level: profile shape
         rz_f = rx * 0.78
         rz_b = rx * 0.95
         
@@ -306,7 +309,7 @@ for y_px in y_head_steps:
         vx = rx * np.sin(th)
         vz = rz_f * np.cos(th)
         
-        orig_x = center_x + np.sin(th) * 48.0
+        orig_x = center_x + np.sin(th) * (rx / scale_x)
         uv = get_uv_front(orig_x, y_px)
         
         v_idx = len(all_vertices)
@@ -321,7 +324,7 @@ for y_px in y_head_steps:
         vx = rx * np.sin(th)
         vz = rz_b * np.cos(th)
         
-        orig_x = center_x + np.sin(th) * 48.0
+        orig_x = center_x + np.sin(th) * (rx / scale_x)
         uv = get_uv_back(orig_x, y_px)
         
         v_idx = len(all_vertices)
@@ -333,7 +336,7 @@ for y_px in y_head_steps:
     head_rf.append(rf)
     head_rb.append(rb)
 
-# Smooth skull cap WITHOUT point spike
+# Smooth skull cap without pointy apex spike
 add_smooth_column(head_rf, head_rb, cap_top=True, cap_bottom=False, top_dome=False)
 
 # 9. BUILD NECK (Y: 215 to 305)
@@ -346,8 +349,8 @@ for y_px in y_neck_steps:
     norm_y = 1.0 - (y_px - ymin) / float(ymax - ymin)
     y_world = norm_y * world_height
     
-    t_neck = (y_px - 215) / (305 - 215)
-    rx = 0.038 + 0.010 * t_neck
+    # Slender female neck radius
+    rx = 0.040 + 0.012 * ((y_px - 215) / 90.0)**2
     rz = rx * 1.02
     
     rf, rb = [], []
@@ -355,7 +358,7 @@ for y_px in y_neck_steps:
         th = -np.pi * 0.5 + np.pi * k / float(K_neck)
         vx = rx * np.sin(th)
         vz = rz * np.cos(th)
-        orig_x = center_x + np.sin(th) * 36.0
+        orig_x = center_x + np.sin(th) * 35.0
         uv = get_uv_front(orig_x, y_px)
         
         v_idx = len(all_vertices)
@@ -368,7 +371,7 @@ for y_px in y_neck_steps:
         th = np.pi * 0.5 + np.pi * k / float(K_neck)
         vx = rx * np.sin(th)
         vz = rz * np.cos(th)
-        orig_x = center_x + np.sin(th) * 36.0
+        orig_x = center_x + np.sin(th) * 35.0
         uv = get_uv_back(orig_x, y_px)
         
         v_idx = len(all_vertices)
@@ -382,47 +385,64 @@ for y_px in y_neck_steps:
 
 add_smooth_column(neck_rf, neck_rb, cap_top=False, cap_bottom=False)
 
-# 10. BUILD BODY & GOWN (Y: 305 to 1480) - SMOOTH CONTINUOUS PROFILE
+# 10. BUILD BODY & GOWN (Y: 305 to 1480)
 print("3. Modeling Bodice & Flowing Halter Gown...")
 K_body = 12
 body_rf, body_rb = [], []
 
-# Smooth continuous anatomical width curve (NO DISCS, NO COLLARS, NO JUMPS)
-y_body_keys = [305, 340, 390, 440, 490, 550, 620, 700, 780, 880, 1000, 1150, 1300, 1450, 1480]
-rx_body_keys = [0.048, 0.062, 0.082, 0.096, 0.090, 0.084, 0.098, 0.120, 0.142, 0.165, 0.190, 0.220, 0.250, 0.270, 0.272]
-
-# Dense 28 rings for ultra-smooth vertical silhouette
-y_body_steps = np.linspace(305, 1480, 28).astype(int)
+# Dense steps along body for perfect silhouette curve
+y_body_steps = [
+    305, 325, 350, 380, 415, 450, 490, 530, 570, 620,
+    670, 720, 770, 830, 900, 980, 1070, 1170, 1280, 1390, 1480
+]
 
 for y_px in y_body_steps:
     norm_y = 1.0 - (y_px - ymin) / float(ymax - ymin)
     y_world = norm_y * world_height
     
-    rx = float(np.interp(y_px, y_body_keys, rx_body_keys))
+    info = analyze_row(y_px)
+    if info['type'] == 'torso_arms':
+        x_min, x_max = info['body']
+        # Smoothly taper shoulder transition into chest (prevents shoulder collar shelf)
+        if y_px == 380:
+            x_min, x_max = 390, 634
+        elif y_px == 415:
+            x_min, x_max = 410, 614
+        # Eliminate hand inclusion at hip (prevents hip disc jump)
+        if x_min < 370 and y_px >= 500:
+            x_min = 380
+    else:
+        x_min, x_max = info['min'], info['max']
+        
+    rx = (x_max - x_min) * 0.5 * scale_x
     
-    # Anatomical front & back depth
+    # Anatomical depth profile
     if y_px <= 450:
-        rz_f = rx * 0.92
+        # Chest/bust fullness: halter gown front projection
+        rz_f = rx * 0.90
         rz_b = rx * 0.72
     elif y_px <= 620:
+        # Slender waist
         rz_f = rx * 0.78
         rz_b = rx * 0.75
     elif y_px <= 800:
+        # Hourglass hips & buttocks
         rz_f = rx * 0.82
         rz_b = rx * 0.95
     else:
+        # Skirt flare
         rz_f = rx * 0.92
         rz_b = rx * 0.92
         
     rf, rb = [], []
     
-    # Front semicircle
+    # Front semicircle (strictly within x_min to x_max of body!)
     for k in range(K_body + 1):
         th = -np.pi * 0.5 + np.pi * k / float(K_body)
         vx = rx * np.sin(th)
         vz = rz_f * np.cos(th)
         
-        orig_x = center_x + np.sin(th) * (rx / scale_x * 0.92)
+        orig_x = center_x + np.sin(th) * ((x_max - x_min) * 0.495)
         uv = get_uv_front(orig_x, y_px)
         
         v_idx = len(all_vertices)
@@ -437,7 +457,7 @@ for y_px in y_body_steps:
         vx = rx * np.sin(th)
         vz = rz_b * np.cos(th)
         
-        orig_x = center_x + np.sin(th) * (rx / scale_x * 0.92)
+        orig_x = center_x + np.sin(th) * ((x_max - x_min) * 0.495)
         uv = get_uv_back(orig_x, y_px)
         
         v_idx = len(all_vertices)
@@ -451,7 +471,7 @@ for y_px in y_body_steps:
 
 add_smooth_column(body_rf, body_rb, cap_top=False, cap_bottom=True)
 
-# 11. BUILD ARMS WITH 100% CLEAN SKIN & SMOOTH TRAJECTORY
+# 11. BUILD ARMS WITH 100% CLEAN SKIN (NO WHITE BORDER)
 print("4. Modeling Porcelain Bare Arms...")
 K_arm = 8
 
@@ -459,34 +479,45 @@ def build_arm(is_right=False):
     arm_rf, arm_rb = [], []
     sign = 1.0 if is_right else -1.0
     
-    # Smooth continuous arm center line & radii
-    # Y from shoulder Y=330 down to hand Y=780
-    y_arm_keys = [330, 420, 520, 620, 710, 780]
-    mid_x_keys = [0.155, 0.178, 0.202, 0.228, 0.252, 0.268]
-    rx_keys = [0.026, 0.025, 0.022, 0.019, 0.016, 0.017]
-    
-    y_arm_steps = np.linspace(330, 780, 16).astype(int)
+    # Arm height steps from shoulder Y=320 down to fingertips Y=780
+    y_arm_steps = [320, 350, 390, 435, 485, 540, 600, 660, 720, 780]
     
     for y_px in y_arm_steps:
         norm_y = 1.0 - (y_px - ymin) / float(ymax - ymin)
         y_world = norm_y * world_height
         
-        mid_vx = sign * float(np.interp(y_px, y_arm_keys, mid_x_keys))
-        rx = float(np.interp(y_px, y_arm_keys, rx_keys))
-        rz = rx * 1.06
-        
-        # Center in image space
-        mid_x_px = center_x + (mid_vx / scale_x)
+        info = analyze_row(y_px)
+        if info['type'] == 'torso_arms':
+            arm_bounds = info['right_arm'] if is_right else info['left_arm']
+        else:
+            arm_bounds = None
+            
+        if arm_bounds is not None:
+            a_min, a_max = arm_bounds
+            mid_x_px = (a_min + a_max) * 0.5
+            arm_w_px = (a_max - a_min) * 0.5
+        else:
+            # Upper shoulder joint (Y <= 400)
+            t = (y_px - 320) / 100.0
+            mid_x_px = center_x + sign * (145.0 + 20.0 * t)
+            arm_w_px = 25.0
+            a_min = mid_x_px - arm_w_px
+            a_max = mid_x_px + arm_w_px
+            
+        mid_vx = (mid_x_px - center_x) * scale_x
+        rx = max(0.016, arm_w_px * scale_x)
+        rz = rx * 1.08  # subtle anatomical depth
         
         rf, rb = [], []
         
-        # Front half of arm cylinder
+        # Front half of arm cylinder: maps strictly across [a_min, a_max]
         for k in range(K_arm + 1):
             th = -np.pi * 0.5 + np.pi * k / float(K_arm)
             vx = mid_vx + rx * np.sin(th)
             vz = rz * np.cos(th)
             
-            orig_x = mid_x_px + np.sin(th) * (rx / scale_x * 0.85)
+            # Map th to [a_min, a_max]: strictly interior to skin!
+            orig_x = mid_x_px + np.sin(th) * (arm_w_px * 0.90)
             uv = get_uv_front(orig_x, y_px)
             
             v_idx = len(all_vertices)
@@ -501,7 +532,7 @@ def build_arm(is_right=False):
             vx = mid_vx + rx * np.sin(th)
             vz = rz * np.cos(th)
             
-            orig_x = mid_x_px + np.sin(th) * (rx / scale_x * 0.85)
+            orig_x = mid_x_px + np.sin(th) * (arm_w_px * 0.90)
             uv = get_uv_back(orig_x, y_px)
             
             v_idx = len(all_vertices)
@@ -513,7 +544,7 @@ def build_arm(is_right=False):
         arm_rf.append(rf)
         arm_rb.append(rb)
         
-    add_smooth_column(arm_rf, arm_rb, cap_top=True, cap_bottom=True, top_dome=False, bottom_apex=True)
+    add_smooth_column(arm_rf, arm_rb, cap_top=True, cap_bottom=True, top_dome=True, bottom_apex=True)
 
 build_arm(is_right=False)
 build_arm(is_right=True)
