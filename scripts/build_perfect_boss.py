@@ -114,3 +114,4 @@ atlas_rgb = cv2.cvtColor(atlas, cv2.COLOR_BGR2RGB)
 atlas_pil = Image.fromarray(atlas_rgb)
 atlas_pil.save('public/textures/boss/boss_perfect_atlas.png')
 print("Successfully generated public/textures/boss/boss_perfect_atlas.png!")
+
