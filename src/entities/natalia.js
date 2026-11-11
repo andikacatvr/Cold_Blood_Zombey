@@ -17,7 +17,7 @@ import { createAirborneBloodDrop, spawnBloodPoolOnSnow } from './effects.js';
 const THREE = window.THREE;
 
 export let nataliaModel = null;
-export const NATALIA_SCALE = 1.0; // 1.0 = true 1.745m height matching bossgame.glb!
+export const NATALIA_SCALE = 1.341; // 1.341 matches Kristin's in-game heroic height (2.34m)!
 
 // Agent Following & Tactical State
 export let nataliaFollowMode = true;
@@ -548,7 +548,7 @@ export function updateNataliaParachuteDrop(progress, sfxRef = Sfx, dt = 0.016) {
           activeParachuteRig.group.parent.remove(activeParachuteRig.group);
           detachedCanopy = activeParachuteRig.canopy;
           detachedCanopy.position.set(2.8, gy + 0.35, 14.2);
-          detachedCanopy.scale.set(1.0, 0.45, 1.0);
+          detachedCanopy.scale.set(NATALIA_SCALE, NATALIA_SCALE * 0.45, NATALIA_SCALE);
           detachedCanopyStartTime = performance.now();
           scene.add(detachedCanopy);
         }
