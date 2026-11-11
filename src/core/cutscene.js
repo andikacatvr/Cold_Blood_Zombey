@@ -95,37 +95,37 @@ const NONA_BATAVIA_STAGES = [
 const CUTSCENE_STAGES = [
   {
     start: 0.0,
-    end: 5.5,
-    camStart: new THREE.Vector3(5.8, 3.6, 26.5),
-    camEnd: new THREE.Vector3(2.6, 2.0, 18.8),
-    lookStart: new THREE.Vector3(0.2, 1.2, 16.5),
-    lookEnd: new THREE.Vector3(0.4, 0.65, 14.1),
-    subtitle: `<span style="color:#ffffff;">Malam pekat membeku di rimba Hutan Long Way Hill... Tim mahasiswa yang sedang meneliti daerah ini tak sengaja masuk ke wilayah terlarang yang dipenuhi sihir gelap kuno!</span>`,
+    end: 4.5,
+    camStart: new THREE.Vector3(4.8, 3.2, 24.5),
+    camEnd: new THREE.Vector3(1.8, 1.8, 17.5),
+    lookStart: new THREE.Vector3(0.2, 1.0, 15.5),
+    lookEnd: new THREE.Vector3(0.4, 0.55, 14.0),
+    subtitle: `<span style="color:#ffffff;">Malam membeku di Hutan Long Way Hill... Gelombang sihir gelap kuno bangkit menyelimuti tanah!</span>`,
     onEnter: (sfx) => {
       if (sfx && sfx.playChurchBellToll) sfx.playChurchBellToll();
       if (sfx && sfx.playSnowStep) sfx.playSnowStep();
     }
   },
   {
-    start: 5.5,
-    end: 10.5,
-    camStart: new THREE.Vector3(-2.8, 1.85, 16.5),
-    camEnd: new THREE.Vector3(-2.0, 1.55, 15.0),
-    lookStart: new THREE.Vector3(0.45, 0.75, 13.9),
-    lookEnd: new THREE.Vector3(0.55, 0.85, 14.0),
-    subtitle: `<span style="color:#ffffff;">Hawa sihir hitam merasuki seluruh tanah dan membangkitkan mayat-mayat terkutuk! Tubuhmu roboh tak sadarkan diri di atas salju es, sementara rekan risetmu, Kristin, berjaga dengan cemas.</span>`,
+    start: 4.5,
+    end: 9.8,
+    camStart: new THREE.Vector3(-1.15, 1.15, 15.5),
+    camEnd: new THREE.Vector3(-0.65, 0.85, 14.8),
+    lookStart: new THREE.Vector3(0.55, 0.45, 13.9),
+    lookEnd: new THREE.Vector3(0.70, 0.50, 13.9),
+    subtitle: `<span style="color:#5cf0a5; font-size:22px; font-weight:bold;">KRISTIN:</span> <i>*jongkok panik mengguncang bahumu*</i> <span style="color:#ffffff; font-size:21px; font-weight:bold;">"Woii bangun! Woii bangun bro! Sadar woy!"</span>`,
     onEnter: (sfx) => {
       if (sfx && sfx.playZombieGroan) sfx.playZombieGroan();
     }
   },
   {
-    start: 10.5,
+    start: 9.8,
     end: 15.5,
-    camStart: new THREE.Vector3(-0.15, 0.55, 15.2),
+    camStart: new THREE.Vector3(-0.15, 0.55, 14.6),
     camEnd: new THREE.Vector3(0.0, 1.80, 14.0),
-    lookStart: new THREE.Vector3(1.15, 1.45, 14.0),
-    lookEnd: new THREE.Vector3(1.20, 1.50, 13.9),
-    subtitle: `<span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN (REKAN PENELITI):</span> "Woi, sadar bro! Syukurlah lu selamat! Daerah penelitian ini ternyata dipenuhi sihir gelap... mayat-mayat pada bangkit! Cepat berdiri, ambil senjatamu, kita harus bertahan hidup!"`,
+    lookStart: new THREE.Vector3(0.80, 0.85, 13.9),
+    lookEnd: new THREE.Vector3(0.85, 1.65, 13.9),
+    subtitle: `<span style="color:#5cf0a5; font-size:22px; font-weight:bold;">KRISTIN:</span> "Woii bangun! Syukurlah lu selamat bro! Mayat-mayat pada bangkit karena kutukan sihir gelap! Cepat berdiri, ambil senjatamu, kita harus bertahan hidup!"`,
     onEnter: (sfx) => {
       if (sfx && sfx.playPumpRack) sfx.playPumpRack();
       if (sfx && sfx.playSnowThud) sfx.playSnowThud(1.0);
@@ -187,11 +187,11 @@ export function startIntroCutscene(camera, sfx, onComplete) {
   // Spawn dropped shotgun in the snow next to player's outstretched hand
   createDroppedShotgun();
 
-  // Position Kristin crouching/standing vigilant beside the unconscious player
+  // Position Kristin crouching down beside the unconscious player
   if (andikaModel && andikaModel.root) {
-    const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.25, 14.05) : 0.1;
-    andikaModel.root.position.set(1.25, gy, 14.05);
-    andikaModel.root.rotation.set(0.12, -Math.PI / 2 - 0.25, 0.08); // Facing player & leaning down with concern
+    const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.82, 13.9) : 0.1;
+    andikaModel.root.position.set(0.82, gy - 0.58, 13.9);
+    andikaModel.root.rotation.set(0.42, -Math.PI / 2 - 0.28, 0.16); // Leaning down close over player
   }
 
   // Show cinema overlay & letterbox
@@ -412,32 +412,32 @@ export function updateCutscene(dt) {
   }
 
   // 1. Character Posing & Dynamic Awakening Transition
-  if (cutsceneTime < 10.0) {
+  if (cutsceneTime < 9.8) {
     // Player remains unconscious flat on the snow
     setPlayerCutscenePose('unconscious');
 
-    // Kristin breathes and remains vigilant beside the unconscious player
+    // Kristin crouched down over player, shaking player's shoulder and shouting "woii bangun"
     if (andikaModel && andikaModel.root) {
-      const breath = Math.sin(cutsceneTime * 2.8) * 0.012;
-      const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.25, 14.05) : 0.1;
-      andikaModel.root.position.set(1.25, gy + breath, 14.05);
-      andikaModel.root.rotation.set(0.12, -Math.PI / 2 - 0.25, 0.08);
+      const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.82, 13.9) : 0.1;
+      const shake = (cutsceneTime > 4.2) ? Math.sin(cutsceneTime * 11.0) * 0.028 : Math.sin(cutsceneTime * 2.5) * 0.010;
+      const headNod = (cutsceneTime > 4.2) ? Math.sin(cutsceneTime * 5.5) * 0.04 : 0;
+      andikaModel.root.position.set(0.82 + shake * 0.6, gy - 0.58 + Math.abs(shake) * 0.25, 13.9);
+      andikaModel.root.rotation.set(0.42 + headNod, -Math.PI / 2 - 0.28, 0.16);
     }
   } else {
     // Stage 3: Player awakens and rises up
-    const wakeProgress = Math.min(1.0, (cutsceneTime - 10.0) / 4.5);
+    const wakeProgress = Math.min(1.0, (cutsceneTime - 9.8) / 4.2);
     setPlayerCutscenePose('waking', wakeProgress);
 
-    // Kristin straightens up and welcomes player back to conscious world
+    // Kristin stands up from crouching to full standing height as player wakes up
     if (andikaModel && andikaModel.root) {
       const ease = wakeProgress * wakeProgress * (3 - 2 * wakeProgress);
-      const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.25, 14.05) : 0.1;
-      andikaModel.root.position.set(1.25, gy, 14.05);
-      andikaModel.root.rotation.set(
-        THREE.MathUtils.lerp(0.12, 0, ease),
-        -Math.PI / 2 - 0.25,
-        THREE.MathUtils.lerp(0.08, 0, ease)
-      );
+      const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.82, 13.9) : 0.1;
+      const curY = THREE.MathUtils.lerp(gy - 0.58, gy, ease);
+      const curRotX = THREE.MathUtils.lerp(0.42, 0, ease);
+      const curRotZ = THREE.MathUtils.lerp(0.16, 0, ease);
+      andikaModel.root.position.set(0.82, curY, 13.9);
+      andikaModel.root.rotation.set(curRotX, -Math.PI / 2 - 0.28, curRotZ);
     }
 
     // Player retrieves dropped shotgun from snow
