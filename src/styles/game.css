@@ -1106,3 +1106,198 @@
     right: 14px;
   }
 }
+
+/* =========================================================================
+   IN-GAME TACTICAL RADAR MINIMAP & MAP MODAL
+   ========================================================================= */
+#hud-minimap {
+  position: absolute;
+  top: 62px;
+  right: 20px;
+  width: 130px;
+  height: 154px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 28;
+  transition: transform 0.2s ease, opacity 0.3s ease;
+}
+#hud-minimap:hover {
+  transform: scale(1.05);
+}
+#hud-minimap-canvas {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.9), 0 0 8px rgba(74, 130, 91, 0.4);
+  background: rgba(12, 22, 17, 0.92);
+  display: block;
+}
+#minimap-zone-badge {
+  margin-top: 4px;
+  background: rgba(10, 16, 12, 0.92);
+  border: 1px solid #3d6849;
+  color: #ffd15c;
+  font-family: 'VT323', monospace;
+  font-size: 15px;
+  padding: 1px 8px;
+  border-radius: 3px;
+  text-shadow: 0 1px 2px #000;
+  white-space: nowrap;
+  max-width: 145px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+#hud-map-btn {
+  color: #ffd15c;
+  border-color: #7a5a2a;
+}
+#hud-map-btn:hover {
+  background: rgba(50, 36, 16, 0.95);
+  border-color: #ffd15c;
+}
+
+/* FULLSCREEN TACTICAL MAP MODAL */
+.tactical-map-dialog {
+  background: #0d1411;
+  border: 2px solid #3d6849;
+  box-shadow: 0 0 45px rgba(0, 0, 0, 0.95), 0 0 15px rgba(45, 100, 65, 0.3);
+  width: 95vw;
+  max-width: 1140px;
+  max-height: 92vh;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalFadeIn 0.25s ease-out;
+  font-family: 'VT323', monospace;
+}
+.map-dialog-header {
+  padding: 14px 22px;
+  background: #131f1a;
+  border-bottom: 2px solid #233b2c;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.map-dialog-title {
+  font-size: 26px;
+  color: #9de8b7;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 10px rgba(157, 232, 183, 0.5);
+}
+.map-dialog-subtitle {
+  font-size: 18px;
+  color: #8da394;
+  margin-top: 3px;
+}
+.map-dialog-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  background: #090e0c;
+}
+.map-canvas-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+  background: #0d1512;
+  border-right: 2px solid #1e3325;
+  overflow: auto;
+}
+#tactical-map-canvas {
+  max-width: 100%;
+  max-height: 68vh;
+  border: 1px solid #3d6849;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.85);
+  border-radius: 4px;
+  background: #101715;
+}
+.map-sidebar-legend {
+  width: 320px;
+  padding: 16px;
+  background: #111a15;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.map-legend-title {
+  font-size: 20px;
+  color: #ffd15c;
+  border-bottom: 1px solid #3d6849;
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+.legend-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: rgba(22, 34, 28, 0.6);
+  border: 1px solid rgba(61, 104, 73, 0.35);
+}
+.legend-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.legend-item strong {
+  display: block;
+  font-size: 18px;
+  color: #d8ede0;
+  line-height: 1.1;
+}
+.legend-desc {
+  font-size: 15px;
+  color: #8da394;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+.legend-divider {
+  height: 1px;
+  background: #233b2c;
+  margin: 4px 0;
+}
+.map-dialog-footer {
+  padding: 12px 22px;
+  background: #131f1a;
+  border-top: 2px solid #233b2c;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+@media (max-width: 768px) {
+  #hud-minimap {
+    width: 95px;
+    height: 115px;
+    top: 50px;
+    right: 12px;
+  }
+  #hud-minimap-canvas {
+    width: 95px;
+    height: 95px;
+  }
+  #minimap-zone-badge {
+    font-size: 13px;
+    max-width: 110px;
+  }
+  .map-dialog-body {
+    flex-direction: column;
+  }
+  .map-sidebar-legend {
+    width: 100%;
+    max-height: 180px;
+    border-top: 1px solid #233b2c;
+  }
+}

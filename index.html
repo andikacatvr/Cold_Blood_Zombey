@@ -83,8 +83,15 @@
 
         <div style="display: flex; gap: 10px; align-items: center;">
           <div class="hud-box" id="hud-score">CRIMSON PURGED: 000</div>
+          <button class="hud-box hud-btn" id="hud-map-btn" title="Buka Peta Wilayah (M)">🗺️ PETA [M]</button>
           <button class="hud-box hud-btn" id="hud-settings-btn" title="Pengaturan (ESC)">⚙ PENGATURAN</button>
         </div>
+      </div>
+
+      <!-- IN-GAME TACTICAL RADAR MINIMAP -->
+      <div id="hud-minimap" title="Klik untuk membuka Peta Taktis Lengkap [M]">
+        <canvas id="hud-minimap-canvas" width="130" height="130"></canvas>
+        <div id="minimap-zone-badge">HUTAN SALJU</div>
       </div>
 
       <div id="reticle">
@@ -245,8 +252,9 @@
             <div class="ctrl-card"><span class="key-badge">C</span> Toggle Kamera (FPS / TPS)</div>
             <div class="ctrl-card"><span class="key-badge">T</span> Perintah Kristin: Ikuti / Diam</div>
             <div class="ctrl-card"><span class="key-badge">E</span> Dialog dengan Kristin</div>
+            <div class="ctrl-card"><span class="key-badge">M</span> Buka Peta Taktis (Map)</div>
             <div class="ctrl-card"><span class="key-badge">ESC</span> Pause / Buka Pengaturan</div>
-            <div class="ctrl-card" style="grid-column: 1 / -1; border-color: #3d6849; background: rgba(18, 30, 22, 0.85);"><span class="key-badge" style="background:#22442c; color:#9de8b7; border-color:#4a825b;">📱 SMARTPHONE HP</span> Analog Kiri = Gerak | Geser Kanan Layar = Arah Kamera / Bidik | Tombol Kanan = Tembak, Reload, Lompat, Kristin</div>
+            <div class="ctrl-card" style="grid-column: 1 / -1; border-color: #3d6849; background: rgba(18, 30, 22, 0.85);"><span class="key-badge" style="background:#22442c; color:#9de8b7; border-color:#4a825b;">📱 SMARTPHONE HP</span> Analog Kiri = Gerak | Geser Kanan Layar = Arah Kamera / Bidik | Tombol Kanan = Tembak, Reload, Lompat, Kristin, Peta</div>
           </div>
         </div>
 
@@ -254,6 +262,112 @@
         <div class="settings-footer">
           <button class="btn-play" id="btn-close-settings">SIMPAN &amp; KEMBALI</button>
           <button class="btn-play btn-sec" id="btn-reset-settings">RESET DEFAULT</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FULLSCREEN TACTICAL SURVIVAL MAP MODAL -->
+    <div id="screen-tactical-map" class="settings-modal-backdrop" style="display: none;">
+      <div class="tactical-map-dialog">
+        <div class="map-dialog-header">
+          <div>
+            <div class="map-dialog-title">🗺️ PETA TAKTIS &amp; EKSPLORASI WILAYAH</div>
+            <div class="map-dialog-subtitle" id="map-coords-info">
+              <span>POSISI: <strong>X: 0.0</strong>, <strong>Z: 14.0</strong></span> &bull;
+              <span>ELEV: <strong>0.1m</strong></span> &bull;
+              <span style="color:#ffd15c;">ZONA: <strong>HUTAN SALJU</strong></span>
+            </div>
+          </div>
+          <button class="settings-close-x" id="btn-close-map-x" title="Tutup Peta (M / ESC)">✕</button>
+        </div>
+
+        <div class="map-dialog-body">
+          <div class="map-canvas-container">
+            <canvas id="tactical-map-canvas" width="760" height="560"></canvas>
+          </div>
+
+          <div class="map-sidebar-legend">
+            <div class="map-legend-title">KETERANGAN &amp; LOKASI PENTING</div>
+            
+            <div class="legend-item">
+              <span class="legend-icon" style="color: #ffdd33;">📍</span>
+              <div>
+                <strong>KAMU (SURVIVOR)</strong>
+                <div class="legend-desc">Posisi &amp; arah pandangmu saat ini</div>
+              </div>
+            </div>
+
+            <div class="legend-item">
+              <span class="legend-icon" style="color: #2de8a0;">●</span>
+              <div>
+                <strong>KRISTIN (ESCORT)</strong>
+                <div class="legend-desc">Pendamping setia bersenjata shotgun</div>
+              </div>
+            </div>
+
+            <div class="legend-item">
+              <span class="legend-icon" style="color: #ffbb33;">●</span>
+              <div>
+                <strong>AGENT NATALIA</strong>
+                <div class="legend-desc">Agen tempur bersenjata pistol taktis</div>
+              </div>
+            </div>
+
+            <div class="legend-divider"></div>
+
+            <div class="legend-item">
+              <span class="legend-icon" style="color: #b89d6e;">🏖️</span>
+              <div>
+                <strong>PANTAI PASIR EMAS (BARU)</strong>
+                <div class="legend-desc">Pesisir pasir &amp; bukit pasir di ujung sungai (Z: 76-126)</div>
+              </div>
+            </div>
+
+            <div class="legend-item">
+              <span class="legend-icon" style="color: #a67b53;">⚓</span>
+              <div>
+                <strong>DERMAGA KAYU NELAYAN</strong>
+                <div class="legend-desc">Dermaga 26m menjorok ke laut lepas (X: 14, Z: 112-138)</div>
+              </div>
+            </div>
+
+            <div class="legend-item">
+              <span class="legend-icon" style="color: #64b9dc;">🌊</span>
+              <div>
+                <strong>LAUTAN LEPAS (SOUTH OCEAN)</strong>
+                <div class="legend-desc">Hamparan laut selatan berombak riak</div>
+              </div>
+            </div>
+
+            <div class="legend-item">
+              <span class="legend-icon" style="color: #3d88b0;">🏔️</span>
+              <div>
+                <strong>AIR TERJUN &amp; TEBING UTARA</strong>
+                <div class="legend-desc">Tebing curam &amp; sumber sungai (Z: -58)</div>
+              </div>
+            </div>
+
+            <div class="legend-item">
+              <span class="legend-icon" style="color: #d2e4ea;">🏠</span>
+              <div>
+                <strong>RUMAH AMAN (FARMHOUSE)</strong>
+                <div class="legend-desc">Rumah putih tempat Kristin berlindung (X: -13, Z: -6)</div>
+              </div>
+            </div>
+
+            <div class="legend-item">
+              <span class="legend-icon" style="color: #e65151;">🚧</span>
+              <div>
+                <strong>PAGAR KARANTINA (300M)</strong>
+                <div class="legend-desc">Garis perimeter kawat duri keamanan</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="map-dialog-footer">
+          <button class="btn-play" id="btn-close-map">KEMBALI BERMAIN [M]</button>
+          <div style="font-size: 15px; color: #8ba2b3; font-family: 'VT323', monospace;">TEKAN [M] ATAU [ESC] UNTUK MEMBUKA / MENUTUP PETA</div>
         </div>
       </div>
     </div>
@@ -286,8 +400,12 @@
       <!-- RIGHT LOOK / AIM TOUCH ZONE (FULL RIGHT SCREEN AREA) -->
       <div id="touch-look-zone"></div>
 
-      <!-- TOP RIGHT UTILITY BUTTONS (CAMERA & KRISTIN INTERACTION) -->
+      <!-- TOP RIGHT UTILITY BUTTONS (CAMERA, KRISTIN & MAP) -->
       <div id="touch-top-cluster">
+        <button id="btn-touch-map" class="touch-btn touch-util-btn" title="Peta Taktis [M]">
+          <span class="touch-btn-icon">🗺️</span>
+          <span class="touch-btn-label">PETA</span>
+        </button>
         <button id="btn-touch-camera" class="touch-btn touch-util-btn" title="Ganti Sudut Kamera (FPS/TPS)">
           <span class="touch-btn-icon">🎥</span>
           <span class="touch-btn-label">KAMERA</span>

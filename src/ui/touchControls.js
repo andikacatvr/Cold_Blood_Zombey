@@ -19,6 +19,7 @@ import {
 import { toggleCameraMode } from '../entities/playerModel.js';
 import { isCinematicActive } from '../core/cutscene.js';
 import { isSettingsOpen } from './settingsMenu.js';
+import { isMapOpen } from './mapMenu.js';
 
 let joystickTouchId = null;
 let lookTouchId = null;
@@ -57,6 +58,7 @@ export function updateTouchControlsVisibility() {
     !state.isPaused &&
     !isCinematicActive &&
     !isSettingsOpen &&
+    !isMapOpen &&
     isTouchControlsEnabled();
 
   touchControlsContainer.style.display = shouldShow ? 'block' : 'none';

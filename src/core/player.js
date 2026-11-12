@@ -46,6 +46,7 @@ import {
 } from '../world/environment.js';
 import { updateHUD, showLifeLostAlert, triggerGameOver } from '../ui/hud.js';
 import { openSettings, closeSettings, isSettingsOpen } from '../ui/settingsMenu.js';
+import { toggleMap, closeMap, isMapOpen } from '../ui/mapMenu.js';
 import { triggerAndikaGesture, toggleCompanionFollow, andikaModel } from '../entities/kristin.js';
 import { triggerNataliaGesture, toggleNataliaFollow, nataliaModel } from '../entities/natalia.js';
 import { startIntroCutscene, isCinematicActive } from './cutscene.js';
@@ -604,6 +605,10 @@ export function setupPlayerControls() {
     if (isCinematicActive) return;
     const c = e.code;
     if (c === 'Escape') {
+      if (isMapOpen) {
+        closeMap(state);
+        return;
+      }
       if (isSettingsOpen) {
         closeSettings(state);
       } else if (state.running) {
@@ -611,7 +616,13 @@ export function setupPlayerControls() {
       }
       return;
     }
-    if (state.isPaused) return;
+    if (c === 'KeyM') {
+      if (!isSettingsOpen) {
+        toggleMap(state);
+      }
+      return;
+    }
+    if (state.isPaused || isMapOpen) return;
 
     if (c === 'KeyW') keys.w = true;
     if (c === 'KeyA') keys.a = true;
@@ -657,7 +668,7 @@ export function setupPlayerControls() {
   });
 
   document.addEventListener('mousemove', (e) => {
-    if (document.pointerLockElement !== document.body || !state.running || state.isPaused || !cameraRef) return;
+    if (document.pointerLockElement !== document.body || !state.running || state.isPaused || !cameraRef || isMapOpen) return;
     const sens = 0.0024 * (gameSettings.sensitivity || 1.0);
     yaw -= e.movementX * sens;
     pitch -= e.movementY * sens;
@@ -667,7 +678,7 @@ export function setupPlayerControls() {
   });
 
   document.addEventListener('mousedown', (e) => {
-    if (!state.running || state.isPaused || isSettingsOpen) return;
+    if (!state.running || state.isPaused || isSettingsOpen || isMapOpen) return;
     if (document.pointerLockElement !== document.body) {
       try {
         document.body.requestPointerLock();

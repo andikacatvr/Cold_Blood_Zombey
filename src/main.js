@@ -110,6 +110,11 @@ import {
   initTouchControls,
   updateTouchControlsVisibility
 } from './ui/touchControls.js';
+import {
+  setupMapListeners,
+  updateMinimapRadar,
+  isMapOpen
+} from './ui/mapMenu.js';
 
 const THREE = window.THREE;
 
@@ -911,6 +916,7 @@ function frameLoop(t) {
     }
   } else if (state.running && !state.isPaused) {
     updateSimulation(dt);
+    updateMinimapRadar();
     if (busHazardLights && busHazardLights.length > 0) {
       const pulse = (Math.sin(performance.now() * 0.007) > 0.1 ? 2.5 : 0.2);
       busHazardLights.forEach(l => l.intensity = pulse);
@@ -1023,6 +1029,7 @@ function init() {
     switchWeapon,
     state
   });
+  setupMapListeners(state);
 
   const btnEnter = document.getElementById('btn-enter');
   if (btnEnter) btnEnter.addEventListener('click', () => startWinterSurvive(scene));
