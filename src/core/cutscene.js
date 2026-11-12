@@ -18,7 +18,8 @@ import { createTacticalHelicopter } from '../entities/helicopter.js';
 import { weaponHolder } from '../entities/weapons.js';
 import { playerMeshRoot, cameraMode, setPlayerCutscenePose } from '../entities/playerModel.js';
 import { scene, playerFlashlight } from '../graphics/engine.js';
-import { playerPos, state } from './player.js';
+import { playerPos, state, setPlayerYawPitch } from './player.js';
+import { zombies } from '../entities/enemies.js';
 import { updateTouchControlsVisibility } from '../ui/touchControls.js';
 
 const THREE = window.THREE;
@@ -226,6 +227,7 @@ export function startIntroCutscene(camera, sfx, onComplete) {
 
   // Position unconscious player lying limp on back in the snow
   setPlayerCutscenePose('unconscious');
+  if (state && state.player) state.player.isInvulnerable = true;
 
   // Spawn dropped shotgun in the snow next to player's outstretched hand
   createDroppedShotgun();
@@ -285,6 +287,7 @@ export function startNonaBataviaCutscene(bossZombie, camera, sfx, onComplete) {
   cutsceneTime = 0;
   currentStageIndex = -1;
   isCinematicActive = true;
+  if (state && state.player) state.player.isInvulnerable = true;
 
   // Hide hands viewmodel & flashlight
   if (weaponHolder) weaponHolder.visible = false;
@@ -398,6 +401,7 @@ export function finishNonaBataviaCutscene() {
   if (!isCinematicActive || activeCutsceneType !== 'nona_batavia') return;
   isCinematicActive = false;
   activeCutsceneType = null;
+  if (state && state.player) state.player.isInvulnerable = false;
 
   // Aim player toward Nona Batavia
   if (cameraRef && activeBossRef) {
@@ -405,7 +409,10 @@ export function finishNonaBataviaCutscene() {
     const pz = (typeof playerPos !== 'undefined' && playerPos) ? playerPos.z : 0;
     const py = (typeof getTerrainHeight === 'function' ? getTerrainHeight(px, pz) : 0) + 1.8;
     cameraRef.position.set(px, py, pz);
-    cameraRef.lookAt(activeBossRef.x, activeBossRef.y + 0.6, activeBossRef.z);
+    const bdx = activeBossRef.x - px;
+    const bdz = activeBossRef.z - pz;
+    const targetYaw = Math.atan2(-bdx, -bdz);
+    setPlayerYawPitch(targetYaw, 0.08);
   }
 
   // Fade out & hide cinema overlay
@@ -543,6 +550,7 @@ export function finishCutscene() {
 
   // Reset player model to standard upright stance
   setPlayerCutscenePose('reset');
+  if (state && state.player) state.player.isInvulnerable = false;
 
   // Position Kristin beside player ready for escort mode
   if (andikaModel && andikaModel.root) {
@@ -626,6 +634,11 @@ export function startNataliaHelicopterCutscene(camera, sfx, onComplete) {
   if (reticle) reticle.style.display = 'none';
   updateTouchControlsVisibility();
 
+  // Protect player from damage during cutscene
+  if (state && state.player) {
+    state.player.isInvulnerable = true;
+  }
+
   // Create tactical helicopter in scene
   if (!activeHelicopter && scene) {
     activeHelicopter = createTacticalHelicopter();
@@ -636,9 +649,34 @@ export function startNataliaHelicopterCutscene(camera, sfx, onComplete) {
   const pz = (typeof playerPos !== 'undefined' && playerPos) ? playerPos.z : (cameraRef ? cameraRef.position.z : 14.0);
   const pgy = (typeof getTerrainHeight === 'function' ? getTerrainHeight(px, pz) : 0);
 
-  // Position helicopter starting far away in the stormy sky
+  // Push nearby zombies back away from cutscene drop zone
+  if (zombies && zombies.length) {
+    for (let i = 0; i < zombies.length; i++) {
+      const z = zombies[i];
+      if (!z || z.isDead) continue;
+      const dx = z.x - px;
+      const dz = z.z - pz;
+      const dist = Math.hypot(dx, dz);
+      if (dist < 20.0) {
+        const pushAng = (dist > 0.1) ? Math.atan2(dx, dz) : Math.random() * Math.PI * 2;
+        z.x = px + Math.sin(pushAng) * (20.0 + Math.random() * 4.0);
+        z.z = pz + Math.cos(pushAng) * (20.0 + Math.random() * 4.0);
+        if (z.model && z.model.root) {
+          const gy = (typeof getTerrainHeight === 'function' ? getTerrainHeight(z.x, z.z) : 0);
+          z.model.root.position.set(z.x, gy, z.z);
+        }
+      }
+    }
+  }
+
+  // Widen fog distance temporarily so helicopter approach is visible through misty atmosphere
+  if (scene && scene.fog) {
+    scene.fog.far = 52.0;
+  }
+
+  // Position helicopter starting in sky within camera frustum
   if (activeHelicopter) {
-    activeHelicopter.root.position.set(px - 40, pgy + 32, pz + 42);
+    activeHelicopter.root.position.set(px - 22, pgy + 16, pz + 24);
     activeHelicopter.root.rotation.set(-0.15, Math.PI / 4, 0.12);
   }
 
@@ -698,9 +736,9 @@ function updateNataliaHelicopterCutscene(dt) {
 
     if (activeHelicopter) {
       activeHelicopter.root.position.set(
-        THREE.MathUtils.lerp(px - 40, hoverX, ease),
-        THREE.MathUtils.lerp(pgy + 32, hoverY, ease),
-        THREE.MathUtils.lerp(pz + 42, hoverZ, ease)
+        THREE.MathUtils.lerp(px - 22, hoverX, ease),
+        THREE.MathUtils.lerp(pgy + 16, hoverY, ease),
+        THREE.MathUtils.lerp(pz + 24, hoverZ, ease)
       );
       activeHelicopter.root.rotation.set(
         THREE.MathUtils.lerp(-0.15, -0.05, ease),
@@ -857,10 +895,23 @@ export function finishNataliaHelicopterCutscene() {
 
   state.nataliaSpawned = true;
 
-  // Restore camera
+  // Restore dense fog distance
+  if (scene && scene.fog) {
+    scene.fog.far = 18.0;
+  }
+
+  // Restore player invulnerability
+  if (state && state.player) {
+    state.player.isInvulnerable = false;
+  }
+
+  // Restore camera orientation smoothly towards Natalia without mouse snap
   if (cameraRef) {
     cameraRef.position.set(px, (typeof getTerrainHeight === 'function' ? getTerrainHeight(px, pz) : 0) + 1.8, pz);
-    cameraRef.lookAt(dropX, dropGY + 1.4, dropZ);
+    const cdx = dropX - px;
+    const cdz = dropZ - pz;
+    const targetYaw = Math.atan2(-cdx, -cdz);
+    setPlayerYawPitch(targetYaw, 0.05);
   }
 
   // Fade out & hide cinema overlay

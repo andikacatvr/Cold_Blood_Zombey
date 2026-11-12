@@ -1208,22 +1208,17 @@ export function killZombieWithKinematics(z, shotDir, hitDistance, isHeadshot, st
           console.log('[AGENT NATALIA] Tactical arrival complete! Natalia joins as armed companion.');
         });
       }
-    }, 600);
+    }, 400);
   }
 
-  // Nona Batavia Boss Encounter: Triggers every 50 kills (50, 100, 150, 200, ...)
+  // Nona Batavia Boss Encounter: Triggers at 50, 150, 200, 250, ... (skips 100 so Agent Natalia's arrival cutscene is never interrupted)
   const milestone = Math.floor(state.kills / 50) * 50;
-  if (milestone >= 50 && milestone > (state.lastLadyMithrillKills || 0)) {
+  if (milestone >= 50 && milestone !== 100 && milestone > (state.lastLadyMithrillKills || 0)) {
     state.lastLadyMithrillKills = milestone;
     console.log(`[BOSS] Nona Batavia Milestone Reached: ${state.kills} Kills! Spawning aerial boss...`);
     setTimeout(() => {
       if (state && state.running) {
-        // Delay slightly if helicopter cutscene is running
-        if (state.kills === 100) {
-          setTimeout(() => spawnNonaBataviaBoss(state), 21000);
-        } else {
-          spawnNonaBataviaBoss(state);
-        }
+        spawnNonaBataviaBoss(state);
       }
     }, 700);
   }

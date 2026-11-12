@@ -135,6 +135,17 @@ export function addLookDelta(dx, dy) {
   }
 }
 
+export function setPlayerYawPitch(newYaw, newPitch = 0) {
+  yaw = newYaw;
+  pitch = Math.max(-Math.PI / 2.3, Math.min(Math.PI / 2.3, newPitch));
+  if (cameraRef) {
+    cameraRef.rotation.order = 'YXZ';
+    cameraRef.rotation.y = yaw;
+    cameraRef.rotation.x = pitch;
+    cameraRef.rotation.z = 0;
+  }
+}
+
 export function triggerInteract() {
   if (!state.running || state.isPaused) return;
   if (andikaModel) {
@@ -444,7 +455,7 @@ export function repelNearbyZombies() {
 }
 
 export function hitPlayer(dmg) {
-  if (!state.running || state.player.isInvulnerable || state.isPaused) return;
+  if (!state.running || state.player.isInvulnerable || state.isPaused || isCinematicActive) return;
 
   let effectiveDmg = dmg;
   if (gameSettings.difficulty === 'easy') effectiveDmg = Math.round(dmg * 0.7);
