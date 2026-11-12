@@ -8,8 +8,8 @@ import { spawnWoodSplinters } from '../entities/effects.js';
 
 const THREE = window.THREE;
 
-export const MAP_LIMIT = 90;
-export const TERRAIN_LIMIT = 165;
+export const MAP_LIMIT = 150;
+export const TERRAIN_LIMIT = 230;
 
 export let riverWaterMesh = null;
 export let waterfallMesh = null;
@@ -20,6 +20,10 @@ export let waterfallMistParticles = null;
 export const waterfallMistVel = [];
 export let topRiverMesh = null;
 export let topRiverCrestFoam = null;
+export let beachSandMesh = null;
+export let wetBeachSandMesh = null;
+export let oceanWaterMesh = null;
+export let oceanShorelineFoam = null;
 
 /**
  * Returns the X position of the winding lower river centerline at any given Z coordinate.
@@ -30,10 +34,10 @@ export function getRiverCenterX(z) {
 
 /**
  * Returns the exact elevation (Y position) of the lower mountain river water surface at any given Z.
- * Naturally descends 3.0 meters from waterfall plunge pool (z=-56.5) down to the southern border (z=110).
+ * Naturally descends from waterfall plunge pool (z=-56.5) down to sea level (-2.55m) at the southern ocean beach (z=126.0).
  */
 export function getRiverWaterY(z) {
-  const progress = Math.max(0, (z - (-58.0)) / 198.0);
+  const progress = Math.min(1.0, Math.max(0, (z - (-58.0)) / 184.0));
   return 0.85 - progress * 3.4;
 }
 
@@ -65,6 +69,21 @@ export function getTerrainHeight(x, z) {
   const h2 = Math.sin(x * 0.105 + 1.2) * Math.cos(z * 0.092 - 0.7) * 1.35;
   const h3 = Math.cos(x * 0.028 - z * 0.034) * 1.55;
   let raw = h1 + h2 + h3; // Base undulating waves
+
+  // 0. Coastal Sand Dunes, Beach & Ocean Bay Transition (z >= 75.0)
+  if (z >= 75.0) {
+    const coastP = Math.min(1.0, (z - 75.0) / 40.0);
+    // Smooth transition from forest knolls into coastal sand dunes & beach flats
+    const duneWaves = Math.sin(x * 0.062) * 0.55 + Math.cos(z * 0.078) * 0.35;
+    const targetBeachY = -1.35 + duneWaves - (coastP * 0.95);
+    raw = THREE.MathUtils.lerp(raw, targetBeachY, coastP);
+
+    // Submerged coastal seabed descending smoothly into the ocean (z > 126.0)
+    if (z > 126.0) {
+      const seabedDepth = Math.min(4.8, (z - 126.0) * 0.24);
+      raw = Math.min(raw, -2.55 - seabedDepth);
+    }
+  }
 
   // 1. Mountain Waterfall Cliff Ridge in the North-East (x around 42)
   if (z <= -55.0 && Math.abs(x - 42.0) < 36.0) {
@@ -103,15 +122,17 @@ export function getTerrainHeight(x, z) {
     }
   }
 
-  // 2. Winding Alpine River Valley & Riverbed Channel (from waterfall plunge pool z=-58.0 to well past southern border z=140)
-  if (z > -59.0 && z < 145.0) {
+  // 2. Winding Alpine River Valley & Riverbed Channel (from waterfall plunge pool z=-58.0 to beach estuary z=126.0)
+  if (z > -59.0 && z <= 126.0) {
     const rX = getRiverCenterX(z);
     const distToRiver = Math.abs(x - rX);
     const waterY = getRiverWaterY(z);
 
-    const channelR = 5.2; // Submerged riverbed boundary
-    const bankR = 8.5;    // Dry snow shoreline ridge
-    const valleyR = 16.0; // Outer forest valley blend corridor
+    // River widens as it approaches the beach estuary
+    const widenFactor = (z > 78.0) ? (1.0 + (z - 78.0) * 0.024) : 1.0;
+    const channelR = 5.2 * widenFactor; // Submerged riverbed boundary
+    const bankR = 8.5 * widenFactor;    // Shoreline ridge
+    const valleyR = 16.0 * widenFactor; // Outer valley blend corridor
 
     if (distToRiver < channelR) {
       // Submerged U-shaped riverbed:
@@ -305,6 +326,10 @@ export function blastOpenDoor(doorObj, state, updateHUD) {
 export function initWorld(scene, textures) {
   const {
     snowTex,
+    beachSandTex,
+    wetBeachSandTex,
+    oceanWaterTex,
+    shorelineFoamTex,
     chainlinkTex,
     houseWallTex,
     woodPlanksTex,
@@ -314,8 +339,8 @@ export function initWorld(scene, textures) {
     creamStoneTex
   } = textures;
 
-  // Undulating Natural Forest Ground Mesh (Expanded 330m Expanse - Infinite snowy horizon past boundary)
-  const groundGeo = new THREE.PlaneGeometry(TERRAIN_LIMIT * 2, TERRAIN_LIMIT * 2, 130, 130);
+  // Undulating Natural Forest Ground Mesh (Expanded 460m Expanse - Infinite snowy & coastal horizon past boundary)
+  const groundGeo = new THREE.PlaneGeometry(TERRAIN_LIMIT * 2, TERRAIN_LIMIT * 2, 160, 160);
   groundGeo.rotateX(-Math.PI / 2);
   const posAttr = groundGeo.attributes.position;
   for (let i = 0; i < posAttr.count; i++) {
@@ -326,7 +351,7 @@ export function initWorld(scene, textures) {
   groundGeo.computeVertexNormals();
 
   if (snowTex) {
-    snowTex.repeat.set(96, 96);
+    snowTex.repeat.set(130, 130);
   }
   const groundMat = new THREE.MeshLambertMaterial({ map: snowTex, flatShading: false });
   const groundMesh = new THREE.Mesh(groundGeo, groundMat);
@@ -1060,6 +1085,9 @@ export function initWorld(scene, textures) {
       if (Math.hypot(x - (-22), z - 22) < 7.5) continue;
       if (Math.hypot(x - 16, z - 28) < 7.5) continue;
 
+      // Keep trees out of the Coastal Beach & Sand Dunes zone (z >= 76)
+      if (z >= 76.0) continue;
+
       // Keep trees out of the Winding River Channel & Valley
       if (z > -62.0 && z < 112.0) {
         const rX = getRiverCenterX(z);
@@ -1086,12 +1114,13 @@ export function initWorld(scene, textures) {
       }
     }
 
-    // Outer forest pines stretching far out into the snow (r = 95m to 155m)
-    for (let i = 0; i < 75; i++) {
-      const a = (i / 75) * Math.PI * 2;
-      const r = 96 + Math.random() * 55;
+    // Outer forest pines stretching far out into the snow (r = 100m to 195m, excluding southern beach)
+    for (let i = 0; i < 90; i++) {
+      const a = (i / 90) * Math.PI * 2;
+      const r = 100 + Math.random() * 85;
       const x = Math.cos(a) * r;
       const z = Math.sin(a) * r;
+      if (z > 76.0) continue; // Keep southern beach open
       const gy = getTerrainHeight(x, z);
       const sc = 1.35 + Math.random() * 0.55;
       const rotY = Math.random() * Math.PI * 2;
@@ -1401,7 +1430,7 @@ export function initWorld(scene, textures) {
     // A. Winding Curved Mountain River Ribbon Mesh
     const riverSegments = 160;
     const startZ = -58.0;
-    const endZ = 140.0; // Flows completely past the world boundaries (mentok sampai ujung)
+    const endZ = 126.0; // Flows into the coastal ocean bay at the beach
     const stepZ = (endZ - startZ) / riverSegments;
     const riverHalfW = 5.25; // Embeds deeply into the snowy shoreline banks
 
@@ -1414,9 +1443,10 @@ export function initWorld(scene, textures) {
       const z = startZ + i * stepZ;
       const cx = getRiverCenterX(z);
       const wy = getRiverWaterY(z);
+      const curHalfW = riverHalfW * (z > 78.0 ? (1.0 + (z - 78.0) * 0.024) : 1.0);
 
       // Left bank vertex
-      riverPositions.push(cx - riverHalfW, wy, z);
+      riverPositions.push(cx - curHalfW, wy, z);
       riverNormals.push(0, 1, 0);
       riverUVs.push(0, i * 0.35);
 
@@ -1426,7 +1456,7 @@ export function initWorld(scene, textures) {
       riverUVs.push(0.5, i * 0.35);
 
       // Right bank vertex
-      riverPositions.push(cx + riverHalfW, wy, z);
+      riverPositions.push(cx + curHalfW, wy, z);
       riverNormals.push(0, 1, 0);
       riverUVs.push(1.0, i * 0.35);
 
@@ -1695,6 +1725,314 @@ export function initWorld(scene, textures) {
     scene.add(bridgeGroup);
   }
 
+  // 9. Coastal Beach, Sand Dunes, Ocean Bay & Fishing Pier Generator
+  function buildBeachAndCoastline(scene, textures) {
+    const { beachSandTex, wetBeachSandTex, oceanWaterTex, shorelineFoamTex, woodPlanksTex } = textures;
+
+    // A. Golden Sand Beach Surface Mesh (curved coastal dunes & river delta banks)
+    const sandW = 265;
+    const sandD = 60;
+    const sandGeo = new THREE.PlaneGeometry(sandW, sandD, 110, 42);
+    sandGeo.rotateX(-Math.PI / 2);
+    const sandPos = sandGeo.attributes.position;
+    for (let i = 0; i < sandPos.count; i++) {
+      const vx = sandPos.getX(i);
+      const edgeWave = Math.sin(vx * 0.075) * 5.2 + Math.cos(vx * 0.13) * 2.8;
+      const baseVz = sandPos.getZ(i) + 104.0;
+      const vz = (baseVz < 98.0) ? (baseVz + edgeWave * Math.max(0, 1.0 - (baseVz - 74.0) / 24.0)) : baseVz;
+      sandPos.setZ(i, vz);
+      sandPos.setY(i, getTerrainHeight(vx, vz) + 0.035);
+    }
+    sandGeo.computeVertexNormals();
+
+    const sandMat = new THREE.MeshLambertMaterial({
+      map: beachSandTex,
+      flatShading: false
+    });
+    beachSandMesh = new THREE.Mesh(sandGeo, sandMat);
+    beachSandMesh.receiveShadow = true;
+    scene.add(beachSandMesh);
+
+    // B. Wet Dark Sand Shoreline Ribbon (along surf edge z: 123 to 132)
+    const wetW = 265;
+    const wetD = 10.0;
+    const wetGeo = new THREE.PlaneGeometry(wetW, wetD, 90, 8);
+    wetGeo.rotateX(-Math.PI / 2);
+    const wetPos = wetGeo.attributes.position;
+    for (let i = 0; i < wetPos.count; i++) {
+      const vx = wetPos.getX(i);
+      const vz = wetPos.getZ(i) + 127.0;
+      wetPos.setZ(i, vz);
+      wetPos.setY(i, getTerrainHeight(vx, vz) + 0.048);
+    }
+    wetGeo.computeVertexNormals();
+
+    const wetMat = new THREE.MeshStandardMaterial({
+      map: wetBeachSandTex,
+      roughness: 0.32,
+      metalness: 0.22,
+      flatShading: false
+    });
+    wetBeachSandMesh = new THREE.Mesh(wetGeo, wetMat);
+    wetBeachSandMesh.receiveShadow = true;
+    scene.add(wetBeachSandMesh);
+
+    // C. Expansive Ocean Water Surface (z: 125.0 to 255.0, sea level -2.52m)
+    const oceanW = 480;
+    const oceanD = 140;
+    const oceanGeo = new THREE.PlaneGeometry(oceanW, oceanD, 32, 16);
+    oceanGeo.rotateX(-Math.PI / 2);
+    oceanGeo.translate(0, -2.52, 195.0);
+
+    const oceanMat = new THREE.MeshPhongMaterial({
+      map: oceanWaterTex,
+      color: 0x163d4f,
+      transparent: true,
+      opacity: 0.90,
+      shininess: 90,
+      specular: 0x66ccee
+    });
+    oceanWaterMesh = new THREE.Mesh(oceanGeo, oceanMat);
+    scene.add(oceanWaterMesh);
+
+    // D. Undulating Ocean Shoreline Surf Foam Line
+    const foamGeo = new THREE.PlaneGeometry(265, 4.2, 48, 2);
+    foamGeo.rotateX(-Math.PI / 2);
+    foamGeo.translate(0, -2.48, 126.8);
+
+    const foamMat = new THREE.MeshBasicMaterial({
+      map: shorelineFoamTex,
+      transparent: true,
+      opacity: 0.72,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    oceanShorelineFoam = new THREE.Mesh(foamGeo, foamMat);
+    scene.add(oceanShorelineFoam);
+
+    // E. Rustic Wooden Coastal Fishing Pier
+    const pierGroup = new THREE.Group();
+    pierGroup.name = 'Coastal_Fishing_Pier';
+
+    const woodDeckMat = new THREE.MeshStandardMaterial({
+      map: woodPlanksTex,
+      roughness: 0.75,
+      metalness: 0.12
+    });
+    const darkWoodMat = new THREE.MeshStandardMaterial({
+      color: 0x2b211a,
+      roughness: 0.85,
+      metalness: 0.1
+    });
+
+    // Main Deck Planking (26m long, 3.4m wide, elevation -1.55m)
+    const deckGeo = new THREE.BoxGeometry(3.4, 0.22, 26.0);
+    const deckMesh = new THREE.Mesh(deckGeo, woodDeckMat);
+    deckMesh.position.set(14.0, -1.55, 125.0);
+    deckMesh.castShadow = true;
+    deckMesh.receiveShadow = true;
+    pierGroup.add(deckMesh);
+
+    // Supporting Timber Pilings & Cross-Braces
+    const pilingGeo = new THREE.CylinderGeometry(0.18, 0.22, 5.2, 8);
+    const braceGeo = new THREE.BoxGeometry(0.12, 0.18, 3.8);
+
+    const pilingZList = [113, 117, 121, 125, 129, 133, 137];
+    pilingZList.forEach(pz => {
+      // Left & Right pilings
+      for (const side of [-1, 1]) {
+        const px = 14.0 + side * 1.5;
+        const piling = new THREE.Mesh(pilingGeo, darkWoodMat);
+        piling.position.set(px, -3.2, pz);
+        pierGroup.add(piling);
+
+        // Vertical Railing Post
+        const postGeo = new THREE.CylinderGeometry(0.065, 0.075, 1.15, 6);
+        const post = new THREE.Mesh(postGeo, darkWoodMat);
+        post.position.set(px, -0.92, pz);
+        pierGroup.add(post);
+      }
+
+      // Cross-brace
+      const brace = new THREE.Mesh(braceGeo, darkWoodMat);
+      brace.position.set(14.0, -2.2, pz);
+      pierGroup.add(brace);
+    });
+
+    // Horizontal Handrails
+    const railGeo = new THREE.CylinderGeometry(0.045, 0.045, 26.0, 8);
+    railGeo.rotateX(Math.PI / 2);
+    for (const side of [-1, 1]) {
+      const rail = new THREE.Mesh(railGeo, darkWoodMat);
+      rail.position.set(14.0 + side * 1.5, -0.42, 125.0);
+      pierGroup.add(rail);
+
+      const midRail = new THREE.Mesh(railGeo, darkWoodMat);
+      midRail.position.set(14.0 + side * 1.5, -0.95, 125.0);
+      pierGroup.add(midRail);
+    }
+
+    // End Barrier Railing
+    const endRailGeo = new THREE.CylinderGeometry(0.045, 0.045, 3.2, 8);
+    endRailGeo.rotateZ(Math.PI / 2);
+    const endRail = new THREE.Mesh(endRailGeo, darkWoodMat);
+    endRail.position.set(14.0, -0.42, 137.9);
+    pierGroup.add(endRail);
+
+    // Vintage Brass Hanging Lanterns at Pier End
+    const lanternMat = new THREE.MeshStandardMaterial({ color: 0x3a2c18, metalness: 0.85, roughness: 0.35 });
+    const lanternGlassMat = new THREE.MeshBasicMaterial({ color: 0xffaa33 });
+    for (const side of [-1, 1]) {
+      const lx = 14.0 + side * 1.5;
+      const lz = 137.5;
+      const lanternArmGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.6, 6);
+      const lanternArm = new THREE.Mesh(lanternArmGeo, lanternMat);
+      lanternArm.position.set(lx, -0.22, lz);
+      pierGroup.add(lanternArm);
+
+      const lanternBoxGeo = new THREE.BoxGeometry(0.24, 0.35, 0.24);
+      const lanternBox = new THREE.Mesh(lanternBoxGeo, lanternGlassMat);
+      lanternBox.position.set(lx, -0.45, lz);
+      pierGroup.add(lanternBox);
+
+      const pierLight = new THREE.PointLight(0xff9933, 2.4, 12.0);
+      pierLight.position.set(lx, -0.45, lz);
+      pierGroup.add(pierLight);
+    }
+
+    // Pier Railing Colliders
+    colliders.push({ minX: 12.1, maxX: 12.6, minZ: 114.0, maxZ: 138.0 });
+    colliders.push({ minX: 15.4, maxX: 15.9, minZ: 114.0, maxZ: 138.0 });
+    colliders.push({ minX: 12.1, maxX: 15.9, minZ: 137.6, maxZ: 138.3 });
+
+    scene.add(pierGroup);
+
+    // F. Abandoned Weathered Fishing Rowboat in the Sand Dunes
+    const boatGroup = new THREE.Group();
+    boatGroup.name = 'Beached_Fishing_Boat';
+    boatGroup.position.set(44.0, getTerrainHeight(44.0, 116.0) + 0.12, 116.0);
+    boatGroup.rotation.set(0.18, 0.42, -0.22);
+
+    const boatMat = new THREE.MeshStandardMaterial({
+      color: 0x3e454b,
+      roughness: 0.85,
+      metalness: 0.15
+    });
+    const boatTrimMat = new THREE.MeshStandardMaterial({
+      color: 0x6e3828,
+      roughness: 0.75
+    });
+
+    const keelGeo = new THREE.BoxGeometry(1.6, 0.55, 4.4);
+    const keelMesh = new THREE.Mesh(keelGeo, boatMat);
+    boatGroup.add(keelMesh);
+
+    const bowGeo = new THREE.ConeGeometry(0.85, 1.4, 5);
+    bowGeo.rotateX(Math.PI / 2);
+    const bowMesh = new THREE.Mesh(bowGeo, boatMat);
+    bowMesh.position.set(0, 0.05, 2.7);
+    boatGroup.add(bowMesh);
+
+    for (const bz of [-1.1, 0.3, 1.5]) {
+      const seatGeo = new THREE.BoxGeometry(1.5, 0.08, 0.38);
+      const seatMesh = new THREE.Mesh(seatGeo, boatTrimMat);
+      seatMesh.position.set(0, 0.28, bz);
+      boatGroup.add(seatMesh);
+    }
+
+    const oarGeo = new THREE.CylinderGeometry(0.03, 0.03, 3.2, 6);
+    oarGeo.rotateZ(0.35);
+    const oar1 = new THREE.Mesh(oarGeo, woodDeckMat);
+    oar1.position.set(0.4, 0.42, 0.2);
+    boatGroup.add(oar1);
+
+    colliders.push({ minX: 42.6, maxX: 45.4, minZ: 114.2, maxZ: 118.2 });
+    scene.add(boatGroup);
+
+    // G. Coastal Driftwood Trunks
+    const driftwoodMat = new THREE.MeshStandardMaterial({
+      color: 0x5a554c,
+      roughness: 0.92,
+      metalness: 0.05
+    });
+    const logConfigs = [
+      { x: -16.0, z: 104.0, rotY: 0.85, len: 6.5, rad: 0.32 },
+      { x: 56.0, z: 112.0, rotY: -0.65, len: 5.4, rad: 0.28 },
+      { x: -52.0, z: 115.0, rotY: 1.25, len: 7.2, rad: 0.38 },
+      { x: 88.0, z: 118.0, rotY: -0.4, len: 4.8, rad: 0.26 }
+    ];
+    logConfigs.forEach(cfg => {
+      const logGeo = new THREE.CylinderGeometry(cfg.rad * 0.85, cfg.rad, cfg.len, 7);
+      logGeo.rotateZ(Math.PI / 2);
+      const logMesh = new THREE.Mesh(logGeo, driftwoodMat);
+      const gy = getTerrainHeight(cfg.x, cfg.z);
+      logMesh.position.set(cfg.x, gy + cfg.rad * 0.5, cfg.z);
+      logMesh.rotation.y = cfg.rotY;
+      scene.add(logMesh);
+
+      colliders.push({
+        minX: cfg.x - cfg.len * 0.35,
+        maxX: cfg.x + cfg.len * 0.35,
+        minZ: cfg.z - cfg.rad * 1.5,
+        maxZ: cfg.z + cfg.rad * 1.5
+      });
+    });
+
+    // H. Coastal Sea Boulders & Rock Outcrops
+    const rockMat = new THREE.MeshStandardMaterial({
+      color: 0x333b42,
+      roughness: 0.75,
+      metalness: 0.25,
+      flatShading: true
+    });
+    const boulderCoords = [
+      { x: -32.0, z: 124.0, s: 2.2 },
+      { x: -68.0, z: 127.0, s: 3.4 },
+      { x: 74.0, z: 123.0, s: 2.8 },
+      { x: 98.0, z: 126.0, s: 3.6 },
+      { x: -95.0, z: 118.0, s: 4.2 }
+    ];
+    boulderCoords.forEach(b => {
+      const rGeo = new THREE.DodecahedronGeometry(b.s, 1);
+      const rMesh = new THREE.Mesh(rGeo, rockMat);
+      const gy = getTerrainHeight(b.x, b.z);
+      rMesh.position.set(b.x, gy + b.s * 0.45, b.z);
+      rMesh.scale.set(1.1, 0.75, 1.25);
+      scene.add(rMesh);
+
+      colliders.push({
+        minX: b.x - b.s * 0.9,
+        maxX: b.x + b.s * 0.9,
+        minZ: b.z - b.s * 0.9,
+        maxZ: b.z + b.s * 0.9
+      });
+    });
+
+    // I. Coastal Dune Grass & Reeds along the snow-sand transition
+    const grassMat = new THREE.MeshStandardMaterial({
+      color: 0x9e9168,
+      roughness: 0.85,
+      flatShading: true,
+      side: THREE.DoubleSide
+    });
+    const bladeGeo = new THREE.ConeGeometry(0.12, 1.4, 4);
+    for (let g = 0; g < 32; g++) {
+      const gx = -85 + Math.random() * 170;
+      if (Math.abs(gx - getRiverCenterX(84)) < 8.0) continue;
+      const gz = 78 + Math.random() * 22;
+      const gy = getTerrainHeight(gx, gz);
+      const clump = new THREE.Group();
+      clump.position.set(gx, gy + 0.45, gz);
+      for (let b = 0; b < 6; b++) {
+        const blade = new THREE.Mesh(bladeGeo, grassMat);
+        blade.position.set((Math.random() - 0.5) * 0.4, 0, (Math.random() - 0.5) * 0.4);
+        blade.rotation.set((Math.random() - 0.5) * 0.35, Math.random() * Math.PI, (Math.random() - 0.5) * 0.35);
+        clump.add(blade);
+      }
+      scene.add(clump);
+    }
+  }
+
   // Pure Dense Snow Forest (No road, no vehicles, only deep snow wilderness)
   buildDenseSnowForest();
 
@@ -1703,6 +2041,9 @@ export function initWorld(scene, textures) {
 
   // Construct Winding River, Mountain Waterfall & Wooden Bridge
   buildRiverAndWaterfall(scene, textures);
+
+  // Construct Coastal Beach, Sand Dunes, Ocean Bay & Fishing Pier
+  buildBeachAndCoastline(scene, textures);
 
   // Construct Sanctuary White Farmhouse
   buildWhiteFarmhouse(-13, -6);

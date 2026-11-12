@@ -15,6 +15,7 @@ import {
   waterfallVeilMesh,
   topRiverMesh,
   topRiverCrestFoam,
+  oceanShorelineFoam,
   lockedDoors,
   showLockedDoorPrompt,
   checkHousePickups,
@@ -159,12 +160,17 @@ function updateSimulation(dt) {
   if (!checkWallCollision(nextX, playerPos.z)) playerPos.x = nextX;
   if (!checkWallCollision(playerPos.x, nextZ)) playerPos.z = nextZ;
 
-  // Undulating Terrain Ground Height Tracking & Bridge Clambering
+  // Undulating Terrain Ground Height Tracking & Bridge / Coastal Pier Clambering
   let targetGroundY = getTerrainHeight(playerPos.x, playerPos.z);
   const bridgeCenterX = getRiverCenterX(4.0);
   const bridgeFloorY = getRiverWaterY(4.0) + 0.68;
   if (Math.abs(playerPos.z - 4.0) < 1.7 && Math.abs(playerPos.x - bridgeCenterX) < 6.6) {
     targetGroundY = Math.max(targetGroundY, bridgeFloorY);
+  }
+
+  // Wooden Fishing Pier Clambering (x: 12.3 to 15.7, z: 112.0 to 138.0)
+  if (playerPos.z >= 112.0 && playerPos.z <= 138.0 && Math.abs(playerPos.x - 14.0) < 1.8) {
+    targetGroundY = Math.max(targetGroundY, -1.44);
   }
 
   // Jumping & Gravity Physics
@@ -187,13 +193,15 @@ function updateSimulation(dt) {
     setIsGrounded(true);
   }
 
-  // River immersion check (wading through the icy mountain river)
+  // Water immersion check (wading through the icy mountain river or ocean surf)
   const rX = getRiverCenterX(playerPos.z);
   const waterY = getRiverWaterY(playerPos.z);
-  const inRiver = (playerPos.z > -59.5 && playerPos.z < 110.0 && Math.abs(playerPos.x - rX) < 4.4 && playerPos.y <= waterY + 0.08);
+  const inRiver = (playerPos.z > -59.5 && playerPos.z <= 126.0 && Math.abs(playerPos.x - rX) < 4.8 && playerPos.y <= waterY + 0.08);
+  const inOcean = (playerPos.z > 126.0 && playerPos.y <= -2.48);
+  const inWater = inRiver || inOcean;
 
   if (isMoving && Math.abs(playerPos.y - targetGroundY) < 0.15) {
-    if (inRiver) {
+    if (inWater) {
       Sfx.playWaterSplash();
     } else {
       Sfx.playSnowStep();
@@ -925,6 +933,17 @@ function frameLoop(t) {
   }
   if (textures.waterfallTex) {
     textures.waterfallTex.offset.y -= dt * 1.95;
+  }
+  if (textures.oceanWaterTex) {
+    textures.oceanWaterTex.offset.y -= dt * 0.14;
+    textures.oceanWaterTex.offset.x += dt * 0.035;
+  }
+  if (oceanShorelineFoam) {
+    const surfPulse = 1.0 + Math.sin(performance.now() * 0.0028) * 0.16;
+    oceanShorelineFoam.scale.set(1.0, 1.0, surfPulse);
+    if (oceanShorelineFoam.material) {
+      oceanShorelineFoam.material.opacity = 0.58 + Math.sin(performance.now() * 0.0028) * 0.22;
+    }
   }
 
   // Update Spatial Waterfall Roar sound

@@ -693,6 +693,74 @@ const THREE = window.THREE;
             }
           }
         }
+      } else if (type === 'beach_sand') {
+        c.width = 128; c.height = 128;
+        // Natural coastal golden sand with fine wind ripples & subtle micro-pebbles
+        ctx.fillStyle = '#dfcca4';
+        ctx.fillRect(0, 0, 128, 128);
+
+        // Undulating wind dune ripples
+        for (let y = 0; y < 128; y++) {
+          const w = Math.sin(y * 0.18) * 0.6 + Math.sin(y * 0.38 + 1.2) * 0.3;
+          ctx.fillStyle = (w > 0.15) ? 'rgba(240, 228, 198, 0.45)' : 'rgba(195, 172, 128, 0.42)';
+          ctx.fillRect(0, y, 128, 1);
+        }
+
+        // Fine mineral sand grains
+        for (let i = 0; i < 900; i++) {
+          ctx.fillStyle = Math.random() > 0.48 ? '#eedcb9' : '#caa778';
+          ctx.fillRect(Math.random() * 128, Math.random() * 128, 1.5, 1.5);
+        }
+        // Micro coastal shell specks & pebbles
+        for (let i = 0; i < 70; i++) {
+          ctx.fillStyle = Math.random() > 0.5 ? '#9e815b' : '#7b6342';
+          ctx.fillRect(Math.random() * 128, Math.random() * 128, 2, 2);
+        }
+      } else if (type === 'wet_beach_sand') {
+        c.width = 128; c.height = 128;
+        // Dark saturated wet shoreline sand
+        ctx.fillStyle = '#967f5c';
+        ctx.fillRect(0, 0, 128, 128);
+
+        for (let y = 0; y < 128; y++) {
+          const w = Math.sin(y * 0.22) * 0.5;
+          ctx.fillStyle = (w > 0.1) ? 'rgba(172, 148, 112, 0.35)' : 'rgba(125, 102, 72, 0.45)';
+          ctx.fillRect(0, y, 128, 1);
+        }
+        for (let i = 0; i < 600; i++) {
+          ctx.fillStyle = Math.random() > 0.5 ? '#b29871' : '#78613f';
+          ctx.fillRect(Math.random() * 128, Math.random() * 128, 1.5, 1.5);
+        }
+      } else if (type === 'ocean_water') {
+        c.width = 256; c.height = 256;
+        // Deep cold oceanic water with tidal swell undulations
+        ctx.fillStyle = '#16313f';
+        ctx.fillRect(0, 0, 256, 256);
+
+        for (let y = 0; y < 256; y++) {
+          const swell = Math.sin(y * 0.12) * 0.5 + Math.cos(y * 0.05) * 0.3;
+          ctx.fillStyle = (swell > 0.15) ? 'rgba(38, 72, 92, 0.65)' : 'rgba(16, 36, 48, 0.65)';
+          ctx.fillRect(0, y, 256, 1);
+        }
+        // Drifting foam crest ribbons
+        for (let i = 0; i < 40; i++) {
+          ctx.fillStyle = 'rgba(195, 226, 240, 0.55)';
+          const fx = Math.random() * 240;
+          const fy = Math.random() * 252;
+          ctx.fillRect(fx, fy, 8 + Math.random() * 18, 2);
+        }
+      } else if (type === 'shoreline_foam') {
+        c.width = 256; c.height = 64;
+        ctx.clearRect(0, 0, 256, 64);
+        ctx.fillStyle = 'rgba(235, 248, 255, 0.85)';
+        ctx.fillRect(0, 16, 256, 32);
+
+        for (let i = 0; i < 450; i++) {
+          ctx.fillStyle = Math.random() > 0.35 ? 'rgba(255, 255, 255, 0.95)' : 'rgba(185, 224, 242, 0.75)';
+          ctx.beginPath();
+          ctx.arc(Math.random() * 256, 12 + Math.random() * 40, 1 + Math.random() * 3.0, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       const tex = new THREE.CanvasTexture(c);
@@ -822,9 +890,33 @@ const THREE = window.THREE;
     chainlinkTex.wrapS = THREE.RepeatWrapping;
     chainlinkTex.wrapT = THREE.RepeatWrapping;
 
+    const beachSandTex = createProceduralTexture('beach_sand');
+    beachSandTex.wrapS = THREE.RepeatWrapping;
+    beachSandTex.wrapT = THREE.RepeatWrapping;
+    beachSandTex.repeat.set(24, 24);
+
+    const wetBeachSandTex = createProceduralTexture('wet_beach_sand');
+    wetBeachSandTex.wrapS = THREE.RepeatWrapping;
+    wetBeachSandTex.wrapT = THREE.RepeatWrapping;
+    wetBeachSandTex.repeat.set(20, 20);
+
+    const oceanWaterTex = createProceduralTexture('ocean_water');
+    oceanWaterTex.wrapS = THREE.RepeatWrapping;
+    oceanWaterTex.wrapT = THREE.RepeatWrapping;
+    oceanWaterTex.repeat.set(16, 16);
+
+    const shorelineFoamTex = createProceduralTexture('shoreline_foam');
+    shorelineFoamTex.wrapS = THREE.RepeatWrapping;
+    shorelineFoamTex.wrapT = THREE.RepeatWrapping;
+    shorelineFoamTex.repeat.set(10, 1);
+
 export const textures = {
   createProceduralTexture,
   snowTex,
+  beachSandTex,
+  wetBeachSandTex,
+  oceanWaterTex,
+  shorelineFoamTex,
   asphaltRoadTex,
   riverWaterTex,
   waterfallTex,
@@ -868,5 +960,5 @@ export const textures = {
   faceFemaleMeghanTex
 };
 
-export { createProceduralTexture, snowTex, asphaltRoadTex, riverWaterTex, waterfallTex, waterfallMistTex, topStreamTex, crestFoamTex, chainlinkTex, bloodSnowTex, bloodDripTex, houseWallTex, woodPlanksTex, brickHearthTex, creamCabinTex, creamBarnTex, creamStoneTex, nunFaceTex, l4dFlannelTex, l4dHoodieTex, l4dPatientTex, l4dBruiserTex, l4dDenimTex, l4dDarkPantsTex, l4dFaceTex, l4dNecroticSkinTex, l4dClawsTex, andikaSweaterTex, andikaCargoTex, andikaFaceTex, andikaSneakerTex, katzSignTex, martinSignTex, parkingSignTex, drainGrateTex, storefrontBrickTex, awningFabricTex, concreteCurbTex, faceFemaleShaggyTex, faceMaleTiredTex, faceMaleFadeTex, faceFemaleSleekTex, faceFemaleMeghanTex };
+export { createProceduralTexture, snowTex, beachSandTex, wetBeachSandTex, oceanWaterTex, shorelineFoamTex, asphaltRoadTex, riverWaterTex, waterfallTex, waterfallMistTex, topStreamTex, crestFoamTex, chainlinkTex, bloodSnowTex, bloodDripTex, houseWallTex, woodPlanksTex, brickHearthTex, creamCabinTex, creamBarnTex, creamStoneTex, nunFaceTex, l4dFlannelTex, l4dHoodieTex, l4dPatientTex, l4dBruiserTex, l4dDenimTex, l4dDarkPantsTex, l4dFaceTex, l4dNecroticSkinTex, l4dClawsTex, andikaSweaterTex, andikaCargoTex, andikaFaceTex, andikaSneakerTex, katzSignTex, martinSignTex, parkingSignTex, drainGrateTex, storefrontBrickTex, awningFabricTex, concreteCurbTex, faceFemaleShaggyTex, faceMaleTiredTex, faceMaleFadeTex, faceFemaleSleekTex, faceFemaleMeghanTex };
 
