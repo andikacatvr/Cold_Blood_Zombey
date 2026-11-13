@@ -102,9 +102,15 @@
       console.log('Nona Batavia model loaded successfully!');
     }, undefined, (err) => {
       console.warn('Fallback load:', err);
-      loader.load('/nona_batavia.glb', (gltf) => {
+      loader.load('../../public/models/nona_batavia.glb', (gltf) => {
         document.getElementById('loading').style.display = 'none';
         scene.add(gltf.scene);
+      }, undefined, (err2) => {
+        console.warn('Fallback 2 load:', err2);
+        loader.load('/models/nona_batavia.glb', (gltf) => {
+          document.getElementById('loading').style.display = 'none';
+          scene.add(gltf.scene);
+        });
       });
     });
 
