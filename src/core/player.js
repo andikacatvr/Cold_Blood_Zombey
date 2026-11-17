@@ -87,6 +87,7 @@ export const state = {
   lastLadyMithrillKills: 0,
   nataliaSpawned: false,
   wave: 1,
+  gameMode: 'story', // 'story' | 'endless'
   storyPhase: 'orientation', // 'orientation' | 'complication' | 'resolution' | 'coda'
   talkedVillagers: new Set(),
   resolutionKills: 0,
@@ -105,6 +106,7 @@ export const state = {
     isInvulnerable: false
   }
 };
+window.__GAME_MODE = state.gameMode;
 window.__STORY_PHASE = state.storyPhase;
 
 export const keys = { w: false, a: false, s: false, d: false, shift: false };
@@ -708,11 +710,47 @@ export function nextWave() {
   // Survival Wave Rewards
   state.player.reserve = Math.min(state.player.reserve + 24, 48);
   state.player.hp = Math.min(100, state.player.hp + 20);
+  const nw = state.wave + 1;
+
+  if (state.gameMode === 'endless') {
+    const chapterEl = document.getElementById('quest-chapter-tag');
+    const titleEl = document.getElementById('quest-title-text');
+    const descEl = document.getElementById('quest-desc-text');
+    if (chapterEl) chapterEl.textContent = 'MODE BERTAHAN: HORDE SALJU';
+    if (titleEl) titleEl.textContent = `GELOMBANG ${nw}: BERSIHKAN ZOMBIE`;
+    if (descEl) descEl.textContent = `"Gelombang ${nw} telah tiba! Tetap waspada terhadap sprinter dan mutant biara!"`;
+  }
+
   updateHUD(state);
-  startWinterWave(state.wave + 1);
+  startWinterWave(nw);
 }
 
-export function startWinterSurvive(scene) {
+export function returnToMainMenu() {
+  state.running = false;
+  state.isPaused = false;
+  clearEnemies();
+  const go = document.getElementById('screen-gameover');
+  if (go) go.style.display = 'none';
+  const st = document.getElementById('screen-settings');
+  if (st) st.style.display = 'none';
+  const hud = document.getElementById('hud');
+  if (hud) hud.style.display = 'none';
+  const reticle = document.getElementById('reticle');
+  if (reticle) reticle.style.display = 'none';
+  const cinOverlay = document.getElementById('cinematic-overlay');
+  if (cinOverlay) cinOverlay.style.display = 'none';
+  const bossHud = document.getElementById('boss-hud-container');
+  if (bossHud) bossHud.style.display = 'none';
+  const screenStart = document.getElementById('screen-start');
+  if (screenStart) screenStart.style.display = 'flex';
+  try {
+    if (document.exitPointerLock) document.exitPointerLock();
+  } catch (e) {}
+}
+
+export function startWinterSurvive(scene, mode = 'story') {
+  state.gameMode = mode;
+  window.__GAME_MODE = mode;
   Sfx.init(state);
   respawnHousePickups();
 
@@ -745,20 +783,7 @@ export function startWinterSurvive(scene) {
   state.player.maxLives = 3;
   state.player.isInvulnerable = false;
   state.player.hp = 100;
-  state.player.weapon = 'unarmed';
-  state.player.maxClip = 0;
-  state.player.clip = 0;
-  state.player.reserve = 0;
   state.player.isReloading = false;
-  state.running = false;
-  switchWeapon('unarmed');
-
-  playerPos.set(0, 0, 14);
-  if (cameraRef) {
-    cameraRef.position.set(0, 1.8, 14);
-  }
-  yaw = 0;
-  pitch = 0;
 
   document.getElementById('screen-start').style.display = 'none';
   document.getElementById('screen-gameover').style.display = 'none';
@@ -766,22 +791,111 @@ export function startWinterSurvive(scene) {
   const bossHud = document.getElementById('boss-hud-container');
   if (bossHud) bossHud.style.display = 'none';
 
-  spawnVillageNPCs(scene, getTerrainHeight);
-
-  startIntroCutscene(cameraRef, Sfx, () => {
-    state.running = true;
+  if (mode === 'story') {
+    // ==========================================
+    // 1. STORY MODE: Narrative Campaign
+    // ==========================================
+    state.running = false;
     state.storyPhase = 'orientation';
     window.__STORY_PHASE = 'orientation';
     state.talkedVillagers = new Set();
     state.resolutionKills = 0;
+    state.player.weapon = 'unarmed';
+    state.player.maxClip = 0;
+    state.player.clip = 0;
+    state.player.reserve = 0;
+    switchWeapon('unarmed');
+
+    playerPos.set(0, 0, 14);
+    if (cameraRef) {
+      cameraRef.position.set(0, 1.8, 14);
+    }
+    yaw = 0;
+    pitch = 0;
+
+    spawnVillageNPCs(scene, getTerrainHeight);
     setObjective('orientation');
+
+    startIntroCutscene(cameraRef, Sfx, () => {
+      state.running = true;
+      state.storyPhase = 'orientation';
+      window.__STORY_PHASE = 'orientation';
+      updateHUD(state);
+      updateTouchControlsVisibility();
+      setTimeout(() => {
+        showDialogSubtitle('KRISTIN: "Rod, kita mulai riset dari bapak tua di depan gerbang itu dulu (Old Thomas). Dia bawa cawan air, ayo kita ke sana!"', 6500);
+        triggerKristinGesture('point');
+      }, 800);
+    });
+
+  } else {
+    // ==========================================
+    // 2. ENDLESS MODE: Wave-based Survival Action
+    // ==========================================
+    state.running = true;
+    state.storyPhase = 'resolution';
+    window.__STORY_PHASE = 'resolution';
+    const initWep = gameSettings.weapon || 'spin';
+    state.player.weapon = initWep;
+    state.player.clip = (initWep === 'spin') ? 5 : 7;
+    state.player.maxClip = state.player.clip;
+    state.player.reserve = 36;
+    switchWeapon(initWep);
+
+    const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0, 14.0) : 0.1;
+    playerPos.set(0, gyP, 14.0);
+    if (cameraRef) {
+      cameraRef.position.set(0, gyP + 1.8, 14.0);
+      setPlayerYawPitch(0, 0);
+    }
+
+    const gyK = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.4, 14.0) : 0.1;
+    if (kristinModel && kristinModel.root) {
+      kristinModel.root.position.set(1.4, gyK, 14.0);
+      kristinModel.root.rotation.set(0, -0.25, 0);
+      if (kristinModel.setWeapon) kristinModel.setWeapon('pump');
+    }
+
+    // Hide cinematic overlay & show HUD
+    const cinOverlay = document.getElementById('cinematic-overlay');
+    if (cinOverlay) cinOverlay.style.display = 'none';
+
+    const hud = document.getElementById('hud');
+    if (hud) hud.style.display = 'flex';
+    const reticle = document.getElementById('reticle');
+    if (reticle) reticle.style.display = 'block';
+
+    if (playerFlashlight) playerFlashlight.visible = true;
+    if (playerMeshRoot) playerMeshRoot.visible = (cameraMode === 'tps');
+    if (weaponHolder) weaponHolder.visible = (cameraMode === 'fps');
+
+    // Endless Mode Quest HUD
+    const chapterEl = document.getElementById('quest-chapter-tag');
+    const titleEl = document.getElementById('quest-title-text');
+    const descEl = document.getElementById('quest-desc-text');
+    const compassEl = document.getElementById('kristin-compass-text');
+    if (chapterEl) chapterEl.textContent = 'MODE BERTAHAN: HORDE SALJU';
+    if (titleEl) titleEl.textContent = 'GELOMBANG 1: BERSIHKAN ZOMBIE';
+    if (descEl) descEl.textContent = '"Gunakan Shotgun dan persenjataanmu untuk menahan gempuran kawanan zombie dan monster pengantin!"';
+    if (compassEl) compassEl.textContent = '"Waspada, zombie menyerang dari segala arah!"';
+
     updateHUD(state);
     updateTouchControlsVisibility();
+
+    // Start wave 1 immediately
+    startWinterWave(1);
+
     setTimeout(() => {
-      showDialogSubtitle('KRISTIN: "Rod, kita mulai riset dari bapak tua di depan gerbang itu dulu (Old Thomas). Dia bawa cawan air, ayo kita ke sana!"', 6500);
-      triggerKristinGesture('point');
-    }, 800);
-  });
+      showDialogSubtitle('KRISTIN: "Rod! Mereka datang bergelombang dari segala arah! Siapkan shotgun lo, jangan biarkan mereka mendekat!"', 6000);
+      triggerKristinGesture('pump', Sfx);
+    }, 600);
+
+    try {
+      document.body.requestPointerLock();
+    } catch (e) {
+      console.warn('Pointer lock request:', e);
+    }
+  }
 }
 
 export function setupPlayerControls() {

@@ -93,6 +93,7 @@ import {
   switchWeapon,
   hitPlayer,
   startWinterSurvive,
+  returnToMainMenu,
   setupPlayerControls,
   nextWave
 } from './core/player.js';
@@ -188,8 +189,10 @@ function updateSimulation(dt) {
     }
   }
 
-  // Ambient Horde Spawner: ONLY active during Complication, Resolution, or Coda (NEVER during peaceful orientation!)
-  if (state.storyPhase !== 'orientation') {
+  // Ambient Horde Spawner:
+  // In Story Mode: ONLY active during Complication, Resolution, or Coda (NEVER during peaceful orientation!)
+  // In Endless Mode: Always active for constant combat pressure
+  if (state.gameMode === 'endless' || (state.gameMode === 'story' && state.storyPhase !== 'orientation')) {
     ambientHordeTimer += dt;
     if (ambientHordeTimer >= 2.4) {
       ambientHordeTimer = 0;
@@ -1094,11 +1097,30 @@ function init() {
   });
   setupMapListeners(state);
 
+  const btnStartStory = document.getElementById('btn-start-story');
+  if (btnStartStory) btnStartStory.addEventListener('click', () => startWinterSurvive(scene, 'story'));
+
+  const cardModeStory = document.getElementById('card-mode-story');
+  if (cardModeStory) cardModeStory.addEventListener('click', (e) => {
+    if (e.target !== btnStartStory) startWinterSurvive(scene, 'story');
+  });
+
+  const btnStartEndless = document.getElementById('btn-start-endless');
+  if (btnStartEndless) btnStartEndless.addEventListener('click', () => startWinterSurvive(scene, 'endless'));
+
+  const cardModeEndless = document.getElementById('card-mode-endless');
+  if (cardModeEndless) cardModeEndless.addEventListener('click', (e) => {
+    if (e.target !== btnStartEndless) startWinterSurvive(scene, 'endless');
+  });
+
   const btnEnter = document.getElementById('btn-enter');
-  if (btnEnter) btnEnter.addEventListener('click', () => startWinterSurvive(scene));
+  if (btnEnter) btnEnter.addEventListener('click', () => startWinterSurvive(scene, 'story'));
 
   const btnRestart = document.getElementById('btn-restart');
-  if (btnRestart) btnRestart.addEventListener('click', () => startWinterSurvive(scene));
+  if (btnRestart) btnRestart.addEventListener('click', () => startWinterSurvive(scene, state.gameMode || 'story'));
+
+  const btnReturnMenu = document.getElementById('btn-return-menu');
+  if (btnReturnMenu) btnReturnMenu.addEventListener('click', () => returnToMainMenu());
 
   applyGraphicFidelity(gameSettings.graphicMode || 'ps1');
   switchWeapon(gameSettings.weapon || 'spin');

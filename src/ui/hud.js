@@ -7,7 +7,17 @@ import { updateTouchControlsVisibility } from './touchControls.js';
 
 export function updateHUD(state) {
   const waveEl = document.getElementById('hud-wave');
-  if (waveEl) waveEl.innerText = `ENDLESS HORDE: WAVE ${state.wave}`;
+  if (waveEl) {
+    if (state.gameMode === 'story') {
+      const ch = (state.storyPhase === 'orientation') ? 'BAB 1: ORIENTASI'
+               : (state.storyPhase === 'complication') ? 'BAB 1: KOMPLIKASI'
+               : (state.storyPhase === 'resolution') ? 'BAB 1: RESOLUSI'
+               : 'BAB 1: KODA';
+      waveEl.innerText = `MODE CERITA • ${ch}`;
+    } else {
+      waveEl.innerText = `ENDLESS HORDE: WAVE ${state.wave}`;
+    }
+  }
 
   const scoreEl = document.getElementById('hud-score');
   if (scoreEl) scoreEl.innerText = `CRIMSON PURGED: ${String(state.kills).padStart(3, '0')}`;
@@ -103,7 +113,17 @@ export function triggerGameOver(state) {
   if (goScreen) goScreen.style.display = 'flex';
 
   const goWave = document.getElementById('go-wave-text');
-  if (goWave) goWave.innerText = `ENDLESS RUN: BERTAHAN HINGGA WAVE ${state.wave}`;
+  if (goWave) {
+    if (state.gameMode === 'story') {
+      const ch = (state.storyPhase === 'orientation') ? 'FASE ORIENTASI'
+               : (state.storyPhase === 'complication') ? 'FASE KOMPLIKASI'
+               : (state.storyPhase === 'resolution') ? 'FASE RESOLUSI'
+               : 'FASE KODA';
+      goWave.innerText = `MODE CERITA: GUGUR PADA ${ch}`;
+    } else {
+      goWave.innerText = `MODE BERTAHAN: BERTAHAN HINGGA WAVE ${state.wave}`;
+    }
+  }
   const goKills = document.getElementById('go-kills');
   if (goKills) goKills.innerText = `TOTAL CRIMSON PURGED: ${state.kills}`;
 }

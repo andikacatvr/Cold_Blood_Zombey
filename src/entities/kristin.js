@@ -487,9 +487,10 @@ export function buildKristinCharacter(textures) {
     get vertexWeights() { return vertexWeights; },
     get vertexCount() { return vertexCount; },
     setWeapon(w) {
-      // In prologue, orientation, and complication, firearms and weapons are strictly prohibited.
-      // Kristin holds only her research field clipboard and water sample vial.
-      const isEarlyPhase = !window.__STORY_PHASE || window.__STORY_PHASE === 'orientation' || window.__STORY_PHASE === 'complication';
+      // In Story Mode (prologue, orientation, complication), firearms are locked.
+      // In Endless Mode, weapons are unlocked immediately from wave 1!
+      const isStoryMode = (window.__GAME_MODE === 'story' || !window.__GAME_MODE);
+      const isEarlyPhase = isStoryMode && (!window.__STORY_PHASE || window.__STORY_PHASE === 'orientation' || window.__STORY_PHASE === 'complication');
       if (isEarlyPhase) {
         miniSpin.visible = false;
         miniPump.visible = false;
@@ -549,9 +550,12 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
   const now = performance.now();
   const t = now * 0.002;
 
-  // Check story phase: Orientation & Complication use Guide/Leader AI (Player follows Kristin!)
+  // Check story phase & game mode:
+  // In Story Mode: Orientation & Complication use Guide/Leader AI (Player follows Kristin!)
+  // In Endless Mode: Always Combat Bodyguard AI (Follows, covers, and shoots zombies alongside Rodrick)
+  const gameMode = window.__GAME_MODE || 'story';
   const storyPhase = window.__STORY_PHASE || 'orientation';
-  const isGuideMode = (storyPhase === 'orientation' || storyPhase === 'complication');
+  const isGuideMode = (gameMode === 'story') && (storyPhase === 'orientation' || storyPhase === 'complication');
 
   // Use actual survivor player position
   const playerX = (typeof playerPos !== 'undefined') ? playerPos.x : camera.position.x;

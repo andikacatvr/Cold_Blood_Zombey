@@ -153,13 +153,53 @@
       </div>
     </div>
 
-    <!-- START SCREEN (CLEAN & CINEMATIC) -->
+    <!-- START SCREEN (CLEAN & CINEMATIC WITH MODE SELECTION) -->
     <div class="menu-panel" id="screen-start">
-      <div class="start-card">
+      <div class="start-card" style="max-width: 720px; padding: 28px 24px;">
         <div class="title-banner">COLD BLOOD ZOMBEY</div>
-        <div class="sub-banner">THE FORBIDDEN RESEARCH EXPEDITION &bull; DARK OCCULT INCIDENT</div>
-        <div class="start-btn-group">
-          <button class="btn-play" id="btn-enter">▶ MULAI PERJALANAN</button>
+        <div class="sub-banner">BLACKWOOD MOORS &bull; PILIH MODE PERMAINAN</div>
+
+        <div class="mode-select-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; width: 100%; margin: 18px 0;">
+          <!-- MODE 1: STORY MODE -->
+          <div class="mode-card" id="card-mode-story" style="background: rgba(14, 26, 20, 0.88); border: 2px solid #3d724e; border-radius: 6px; padding: 18px 16px; display: flex; flex-direction: column; justify-content: space-between; text-align: left; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.6);">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-family:'VT323', monospace; font-size: 16px; background: #1a442b; color: #a2f0b5; border: 1px solid #4a825b; padding: 2px 8px; border-radius: 3px; letter-spacing: 1px;">KAMPANYE CERITA</span>
+                <span style="font-size: 22px;">📜</span>
+              </div>
+              <div style="font-family:'VT323', monospace; font-size: 26px; color: #ffffff; letter-spacing: 2px; font-weight: bold; margin-bottom: 4px;">
+                MODE CERITA (STORY MODE)
+              </div>
+              <div style="font-family:'VT323', monospace; font-size: 17px; color: #c0ded0; line-height: 1.25;">
+                Prolog kedatangan mobil pick-up, investigasi desa Coldbrook, Kristin sebagai pemandu jalan, wawancara warga, dan investigasi wabah biara!
+              </div>
+            </div>
+            <button class="btn-play" id="btn-start-story" style="margin-top: 14px; width: 100%; font-size: 22px; padding: 8px 12px; background: #235234; border-color: #52a66f; box-shadow: 0 0 14px rgba(60, 160, 90, 0.45);">
+              ▶ MAIN MODE CERITA
+            </button>
+          </div>
+
+          <!-- MODE 2: ENDLESS MODE -->
+          <div class="mode-card" id="card-mode-endless" style="background: rgba(30, 14, 18, 0.88); border: 2px solid #8e1b24; border-radius: 6px; padding: 18px 16px; display: flex; flex-direction: column; justify-content: space-between; text-align: left; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.6);">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-family:'VT323', monospace; font-size: 16px; background: #4a151b; color: #ff99a8; border: 1px solid #a82431; padding: 2px 8px; border-radius: 3px; letter-spacing: 1px;">SURVIVAL GELOMBANG</span>
+                <span style="font-size: 22px;">☠️</span>
+              </div>
+              <div style="font-family:'VT323', monospace; font-size: 26px; color: #ffffff; letter-spacing: 2px; font-weight: bold; margin-bottom: 4px;">
+                MODE BERTAHAN (ENDLESS MODE)
+              </div>
+              <div style="font-family:'VT323', monospace; font-size: 17px; color: #e6c5cb; line-height: 1.25;">
+                Aksi tembak instan! Langsung bersenjata Shotgun M1887 &amp; amunisi, hadapi gelombang mayat hidup bertubi-tubi dan Boss Lady Mithrill!
+              </div>
+            </div>
+            <button class="btn-play" id="btn-start-endless" style="margin-top: 14px; width: 100%; font-size: 22px; padding: 8px 12px; background: #8e1b24; border-color: #e6424e; box-shadow: 0 0 14px rgba(200, 30, 40, 0.45);">
+              ☠ MAIN MODE BERTAHAN
+            </button>
+          </div>
+        </div>
+
+        <div class="start-btn-group" style="margin-top: 8px;">
           <button class="btn-play btn-sec" id="btn-menu-settings">⚙ PENGATURAN</button>
         </div>
       </div>
@@ -175,6 +215,7 @@
       </div>
       <div style="display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap;">
         <button class="btn-play" id="btn-restart">TRY ONCE MORE</button>
+        <button class="btn-play btn-sec" id="btn-return-menu">🏠 MENU UTAMA</button>
         <button class="btn-play btn-sec" id="btn-go-settings">⚙ PENGATURAN</button>
       </div>
     </div>
