@@ -42,6 +42,8 @@ import {
   blastOpenDoor,
   checkWallCollision,
   respawnHousePickups,
+  showPickupAlert,
+  getTerrainHeight,
   MAP_LIMIT
 } from '../world/environment.js';
 import { updateHUD, showLifeLostAlert, triggerGameOver } from '../ui/hud.js';
@@ -51,7 +53,9 @@ import { triggerKristinGesture, toggleCompanionFollow, kristinModel, giveKristin
 import { triggerNataliaGesture, toggleNataliaFollow, nataliaModel } from '../entities/natalia.js';
 import { startIntroCutscene, isCinematicActive } from './cutscene.js';
 import { updateTouchControlsVisibility } from '../ui/touchControls.js';
-import { setObjective } from './quest.js';
+import { setObjective, getActiveObjective, updateQuestHUD } from './quest.js';
+import { getNearestVillager, spawnVillageNPCs } from '../entities/villager.js';
+import { openStoryDialogue, isStoryDialogueOpen } from './dialogueSystem.js';
 import {
   buildSurvivorPlayerModel,
   updatePlayerModelAnimation,
@@ -83,6 +87,9 @@ export const state = {
   lastLadyMithrillKills: 0,
   nataliaSpawned: false,
   wave: 1,
+  storyPhase: 'orientation', // 'orientation' | 'complication' | 'resolution' | 'coda'
+  talkedVillagers: new Set(),
+  resolutionKills: 0,
   player: {
     lives: 3,
     maxLives: 3,
@@ -150,6 +157,17 @@ export function setPlayerYawPitch(newYaw, newPitch = 0) {
 
 export function triggerInteract() {
   if (!state.running || state.isPaused) return;
+
+  // 1. Check interactive village NPCs during Orientation
+  const nearestVillager = getNearestVillager(playerPos, 3.4);
+  if (nearestVillager && state.storyPhase === 'orientation') {
+    openStoryDialogue(nearestVillager, (talkedNPC) => {
+      handleVillagerTalked(talkedNPC);
+    });
+    return;
+  }
+
+  // 2. Otherwise trigger Kristin/Natalia companion gesture
   if (kristinModel) {
     const dist = playerPos.distanceTo(kristinModel.root.position);
     if (dist < 6.5) {
@@ -231,9 +249,85 @@ window.__equipDarrellShotgun = () => {
   switchWeapon('pump');
 };
 
+export function handleVillagerTalked(talkedNPC) {
+  if (!talkedNPC) return;
+  state.talkedVillagers.add(talkedNPC.id);
+  const count = state.talkedVillagers.size;
+
+  // Update HUD Quest Tracker for Orientation
+  const obj = getActiveObjective();
+  if (obj && state.storyPhase === 'orientation') {
+    obj.title = `Wawancara Warga Desa (${count}/3)`;
+    updateQuestHUD();
+  }
+
+  // Trigger complication when at least 3 villagers talked to or Darrell has been talked to and count >= 2
+  if (count >= 3 || (state.talkedVillagers.has('darrell') && count >= 2)) {
+    setTimeout(() => {
+      triggerComplicationPhase();
+    }, 1200);
+  }
+}
+
+export function triggerComplicationPhase() {
+  if (state.storyPhase !== 'orientation') return;
+  state.storyPhase = 'complication';
+  setObjective('complication');
+
+  // Lonceng biara berdentang kencang bertubi-tubi + erangan zombie
+  if (Sfx && Sfx.playChurchBellToll) {
+    Sfx.playChurchBellToll();
+    setTimeout(() => { if (Sfx && Sfx.playChurchBellToll) Sfx.playChurchBellToll(); }, 2400);
+  }
+  if (Sfx && Sfx.playZombieGroan) Sfx.playZombieGroan();
+
+  showDialogSubtitle('KRISTIN: "ROD! Sensor hidrologi gue selesai analisis! Air sumur biara itu bukan air suci—itu senyawa neurotoksin kultus! LIHAT WARGA-WARGA ITU BERMUTASI! LARI KE PONDOK DARRELL!"', 8000);
+
+  // Spawn initial outbreak zombies (Infected Devout)
+  setTimeout(() => {
+    if (!state.running) return;
+    spawnWinterZombie(2.2, 15.5, state); // Old Thomas mutant
+    spawnWinterZombie(8.5, -2.0, state); // Edward mutant
+    spawnWinterZombie(0.0, 7.0, state);
+    spawnWinterZombie(-5.0, 10.0, state);
+  }, 1200);
+}
+
 window.__triggerDarrellPickup = () => {
-  setObjective('1.2');
-  showDialogSubtitle("Mantap Rod, lo nemu shotgun laras ganda Darrell! Tapi ingat pesannya: jangan percaya siapapun yang tersenyum terus! Sekarang kita cari Mrs. Eleanor di dekat Ancient Spring!", 5500);
+  if (state.storyPhase === 'complication' || state.storyPhase === 'orientation') {
+    state.storyPhase = 'resolution';
+    state.resolutionKills = 0;
+    setObjective('resolution');
+    showDialogSubtitle("Mantap Rod, lo dapet shotgun laras ganda Darrell! Mayat hidup mengepung pintu pondok! Tembak jatuh semuanya!", 6000);
+
+    // Spawn zombies besieging Darrell's cottage
+    setTimeout(() => {
+      if (!state.running) return;
+      spawnWinterZombie(-12.8, -1.0, state);
+      spawnWinterZombie(-10.5, -2.5, state);
+      spawnWinterZombie(-14.5, -2.0, state);
+      spawnWinterZombie(-8.5, -5.0, state);
+    }, 400);
+  } else {
+    setObjective('1.2');
+    showDialogSubtitle("Mantap Rod, lo nemu shotgun laras ganda Darrell! Sekarang kita cari Mrs. Eleanor di dekat Ancient Spring!", 5500);
+  }
+};
+
+window.__triggerCodaPhase = () => {
+  if (state.storyPhase !== 'resolution') return;
+  state.storyPhase = 'coda';
+  setObjective('coda');
+  showPickupAlert("PONDOK DARRELL BERHASIL DIAMANKAN!", true);
+  if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(1400, 0.6);
+
+  setTimeout(() => {
+    showDialogSubtitle('RODRICK (Perekam Suara): *suara pita kaset berputar* "Catatan lapangan hari pertama... Selesai. Coldbrook telah jatuh ke tangan kultus. Ini bukan wabah biasa, melainkan konspirasi keji kultus biara Father Raksha. Kami terjebak di Blackwood Moors... tapi kami tidak akan mati di sini. Kita harus mencari Mrs. Eleanor dan menemukan lorong rahasia di bawah biara..."', 8000);
+    setTimeout(() => {
+      showDialogSubtitle('KRISTIN: "Gue ada di samping lo, Rod. Ayo kita temui Mrs. Eleanor di Ancient Spring dan temukan jalan keluar rahasia itu!"', 5500);
+      setObjective('1.2');
+    }, 8200);
+  }, 1200);
 };
 
 export function performGolokSlash(isQuick = false) {
@@ -640,11 +734,17 @@ export function startWinterSurvive(scene) {
   const bossHud = document.getElementById('boss-hud-container');
   if (bossHud) bossHud.style.display = 'none';
 
+  spawnVillageNPCs(scene, getTerrainHeight);
+
   startIntroCutscene(cameraRef, Sfx, () => {
     state.running = true;
+    state.storyPhase = 'orientation';
+    state.talkedVillagers = new Set();
+    state.resolutionKills = 0;
+    setObjective('orientation');
     updateHUD(state);
-    startWinterWave(1);
     updateTouchControlsVisibility();
+    showDialogSubtitle("Kita sudah sampai di Coldbrook, Rod. Suasananya tenang... Ayo kita sapa warga sekitar dulu (tekan [E] untuk bicara).", 6000);
   });
 }
 
@@ -693,6 +793,13 @@ export function setupPlayerControls() {
       if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(mode === 'tps' ? 2800 : 1800, 0.4);
     }
     if (c === 'KeyE') {
+      const nearestVillager = getNearestVillager(playerPos, 3.4);
+      if (nearestVillager && state.storyPhase === 'orientation') {
+        openStoryDialogue(nearestVillager, (talkedNPC) => {
+          handleVillagerTalked(talkedNPC);
+        });
+        return;
+      }
       if (state.nataliaSpawned && nataliaModel && kristinModel) {
         const dNatalia = playerPos.distanceTo(nataliaModel.root.position);
         const dKristin = playerPos.distanceTo(kristinModel.root.position);

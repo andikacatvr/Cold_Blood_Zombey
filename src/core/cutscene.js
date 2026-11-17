@@ -149,9 +149,9 @@ const CUTSCENE_STAGES = [
     camEnd: new THREE.Vector3(0.0, 1.75, 14.0),
     lookStart: new THREE.Vector3(0.0, 1.6, 18.0),
     lookEnd: new THREE.Vector3(0.0, 1.6, 6.0),
-    subtitle: `<span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN:</span> "Rod! Gerbang masuknya baru saja dirantai dari luar! Warga desa mulai bangkit seperti mayat hidup!"<br><span style="color:#d8b26e; font-size:21px; font-weight:bold;">RODRICK:</span> "Kita terjebak di Coldbrook tanpa senjata! Darrell si pemburu tinggal di pondok kayu sebelah timur desa—dia pasti punya senapan! Ayo bergerak!"`,
+    subtitle: `<span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN:</span> "Sore sudah menjelang senja, Rod. Warga di sini tampak tenang dan ramah, tapi suasana desanya terasa sangat dingin dan aneh..."<br><span style="color:#d8b26e; font-size:21px; font-weight:bold;">RODRICK:</span> "Ayo kita telusuri jalan desa dan ajak ngobrol warga sekitar dulu. Catat semua kejanggalan yang kita temukan."`,
     onEnter: (sfx) => {
-      if (sfx && sfx.playPumpRack) sfx.playPumpRack();
+      if (sfx && sfx.playSnowStep) sfx.playSnowStep();
       if (sfx && sfx.playSnowThud) sfx.playSnowThud(1.0);
     }
   }
@@ -505,10 +505,9 @@ export function updateCutscene(dt) {
     }
   }
 
-  // 3. Stage 4 Night Transition: Truck & Old Thomas vanish into the dark moors
+  // 3. Stage 4 Departure: Vintage flatbed truck departs into the dark moors
   if (cutsceneTime >= 21.5) {
     if (cutsceneTruck && cutsceneTruck.visible) cutsceneTruck.visible = false;
-    if (cutsceneOldThomas && cutsceneOldThomas.visible) cutsceneOldThomas.visible = false;
   }
 
   if (cutsceneTime >= 28.5) {
@@ -608,8 +607,8 @@ export function finishCutscene() {
   if (playerMeshRoot) playerMeshRoot.visible = (cameraMode === 'tps');
   if (weaponHolder) weaponHolder.visible = (cameraMode === 'fps');
 
-  // Activate Chapter 1 Objective 1.1: Cari Tempat Aman & Senjata
-  setObjective('1.1');
+  // Activate Orientasi Objective: Eksplorasi & Wawancara Warga
+  setObjective('orientation');
 
   // Request pointer lock for FPS gameplay
   try {

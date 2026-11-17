@@ -364,3 +364,487 @@ export function buildGothicVillageGate() {
 
   return root;
 }
+
+/**
+ * Builds Darrell the Huntsman - Rugged, serious, alert hunter
+ */
+export function buildDarrellModel() {
+  const root = new THREE.Group();
+  root.name = 'Darrell_Huntsman';
+
+  const jacketMat = new THREE.MeshLambertMaterial({ color: 0x3d2719, flatShading: false });
+  const vestMat = new THREE.MeshLambertMaterial({ color: 0x242622, flatShading: false });
+  const trousersMat = new THREE.MeshLambertMaterial({ color: 0x1f2228, flatShading: false });
+  const skinMat = new THREE.MeshLambertMaterial({ color: 0xc89e82, flatShading: false });
+  const brownHairMat = new THREE.MeshLambertMaterial({ color: 0x2b1c14, flatShading: false });
+  const bootMat = new THREE.MeshLambertMaterial({ color: 0x1a1410, flatShading: false });
+  const leatherMat = new THREE.MeshLambertMaterial({ color: 0x5a3219 });
+  const steelMat = new THREE.MeshStandardMaterial({ color: 0x9098a0, metalness: 0.8, roughness: 0.3 });
+
+  // 1. Torso & Leather Hunter Jacket
+  const torsoGroup = new THREE.Group();
+  torsoGroup.position.set(0, 0.95, 0);
+
+  const jacketBody = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.64, 0.32), jacketMat);
+  jacketBody.position.set(0, 0.18, 0);
+  jacketBody.castShadow = true;
+  torsoGroup.add(jacketBody);
+
+  // Inner vest
+  const innerVest = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.44, 0.33), vestMat);
+  innerVest.position.set(0, 0.22, 0.01);
+  torsoGroup.add(innerVest);
+
+  // Belt & Knife Scabbard
+  const belt = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.10, 0.34), leatherMat);
+  belt.position.set(0, -0.12, 0);
+  torsoGroup.add(belt);
+
+  const knifeSheath = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.26, 0.08), leatherMat);
+  knifeSheath.position.set(0.24, -0.20, 0.12);
+  knifeSheath.rotation.z = -0.2;
+  torsoGroup.add(knifeSheath);
+
+  const knifeHilt = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.12, 0.05), steelMat);
+  knifeHilt.position.set(0.26, -0.06, 0.12);
+  knifeHilt.rotation.z = -0.2;
+  torsoGroup.add(knifeHilt);
+
+  // 2. Head & Hunter's Stubble
+  const headGroup = new THREE.Group();
+  headGroup.position.set(0, 0.58, 0);
+
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.11, 0.14, 8), skinMat);
+  neck.position.set(0, -0.06, 0);
+  headGroup.add(neck);
+
+  const headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.26, 0.24), skinMat);
+  headMesh.castShadow = true;
+  headGroup.add(headMesh);
+
+  // Face texture: rugged, alert eyes, stubble beard, serious frown (NOT smiling!)
+  const faceCanvas = document.createElement('canvas');
+  faceCanvas.width = 128;
+  faceCanvas.height = 128;
+  const fctx = faceCanvas.getContext('2d');
+  fctx.fillStyle = '#c89e82';
+  fctx.fillRect(0, 0, 128, 128);
+
+  // Furrowed brows
+  fctx.fillStyle = '#1f1612';
+  fctx.beginPath();
+  fctx.moveTo(22, 50); fctx.lineTo(54, 58); fctx.lineTo(22, 54); fctx.fill();
+  fctx.beginPath();
+  fctx.moveTo(106, 50); fctx.lineTo(74, 58); fctx.lineTo(106, 54); fctx.fill();
+
+  // Intense vigilant eyes
+  fctx.fillStyle = '#ffffff';
+  fctx.fillRect(30, 60, 20, 10);
+  fctx.fillRect(78, 60, 20, 10);
+  fctx.fillStyle = '#3a2818';
+  fctx.fillRect(36, 62, 10, 8);
+  fctx.fillRect(82, 62, 10, 8);
+
+  // Stubble beard & mustache
+  fctx.fillStyle = 'rgba(40, 25, 18, 0.45)';
+  fctx.fillRect(28, 80, 72, 38);
+  // Stern, tight mouth
+  fctx.strokeStyle = '#2b1410';
+  fctx.lineWidth = 3;
+  fctx.beginPath();
+  fctx.moveTo(42, 94);
+  fctx.lineTo(86, 94);
+  fctx.stroke();
+
+  const faceTexture = new THREE.CanvasTexture(faceCanvas);
+  const facePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.25), new THREE.MeshLambertMaterial({ map: faceTexture }));
+  facePlane.position.set(0, 0, 0.122);
+  headGroup.add(facePlane);
+
+  // Dark brown hair & hunting cap
+  const hair = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.12, 0.26), brownHairMat);
+  hair.position.set(0, 0.12, -0.01);
+  headGroup.add(hair);
+
+  const hunterCap = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.09, 0.30), jacketMat);
+  hunterCap.position.set(0, 0.16, -0.01);
+  headGroup.add(hunterCap);
+
+  torsoGroup.add(headGroup);
+
+  // 3. Arms (Alert posture)
+  const lArm = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.48, 0.14), jacketMat);
+  lArm.position.set(-0.31, 0.14, 0);
+  torsoGroup.add(lArm);
+
+  const rArm = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.48, 0.14), jacketMat);
+  rArm.position.set(0.31, 0.14, 0);
+  torsoGroup.add(rArm);
+
+  root.add(torsoGroup);
+
+  // 4. Legs & Heavy Boots
+  const legL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.58, 0.18), trousersMat);
+  legL.position.set(-0.14, 0.36, 0);
+  root.add(legL);
+
+  const legR = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.58, 0.18), trousersMat);
+  legR.position.set(0.14, 0.36, 0);
+  root.add(legR);
+
+  const bootL = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.15, 0.26), bootMat);
+  bootL.position.set(-0.14, 0.08, 0.03);
+  root.add(bootL);
+
+  const bootR = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.15, 0.26), bootMat);
+  bootR.position.set(0.14, 0.08, 0.03);
+  root.add(bootR);
+
+  root.userData = { headGroup, torsoGroup };
+  return root;
+}
+
+/**
+ * Builds Mrs. Eleanor - Elder villager near Ancient Spring with knit shawl
+ */
+export function buildMrsEleanorModel() {
+  const root = new THREE.Group();
+  root.name = 'Mrs_Eleanor';
+
+  const dressMat = new THREE.MeshLambertMaterial({ color: 0x342d38 });
+  const shawlMat = new THREE.MeshLambertMaterial({ color: 0x6e5246 });
+  const skinMat = new THREE.MeshLambertMaterial({ color: 0xd8c2af });
+  const greyHairMat = new THREE.MeshLambertMaterial({ color: 0xc4c4c4 });
+
+  // 1. Torso & Long Wool Dress
+  const torsoGroup = new THREE.Group();
+  torsoGroup.position.set(0, 0.90, 0);
+
+  const bodice = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.55, 0.28), dressMat);
+  bodice.position.set(0, 0.18, 0);
+  torsoGroup.add(bodice);
+
+  // Shawl draped across shoulders
+  const shawl = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.34, 0.34), shawlMat);
+  shawl.position.set(0, 0.26, 0);
+  torsoGroup.add(shawl);
+
+  // Long skirt to feet
+  const skirt = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.38, 0.72, 8), dressMat);
+  skirt.position.set(0, -0.36, 0);
+  torsoGroup.add(skirt);
+
+  // 2. Head with Grey Bun
+  const headGroup = new THREE.Group();
+  headGroup.position.set(0, 0.54, 0);
+
+  const headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.24, 0.22), skinMat);
+  headGroup.add(headMesh);
+
+  // Face texture: aged, clouded eyes staring faintly, calm vacant expression
+  const faceCanvas = document.createElement('canvas');
+  faceCanvas.width = 128;
+  faceCanvas.height = 128;
+  const fctx = faceCanvas.getContext('2d');
+  fctx.fillStyle = '#d8c2af';
+  fctx.fillRect(0, 0, 128, 128);
+
+  // Aged wrinkle lines
+  fctx.fillStyle = '#b59e8c';
+  fctx.fillRect(28, 44, 72, 3);
+  fctx.fillRect(36, 50, 56, 3);
+  fctx.fillRect(24, 76, 20, 2);
+  fctx.fillRect(84, 76, 20, 2);
+
+  // Clouded eyes
+  fctx.fillStyle = '#423d38';
+  fctx.beginPath();
+  fctx.arc(38, 68, 6, 0, Math.PI * 2);
+  fctx.arc(90, 68, 6, 0, Math.PI * 2);
+  fctx.fill();
+  fctx.fillStyle = '#b0aba2';
+  fctx.beginPath();
+  fctx.arc(38, 68, 3, 0, Math.PI * 2);
+  fctx.arc(90, 68, 3, 0, Math.PI * 2);
+  fctx.fill();
+
+  // Subtle murmur mouth
+  fctx.strokeStyle = '#482a24';
+  fctx.lineWidth = 2;
+  fctx.beginPath();
+  fctx.arc(64, 96, 12, 0, Math.PI);
+  fctx.stroke();
+
+  const faceTex = new THREE.CanvasTexture(faceCanvas);
+  const facePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.23), new THREE.MeshLambertMaterial({ map: faceTex }));
+  facePlane.position.set(0, 0, 0.112);
+  headGroup.add(facePlane);
+
+  // Grey hair bun at back
+  const hairTop = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.10, 0.24), greyHairMat);
+  hairTop.position.set(0, 0.12, 0);
+  headGroup.add(hairTop);
+
+  const hairBun = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), greyHairMat);
+  hairBun.position.set(0, 0.04, -0.13);
+  headGroup.add(hairBun);
+
+  torsoGroup.add(headGroup);
+
+  // Arms folded in front
+  const armsFolded = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.14, 0.18), dressMat);
+  armsFolded.position.set(0, 0.08, 0.14);
+  torsoGroup.add(armsFolded);
+
+  root.add(torsoGroup);
+  root.userData = { headGroup, torsoGroup };
+  return root;
+}
+
+/**
+ * Builds Edward the Devout Villager - Staring toward the abbey bell tower
+ */
+export function buildEdwardVillagerModel() {
+  const root = new THREE.Group();
+  root.name = 'Edward_Villager';
+
+  const coatMat = new THREE.MeshLambertMaterial({ color: 0x2e3532 });
+  const apronMat = new THREE.MeshLambertMaterial({ color: 0x5a4835 });
+  const trousersMat = new THREE.MeshLambertMaterial({ color: 0x1f2022 });
+  const skinMat = new THREE.MeshLambertMaterial({ color: 0xd2b59d });
+  const hairMat = new THREE.MeshLambertMaterial({ color: 0x362c26 });
+  const bootMat = new THREE.MeshLambertMaterial({ color: 0x1c1a18 });
+
+  // 1. Torso & Work Apron
+  const torsoGroup = new THREE.Group();
+  torsoGroup.position.set(0, 0.95, 0);
+
+  const coat = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.62, 0.30), coatMat);
+  coat.position.set(0, 0.18, 0);
+  torsoGroup.add(coat);
+
+  const apron = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.48, 0.32), apronMat);
+  apron.position.set(0, 0.10, 0.01);
+  torsoGroup.add(apron);
+
+  // 2. Head with cult smiling stare
+  const headGroup = new THREE.Group();
+  headGroup.position.set(0, 0.58, 0);
+
+  const headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.26, 0.24), skinMat);
+  headGroup.add(headMesh);
+
+  const faceCanvas = document.createElement('canvas');
+  faceCanvas.width = 128;
+  faceCanvas.height = 128;
+  const fctx = faceCanvas.getContext('2d');
+  fctx.fillStyle = '#d2b59d';
+  fctx.fillRect(0, 0, 128, 128);
+
+  // Big wide glazed eyes
+  fctx.fillStyle = '#111111';
+  fctx.beginPath();
+  fctx.arc(38, 62, 7, 0, Math.PI * 2);
+  fctx.arc(90, 62, 7, 0, Math.PI * 2);
+  fctx.fill();
+  fctx.fillStyle = '#eae4d8';
+  fctx.beginPath();
+  fctx.arc(38, 62, 3.5, 0, Math.PI * 2);
+  fctx.arc(90, 62, 3.5, 0, Math.PI * 2);
+  fctx.fill();
+
+  // Wide unnatural cult smile
+  fctx.fillStyle = '#3a1212';
+  fctx.beginPath();
+  fctx.ellipse(64, 96, 34, 14, 0, 0, Math.PI);
+  fctx.fill();
+  fctx.fillStyle = '#f0ebe0';
+  fctx.fillRect(38, 92, 52, 6);
+
+  const faceTex = new THREE.CanvasTexture(faceCanvas);
+  const facePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.25), new THREE.MeshLambertMaterial({ map: faceTex }));
+  facePlane.position.set(0, 0, 0.122);
+  headGroup.add(facePlane);
+
+  const hair = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.12, 0.26), hairMat);
+  hair.position.set(0, 0.12, -0.01);
+  headGroup.add(hair);
+
+  torsoGroup.add(headGroup);
+
+  const lArm = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.46, 0.12), coatMat);
+  lArm.position.set(-0.29, 0.14, 0);
+  torsoGroup.add(lArm);
+
+  const rArm = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.46, 0.12), coatMat);
+  rArm.position.set(0.29, 0.14, 0);
+  torsoGroup.add(rArm);
+
+  root.add(torsoGroup);
+
+  const legL = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.58, 0.18), trousersMat);
+  legL.position.set(-0.13, 0.36, 0);
+  root.add(legL);
+
+  const legR = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.58, 0.18), trousersMat);
+  legR.position.set(0.13, 0.36, 0);
+  root.add(legR);
+
+  const bootL = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.14, 0.24), bootMat);
+  bootL.position.set(-0.13, 0.07, 0.03);
+  root.add(bootL);
+
+  const bootR = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.14, 0.24), bootMat);
+  bootR.position.set(0.13, 0.07, 0.03);
+  root.add(bootR);
+
+  root.userData = { headGroup, torsoGroup };
+  return root;
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * INTERACTIVE VILLAGE NPC REGISTRY & STORY DATA
+ * ---------------------------------------------------------------------------
+ */
+export const VILLAGE_NPCS = [
+  {
+    id: 'old_thomas',
+    name: 'Old Thomas',
+    title: 'Warga Tua di Gerbang Coldbrook',
+    x: 2.2,
+    z: 15.5,
+    rotY: Math.PI * 0.9,
+    builder: buildOldThomasModel,
+    mesh: null,
+    talked: false,
+    dialog: {
+      speaker: 'OLD THOMAS',
+      lines: [
+        'Selamat datang di Coldbrook, anak-anak muda... Dinginnya Blackwood Moors menusuk tulang, bukan?',
+        'Silakan basuh tenggorokan dengan air suci sumur biara. Pastor Raksha selalu membuka pintu bagi jiwa-jiwa yang haus keselamatan...'
+      ],
+      kristinResponse: 'Rod, perhatikan pupil matanya... melebar penuh dan pandangannya kosong. Senyumnya terasa sangat dipaksakan.'
+    }
+  },
+  {
+    id: 'darrell',
+    name: 'Darrell the Huntsman',
+    title: 'Pemburu Paruh Baya di Pondok Timur',
+    x: -11.0,
+    z: -3.5,
+    rotY: 0.4,
+    builder: buildDarrellModel,
+    mesh: null,
+    talked: false,
+    dialog: {
+      speaker: 'DARRELL',
+      lines: [
+        'Kalian berdua anak kuliahan yang datang meneliti? Dengarkan baik-baik: lekas kemasi barang kalian dan pergi sebelum malam tiba!',
+        'Jangan pernah sekali-kali meminum air sumur yang mereka bagi-bagikan! Dan ingat: jangan percaya siapapun yang terus tersenyum tanpa henti!',
+        'Jika terjadi sesuatu yang buruk, aku menyimpan senapan laras ganda dan amunisi di atas meja kayu dalam pondokku.'
+      ],
+      kristinResponse: 'Bapak pemburu ini tidak tersenyum aneh seperti warga lainnya, Rod. Dia tahu sesuatu yang mengerikan tentang air sumur biara!'
+    }
+  },
+  {
+    id: 'mrs_eleanor',
+    name: 'Mrs. Eleanor',
+    title: 'Tetua Desa di Jalur Barat',
+    x: -28.0,
+    z: 14.0,
+    rotY: -0.8,
+    builder: buildMrsEleanorModel,
+    mesh: null,
+    talked: false,
+    dialog: {
+      speaker: 'MRS. ELEANOR',
+      lines: [
+        '*bergumam pelan sambil menatap air* "Tiga sujud, dua sembah, satu keheningan... begitulah nyanyian mereka..."',
+        'Lonceng biara akan segera berdentang menyambut senja... dan saat itu tiba, kami semua akan diampuni...'
+      ],
+      kristinResponse: 'Lagi-lagi kalimat "kami semua diampuni"... intonasi dan jeda bicaranya sama persis dengan Old Thomas!'
+    }
+  },
+  {
+    id: 'edward',
+    name: 'Edward the Devout',
+    title: 'Warga di Persimpangan Desa',
+    x: 8.5,
+    z: -2.0,
+    rotY: 1.2,
+    builder: buildEdwardVillagerModel,
+    mesh: null,
+    talked: false,
+    dialog: {
+      speaker: 'EDWARD',
+      lines: [
+        'Pastor Raksha telah berjanji kepada kita semua... dinginnya malam tidak akan lagi menyakitkan jika kita menyerahkan beban kita padanya.',
+        'Jangan tolak berkat biara. Minumlah, dan kalian tidak akan pernah merasakan lapar atau rasa takut lagi...'
+      ],
+      kristinResponse: 'Rod, sensor kimia air di ranselku mulai berdering! Air sumur itu bukan air murni... itu cairan kimia biara!'
+    }
+  }
+];
+
+export function spawnVillageNPCs(scene, getTerrainHeight) {
+  VILLAGE_NPCS.forEach(npc => {
+    if (npc.mesh && scene) scene.remove(npc.mesh);
+    npc.mesh = npc.builder();
+    const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(npc.x, npc.z) : 0;
+    npc.mesh.position.set(npc.x, gy, npc.z);
+    npc.mesh.rotation.y = npc.rotY;
+    if (scene) scene.add(npc.mesh);
+  });
+}
+
+export function updateVillageNPCs(dt, playerPos) {
+  VILLAGE_NPCS.forEach(npc => {
+    if (!npc.mesh || !npc.mesh.visible) return;
+    // Subtle idle breathing
+    if (npc.mesh.userData && npc.mesh.userData.torsoGroup) {
+      npc.mesh.userData.torsoGroup.position.y = 0.95 + Math.sin(performance.now() * 0.002 + npc.x) * 0.012;
+    }
+    // Head turns subtly toward player when nearby
+    if (playerPos && npc.mesh.userData && npc.mesh.userData.headGroup) {
+      const dx = playerPos.x - npc.x;
+      const dz = playerPos.z - npc.z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist < 7.0 && dist > 0.5) {
+        const targetAngle = Math.atan2(dx, dz) - npc.rotY;
+        const clampedAngle = Math.max(-0.6, Math.min(0.6, targetAngle));
+        npc.mesh.userData.headGroup.rotation.y = THREE.MathUtils.lerp(
+          npc.mesh.userData.headGroup.rotation.y,
+          clampedAngle,
+          dt * 3.0
+        );
+      }
+    }
+  });
+}
+
+export function getNearestVillager(playerPos, maxDist = 3.2) {
+  if (!playerPos) return null;
+  let nearest = null;
+  let minDist = maxDist;
+  VILLAGE_NPCS.forEach(npc => {
+    if (!npc.mesh || !npc.mesh.visible) return;
+    const dx = playerPos.x - npc.x;
+    const dz = playerPos.z - npc.z;
+    const d = Math.sqrt(dx * dx + dz * dz);
+    if (d < minDist) {
+      minDist = d;
+      nearest = npc;
+    }
+  });
+  return nearest;
+}
+
+export function removeVillageNPCs(scene) {
+  VILLAGE_NPCS.forEach(npc => {
+    if (npc.mesh && scene) {
+      scene.remove(npc.mesh);
+      npc.mesh = null;
+    }
+  });
+}

@@ -1198,6 +1198,14 @@ export function killZombieWithKinematics(z, shotDir, hitDistance, isHeadshot, st
   }
   if (updateHUD) updateHUD();
 
+  // Resolution Phase Progression: 4 zombies killed at Darrell's cottage triggers Coda
+  if (state && state.storyPhase === 'resolution') {
+    state.resolutionKills = (state.resolutionKills || 0) + 1;
+    if (state.resolutionKills >= 4) {
+      if (window.__triggerCodaPhase) window.__triggerCodaPhase();
+    }
+  }
+
   // Agent Natalia Helicopter Arrival Milestone: Triggers at 100 zombie kills!
   if (state.kills >= 100 && !state.nataliaSpawned) {
     state.nataliaSpawned = true;

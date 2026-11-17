@@ -116,6 +116,17 @@ import {
   isMapOpen
 } from './ui/mapMenu.js';
 import { initQuestSystem } from './core/quest.js';
+import {
+  spawnVillageNPCs,
+  updateVillageNPCs,
+  getNearestVillager,
+  removeVillageNPCs
+} from './entities/villager.js';
+import {
+  initDialogueSystem,
+  openStoryDialogue,
+  isStoryDialogueOpen
+} from './core/dialogueSystem.js';
 
 const THREE = window.THREE;
 
@@ -133,27 +144,51 @@ let ambientHordeTimer = 0;
 function updateSimulation(dt) {
   if (!state.running) return;
 
-  // Ambient Horde Spawner: Constantly repopulates the dark forest so infected lurk in the trees
-  ambientHordeTimer += dt;
-  if (ambientHordeTimer >= 2.4) {
-    ambientHordeTimer = 0;
-    const aliveCount = zombies.length;
-    if (aliveCount < 16) {
-      const a = Math.random() * Math.PI * 2;
-      const r = 22 + Math.random() * 14;
-      spawnWinterZombie(playerPos.x + Math.sin(a) * r, playerPos.z + Math.cos(a) * r, state);
+  // Village NPC Breathing & Head Tracking
+  updateVillageNPCs(dt, playerPos);
+
+  // Interaction Prompt UI during Orientation phase
+  const promptEl = document.getElementById('npc-interaction-prompt');
+  const promptText = document.getElementById('npc-prompt-text');
+  if (promptEl) {
+    if (state.storyPhase === 'orientation') {
+      const nearest = getNearestVillager(playerPos, 3.2);
+      if (nearest && !isStoryDialogueOpen()) {
+        promptEl.style.display = 'block';
+        if (promptText) promptText.textContent = `BICARA DENGAN ${nearest.name.toUpperCase()}`;
+      } else {
+        promptEl.style.display = 'none';
+      }
+    } else {
+      promptEl.style.display = 'none';
     }
   }
 
-  // 1. Locomotion & Snowstep Audio
+  // Ambient Horde Spawner: ONLY active during Complication, Resolution, or Coda (NEVER during peaceful orientation!)
+  if (state.storyPhase !== 'orientation') {
+    ambientHordeTimer += dt;
+    if (ambientHordeTimer >= 2.4) {
+      ambientHordeTimer = 0;
+      const aliveCount = zombies.length;
+      if (aliveCount < 16) {
+        const a = Math.random() * Math.PI * 2;
+        const r = 22 + Math.random() * 14;
+        spawnWinterZombie(playerPos.x + Math.sin(a) * r, playerPos.z + Math.cos(a) * r, state);
+      }
+    }
+  }
+
+  // 1. Locomotion & Snowstep Audio (Freeze locomotion while reading story dialogue)
   const move = new THREE.Vector3();
-  if (keys.w) move.z -= 1;
-  if (keys.s) move.z += 1;
-  if (keys.a) move.x -= 1;
-  if (keys.d) move.x += 1;
-  if (touchMove && touchMove.active) {
-    move.x += touchMove.x;
-    move.z += touchMove.z;
+  if (!isStoryDialogueOpen()) {
+    if (keys.w) move.z -= 1;
+    if (keys.s) move.z += 1;
+    if (keys.a) move.x -= 1;
+    if (keys.d) move.x += 1;
+    if (touchMove && touchMove.active) {
+      move.x += touchMove.x;
+      move.z += touchMove.z;
+    }
   }
   const isMoving = move.lengthSq() > 0.01;
   if (isMoving) move.normalize();
@@ -980,6 +1015,8 @@ function init() {
   initNataliaAgent(scene, textures);
   initPlayer(camera, scene);
   initQuestSystem(Sfx);
+  initDialogueSystem();
+  spawnVillageNPCs(scene, getTerrainHeight);
   setupPlayerControls();
   initTouchControls();
 

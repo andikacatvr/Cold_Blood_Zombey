@@ -7,6 +7,38 @@
 import { giveKristinHint } from '../entities/kristin.js';
 
 export const OBJECTIVES = {
+  'orientation': {
+    id: 'orientation',
+    chapter: 'ORIENTASI: EKSPLORASI COLDBROOK',
+    title: 'Wawancara Warga Desa (0/3)',
+    journal: 'Pelajari situasi desa Coldbrook yang ganjil. Dekati dan sapa warga desa (tekan [E] Bicara) untuk mengumpulkan rekaman lapangan.',
+    location: 'Area Pemukiman & Gerbang Coldbrook',
+    marker: { x: 2.2, z: 15.5 }
+  },
+  'complication': {
+    id: 'complication',
+    chapter: 'KOMPLIKASI: WABAH MELETUS',
+    title: 'Lari ke Pondok Darrell & Ambil Senjata!',
+    journal: 'Lonceng biara berdentang liar dan warga bermutasi jadi mayat hidup! Lari ke timur menuju pondok Darrell dan ambil senapan laras ganda di atas mejanya!',
+    location: 'Pondok Darrell (ujung jalan timur, tengkorak babi hutan)',
+    marker: { x: -13, z: -6 }
+  },
+  'resolution': {
+    id: 'resolution',
+    chapter: 'RESOLUSI: BERSIHKAN PENGEPUNG PONDOK',
+    title: 'Habisi Mayat Hidup di Depan Pondok',
+    journal: 'Gunakan senapan laras ganda Darrell untuk menembak jatuh mayat hidup yang mengepung pintu pondok.',
+    location: 'Pondok Pemburu Darrell',
+    marker: { x: -13, z: -6 }
+  },
+  'coda': {
+    id: 'coda',
+    chapter: 'KODA: CATATAN LAPANGAN RODRICK',
+    title: 'Evaluasi & Temui Mrs. Eleanor di Ancient Spring',
+    journal: 'Wabah ini disengaja oleh biara Father Raksha. Cari Mrs. Eleanor di mata air kuno barat untuk membuka jalan pelarian.',
+    location: 'Ancient Spring (Mata Air Barat)',
+    marker: { x: -45, z: 20 }
+  },
   'prolog': {
     id: 'prolog',
     chapter: 'PROLOGUE: EXPEDITION AT THE BLACKWOOD MOORS',

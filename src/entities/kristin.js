@@ -72,6 +72,26 @@ export function toggleCompanionFollow(sfxRef = Sfx) {
 }
 
 export const KRISTIN_OBJECTIVE_HINTS = {
+  'orientation': [
+    "Coba kita sapa warga sekitar dulu, Rod. Ada bapak tua di dekat gerbang dan pemburu di sebelah timur.",
+    "Bicara dengan mereka (tekan [E]). Gue bakal rekam data biologis dan sampel airnya dari sini.",
+    "Perhatikan Darrell di depan pondok timur. Dia tampak sangat waspada dan tidak tersenyum aneh seperti yang lain."
+  ],
+  'complication': [
+    "Lari Rod, jangan berhenti! Kita belum punya senjata! Lari ke arah timur!",
+    "Pondok Darrell ada di ujung gang timur! Ada tengkorak babi hutan di pagar depannya!",
+    "Masuk ke dalam pondok Darrell! Ambil senapan laras ganda di atas mejanya, cepat!"
+  ],
+  'resolution': [
+    "Bagus Rod, lo dapet senapannya! Tembak jatuh zombie yang mengepung pintu!",
+    "Arahkan ke kepala mereka! Kita harus amankan pondok ini dulu!",
+    "Habisi sisa mayat hidup di depan teras pondok, jangan biarkan mereka masuk!"
+  ],
+  'coda': [
+    "Area pondok aman sekarang. Nyalakan alat perekam lo, catat apa yang baru saja terjadi.",
+    "Kita harus segera mencari Mrs. Eleanor di mata air kuno sebelah barat.",
+    "Ikuti jalur jalan setapak ke arah bukit barat, Rod. Mrs. Eleanor tahu jalan rahasia keluar dari Coldbrook."
+  ],
   '1.1': [
     "Anyone who defied Father Raksha's cult lives away from the village square. Check the eastern lane, Rod.",
     "Darrell the huntsman told us he hunts wild boar. His cottage has the skull mounted on the fence post!",

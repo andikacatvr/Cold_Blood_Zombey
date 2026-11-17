@@ -14,6 +14,7 @@ import { zombies, currentBoss } from '../entities/enemies.js';
 import { getRiverCenterX, getRiverWaterY, getTerrainHeight, MAP_LIMIT } from '../world/environment.js';
 import { updateTouchControlsVisibility } from './touchControls.js';
 import { getActiveObjective } from '../core/quest.js';
+import { VILLAGE_NPCS } from '../entities/villager.js';
 
 export let isMapOpen = false;
 let mapAnimId = null;
@@ -323,12 +324,31 @@ function drawFullTacticalMap() {
   ctx.font = 'bold 12px "VT323", monospace';
   ctx.fillStyle = '#d2e4ea';
   ctx.fillText('AIR TERJUN', toCanvasX(42) + 12, toCanvasY(-58) + 4);
-  ctx.fillText('RUMAH AMAN', toCanvasX(-13) - 65, toCanvasY(-6));
+  ctx.fillText('PONDOK DARRELL', toCanvasX(-13) - 75, toCanvasY(-6));
   ctx.fillText('JEMBATAN', toCanvasX(brX) + 16, toCanvasY(4) + 4);
   ctx.fillText('PANTAI PASIR EMAS', toCanvasX(-60), toCanvasY(96));
   ctx.fillText('DERMAGA', toCanvasX(14) + 12, toCanvasY(128));
   ctx.fillText('PERAHU', toCanvasX(44) + 12, toCanvasY(116));
   ctx.fillText('LAUTAN SELATAN', toCanvasX(-45), toCanvasY(148));
+
+  // 10b. Interactive Village NPCs during Orientation
+  if (state && state.storyPhase === 'orientation') {
+    VILLAGE_NPCS.forEach(npc => {
+      const nx = toCanvasX(npc.x);
+      const nz = toCanvasY(npc.z);
+      ctx.fillStyle = npc.talked ? '#627d6a' : '#ffe169';
+      ctx.beginPath();
+      ctx.arc(nx, nz, npc.talked ? 3.5 : 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#223326';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.font = 'bold 11px monospace';
+      ctx.fillStyle = npc.talked ? '#8da594' : '#fff3a8';
+      ctx.fillText(npc.name, nx + 7, nz + 3);
+    });
+  }
 
   // 10b. Active Objective Marker (Gold Pulsing Beacon)
   const actObj = getActiveObjective();
