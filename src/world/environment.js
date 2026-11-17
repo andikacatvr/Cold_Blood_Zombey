@@ -181,6 +181,28 @@ export function getTerrainHeight(x, z) {
     }
   }
 
+  // Highway and Mountain Tunnel Flat Roadway Corridor (x around 0, z from -48 to 32)
+  if (Math.abs(x) < 5.8 && z >= -48.0 && z <= 32.0) {
+    const roadDist = Math.abs(x);
+    if (roadDist < 3.8) {
+      raw = 0.05;
+      blend = 1.0;
+    } else {
+      const f = (roadDist - 3.8) / (5.8 - 3.8);
+      raw = THREE.MathUtils.lerp(0.05, raw, f * f);
+    }
+  }
+
+  // Mountain Ridge slopes rising beside and over the Tunnel
+  if (z >= -44.0 && z <= -6.0) {
+    const ridgeDistX = Math.abs(x);
+    if (ridgeDistX >= 4.0 && ridgeDistX < 18.0) {
+      const p = 1.0 - (ridgeDistX - 4.0) / 14.0;
+      const mountainY = 1.8 + p * p * 6.2;
+      raw = Math.max(raw, mountainY);
+    }
+  }
+
   return raw * blend;
 }
 
@@ -351,7 +373,8 @@ export function initWorld(scene, textures) {
     brickHearthTex,
     creamCabinTex,
     creamBarnTex,
-    creamStoneTex
+    creamStoneTex,
+    asphaltRoadTex
   } = textures;
 
   // Undulating Natural Forest Ground Mesh (Expanded 460m Expanse - Infinite snowy & coastal horizon past boundary)
@@ -1118,6 +1141,9 @@ export function initWorld(scene, textures) {
       if (Math.hypot(x - 22, z - (-20)) < 8.0) continue;
       if (Math.hypot(x - (-22), z - 22) < 7.5) continue;
       if (Math.hypot(x - 16, z - 28) < 7.5) continue;
+
+      // Keep trees off the mountain highway & tunnel corridor
+      if (Math.abs(x) < 5.2 && z >= -48.0 && z <= 32.0) continue;
 
       // Keep trees out of the Coastal Beach & Sand Dunes zone (z >= 76)
       if (z >= 76.0) continue;
@@ -2067,8 +2093,413 @@ export function initWorld(scene, textures) {
     }
   }
 
+  // Construct Mountain Highway, Blackwood Moors Stone Tunnel & "WELCOME TO COLDBROOK" Archway
+  function buildMountainRoadTunnelAndWelcomeArch(scene, textures) {
+    const { asphaltRoadTex } = textures;
+    const root = new THREE.Group();
+    root.name = 'Mountain_Highway_System';
+
+    // Materials
+    const stoneMat = new THREE.MeshLambertMaterial({ color: 0x3d4147, flatShading: false });
+    const darkStoneMat = new THREE.MeshLambertMaterial({ color: 0x22262a, flatShading: false });
+    const tunnelCeilMat = new THREE.MeshLambertMaterial({ color: 0x1b1f23, flatShading: false });
+    const woodArchMat = new THREE.MeshLambertMaterial({ color: 0x2b1c14, flatShading: false });
+    const snowCapMat = new THREE.MeshLambertMaterial({ color: 0xedf4f8, flatShading: false });
+    const ironBarMat = new THREE.MeshStandardMaterial({ color: 0x181a1d, metalness: 0.8, roughness: 0.5 });
+    const yellowLampGlowMat = new THREE.MeshBasicMaterial({ color: 0xffaa33 });
+    const whiteEdgeLineMat = new THREE.MeshBasicMaterial({ color: 0xdde7ef });
+    const roadCurbMat = new THREE.MeshLambertMaterial({ color: 0x4f555d, flatShading: false });
+
+    // 1. ASPHALT MOUNTAIN HIGHWAY ROADWAY (from z = -46 to z = 28)
+    const roadW = 6.8;
+    const roadZStart = -46.0;
+    const roadZEnd = 28.0;
+    const roadLen = roadZEnd - roadZStart; // 74m
+    const roadMidZ = (roadZStart + roadZEnd) / 2; // -9.0
+
+    // Main asphalt roadbed
+    const roadGeo = new THREE.PlaneGeometry(roadW, roadLen);
+    roadGeo.rotateX(-Math.PI / 2);
+    const roadMesh = new THREE.Mesh(
+      roadGeo,
+      new THREE.MeshLambertMaterial({
+        map: asphaltRoadTex,
+        color: 0x30353b,
+        polygonOffset: true,
+        polygonOffsetFactor: -1.0,
+        polygonOffsetUnits: -1.0
+      })
+    );
+    roadMesh.position.set(0, 0.05, roadMidZ);
+    roadMesh.receiveShadow = true;
+    root.add(roadMesh);
+
+    // Road Curbs / Snowy Shoulders along sides
+    [-roadW / 2, roadW / 2].forEach(cx => {
+      const curb = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.18, roadLen), roadCurbMat);
+      curb.position.set(cx, 0.09, roadMidZ);
+      root.add(curb);
+
+      const snowShoulder = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.14, roadLen), snowCapMat);
+      snowShoulder.position.set(cx + (cx < 0 ? -0.75 : 0.75), 0.07, roadMidZ);
+      root.add(snowShoulder);
+    });
+
+    // Road Reflector Posts in open road section (z >= -4 to z <= 24)
+    for (let rz = -3; rz <= 25; rz += 4.5) {
+      [-roadW / 2 - 0.25, roadW / 2 + 0.25].forEach((rx, idx) => {
+        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.0, 6), whiteEdgeLineMat);
+        post.position.set(rx, 0.5, rz);
+        root.add(post);
+
+        const cap = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.18, 0.06), yellowLampGlowMat);
+        cap.position.set(rx, 0.88, rz);
+        root.add(cap);
+      });
+    }
+
+    // 2. THE BLACKWOOD MOORS STONE MOUNTAIN TUNNEL (z = -44 to z = -6)
+    const tunnelLen = 38.0;
+    const tunnelStart = -44.0;
+    const tunnelEnd = -6.0;
+    const tunnelZMid = (tunnelStart + tunnelEnd) / 2; // -25.0
+    const tunnelInnerW = 7.6;
+    const tunnelInnerH = 4.8;
+    const wallThick = 1.4;
+
+    // Tunnel Left & Right Massive Stone Walls
+    [-tunnelInnerW / 2 - wallThick / 2, tunnelInnerW / 2 + wallThick / 2].forEach(wx => {
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(wallThick, tunnelInnerH + 2.0, tunnelLen), darkStoneMat);
+      wall.position.set(wx, (tunnelInnerH + 2.0) / 2 - 0.2, tunnelZMid);
+      wall.castShadow = true;
+      wall.receiveShadow = true;
+      root.add(wall);
+
+      // Add physical colliders to prevent driving/walking out of tunnel walls
+      colliders.push({
+        minX: wx - wallThick / 2,
+        maxX: wx + wallThick / 2,
+        minZ: tunnelStart,
+        maxZ: tunnelEnd
+      });
+    });
+
+    // Tunnel Arched Ceiling Vault
+    const ceilGeo = new THREE.CylinderGeometry(tunnelInnerW / 2 + 0.6, tunnelInnerW / 2 + 0.6, tunnelLen, 14, 1, true, Math.PI, Math.PI);
+    ceilGeo.rotateZ(Math.PI / 2);
+    ceilGeo.rotateY(Math.PI / 2);
+    const ceilMesh = new THREE.Mesh(ceilGeo, tunnelCeilMat);
+    ceilMesh.position.set(0, tunnelInnerH - 0.2, tunnelZMid);
+    root.add(ceilMesh);
+
+    // Mountain Mass / Heavy Rock Ridge above Tunnel
+    const mountainCap = new THREE.Mesh(new THREE.BoxGeometry(tunnelInnerW + wallThick * 2 + 10.0, 4.2, tunnelLen), darkStoneMat);
+    mountainCap.position.set(0, tunnelInnerH + 2.8, tunnelZMid);
+    root.add(mountainCap);
+
+    // Thick snow blanket covering the mountain pass top
+    const mountainSnow = new THREE.Mesh(new THREE.BoxGeometry(tunnelInnerW + wallThick * 2 + 10.4, 0.8, tunnelLen + 0.4), snowCapMat);
+    mountainSnow.position.set(0, tunnelInnerH + 4.9, tunnelZMid);
+    root.add(mountainSnow);
+
+    // 2b. TUNNEL SOUTH EXIT PORTAL (Facing Player & Village at z = -6)
+    const portalPillarW = 1.6;
+    const portalPillarH = 5.8;
+    [-tunnelInnerW / 2 - portalPillarW / 2 + 0.2, tunnelInnerW / 2 + portalPillarW / 2 - 0.2].forEach(px => {
+      const pillar = new THREE.Mesh(new THREE.BoxGeometry(portalPillarW, portalPillarH, 2.2), stoneMat);
+      pillar.position.set(px, portalPillarH / 2, tunnelEnd);
+      pillar.castShadow = true;
+      root.add(pillar);
+
+      const pCap = new THREE.Mesh(new THREE.BoxGeometry(portalPillarW + 0.35, 0.35, 2.4), stoneMat);
+      pCap.position.set(px, portalPillarH + 0.17, tunnelEnd);
+      root.add(pCap);
+
+      const pSnow = new THREE.Mesh(new THREE.BoxGeometry(portalPillarW + 0.38, 0.28, 2.45), snowCapMat);
+      pSnow.position.set(px, portalPillarH + 0.45, tunnelEnd);
+      root.add(pSnow);
+    });
+
+    // Top Keystoned Arch Portal Header across mouth
+    const archHeader = new THREE.Mesh(new THREE.BoxGeometry(tunnelInnerW + 2.8, 1.35, 2.4), stoneMat);
+    archHeader.position.set(0, portalPillarH - 0.25, tunnelEnd);
+    root.add(archHeader);
+
+    const archHeaderSnow = new THREE.Mesh(new THREE.BoxGeometry(tunnelInnerW + 3.0, 0.4, 2.5), snowCapMat);
+    archHeaderSnow.position.set(0, portalPillarH + 0.55, tunnelEnd);
+    root.add(archHeaderSnow);
+
+    // Cast Bronze Tunnel Signboard: "BLACKWOOD PASS - TUNNEL NO. 4"
+    const tunnelSignCanvas = document.createElement('canvas');
+    tunnelSignCanvas.width = 512;
+    tunnelSignCanvas.height = 128;
+    const tctx = tunnelSignCanvas.getContext('2d');
+    tctx.fillStyle = '#1e1c18';
+    tctx.fillRect(0, 0, 512, 128);
+    tctx.strokeStyle = '#6e5832';
+    tctx.lineWidth = 6;
+    tctx.strokeRect(6, 6, 500, 116);
+    tctx.fillStyle = '#cca552';
+    tctx.font = 'bold 36px "Times New Roman", serif';
+    tctx.textAlign = 'center';
+    tctx.fillText('BLACKWOOD PASS', 256, 52);
+    tctx.font = '22px "Times New Roman", serif';
+    tctx.fillStyle = '#8f9c8d';
+    tctx.fillText('TUNNEL NO. 4 • ELEV. 1,420 FT', 256, 92);
+    const tunnelSignTex = new THREE.CanvasTexture(tunnelSignCanvas);
+    const tunnelSign = new THREE.Mesh(
+      new THREE.PlaneGeometry(3.6, 0.9),
+      new THREE.MeshLambertMaterial({ map: tunnelSignTex })
+    );
+    tunnelSign.position.set(0, portalPillarH - 0.25, tunnelEnd + 1.22);
+    root.add(tunnelSign);
+
+    // Industrial Caged Halogen Tunnel Mouth Lamps
+    [-tunnelInnerW / 2 + 0.6, tunnelInnerW / 2 - 0.6].forEach(lx => {
+      const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.6, 6), ironBarMat);
+      arm.position.set(lx, portalPillarH - 0.9, tunnelEnd + 0.35);
+      arm.rotateX(Math.PI / 4);
+      root.add(arm);
+
+      const cage = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.35, 0.3), yellowLampGlowMat);
+      cage.position.set(lx, portalPillarH - 1.25, tunnelEnd + 0.6);
+      root.add(cage);
+    });
+
+    // Tunnel Interior Caged Lighting (spaced along interior length)
+    for (let tz = -36; tz <= -12; tz += 9.0) {
+      [-tunnelInnerW / 2 + 0.3, tunnelInnerW / 2 - 0.3].forEach(lx => {
+        const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.3, 0.25), yellowLampGlowMat);
+        lamp.position.set(lx, 3.4, tz);
+        root.add(lamp);
+      });
+    }
+
+    // Tunnel North Entrance Rockfall Hazard Barricade (z = -43.5, block player from exiting world bounds)
+    const rockfallBarrier = new THREE.Mesh(new THREE.BoxGeometry(tunnelInnerW + 0.2, 5.0, 2.5), darkStoneMat);
+    rockfallBarrier.position.set(0, 2.5, tunnelStart + 1.2);
+    root.add(rockfallBarrier);
+    colliders.push({
+      minX: -tunnelInnerW / 2,
+      maxX: tunnelInnerW / 2,
+      minZ: tunnelStart,
+      maxZ: tunnelStart + 3.0
+    });
+
+    // -------------------------------------------------------------
+    // 3. THE GRAND GOTHIC "WELCOME TO COLDBROOK" ARCHWAY (z = 18.0)
+    // -------------------------------------------------------------
+    const archZ = 18.0;
+    const archSpan = 7.4; // Wide clearance for roadway
+    const archPillarW = 1.1;
+    const archPillarH = 5.2;
+
+    // Two Ancient Stone Pillars flanking the road
+    [-archSpan / 2, archSpan / 2].forEach(px => {
+      // Stone Base
+      const pillarBase = new THREE.Mesh(new THREE.BoxGeometry(archPillarW + 0.3, 0.8, archPillarW + 0.3), darkStoneMat);
+      pillarBase.position.set(px, 0.4, archZ);
+      root.add(pillarBase);
+
+      // Stone Shaft
+      const pillar = new THREE.Mesh(new THREE.BoxGeometry(archPillarW, archPillarH, archPillarW), stoneMat);
+      pillar.position.set(px, archPillarH / 2 + 0.4, archZ);
+      pillar.castShadow = true;
+      root.add(pillar);
+
+      // Decorative Cap
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(archPillarW + 0.25, 0.3, archPillarW + 0.25), stoneMat);
+      cap.position.set(px, archPillarH + 0.55, archZ);
+      root.add(cap);
+
+      // Snow mantle on pillar top
+      const capSnow = new THREE.Mesh(new THREE.BoxGeometry(archPillarW + 0.28, 0.25, archPillarW + 0.28), snowCapMat);
+      capSnow.position.set(px, archPillarH + 0.8, archZ);
+      root.add(capSnow);
+
+      // Gothic Iron Finial on top
+      const finial = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.65, 4), ironBarMat);
+      finial.position.set(px, archPillarH + 1.2, archZ);
+      root.add(finial);
+
+      // Heavy iron lantern arm holding a glowing brass lantern
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.75), ironBarMat);
+      arm.position.set(px, archPillarH - 0.8, archZ + 0.45);
+      root.add(arm);
+
+      const lantern = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.42, 0.28), yellowLampGlowMat);
+      lantern.position.set(px, archPillarH - 1.1, archZ + 0.8);
+      root.add(lantern);
+
+      // Colliders on pillars so player cannot clip through stone
+      colliders.push({
+        minX: px - archPillarW / 2 - 0.15,
+        maxX: px + archPillarW / 2 + 0.15,
+        minZ: archZ - 0.7,
+        maxZ: archZ + 0.7
+      });
+    });
+
+    // Massive Dark Oak Crossbeam spanning across the highway (4.6m clearance)
+    const beamW = archSpan + archPillarW * 2 + 0.6;
+    const beamY = 4.75;
+    const mainBeam = new THREE.Mesh(new THREE.BoxGeometry(beamW, 0.55, 0.6), woodArchMat);
+    mainBeam.position.set(0, beamY, archZ);
+    mainBeam.castShadow = true;
+    root.add(mainBeam);
+
+    // Secondary Upper Support Beam
+    const upperBeam = new THREE.Mesh(new THREE.BoxGeometry(beamW - 1.2, 0.35, 0.45), woodArchMat);
+    upperBeam.position.set(0, beamY + 0.75, archZ);
+    root.add(upperBeam);
+
+    // Snow coating on top of arch beam
+    const beamSnow = new THREE.Mesh(new THREE.BoxGeometry(beamW + 0.1, 0.2, 0.65), snowCapMat);
+    beamSnow.position.set(0, beamY + 1.0, archZ);
+    root.add(beamSnow);
+
+    // Wrought Iron Gothic Scrolls in Arch Corners
+    [-archSpan / 2 + 0.7, archSpan / 2 - 0.7].forEach(bx => {
+      const brace = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.2, 0.08), ironBarMat);
+      brace.position.set(bx, beamY - 0.5, archZ);
+      brace.rotateZ((bx < 0) ? -Math.PI / 4 : Math.PI / 4);
+      root.add(brace);
+    });
+
+    // 3b. THE ICONIC "WELCOME TO COLDBROOK" SIGNBOARD
+    const welcomeCanvas = document.createElement('canvas');
+    welcomeCanvas.width = 1024;
+    welcomeCanvas.height = 256;
+    const wctx = welcomeCanvas.getContext('2d');
+
+    // Weathered Dark Oak Wood grain
+    wctx.fillStyle = '#18120d';
+    wctx.fillRect(0, 0, 1024, 256);
+
+    // Double Ornate Carved Gold Inlay Border
+    wctx.strokeStyle = '#c99e4b';
+    wctx.lineWidth = 10;
+    wctx.strokeRect(14, 14, 996, 228);
+    wctx.lineWidth = 3;
+    wctx.strokeStyle = '#6e5022';
+    wctx.strokeRect(26, 26, 972, 204);
+
+    // Corner decorative flourishes
+    wctx.fillStyle = '#c99e4b';
+    wctx.font = '28px serif';
+    wctx.fillText('✦', 36, 52);
+    wctx.fillText('✦', 968, 52);
+    wctx.fillText('✦', 36, 218);
+    wctx.fillText('✦', 968, 218);
+
+    // "WELCOME TO"
+    wctx.textAlign = 'center';
+    wctx.fillStyle = '#deb765';
+    wctx.font = 'bold 42px "Times New Roman", serif';
+    wctx.fillText('✦  WELCOME TO  ✦', 512, 74);
+
+    // "COLDBROOK"
+    wctx.fillStyle = '#f5eedb';
+    wctx.font = 'bold 84px "Times New Roman", serif';
+    wctx.shadowColor = '#000000';
+    wctx.shadowBlur = 12;
+    wctx.shadowOffsetX = 4;
+    wctx.shadowOffsetY = 4;
+    wctx.fillText('COLDBROOK', 512, 156);
+
+    // Subtitle / Motto: "EST. 1842 • THE VALLEY OF PENANCE"
+    wctx.shadowBlur = 0;
+    wctx.shadowOffsetX = 0;
+    wctx.shadowOffsetY = 0;
+    wctx.fillStyle = '#9cb3a2';
+    wctx.font = 'italic 26px "Times New Roman", serif';
+    wctx.fillText('EST. 1842  •  "THE VALLEY OF SILENT PRAYERS"', 512, 206);
+
+    const welcomeTex = new THREE.CanvasTexture(welcomeCanvas);
+
+    // Signboard Double-Sided Mesh
+    const welcomeBoard = new THREE.Mesh(
+      new THREE.BoxGeometry(4.8, 1.25, 0.12),
+      [
+        woodArchMat, // right
+        woodArchMat, // left
+        woodArchMat, // top
+        woodArchMat, // bottom
+        new THREE.MeshLambertMaterial({ map: welcomeTex }), // front (facing player approaching from tunnel)
+        new THREE.MeshLambertMaterial({ map: welcomeTex })  // back (facing village)
+      ]
+    );
+    welcomeBoard.position.set(0, beamY - 0.35, archZ);
+    welcomeBoard.castShadow = true;
+    root.add(welcomeBoard);
+
+    // Small Iron Hanging Chains suspending the signboard
+    [-1.8, 1.8].forEach(cx => {
+      const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.45, 6), ironBarMat);
+      chain.position.set(cx, beamY + 0.12, archZ);
+      root.add(chain);
+    });
+
+    // 3c. SIDE SIGNPOST: "POPULATION: 128" & "SPEED LIMIT 20"
+    const sideSignCanvas = document.createElement('canvas');
+    sideSignCanvas.width = 256;
+    sideSignCanvas.height = 256;
+    const sctx = sideSignCanvas.getContext('2d');
+    sctx.fillStyle = '#22262a';
+    sctx.fillRect(0, 0, 256, 256);
+    sctx.strokeStyle = '#ffffff';
+    sctx.lineWidth = 6;
+    sctx.strokeRect(8, 8, 240, 240);
+
+    sctx.fillStyle = '#ffffff';
+    sctx.textAlign = 'center';
+    sctx.font = 'bold 28px sans-serif';
+    sctx.fillText('COLDBROOK', 128, 48);
+    sctx.font = 'bold 20px sans-serif';
+    sctx.fillStyle = '#a9b7c6';
+    sctx.fillText('POPULATION', 128, 86);
+
+    // Crossed out population count with eerie red blood mark
+    sctx.font = 'bold 36px monospace';
+    sctx.fillStyle = '#e6eff7';
+    sctx.fillText('128', 128, 134);
+
+    // Blood slash over numbers
+    sctx.strokeStyle = '#b81622';
+    sctx.lineWidth = 7;
+    sctx.beginPath();
+    sctx.moveTo(85, 142);
+    sctx.lineTo(170, 115);
+    sctx.stroke();
+
+    sctx.font = 'bold 28px "VT323", monospace';
+    sctx.fillStyle = '#ff2b3c';
+    sctx.fillText('??', 188, 140);
+
+    sctx.fillStyle = '#deb33a';
+    sctx.font = 'bold 20px sans-serif';
+    sctx.fillText('SPEED LIMIT 20', 128, 205);
+
+    const sideSignTex = new THREE.CanvasTexture(sideSignCanvas);
+    const sideSignMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.85, 0.85),
+      new THREE.MeshLambertMaterial({ map: sideSignTex })
+    );
+    sideSignMesh.position.set(-archSpan / 2 - 1.1, 1.85, archZ - 0.1);
+    root.add(sideSignMesh);
+
+    const sidePost = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.4, 6), ironBarMat);
+    sidePost.position.set(-archSpan / 2 - 1.1, 1.2, archZ - 0.15);
+    root.add(sidePost);
+
+    scene.add(root);
+  }
+
   // Pure Dense Snow Forest (No road, no vehicles, only deep snow wilderness)
   buildDenseSnowForest();
+
+  // Construct Mountain Highway, Blackwood Moors Stone Tunnel & "WELCOME TO COLDBROOK" Archway
+  buildMountainRoadTunnelAndWelcomeArch(scene, textures);
 
   // World Boundary Chainlink Security Perimeter Fence
   buildChainlinkBoundaryFence(scene, chainlinkTex);
