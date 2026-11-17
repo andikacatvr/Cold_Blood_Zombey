@@ -219,6 +219,41 @@ import { gameSettings } from '../config/settings.js';
           o2.stop(t + 0.38);
         } catch (e) {}
       },
+      // Retro PS1 / Resident Evil tactile console menu cursor blip
+      playMenuHover() {
+        if (!this.ctx) return;
+        try {
+          const t = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(1420, t);
+          osc.frequency.exponentialRampToValueAtTime(1860, t + 0.045);
+          gain.gain.setValueAtTime(0.09, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.048);
+          osc.connect(gain);
+          gain.connect(this.dest());
+          osc.start(t);
+          osc.stop(t + 0.05);
+        } catch (e) {}
+      },
+      playMenuSelect() {
+        if (!this.ctx) return;
+        try {
+          const t = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(880, t);
+          osc.frequency.exponentialRampToValueAtTime(440, t + 0.07);
+          gain.gain.setValueAtTime(0.14, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+          osc.connect(gain);
+          gain.connect(this.dest());
+          osc.start(t);
+          osc.stop(t + 0.085);
+        } catch (e) {}
+      },
       // Eerie small brass/silver church bell & wind chime sound (lonceng kecil misterius)
       playSmallBell(customFreq = null, volumeScale = 1.0) {
         if (!this.ctx) return;

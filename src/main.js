@@ -1145,6 +1145,19 @@ function init() {
   const btnReturnMenu = document.getElementById('btn-return-menu');
   if (btnReturnMenu) btnReturnMenu.addEventListener('click', () => returnToMainMenu());
 
+  // Disable default browser context menu so game behaves like a native PC console application
+  window.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  // Attach retro console UI sound effects to all interactive buttons
+  document.querySelectorAll('button, .menu-action-btn, .mode-card, .btn-play, .hud-btn, .btn-sec, .hud-box').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      if (Sfx && Sfx.playMenuHover) Sfx.playMenuHover();
+    });
+    el.addEventListener('click', () => {
+      if (Sfx && Sfx.playMenuSelect) Sfx.playMenuSelect();
+    });
+  });
+
   applyGraphicFidelity(gameSettings.graphicMode || 'ps1');
   switchWeapon(gameSettings.weapon || 'spin');
   syncSettingsUI(gameSettings, state);

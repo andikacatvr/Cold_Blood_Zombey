@@ -5,6 +5,9 @@
       padding: 0;
       user-select: none;
       -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
     }
     body, html {
       width: 100%;
@@ -13,6 +16,7 @@
       background-color: #05080b;
       font-family: 'VT323', monospace;
       color: #cad6df;
+      cursor: crosshair;
     }
     #game-container {
       position: absolute;
@@ -259,13 +263,20 @@
       justify-content: center !important;
       gap: 16px !important;
       letter-spacing: 4px !important;
-      border-radius: 6px !important;
-      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.85), 0 0 15px rgba(200, 30, 40, 0.4) !important;
-      transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+      border-radius: 0px !important;
+      clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px) !important;
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+      transition: all 0.15s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+      cursor: crosshair !important;
+      outline: none !important;
     }
     .menu-action-btn:hover {
       transform: scale(1.04) translateY(-2px) !important;
       box-shadow: 0 10px 32px rgba(0, 0, 0, 0.95), 0 0 25px rgba(240, 50, 60, 0.8) !important;
+    }
+    .menu-action-btn:active {
+      transform: scale(0.98) translateY(2px) !important;
+      box-shadow: inset 0 3px 12px rgba(0, 0, 0, 0.9) !important;
     }
     .btn-arrow {
       color: #ffd15c;
@@ -477,19 +488,30 @@
       font-family: 'VT323', monospace;
       font-size: 32px;
       letter-spacing: 4px;
-      padding: 8px 36px;
+      padding: 10px 36px;
       color: #ffffff;
-      background: #961b24;
-      border: 2px solid #e6424e;
-      cursor: pointer;
+      background: linear-gradient(180deg, #b0202b 0%, #6d1017 100%);
+      border-top: 2px solid #ff6b77;
+      border-left: 2px solid #ff6b77;
+      border-right: 2px solid #3d080c;
+      border-bottom: 2px solid #3d080c;
+      cursor: crosshair;
       text-transform: uppercase;
-      box-shadow: 0 0 20px rgba(200, 30, 40, 0.5);
-      transition: all 0.15s ease;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      transition: all 0.12s ease;
+      outline: none !important;
+      clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
     }
     .btn-play:hover {
-      background: #bf2430;
+      background: linear-gradient(180deg, #d62735 0%, #8f1720 100%);
       transform: scale(1.04);
-      box-shadow: 0 0 28px rgba(240, 50, 60, 0.85);
+      box-shadow: 0 0 28px rgba(240, 50, 60, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      border-top-color: #ff99a3;
+      border-left-color: #ff99a3;
+    }
+    .btn-play:active {
+      transform: scale(0.97) translateY(2px);
+      box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.95);
     }
     /* LIVES HUD STYLING */
     #hud-lives {
@@ -518,18 +540,25 @@
       opacity: 0.45;
     }
     .hud-btn {
-      cursor: pointer;
+      cursor: crosshair;
       pointer-events: auto;
       transition: all 0.15s ease;
       font-family: 'VT323', monospace;
       font-size: 22px;
       letter-spacing: 2px;
+      outline: none !important;
+      clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+      box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.15), 0 4px 10px rgba(0, 0, 0, 0.85);
     }
     .hud-btn:hover {
       background: #4a1a20;
       border-color: #ff3344;
       color: #ffffff;
       transform: scale(1.05);
+      box-shadow: 0 0 16px rgba(255, 51, 68, 0.6);
+    }
+    .hud-btn:active {
+      transform: scale(0.97) translateY(1px);
     }
     /* SETTINGS MODAL DIALOG (CLEAN, COMPACT & NON-OVERFLOWING) */
     #screen-settings.settings-modal-backdrop {
