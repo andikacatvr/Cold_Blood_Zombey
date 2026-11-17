@@ -22,6 +22,7 @@ import { playerPos, state, setPlayerYawPitch } from './player.js';
 import { zombies } from '../entities/enemies.js';
 import { updateTouchControlsVisibility } from '../ui/touchControls.js';
 import { setObjective } from './quest.js';
+import { buildOldThomasModel, buildVintagePickupTruck, buildGothicVillageGate } from '../entities/villager.js';
 
 const THREE = window.THREE;
 
@@ -33,6 +34,9 @@ let onCompleteCallback = null;
 let currentStageIndex = -1;
 let sfxRef = null;
 let cutsceneDroppedShotgun = null;
+let cutsceneTruck = null;
+let cutsceneOldThomas = null;
+let cutsceneVillageGate = null;
 let activeBossRef = null;
 let activeHelicopter = null;
 
@@ -55,7 +59,7 @@ const NONA_BATAVIA_STAGES = [
     },
     getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 0.6, bz),
     getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 1.2, bz),
-    subtitle: `<span style="color:#ffffff;">Lolongan roh gentayangan Batavia membelah kesunyian badai salju...</span>`,
+    subtitle: `<span style="color:#ffffff;">Lolongan Lady of Blackwood Moors membelah kesunyian badai salju...</span>`,
     onEnter: (sfx) => {}
   },
   {
@@ -77,7 +81,7 @@ const NONA_BATAVIA_STAGES = [
     },
     getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 1.2, bz),
     getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 0.9, bz),
-    subtitle: `<span style="color:#ff6b6b; font-size:21px; font-weight:bold; text-shadow:0 0 12px #900;">"Suara kutukan Batavia bergema... Roh penasaran mencari mangsa segar!"</span>`,
+    subtitle: `<span style="color:#ff6b6b; font-size:21px; font-weight:bold; text-shadow:0 0 12px #900;">"Suara kutukan Blackwood bergema... Roh penasaran mencari mangsa segar!"</span>`,
     onEnter: (sfx) => {}
   },
   {
@@ -103,49 +107,49 @@ const NONA_BATAVIA_STAGES = [
 const CUTSCENE_STAGES = [
   {
     start: 0.0,
-    end: 6.5,
-    camStart: new THREE.Vector3(4.8, 3.2, 24.5),
-    camEnd: new THREE.Vector3(1.8, 1.8, 17.5),
-    lookStart: new THREE.Vector3(0.2, 1.0, 15.5),
-    lookEnd: new THREE.Vector3(0.4, 0.55, 14.0),
-    subtitle: `<span style="color:#d8b26e; font-size:22px; font-weight:bold;">RODRICK (Rekaman Suara):</span> <i>*suara perekam berderak*</i> "Catatan lapangan hari pertama. Desa Karang Wening, lereng gunung. Dua minggu penelitian ritual dan kepercayaan lokal..."<br><span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN:</span> "Dan dua minggu sampel air! Jangan lupa bagian gue juga masuk laporan, Rod."`,
+    end: 7.0,
+    camStart: new THREE.Vector3(5.2, 2.6, 12.0),
+    camEnd: new THREE.Vector3(2.5, 1.8, 15.5),
+    lookStart: new THREE.Vector3(0.0, 1.6, 17.5),
+    lookEnd: new THREE.Vector3(0.0, 1.5, 17.5),
+    subtitle: `<span style="color:#a8c4da; font-size:15px; letter-spacing:2px; font-family:serif;">COLDBROOK VILLAGE — BLACKWOOD MOORS, ENGLAND</span><br><span style="color:#d8b26e; font-size:21px; font-weight:bold;">RODRICK (Perekam Suara):</span> <i>*suara kaset berderak*</i> "Catatan lapangan hari pertama. Mobil bak tua ini menurunkan kita tepat di gerbang Coldbrook. Dua minggu riset cerita rakyat dan catatan gereja tua..."<br><span style="color:#5cf0a5; font-size:20px; font-weight:bold;">KRISTIN:</span> "Dan dua minggu penelitian sampel air sumur! Jangan lupa riset lingkungan gue juga masuk publikasi, Rod."`,
     onEnter: (sfx) => {
       if (sfx && sfx.playChurchBellToll) sfx.playChurchBellToll();
       if (sfx && sfx.playSnowStep) sfx.playSnowStep();
     }
   },
   {
-    start: 6.5,
-    end: 13.5,
-    camStart: new THREE.Vector3(-1.15, 1.15, 15.5),
-    camEnd: new THREE.Vector3(-0.65, 0.85, 14.8),
-    lookStart: new THREE.Vector3(0.55, 0.45, 13.9),
-    lookEnd: new THREE.Vector3(0.70, 0.50, 13.9),
-    subtitle: `<span style="color:#e0e6ed; font-size:21px; font-weight:bold;">WARGA DESA:</span> "Selamat datang, anak-anak. Silakan minum air suci dulu. Guru kami menyambut siapa saja..."<br><span style="color:#d8b26e; font-size:20px; font-weight:bold;">RODRICK (Rekaman):</span> "Hari kedua... Gue putar tiga wawancara warga berbeda, kalimatnya sama persis: 'Kami semua diampuni.' Sama intonasinya. Sama jedanya."`,
+    start: 7.0,
+    end: 14.5,
+    camStart: new THREE.Vector3(0.3, 1.55, 15.8),
+    camEnd: new THREE.Vector3(0.7, 1.62, 16.6),
+    lookStart: new THREE.Vector3(0.8, 1.55, 17.5),
+    lookEnd: new THREE.Vector3(0.8, 1.55, 17.5),
+    subtitle: `<span style="color:#f0ebe0; font-size:21px; font-weight:bold;">OLD THOMAS:</span> <i>*senyum lebar ganjil & tatapan kosong*</i> "Selamat datang di Coldbrook, anak-anak muda... Silakan basuh tenggorokan dengan air suci sumur biara. Pastor Raksha selalu membuka pintu bagi jiwa-jiwa berdosa..."<br><span style="color:#d8b26e; font-size:19px; font-weight:bold;">RODRICK (Rekaman):</span> "Hari kedua... Gue dengar warga lain menyambut dengan kalimat yang persis sama, intonasi yang sama, dan senyum kaku yang sama..."`,
     onEnter: (sfx) => {
       if (sfx && sfx.playZombieGroan) sfx.playZombieGroan();
     }
   },
   {
-    start: 13.5,
-    end: 20.5,
-    camStart: new THREE.Vector3(-1.5, 1.25, 15.8),
-    camEnd: new THREE.Vector3(-0.55, 0.75, 14.5),
-    lookStart: new THREE.Vector3(0.65, 0.55, 13.9),
-    lookEnd: new THREE.Vector3(0.75, 0.65, 13.9),
-    subtitle: `<span style="color:#5cf0a5; font-size:22px; font-weight:bold;">KRISTIN:</span> "Rod, lihat ini! Sampel dari air suci... ada senyawa yang nggak ada di sumber air mana pun! Seseorang menambahkannya, dan kita sudah meminumnya dua hari!"<br><span style="color:#ff7878; font-size:20px; font-weight:bold;">IBU WARUNG:</span> <i>*tatapan kosong*</i> "Kami semua diampuni..."`,
+    start: 14.5,
+    end: 21.5,
+    camStart: new THREE.Vector3(1.2, 1.5, 15.2),
+    camEnd: new THREE.Vector3(0.2, 1.5, 15.4),
+    lookStart: new THREE.Vector3(-0.3, 1.5, 14.5),
+    lookEnd: new THREE.Vector3(0.8, 1.55, 17.5),
+    subtitle: `<span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN:</span> "Rod, gawat! Sampel air dari cawan itu... ada zat narkotik dan racun pembusuk jaringan tubuh! Warga di sini bukan ramah, saraf otak mereka dicuci oleh air biara!"<br><span style="color:#f0ebe0; font-size:19px; font-weight:bold;">OLD THOMAS:</span> <i>*senyum membeku, bola mata keruh*</i> "Semua dosa... telah diampuni..."`,
     onEnter: (sfx) => {
       if (sfx && sfx.playSnowStep) sfx.playSnowStep();
     }
   },
   {
-    start: 20.5,
-    end: 28.0,
-    camStart: new THREE.Vector3(-0.15, 0.55, 14.6),
-    camEnd: new THREE.Vector3(0.0, 1.80, 14.0),
-    lookStart: new THREE.Vector3(0.80, 0.85, 13.9),
-    lookEnd: new THREE.Vector3(0.85, 1.65, 13.9),
-    subtitle: `<span style="color:#5cf0a5; font-size:22px; font-weight:bold;">KRISTIN:</span> "Rod, bangun! Itu bukan kutukan, wabah ini sengaja diberikan ke mereka! Gerbang desa dijaga ketat sama umat dan nggak ada sinyal!"<br><span style="color:#d8b26e; font-size:21px; font-weight:bold;">RODRICK:</span> "Berarti kita bertahan sampai pagi! Cari rumah Pak Darmo di ujung timur desa, dia punya senjata!"`,
+    start: 21.5,
+    end: 28.5,
+    camStart: new THREE.Vector3(-0.2, 1.6, 13.0),
+    camEnd: new THREE.Vector3(0.0, 1.75, 14.0),
+    lookStart: new THREE.Vector3(0.0, 1.6, 18.0),
+    lookEnd: new THREE.Vector3(0.0, 1.6, 6.0),
+    subtitle: `<span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN:</span> "Rod! Gerbang masuknya baru saja dirantai dari luar! Warga desa mulai bangkit seperti mayat hidup!"<br><span style="color:#d8b26e; font-size:21px; font-weight:bold;">RODRICK:</span> "Kita terjebak di Coldbrook tanpa senjata! Darrell si pemburu tinggal di pondok kayu sebelah timur desa—dia pasti punya senapan! Ayo bergerak!"`,
     onEnter: (sfx) => {
       if (sfx && sfx.playPumpRack) sfx.playPumpRack();
       if (sfx && sfx.playSnowThud) sfx.playSnowThud(1.0);
@@ -188,32 +192,6 @@ const NATALIA_HELICOPTER_STAGES = [
   }
 ];
 
-function createDroppedShotgun() {
-  if (cutsceneDroppedShotgun && scene) {
-    scene.remove(cutsceneDroppedShotgun);
-    cutsceneDroppedShotgun = null;
-  }
-  const g = new THREE.Group();
-  const steelMat = new THREE.MeshStandardMaterial({ color: 0x22262a, roughness: 0.35, metalness: 0.8 });
-  const woodMat = new THREE.MeshLambertMaterial({ color: 0x3d2215 });
-
-  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.75, 8), steelMat);
-  barrel.rotation.x = Math.PI / 2;
-  barrel.position.set(0, 0, 0.28);
-  g.add(barrel);
-
-  const stock = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.08, 0.26), woodMat);
-  stock.position.set(0, -0.02, -0.18);
-  g.add(stock);
-
-  const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.62, 14.1) : 0;
-  g.position.set(-0.62, gy + 0.08, 14.1);
-  g.rotation.set(0.12, 0.52, Math.PI / 2.05);
-
-  cutsceneDroppedShotgun = g;
-  if (scene) scene.add(cutsceneDroppedShotgun);
-}
-
 function skipActiveCutscene() {
   if (!isCinematicActive) return;
   if (activeCutsceneType === 'nona_batavia') {
@@ -238,18 +216,43 @@ export function startIntroCutscene(camera, sfx, onComplete) {
   if (weaponHolder) weaponHolder.visible = false;
   if (playerFlashlight) playerFlashlight.visible = false;
 
-  // Position unconscious player lying limp on back in the snow
-  setPlayerCutscenePose('unconscious');
+  // Position upright player
+  setPlayerCutscenePose('reset');
   if (state && state.player) state.player.isInvulnerable = true;
 
-  // Spawn dropped shotgun in the snow next to player's outstretched hand
-  createDroppedShotgun();
+  // 1. Spawn Gothic Village Gate if not present
+  if (!cutsceneVillageGate && scene) {
+    cutsceneVillageGate = buildGothicVillageGate();
+    const gyGate = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0, 18.5) : 0;
+    cutsceneVillageGate.position.set(0, gyGate, 18.5);
+    cutsceneVillageGate.rotation.y = 0;
+    scene.add(cutsceneVillageGate);
+  }
 
-  // Position Kristin crouching down beside the unconscious player
+  // 2. Spawn Vintage British Flatbed Pickup Truck
+  if (cutsceneTruck && scene) scene.remove(cutsceneTruck);
+  cutsceneTruck = buildVintagePickupTruck();
+  const gyTruck = (typeof getTerrainHeight === 'function') ? getTerrainHeight(2.8, 13.5) : 0;
+  cutsceneTruck.position.set(2.8, gyTruck, 13.5);
+  cutsceneTruck.rotation.y = -0.35;
+  if (scene) scene.add(cutsceneTruck);
+
+  // 3. Spawn Old Thomas (Elderly British villager with creepy smile & chalice)
+  if (cutsceneOldThomas && scene) scene.remove(cutsceneOldThomas);
+  cutsceneOldThomas = buildOldThomasModel();
+  const gyThomas = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.8, 17.5) : 0;
+  cutsceneOldThomas.position.set(0.8, gyThomas, 17.5);
+  cutsceneOldThomas.rotation.y = Math.PI; // Faces toward player & Kristin
+  if (scene) scene.add(cutsceneOldThomas);
+
+  // 4. Position player & Kristin standing alert
+  const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.35, 14.2) : 0;
+  playerPos.set(-0.35, gyP, 14.2);
+
   if (kristinModel && kristinModel.root) {
-    const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.82, 13.9) : 0.1;
-    kristinModel.root.position.set(0.82, gy - 0.58, 13.9);
-    kristinModel.root.rotation.set(0.42, -Math.PI / 2 - 0.28, 0.16); // Leaning down close over player
+    const gyK = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.45, 14.4) : 0;
+    kristinModel.root.position.set(0.45, gyK, 14.4);
+    kristinModel.root.rotation.set(0, 0.15, 0);
   }
 
   // Show cinema overlay & letterbox
@@ -479,48 +482,41 @@ export function updateCutscene(dt) {
     return;
   }
 
-  // 1. Character Posing & Dynamic Awakening Transition
-  if (cutsceneTime < 20.5) {
-    // Player remains unconscious flat on the snow
-    setPlayerCutscenePose('unconscious');
-
-    // Kristin crouched down over player, listening and analyzing
-    if (kristinModel && kristinModel.root) {
-      const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.82, 13.9) : 0.1;
-      const shake = (cutsceneTime > 13.5) ? Math.sin(cutsceneTime * 8.0) * 0.020 : Math.sin(cutsceneTime * 2.5) * 0.008;
-      const headNod = (cutsceneTime > 13.5) ? Math.sin(cutsceneTime * 4.5) * 0.04 : 0;
-      kristinModel.root.position.set(0.82 + shake * 0.6, gy - 0.58 + Math.abs(shake) * 0.25, 13.9);
-      kristinModel.root.rotation.set(0.42 + headNod, -Math.PI / 2 - 0.28, 0.16);
+  // 1. Animate Old Thomas (Creepy head tilt & holy water arm sway)
+  if (cutsceneOldThomas && cutsceneOldThomas.userData) {
+    const { headGroup, rArmGroup } = cutsceneOldThomas.userData;
+    if (rArmGroup) {
+      rArmGroup.rotation.x = -0.15 + Math.sin(cutsceneTime * 1.8) * 0.08;
     }
-  } else {
-    // Stage 4: Player awakens and rises up
-    const wakeProgress = Math.min(1.0, (cutsceneTime - 20.5) / 5.5);
-    setPlayerCutscenePose('waking', wakeProgress);
-
-    // Kristin stands up from crouching to full standing height as player wakes up
-    if (kristinModel && kristinModel.root) {
-      const ease = wakeProgress * wakeProgress * (3 - 2 * wakeProgress);
-      const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.82, 13.9) : 0.1;
-      const curY = THREE.MathUtils.lerp(gy - 0.58, gy, ease);
-      const curRotX = THREE.MathUtils.lerp(0.42, 0, ease);
-      const curRotZ = THREE.MathUtils.lerp(0.16, 0, ease);
-      kristinModel.root.position.set(0.82, curY, 13.9);
-      kristinModel.root.rotation.set(curRotX, -Math.PI / 2 - 0.28, curRotZ);
-    }
-
-    // Player retrieves dropped shotgun from snow
-    if (wakeProgress > 0.82 && cutsceneDroppedShotgun && scene) {
-      scene.remove(cutsceneDroppedShotgun);
-      cutsceneDroppedShotgun = null;
+    if (headGroup) {
+      headGroup.rotation.y = Math.sin(cutsceneTime * 1.2) * 0.07;
+      headGroup.rotation.z = Math.sin(cutsceneTime * 0.9) * 0.04;
     }
   }
 
-  if (cutsceneTime >= 28.0) {
+  // 2. Animate Kristin looking alert & speaking
+  if (kristinModel && kristinModel.root) {
+    if (cutsceneTime > 14.5 && cutsceneTime < 21.5) {
+      // Turn to talk to Rodrick
+      kristinModel.root.rotation.y = THREE.MathUtils.lerp(kristinModel.root.rotation.y, -0.65, dt * 2.5);
+    } else if (cutsceneTime >= 21.5) {
+      // Turn forward toward village lane
+      kristinModel.root.rotation.y = THREE.MathUtils.lerp(kristinModel.root.rotation.y, -0.2, dt * 2.5);
+    }
+  }
+
+  // 3. Stage 4 Night Transition: Truck & Old Thomas vanish into the dark moors
+  if (cutsceneTime >= 21.5) {
+    if (cutsceneTruck && cutsceneTruck.visible) cutsceneTruck.visible = false;
+    if (cutsceneOldThomas && cutsceneOldThomas.visible) cutsceneOldThomas.visible = false;
+  }
+
+  if (cutsceneTime >= 28.5) {
     finishCutscene();
     return;
   }
 
-  // 3. Camera Choreography & Subtitles
+  // 4. Camera Choreography & Subtitles
   let stage = null;
   let stageIdx = -1;
   for (let i = 0; i < CUTSCENE_STAGES.length; i++) {
@@ -552,10 +548,22 @@ export function updateCutscene(dt) {
 }
 
 export function finishCutscene() {
-  if (!isCinematicActive) return;
+  if (!isCinematicActive || activeCutsceneType !== 'intro') return;
   isCinematicActive = false;
 
-  // Remove dropped shotgun if still present
+  // Clean up vintage truck & Old Thomas
+  if (cutsceneTruck && scene) {
+    scene.remove(cutsceneTruck);
+    cutsceneTruck = null;
+  }
+  if (cutsceneOldThomas && scene) {
+    scene.remove(cutsceneOldThomas);
+    cutsceneOldThomas = null;
+  }
+
+  // Keep cutsceneVillageGate as a permanent entrance landmark in the world
+
+  // Remove dropped shotgun if any
   if (cutsceneDroppedShotgun && scene) {
     scene.remove(cutsceneDroppedShotgun);
     cutsceneDroppedShotgun = null;
@@ -566,16 +574,18 @@ export function finishCutscene() {
   if (state && state.player) state.player.isInvulnerable = false;
 
   // Position Kristin beside player ready for escort mode
+  const gyK = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.2, 13.8) : 0.1;
   if (kristinModel && kristinModel.root) {
-    const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.2, 13.8) : 0.1;
-    kristinModel.root.position.set(1.2, gy, 13.8);
+    kristinModel.root.position.set(1.2, gyK, 13.8);
     kristinModel.root.rotation.set(0, -0.35, 0);
   }
 
-  // Restore camera to default player eye-level spawn
+  // Restore camera to default player eye-level spawn facing into Coldbrook Village (negative Z)
+  const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0, 14.0) : 0.1;
+  playerPos.set(0, gyP, 14.0);
   if (cameraRef) {
-    cameraRef.position.set(0, 1.8, 14.0);
-    cameraRef.rotation.set(0, 0, 0);
+    cameraRef.position.set(0, gyP + 1.8, 14.0);
+    setPlayerYawPitch(0, 0);
   }
 
   // Fade out and hide cinema overlay

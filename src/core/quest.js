@@ -9,82 +9,82 @@ import { giveKristinHint } from '../entities/kristin.js';
 export const OBJECTIVES = {
   'prolog': {
     id: 'prolog',
-    chapter: 'PROLOG: PENELITIAN YANG SALAH WAKTU',
-    title: 'Periksa Desa Karang Wening',
-    journal: 'Dua minggu penelitian ritual dan sampel air di lereng gunung. Ada yang aneh dengan senyum warga...',
-    location: 'Gerbang Desa Karang Wening',
+    chapter: 'PROLOGUE: EXPEDITION AT THE BLACKWOOD MOORS',
+    title: 'Investigate Coldbrook Village',
+    journal: 'Two weeks studying ancient parish rites and hydrology samples in Yorkshire Moors. Something is deeply unsettling with the villagers\' smiles...',
+    location: 'Coldbrook Village Gothic Gate',
     marker: { x: 0, z: 20 }
   },
   '1.1': {
     id: '1.1',
-    chapter: 'BAB 1: DESA SUNYI',
-    title: 'OBJEKTIF 1.1: Cari Tempat Aman dan Senjata',
-    journal: 'Gerbang dijaga umat. Cari rumah warga yang menolak ajaran Guru (Pak Darmo), mungkin dia menyimpan sesuatu.',
-    location: 'Rumah Pak Darmo, ujung gang timur (tanda tengkorak babi hutan)',
+    chapter: 'CHAPTER 1: THE SILENT PARISH',
+    title: 'OBJECTIVE 1.1: Seek Shelter & Weapon',
+    journal: 'The gate is chained shut by the Devout. Find Darrell\'s cottage at the eastern lane—he rejected Father Raksha\'s cult and kept weapons.',
+    location: 'Darrell\'s Hunting Cottage (East lane, boar skull on fence post)',
     marker: { x: -13, z: -6 }
   },
   '1.2': {
     id: '1.2',
-    chapter: 'BAB 1: DESA SUNYI',
-    title: 'OBJEKTIF 1.2: Cari Jalan Keluar Selain Gerbang',
-    journal: 'Gerbang tidak mungkin. Cari seseorang yang tahu jalan lain (Ibu Sumi).',
-    location: 'Rumah Ibu Sumi di dekat Sendang Tua (mata air lama barat desa)',
+    chapter: 'CHAPTER 1: THE SILENT PARISH',
+    title: 'OBJECTIVE 1.2: Find Alternate Escape Route',
+    journal: 'The main road is guarded by the Devout. Seek Mrs. Eleanor, the parish elder residing near the ancient spring.',
+    location: 'Mrs. Eleanor\'s Cottage near Ancient Spring (West hill)',
     marker: { x: -45, z: 20 }
   },
   '1.3': {
     id: '1.3',
-    chapter: 'BAB 1: DESA SUNYI',
-    title: 'OBJEKTIF 1.3: Buka Jalur Rahasia Sendang Tua',
-    journal: 'Dengarkan nyanyian umat: "Tiga sujud, dua tunduk, satu diam". Hitungannya adalah kunci pintu batu.',
-    location: 'Sendang Tua (Dinding batu & 3 patung sujud)',
+    chapter: 'CHAPTER 1: THE SILENT PARISH',
+    title: 'OBJECTIVE 1.3: Unlock the Secret Path at Ancient Spring',
+    journal: 'Listen to the hymn chanting pattern: "Three prostrations, two bows, one silence". Strike the three stone statues.',
+    location: 'Ancient Spring (Stone Vault & 3 Kneeling Statues)',
     marker: { x: -60, z: 35 }
   },
   '2.1': {
     id: '2.1',
-    chapter: 'BAB 2: DI BAWAH RUMAH IBADAH',
-    title: 'OBJEKTIF 2.1: Telusuri Fasilitas Bawah Tanah',
-    journal: 'Lorong kuno ini tembus ke bawah rumah ibadah. Cari bukti protokol eksperimen manusia dan relawan Rendra.',
-    location: 'Fasilitas Bawah Tanah',
+    chapter: 'CHAPTER 2: BENEATH THE CATHEDRAL ABBEY',
+    title: 'OBJECTIVE 2.1: Infiltrate Underground Vault',
+    journal: 'This subterranean tunnel leads beneath the abbey. Search for clinical experiment records and volunteer Brandon.',
+    location: 'Underground Catacomb Vaults',
     marker: { x: 10, z: -40 }
   },
   '2.2': {
     id: '2.2',
-    chapter: 'BAB 2: DI BAWAH RUMAH IBADAH',
-    title: 'OBJEKTIF 2.2: Nyalakan Radio & Hubungi Dunia Luar',
-    journal: 'Cari 3 sekring di Ruang Rawat, Dapur Air, dan Arsip. Hubungi Dr. Laras Kusumo lewat radio.',
-    location: 'Ruang Radio & Generator Bawah Tanah',
+    chapter: 'CHAPTER 2: BENEATH THE CATHEDRAL ABBEY',
+    title: 'OBJECTIVE 2.2: Restore Power & Radio Dr. Laura',
+    journal: 'Locate 3 glass tube fuses in the Ward, Water Kitchen, and Archives. Contact Dr. Laura on the radio frequency.',
+    location: 'Radio Room & Generator Substation',
     marker: { x: 15, z: -45 }
   },
   '2.3': {
     id: '2.3',
-    chapter: 'BAB 2: DI BAWAH RUMAH IBADAH',
-    title: 'OBJEKTIF 2.3: Cari Lab Utama & Kalahkan Ibu Asuh',
-    journal: 'Pintu lab terkunci kode 7391. Di Dapur Air, matikan 3 katup merah untuk melemahkan Ibu Asuh!',
-    location: 'Dapur Air & Pintu Lab 7391',
+    chapter: 'CHAPTER 2: BENEATH THE CATHEDRAL ABBEY',
+    title: 'OBJECTIVE 2.3: Breaching Main Lab & Subdue Matron Agnes',
+    journal: 'Main lab door locked with code 7391. Shut off the 3 red pipeline valves in the Water Kitchen to weaken Matron Agnes!',
+    location: 'Water Kitchen & Lab Door 7391',
     marker: { x: 25, z: -50 }
   },
   '2.4': {
     id: '2.4',
-    chapter: 'BAB 2: DI BAWAH RUMAH IBADAH',
-    title: 'OBJEKTIF 2.4: Racik Penawar Wabah',
-    journal: 'Temui Bima di Lab Utama. Racik: Ampul Dasar Bima -> Stabilizer Pendingin -> Sampel Murni Air Suci.',
-    location: 'Laboratorium Utama Bawah Tanah',
+    chapter: 'CHAPTER 2: BENEATH THE CATHEDRAL ABBEY',
+    title: 'OBJECTIVE 2.4: Synthesize the Antidote Compound',
+    journal: 'Meet Benjamin in the lab. Formulate: Benjamin\'s Base Ampoule -> Cryo-Stabilizer -> Pure Holy Water Sample.',
+    location: 'Cathedral Main Laboratory',
     marker: { x: 30, z: -55 }
   },
   '3.1': {
     id: '3.1',
-    chapter: 'BAB 3: HARI PENYUCIAN',
-    title: 'OBJEKTIF 3.1: Hentikan Ritual Massal di Alun-Alun',
-    journal: 'Ritual dimulai saat bulan di atas menara lonceng. Naik ke alun-alun dan hadapi Guru Raksa.',
-    location: 'Alun-alun Menara Lonceng',
+    chapter: 'CHAPTER 3: THE PURIFICATION DAY',
+    title: 'OBJECTIVE 3.1: Halt the Mass Ritual at the Plaza',
+    journal: 'The ritual begins as the moon aligns with the bell tower. Ascend to the square and confront Father Raksha!',
+    location: 'Cathedral Bell Tower Plaza',
     marker: { x: 0, z: -70 }
   },
   '3.2': {
     id: '3.2',
-    chapter: 'BAB 3: HARI PENYUCIAN',
-    title: 'OBJEKTIF 3.2: Putus Aliran Tangki & Lawan Guru Raksa',
-    journal: 'Putus 3 katup menara lonceng. Hindari kepungan umat dan serang titik lemah dada bercahaya Guru Raksa!',
-    location: 'Menara Lonceng Alun-Alun',
+    chapter: 'CHAPTER 3: THE PURIFICATION DAY',
+    title: 'OBJECTIVE 3.2: Sever Holy Water Tank & Defeat Father Raksha',
+    journal: 'Shut down the 3 bell tower valves. Evade the flock and target Father Raksha\'s radiant mutated chest core!',
+    location: 'Abbey Bell Tower Summit',
     marker: { x: 0, z: -75 }
   }
 };

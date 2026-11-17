@@ -1083,7 +1083,7 @@ export function spawnNonaBataviaBoss(state) {
   // Update Boss Banner
   const nameBanner = document.getElementById('boss-name-banner');
   if (nameBanner) {
-    nameBanner.textContent = 'NONA BATAVIA - ROH GENTAYANGAN';
+    nameBanner.textContent = 'LADY MITHRILL - THE WEEPING BRIDE';
     nameBanner.style.color = '#ffd15c';
     nameBanner.style.textShadow = '0 0 16px rgba(223, 183, 67, 0.8), 2px 2px 0 #400';
   }
@@ -1093,7 +1093,7 @@ export function spawnNonaBataviaBoss(state) {
 
   const banner = document.getElementById('boss-warning-flash');
   if (banner) {
-    banner.textContent = `PERINGATAN: ${killsCount} CRIMSON PURGED! NONA BATAVIA MENDEKAT!`;
+    banner.textContent = `PERINGATAN: ${killsCount} CRIMSON PURGED! LADY MITHRILL MENDEKAT!`;
     banner.style.color = '#ffd15c';
     banner.style.opacity = '1';
     setTimeout(() => { if (banner) banner.style.opacity = '0'; }, 3400);
@@ -1146,9 +1146,9 @@ export function spawnNonaBataviaBoss(state) {
 
   zombies.push(currentBoss);
 
-  // Trigger Nona Batavia Cinematic Cutscene with sound
+  // Trigger Lady Mithrill Cinematic Cutscene with sound
   startNonaBataviaCutscene(currentBoss, cameraRef, Sfx, () => {
-    showDialogSubtitle(`Waspada bro! Nona Batavia gentayangan terbang di atas bawa pasukan! Tembak jatuh!`);
+    showDialogSubtitle(`Waspada bro! Lady Mithrill gentayangan terbang di atas bawa pasukan! Tembak jatuh!`);
 
     // Escort pack of running zombies spawns when cutscene ends
     const escortCount = Math.min(12, 7 + milestoneCount);
@@ -1232,7 +1232,7 @@ export function killZombieWithKinematics(z, shotDir, hitDistance, isHeadshot, st
       else if (Sfx.playLadyMithrillScream) Sfx.playLadyMithrillScream();
       showDialogSubtitle('Waspada bro! Tubuhnya kelebihan energi gaib! Dia mau meledak!');
       setTimeout(() => {
-        showDialogSubtitle('GILA LU BRO! Hancur lebur tuh setan Batavia! Kita selamat!');
+        showDialogSubtitle('GILA LU BRO! Hancur lebur tuh hantu Lady Mithrill! Kita selamat!');
       }, 2600);
       spawnNonaBataviaDeathSequence(z, Sfx);
 

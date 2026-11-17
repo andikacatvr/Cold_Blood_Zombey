@@ -411,7 +411,7 @@ function drawFullTacticalMap() {
 
     ctx.font = 'bold 11px monospace';
     ctx.fillStyle = '#ff6677';
-    ctx.fillText('BOSS: NONA BATAVIA', bx + 12, bz + 4);
+    ctx.fillText('BOSS: LADY MITHRILL', bx + 12, bz + 4);
   }
 
   // 12. Player Marker (Blinking Pin with Directional View Cone)

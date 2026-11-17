@@ -73,43 +73,43 @@ export function toggleCompanionFollow(sfxRef = Sfx) {
 
 export const KRISTIN_OBJECTIVE_HINTS = {
   '1.1': [
-    "Warga yang berani nolak ajaran Guru pasti tinggal agak jauh dari pusat. Coba arah timur, Rod.",
-    "Tadi siang Pak Darmo cerita dia berburu babi hutan. Rumahnya yang ada tengkorak babi hutan di tiang pagar, Rod!",
-    "Gang paling timur, rumah Pak Darmo. Cek celah lemari kayu di sana, cari shotgun! Ayo cepat."
+    "Anyone who defied Father Raksha's cult lives away from the village square. Check the eastern lane, Rod.",
+    "Darrell the huntsman told us he hunts wild boar. His cottage has the skull mounted on the fence post!",
+    "Eastern lane, Darrell's cottage. Check the wooden table inside for his double-barrel shotgun! Hurry!"
   ],
   '1.2': [
-    "Gerbang dijaga ketat sama umat. Kita harus cari tetua yang nggak pernah ikut ritual Guru...",
-    "Ibu Sumi! Rumahnya dekat mata air tua (Sendang) di barat desa, Rod.",
-    "Ikuti jalan setapak berbatu ke barat arah sendang. Temui Ibu Sumi sekarang, dia tahu jalan rahasia!"
+    "The main road is chained shut by the Devout. We must find Mrs. Eleanor, the parish elder who refused the communion...",
+    "Mrs. Eleanor! She lives near the ancient stone spring on the western ridge, Rod.",
+    "Follow the cobblestone trail west toward the old spring. Find Mrs. Eleanor—she knows the hidden path through the hills!"
   ],
   '1.3': [
-    "Putar lagi rekaman nyanyian umat di dekat sendang, Rod. Dengarkan baik-baik hitungannya.",
-    "Liriknya menyebut pola: 'Tiga sujud, dua tunduk, satu diam.'",
-    "Ada tiga patung di sendang! Tekan 3 kali patung kiri, 2 kali patung tengah, 1 kali patung kanan!"
+    "Replay the recording of the parish hymn near the spring, Rod. Listen closely to the count.",
+    "The verses speak of 'Three prostrations, two bows, one silence.'",
+    "There are three kneeling stone statues! Press 3 times on the left, 2 in the center, and 1 on the right!"
   ],
   '2.1': [
-    "Lorong kuno ini tembus ke bawah rumah ibadah. Hati-hati, cari bukti eksperimen mereka.",
-    "Ada suara di balik lemari lorong! Cek di sana, mungkin ada orang yang masih sadar!"
+    "This ancient catacomb leads directly beneath the cathedral abbey. Search for clinical experiment records.",
+    "I hear someone behind the cabinet down the hall! Check it out, someone might still be sane!"
   ],
   '2.2': [
-    "Panel listrik butuh tiga sekring buat nyalain generator dan radio. Cari benda kaca kecil berbentuk tabung.",
-    "Sekringnya tersebar di Ruang Rawat, Dapur Air, dan Ruang Arsip. Kumpulkan ketiganya, Rod!"
+    "The generator panel requires three glass tube fuses to power the shortwave radio. Search the premises.",
+    "The fuses are scattered in the Ward, Water Kitchen, and Archive Room. Collect all three, Rod!"
   ],
   '2.3': [
-    "Kode pintu Lab Utama ada 4 angka. Hitung: ranjang (7), tong (3), berkas merah (9), lilin (1). Kodenya 7391!",
-    "Dapur Air! Katup pipanya merah. Ibu Asuh mengejar suara, tutup ketiga katupnya buat melemahkannya!"
+    "The Main Lab passcode has 4 digits. Count: beds (7), barrels (3), red files (9), candles (1). The code is 7391!",
+    "In the Water Kitchen! The valves are crimson. Matron Agnes hunts sound—shut all three pipeline valves to weaken her!"
   ],
   '2.4': [
-    "Catatan medis bilang yang paling stabil ditaruh duluan. Masukkan ampul Bima dulu, Rod!",
-    "Urutan meja racik: Ampul Dasar Bima -> Stabilizer lemari es -> Sampel air suci murni!"
+    "The clinical notes state the most stable compound must be mixed first. Add Benjamin's ampoule first, Rod!",
+    "Formulation order: Benjamin's Base -> Cryo-Stabilizer -> Pure Holy Water Sample!"
   ],
   '3.1': [
-    "Ritual massal Guru Raksa diadakan di alun-alun dekat menara lonceng. Kita harus naik ke atas!",
-    "Hati-hati sama umat di alun-alun, mereka mengepung tapi bisa dialihkan dengan suara!"
+    "Father Raksha's purification ritual is gathering at the abbey bell tower plaza. We must ascend to the surface!",
+    "Beware the Devout surrounding the square—they swarm in unison, but can be distracted by loud noises!"
   ],
   '3.2': [
-    "Putus 3 katup air suci di lantai dasar, tengah, dan atas menara lonceng sebelum racun tersebar!",
-    "Dada Guru Raksa bercahaya saat bermutasi! Tembak tepat di tanda bercahaya di dadanya, itu titik lemahnya!"
+    "Sever the 3 release valves on the ground, middle, and top floors of the bell tower before the vapor spreads!",
+    "Father Raksha's chest is glowing with mutated ritual glyphs! Aim for the glowing core in his chest—that's his weak point!"
   ]
 };
 

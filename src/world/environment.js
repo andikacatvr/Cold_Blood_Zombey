@@ -201,7 +201,7 @@ export const housePickups = [
     available: true
   },
   {
-    id: 'shotgun_pak_darmo',
+    id: 'shotgun_darrell',
     pos: new THREE.Vector3(-12.8, 1.1, -7.0),
     mesh: null,
     available: true
@@ -258,15 +258,15 @@ export function checkHousePickups(cameraPos, state, updateHUD) {
         } else {
           showPickupAlert(`BERKAH RELIK: +40% VITALITAS PULIH!`, true);
         }
-      } else if (item.id === 'shotgun_pak_darmo') {
+      } else if (item.id === 'shotgun_darrell') {
         state.player.weapon = 'pump';
         state.player.maxClip = 8;
         state.player.clip = 8;
         state.player.reserve = 32;
-        if (window.__equipDarmoShotgun) window.__equipDarmoShotgun();
+        if (window.__equipDarrellShotgun) window.__equipDarrellShotgun();
         Sfx.playPumpRack();
-        showPickupAlert(`MENEMUKAN SHOTGUN LARAS GANDA PAK DARMO & 40 SHELLS!`);
-        if (window.__triggerDarmoPickup) window.__triggerDarmoPickup();
+        showPickupAlert(`MENEMUKAN SENAPAN LARAS GANDA DARRELL & 40 SHELLS!`);
+        if (window.__triggerDarrellPickup) window.__triggerDarrellPickup();
       }
       if (updateHUD) updateHUD();
     }
@@ -664,29 +664,29 @@ export function initWorld(scene, textures) {
     vitalFlaskGroup.add(flaskMesh);
     house.add(vitalFlaskGroup);
 
-    // Pak Darmo's Double-Barrel Shotgun on wooden table
-    const darmoShotgunGroup = new THREE.Group();
-    darmoShotgunGroup.position.set(0.2, 0.98, -1.0);
+    // Darrell's Double-Barrel Shotgun on wooden table
+    const darrellShotgunGroup = new THREE.Group();
+    darrellShotgunGroup.position.set(0.2, 0.98, -1.0);
     const sgBarrel = new THREE.Mesh(
       new THREE.CylinderGeometry(0.022, 0.022, 0.78, 8),
       new THREE.MeshStandardMaterial({ color: 0x2a2c30, metalness: 0.85, roughness: 0.35 })
     );
     sgBarrel.rotation.z = Math.PI / 2;
-    darmoShotgunGroup.add(sgBarrel);
+    darrellShotgunGroup.add(sgBarrel);
     const sgStock = new THREE.Mesh(
       new THREE.BoxGeometry(0.26, 0.075, 0.05),
       new THREE.MeshLambertMaterial({ color: 0x5a3219, emissive: 0x281408, emissiveIntensity: 0.5 })
     );
     sgStock.position.set(-0.35, -0.02, 0);
-    darmoShotgunGroup.add(sgStock);
-    house.add(darmoShotgunGroup);
+    darrellShotgunGroup.add(sgStock);
+    house.add(darrellShotgunGroup);
 
     if (housePickups.length >= 3) {
       housePickups[0].mesh = ammoBoxGroup;
       housePickups[0].pos.set(x + 1.8, 0.95, z - 1.0);
       housePickups[1].mesh = vitalFlaskGroup;
       housePickups[1].pos.set(x - 0.6, 2.7, z - halfD + 0.6);
-      housePickups[2].mesh = darmoShotgunGroup;
+      housePickups[2].mesh = darrellShotgunGroup;
       housePickups[2].pos.set(x + 0.2, 0.98, z - 1.0);
     }
 

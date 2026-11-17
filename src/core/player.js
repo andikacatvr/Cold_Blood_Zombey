@@ -199,7 +199,7 @@ export function switchWeapon(weaponType) {
     state.player.maxClip = 8;
     if (state.player.clip > 8) state.player.clip = 8;
     if (nameEl) {
-      nameEl.innerText = 'SHOTGUN PAK DARMO';
+      nameEl.innerText = 'DARRELL\'S SHOTGUN';
       nameEl.style.color = '#78e08f';
     }
   } else if (target === 'spin') {
@@ -209,7 +209,7 @@ export function switchWeapon(weaponType) {
     state.player.maxClip = 60;
     if (state.player.clip > 60) state.player.clip = 60;
     if (nameEl) {
-      nameEl.innerText = 'SHOTGUN PUTAR M1887';
+      nameEl.innerText = 'M1887 LEVER SHOTGUN';
       nameEl.style.color = '#ff9933';
     }
   } else if (target === 'golok') {
@@ -219,7 +219,7 @@ export function switchWeapon(weaponType) {
     state.player.maxClip = 0;
     state.player.clip = 0;
     if (nameEl) {
-      nameEl.innerText = 'GOLOK TAJAM';
+      nameEl.innerText = 'HUNTING MACHETE';
       nameEl.style.color = '#ff4455';
     }
   }
@@ -227,13 +227,13 @@ export function switchWeapon(weaponType) {
   updateHUD(state);
 }
 
-window.__equipDarmoShotgun = () => {
+window.__equipDarrellShotgun = () => {
   switchWeapon('pump');
 };
 
-window.__triggerDarmoPickup = () => {
+window.__triggerDarrellPickup = () => {
   setObjective('1.2');
-  showDialogSubtitle("Mantap Rod, lo dapet shotgun Pak Darmo! Tapi ingat pesannya: jangan percaya yang tersenyum terus! Sekarang kita cari Ibu Sumi di Sendang Tua!", 5500);
+  showDialogSubtitle("Mantap Rod, lo nemu shotgun laras ganda Darrell! Tapi ingat pesannya: jangan percaya siapapun yang tersenyum terus! Sekarang kita cari Mrs. Eleanor di dekat Ancient Spring!", 5500);
 };
 
 export function performGolokSlash(isQuick = false) {
@@ -353,7 +353,7 @@ export function reloadWeapon() {
 export function fireCombatShotgun() {
   const p = state.player;
   if (p.weapon === 'unarmed') {
-    showDialogSubtitle("Aku belum punya senjata! Aku harus cari senjata di Rumah Pak Darmo (ujung gang timur)!", 3500);
+    showDialogSubtitle("Aku belum punya senjata! Aku harus cari senapan di Pondok Darrell (ujung jalan timur)!", 3500);
     if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(1600, 0.4);
     return;
   }
