@@ -753,6 +753,14 @@ export function returnToMainMenu() {
   if (cinOverlay) cinOverlay.style.display = 'none';
   const bossHud = document.getElementById('boss-hud-container');
   if (bossHud) bossHud.style.display = 'none';
+
+  const menuRoot = document.getElementById('menu-view-root');
+  if (menuRoot) menuRoot.style.display = 'block';
+  const menuModes = document.getElementById('menu-view-modes');
+  if (menuModes) menuModes.style.display = 'none';
+  const menuControls = document.getElementById('menu-view-controls');
+  if (menuControls) menuControls.style.display = 'none';
+
   const screenStart = document.getElementById('screen-start');
   if (screenStart) screenStart.style.display = 'flex';
   try {

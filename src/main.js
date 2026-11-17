@@ -1097,6 +1097,29 @@ function init() {
   });
   setupMapListeners(state);
 
+  const menuViewRoot = document.getElementById('menu-view-root');
+  const menuViewModes = document.getElementById('menu-view-modes');
+  const menuViewControls = document.getElementById('menu-view-controls');
+
+  function showMenuView(view) {
+    if (menuViewRoot) menuViewRoot.style.display = (view === 'root') ? 'block' : 'none';
+    if (menuViewModes) menuViewModes.style.display = (view === 'modes') ? 'block' : 'none';
+    if (menuViewControls) menuViewControls.style.display = (view === 'controls') ? 'block' : 'none';
+    if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(2400, 0.4);
+  }
+
+  const btnMenuPlay = document.getElementById('btn-menu-play');
+  if (btnMenuPlay) btnMenuPlay.addEventListener('click', () => showMenuView('modes'));
+
+  const btnMenuControls = document.getElementById('btn-menu-controls');
+  if (btnMenuControls) btnMenuControls.addEventListener('click', () => showMenuView('controls'));
+
+  const btnModesBack = document.getElementById('btn-modes-back');
+  if (btnModesBack) btnModesBack.addEventListener('click', () => showMenuView('root'));
+
+  const btnControlsBack = document.getElementById('btn-controls-back');
+  if (btnControlsBack) btnControlsBack.addEventListener('click', () => showMenuView('root'));
+
   const btnStartStory = document.getElementById('btn-start-story');
   if (btnStartStory) btnStartStory.addEventListener('click', () => startWinterSurvive(scene, 'story'));
 

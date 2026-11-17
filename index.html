@@ -44,30 +44,6 @@
       </div>
     </div>
 
-    <!-- ACTIVE SURVIVAL OBJECTIVE / QUEST TRACKER -->
-    <div id="hud-quest-panel" style="position:absolute; top:75px; left:25px; z-index:40; pointer-events:none; font-family:'VT323', monospace; max-width:380px;">
-      <div style="background:rgba(8,12,10,0.90); border-left:3px solid #78e08f; border-top:1px solid #233e2b; border-right:1px solid #233e2b; border-bottom:1px solid #233e2b; padding:8px 14px; border-radius:4px; box-shadow:0 0 16px rgba(0,0,0,0.85);">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span id="quest-chapter-tag" style="color:#78e08f; font-size:16px; letter-spacing:1px; font-weight:bold;">BAB 1: DESA SUNYI</span>
-          <span style="color:#8ca693; font-size:14px;">[JURNAL]</span>
-        </div>
-        <div id="quest-title-text" style="color:#ffffff; font-size:22px; margin-top:3px; line-height:1.2; text-shadow:0 0 8px rgba(120,224,143,0.4);">
-          OBJEKTIF 1.1: Cari Tempat Aman &amp; Senjata
-        </div>
-        <div id="quest-desc-text" style="color:#b2c9b9; font-size:16px; margin-top:3px; line-height:1.2;">
-          "Gerbang Coldbrook dirantai. Temukan pondok Darrell di timur desa (tanda tengkorak babi hutan)."
-        </div>
-        <div id="kristin-live-compass" style="margin-top:6px; background:rgba(18,36,26,0.92); border:1px solid #4a825b; border-left:3px solid #5cf0a5; border-radius:3px; padding:3px 8px; display:flex; align-items:center; gap:8px;">
-          <span style="color:#5cf0a5; font-size:16px; font-weight:bold;">🧭 ARAHAN KRISTIN:</span>
-          <span id="kristin-compass-text" style="color:#e0f7ea; font-size:16px;">"Dekati Old Thomas di gerbang (▲ 14m)"</span>
-        </div>
-        <div style="margin-top:6px; display:flex; align-items:center; gap:8px;">
-          <span style="background:#1a3823; color:#a2f0b5; border:1px solid #4a825b; padding:2px 7px; border-radius:3px; font-size:14px; pointer-events:auto; cursor:pointer;" id="quest-hint-key-btn">TEKAN [H]</span>
-          <span style="color:#92a898; font-size:15px;">Minta Petunjuk ke Kristin</span>
-        </div>
-      </div>
-    </div>
-
     <!-- PURE CINEMATIC AGENT DIALOGUE SUBTITLE (AGENT NATALIA) -->
     <div id="natalia-npc-banner" style="display:none; position:absolute; bottom:145px; left:50%; transform:translateX(-50%); background:rgba(18,14,10,0.94); border:1px solid #a87232; color:#f0e2d0; font-family:'VT323', monospace; padding:10px 22px; border-radius:6px; box-shadow:0 0 24px rgba(0,0,0,0.9); text-align:left; z-index:46; pointer-events:none; max-width:85%; min-width:320px; transition:opacity 0.4s ease;">
       <div style="display:inline-flex; align-items:center; gap:14px;">
@@ -136,6 +112,30 @@
         </div>
       </div>
 
+      <!-- ACTIVE SURVIVAL OBJECTIVE / QUEST TRACKER (NESTED IN HUD) -->
+      <div id="hud-quest-panel" style="position:absolute; top:75px; left:25px; z-index:40; pointer-events:none; font-family:'VT323', monospace; max-width:380px;">
+        <div style="background:rgba(8,12,10,0.92); border-left:3px solid #78e08f; border-top:1px solid #233e2b; border-right:1px solid #233e2b; border-bottom:1px solid #233e2b; padding:8px 14px; border-radius:4px; box-shadow:0 0 16px rgba(0,0,0,0.85);">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span id="quest-chapter-tag" style="color:#78e08f; font-size:16px; letter-spacing:1px; font-weight:bold;">BAB 1: DESA SUNYI</span>
+            <span style="color:#8ca693; font-size:14px;">[JURNAL]</span>
+          </div>
+          <div id="quest-title-text" style="color:#ffffff; font-size:22px; margin-top:3px; line-height:1.2; text-shadow:0 0 8px rgba(120,224,143,0.4);">
+            OBJEKTIF 1.1: Cari Tempat Aman &amp; Senjata
+          </div>
+          <div id="quest-desc-text" style="color:#b2c9b9; font-size:16px; margin-top:3px; line-height:1.2;">
+            "Gerbang Coldbrook dirantai. Temukan pondok Darrell di timur desa (tanda tengkorak babi hutan)."
+          </div>
+          <div id="kristin-live-compass" style="margin-top:6px; background:rgba(18,36,26,0.92); border:1px solid #4a825b; border-left:3px solid #5cf0a5; border-radius:3px; padding:3px 8px; display:flex; align-items:center; gap:8px;">
+            <span style="color:#5cf0a5; font-size:16px; font-weight:bold;">🧭 ARAHAN KRISTIN:</span>
+            <span id="kristin-compass-text" style="color:#e0f7ea; font-size:16px;">"Dekati Old Thomas di gerbang (▲ 14m)"</span>
+          </div>
+          <div style="margin-top:6px; display:flex; align-items:center; gap:8px;">
+            <span style="background:#1a3823; color:#a2f0b5; border:1px solid #4a825b; padding:2px 7px; border-radius:3px; font-size:14px; pointer-events:auto; cursor:pointer;" id="quest-hint-key-btn">TEKAN [H]</span>
+            <span style="color:#92a898; font-size:15px;">Minta Petunjuk ke Kristin</span>
+          </div>
+        </div>
+      </div>
+
       <!-- IN-GAME TACTICAL RADAR MINIMAP -->
       <div id="hud-minimap" title="Klik untuk membuka Peta Taktis Lengkap [M]">
         <canvas id="hud-minimap-canvas" width="130" height="130"></canvas>
@@ -153,54 +153,120 @@
       </div>
     </div>
 
-    <!-- START SCREEN (CLEAN & CINEMATIC WITH MODE SELECTION) -->
+    <!-- GRAND RETRO PS1 MAIN MENU & MODE SELECTION SYSTEM -->
     <div class="menu-panel" id="screen-start">
-      <div class="start-card" style="max-width: 720px; padding: 28px 24px;">
-        <div class="title-banner">COLD BLOOD ZOMBEY</div>
-        <div class="sub-banner">BLACKWOOD MOORS &bull; PILIH MODE PERMAINAN</div>
+      <div class="start-card main-menu-frame">
+        <!-- Retro PS1 Horror Tag -->
+        <div class="menu-retro-tag">PS1 SURVIVAL HORROR &bull; 1997 RETRO EDITION</div>
 
-        <div class="mode-select-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; width: 100%; margin: 18px 0;">
-          <!-- MODE 1: STORY MODE -->
-          <div class="mode-card" id="card-mode-story" style="background: rgba(14, 26, 20, 0.88); border: 2px solid #3d724e; border-radius: 6px; padding: 18px 16px; display: flex; flex-direction: column; justify-content: space-between; text-align: left; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.6);">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <span style="font-family:'VT323', monospace; font-size: 16px; background: #1a442b; color: #a2f0b5; border: 1px solid #4a825b; padding: 2px 8px; border-radius: 3px; letter-spacing: 1px;">KAMPANYE CERITA</span>
-                <span style="font-size: 22px;">📜</span>
-              </div>
-              <div style="font-family:'VT323', monospace; font-size: 26px; color: #ffffff; letter-spacing: 2px; font-weight: bold; margin-bottom: 4px;">
-                MODE CERITA (STORY MODE)
-              </div>
-              <div style="font-family:'VT323', monospace; font-size: 17px; color: #c0ded0; line-height: 1.25;">
-                Prolog kedatangan mobil pick-up, investigasi desa Coldbrook, Kristin sebagai pemandu jalan, wawancara warga, dan investigasi wabah biara!
-              </div>
-            </div>
-            <button class="btn-play" id="btn-start-story" style="margin-top: 14px; width: 100%; font-size: 22px; padding: 8px 12px; background: #235234; border-color: #52a66f; box-shadow: 0 0 14px rgba(60, 160, 90, 0.45);">
-              ▶ MAIN MODE CERITA
+        <!-- Massive Atmospheric Horror Title -->
+        <h1 class="title-banner">COLD BLOOD ZOMBEY</h1>
+        <div class="sub-banner">THE BLACKWOOD MOORS EXPEDITION &bull; DARK OCCULT INCIDENT</div>
+
+        <!-- SUBVIEW 1: ROOT MAIN MENU -->
+        <div id="menu-view-root" class="menu-subview">
+          <div class="menu-btn-column">
+            <button class="btn-play menu-action-btn" id="btn-menu-play">
+              <span class="btn-arrow">▶</span> MULAI PERMAINAN
+            </button>
+            <button class="btn-play btn-sec menu-action-btn" id="btn-menu-settings">
+              <span class="btn-arrow">⚙</span> PENGATURAN GAME
+            </button>
+            <button class="btn-play btn-sec menu-action-btn" id="btn-menu-controls">
+              <span class="btn-arrow">🎮</span> PANDUAN KONTROL
             </button>
           </div>
+          <div class="menu-footer-hint">Gunakan Mouse / Layar Sentuh HP &bull; Tekan [ESC] saat bermain untuk jeda</div>
+        </div>
 
-          <!-- MODE 2: ENDLESS MODE -->
-          <div class="mode-card" id="card-mode-endless" style="background: rgba(30, 14, 18, 0.88); border: 2px solid #8e1b24; border-radius: 6px; padding: 18px 16px; display: flex; flex-direction: column; justify-content: space-between; text-align: left; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.6);">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <span style="font-family:'VT323', monospace; font-size: 16px; background: #4a151b; color: #ff99a8; border: 1px solid #a82431; padding: 2px 8px; border-radius: 3px; letter-spacing: 1px;">SURVIVAL GELOMBANG</span>
-                <span style="font-size: 22px;">☠️</span>
+        <!-- SUBVIEW 2: MODE SELECTION (STORY VS ENDLESS) -->
+        <div id="menu-view-modes" class="menu-subview" style="display: none;">
+          <div class="mode-select-header">
+            <span class="mode-select-title">PILIH MODE PERMAINAN</span>
+            <span class="mode-select-subtitle">Pilih gaya bermain yang kamu inginkan untuk bertahan hidup</span>
+          </div>
+
+          <div class="mode-select-grid">
+            <!-- MODE 1: STORY MODE -->
+            <div class="mode-card mode-story-card" id="card-mode-story">
+              <div>
+                <div class="mode-card-top">
+                  <span class="mode-card-badge badge-story">KAMPANYE CERITA</span>
+                  <span class="mode-card-icon">📜</span>
+                </div>
+                <div class="mode-card-title">MODE CERITA (STORY MODE)</div>
+                <div class="mode-card-desc">
+                  Investigasi misteri desa Coldbrook. Mulai dari kedatangan mobil pick-up di gerbang desa berkabut, Kristin sebagai pemandu jalan, wawancara warga, hingga wabah neurotoksin biara meletus!
+                </div>
+                <ul class="mode-features-list">
+                  <li>✓ Prolog Sinematik Mobil Pick-Up</li>
+                  <li>✓ Kristin Pemandu Jalan (Follow Kristin)</li>
+                  <li>✓ Wawancara Warga Desa &amp; Investigasi</li>
+                  <li>✓ Unarmed Start &amp; Pertahanan Pondok</li>
+                </ul>
               </div>
-              <div style="font-family:'VT323', monospace; font-size: 26px; color: #ffffff; letter-spacing: 2px; font-weight: bold; margin-bottom: 4px;">
-                MODE BERTAHAN (ENDLESS MODE)
-              </div>
-              <div style="font-family:'VT323', monospace; font-size: 17px; color: #e6c5cb; line-height: 1.25;">
-                Aksi tembak instan! Langsung bersenjata Shotgun M1887 &amp; amunisi, hadapi gelombang mayat hidup bertubi-tubi dan Boss Lady Mithrill!
-              </div>
+              <button class="btn-play mode-launch-btn btn-story" id="btn-start-story">
+                ▶ MAINKAN MODE CERITA
+              </button>
             </div>
-            <button class="btn-play" id="btn-start-endless" style="margin-top: 14px; width: 100%; font-size: 22px; padding: 8px 12px; background: #8e1b24; border-color: #e6424e; box-shadow: 0 0 14px rgba(200, 30, 40, 0.45);">
-              ☠ MAIN MODE BERTAHAN
+
+            <!-- MODE 2: ENDLESS MODE -->
+            <div class="mode-card mode-endless-card" id="card-mode-endless">
+              <div>
+                <div class="mode-card-top">
+                  <span class="mode-card-badge badge-endless">SURVIVAL GELOMBANG</span>
+                  <span class="mode-card-icon">☠️</span>
+                </div>
+                <div class="mode-card-title">MODE BERTAHAN (ENDLESS MODE)</div>
+                <div class="mode-card-desc">
+                  Aksi tembak instan tanpa henti! Langsung dipersenjatai Shotgun M1887 Putar &amp; amunisi penuh, didampingi Kristin tempur membantai kawanan zombie dan boss pengantin!
+                </div>
+                <ul class="mode-features-list">
+                  <li>✓ Langsung Bersenjata Shotgun M1887 Putar</li>
+                  <li>✓ Kristin Mode Tempur Mendampingi Player</li>
+                  <li>✓ Gelombang Zombie Tak Terbatas (Wave I, II...)</li>
+                  <li>✓ Boss Lady Mithrill &amp; Sprinter Pengantin</li>
+                </ul>
+              </div>
+              <button class="btn-play mode-launch-btn btn-endless" id="btn-start-endless">
+                ☠ MAINKAN MODE BERTAHAN
+              </button>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <button class="btn-play btn-sec menu-back-btn" id="btn-modes-back">
+              ◀ KEMBALI KE MENU UTAMA
             </button>
           </div>
         </div>
 
-        <div class="start-btn-group" style="margin-top: 8px;">
-          <button class="btn-play btn-sec" id="btn-menu-settings">⚙ PENGATURAN</button>
+        <!-- SUBVIEW 3: CONTROLS & HOW TO PLAY -->
+        <div id="menu-view-controls" class="menu-subview" style="display: none;">
+          <div class="mode-select-header">
+            <span class="mode-select-title">PANDUAN KONTROL PERMAINAN</span>
+            <span class="mode-select-subtitle">Daftar tombol keyboard PC dan sentuh smartphone</span>
+          </div>
+
+          <div class="controls-guide-grid">
+            <div class="ctrl-row"><span class="ctrl-key">W A S D</span> <span class="ctrl-desc">Bergerak ke Depan / Kiri / Mundur / Kanan</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">SHIFT</span> <span class="ctrl-desc">Lari Cepat (Sprint)</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">SPASI</span> <span class="ctrl-desc">Melompat</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">KLIK KIRI</span> <span class="ctrl-desc">Menembak Senjata Shotgun / Melee</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">R</span> <span class="ctrl-desc">Isi Ulang Peluru Shells (Reload)</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">E</span> <span class="ctrl-desc">Bicara dengan Warga / Interaksi Kristin / Lanjut Dialog</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">C</span> <span class="ctrl-desc">Ganti Sudut Kamera (FPS Sudut Pandang Pertama / TPS Orang Ketiga)</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">T</span> <span class="ctrl-desc">Perintah Kristin: Ikuti Player / Diam di Tempat</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">H</span> <span class="ctrl-desc">Minta Petunjuk Arah ke Kristin</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">M</span> <span class="ctrl-desc">Buka / Tutup Peta Taktis Wilayah</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">ESC</span> <span class="ctrl-desc">Jeda Permainan &amp; Menu Pengaturan</span></div>
+          </div>
+
+          <div style="margin-top: 18px;">
+            <button class="btn-play btn-sec menu-back-btn" id="btn-controls-back">
+              ◀ KEMBALI KE MENU UTAMA
+            </button>
+          </div>
         </div>
       </div>
     </div>
