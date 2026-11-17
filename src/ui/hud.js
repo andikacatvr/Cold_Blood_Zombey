@@ -15,7 +15,10 @@ export function updateHUD(state) {
   const p = state.player;
   const ammoEl = document.getElementById('hud-ammo');
   if (ammoEl) {
-    if (p.weapon === 'golok') {
+    if (p.weapon === 'unarmed') {
+      ammoEl.innerText = 'SENJATA: TANGAN KOSONG (CARI SHOTGUN)';
+      ammoEl.style.color = '#ff9933';
+    } else if (p.weapon === 'golok') {
       ammoEl.innerText = 'MELEE: ∞ (TAJAM)';
       ammoEl.style.color = '#e6edf5';
     } else if (p.isReloading) {

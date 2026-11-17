@@ -47,10 +47,11 @@ import {
 import { updateHUD, showLifeLostAlert, triggerGameOver } from '../ui/hud.js';
 import { openSettings, closeSettings, isSettingsOpen } from '../ui/settingsMenu.js';
 import { toggleMap, closeMap, isMapOpen } from '../ui/mapMenu.js';
-import { triggerKristinGesture, toggleCompanionFollow, kristinModel, giveKristinHint } from '../entities/kristin.js';
+import { triggerKristinGesture, toggleCompanionFollow, kristinModel, giveKristinHint, showDialogSubtitle } from '../entities/kristin.js';
 import { triggerNataliaGesture, toggleNataliaFollow, nataliaModel } from '../entities/natalia.js';
 import { startIntroCutscene, isCinematicActive } from './cutscene.js';
 import { updateTouchControlsVisibility } from '../ui/touchControls.js';
+import { setObjective } from './quest.js';
 import {
   buildSurvivorPlayerModel,
   updatePlayerModelAnimation,
@@ -172,26 +173,68 @@ export function initPlayer(camera, scene) {
   }
 }
 
-export function switchWeapon() {
-  state.player.weapon = 'spin';
-  gameSettings.weapon = 'spin';
+export function switchWeapon(weaponType) {
+  const target = weaponType || state.player.weapon || 'unarmed';
+  state.player.weapon = target;
+  gameSettings.weapon = target;
   saveSettings();
 
-  pumpShotgunGroup.visible = false;
-  spinShotgunGroup.visible = true;
-  golokGroup.visible = false;
-
-  state.player.maxClip = 60;
-  if (state.player.clip > 60) state.player.clip = 60;
-
   const nameEl = document.getElementById('hud-weapon-name');
-  if (nameEl) {
-    nameEl.innerText = 'SHOTGUN PUTAR M1887';
-    nameEl.style.color = '#ff9933';
+
+  if (target === 'unarmed') {
+    pumpShotgunGroup.visible = false;
+    spinShotgunGroup.visible = false;
+    golokGroup.visible = false;
+    state.player.maxClip = 0;
+    state.player.clip = 0;
+    state.player.reserve = 0;
+    if (nameEl) {
+      nameEl.innerText = 'TANGAN KOSONG';
+      nameEl.style.color = '#a9b7c6';
+    }
+  } else if (target === 'pump') {
+    pumpShotgunGroup.visible = true;
+    spinShotgunGroup.visible = false;
+    golokGroup.visible = false;
+    state.player.maxClip = 8;
+    if (state.player.clip > 8) state.player.clip = 8;
+    if (nameEl) {
+      nameEl.innerText = 'SHOTGUN PAK DARMO';
+      nameEl.style.color = '#78e08f';
+    }
+  } else if (target === 'spin') {
+    pumpShotgunGroup.visible = false;
+    spinShotgunGroup.visible = true;
+    golokGroup.visible = false;
+    state.player.maxClip = 60;
+    if (state.player.clip > 60) state.player.clip = 60;
+    if (nameEl) {
+      nameEl.innerText = 'SHOTGUN PUTAR M1887';
+      nameEl.style.color = '#ff9933';
+    }
+  } else if (target === 'golok') {
+    pumpShotgunGroup.visible = false;
+    spinShotgunGroup.visible = false;
+    golokGroup.visible = true;
+    state.player.maxClip = 0;
+    state.player.clip = 0;
+    if (nameEl) {
+      nameEl.innerText = 'GOLOK TAJAM';
+      nameEl.style.color = '#ff4455';
+    }
   }
 
   updateHUD(state);
 }
+
+window.__equipDarmoShotgun = () => {
+  switchWeapon('pump');
+};
+
+window.__triggerDarmoPickup = () => {
+  setObjective('1.2');
+  showDialogSubtitle("Mantap Rod, lo dapet shotgun Pak Darmo! Tapi ingat pesannya: jangan percaya yang tersenyum terus! Sekarang kita cari Ibu Sumi di Sendang Tua!", 5500);
+};
 
 export function performGolokSlash(isQuick = false) {
   const now = performance.now();
@@ -269,7 +312,7 @@ export function performGolokSlash(isQuick = false) {
 
 export function reloadWeapon() {
   const p = state.player;
-  if (p.weapon === 'golok') return;
+  if (p.weapon === 'unarmed' || p.weapon === 'golok') return;
   if (p.isReloading || p.clip >= p.maxClip) return;
   p.isReloading = true;
 
@@ -309,6 +352,11 @@ export function reloadWeapon() {
 
 export function fireCombatShotgun() {
   const p = state.player;
+  if (p.weapon === 'unarmed') {
+    showDialogSubtitle("Aku belum punya senjata! Aku harus cari senjata di Rumah Pak Darmo (ujung gang timur)!", 3500);
+    if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(1600, 0.4);
+    return;
+  }
   const now = performance.now();
   const isSpin = (p.weapon === 'spin');
   const fireCooldown = isSpin ? 420 : 480;
@@ -571,13 +619,13 @@ export function startWinterSurvive(scene) {
   state.player.maxLives = 3;
   state.player.isInvulnerable = false;
   state.player.hp = 100;
-  state.player.weapon = gameSettings.weapon || 'spin';
-  state.player.maxClip = (state.player.weapon === 'golok' ? 0 : 60);
-  state.player.clip = state.player.maxClip;
-  state.player.reserve = 240;
+  state.player.weapon = 'unarmed';
+  state.player.maxClip = 0;
+  state.player.clip = 0;
+  state.player.reserve = 0;
   state.player.isReloading = false;
   state.running = false;
-  switchWeapon(state.player.weapon);
+  switchWeapon('unarmed');
 
   playerPos.set(0, 0, 14);
   if (cameraRef) {
