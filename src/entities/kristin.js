@@ -22,6 +22,9 @@ export let companionFollowMode = true;
 let walkCadence = 0;
 let lastFootstepTime = 0;
 let combatShootCooldown = 0;
+let lastLeadCalloutTime = 0;
+let lastWaitCalloutTime = 0;
+let lastArriveCalloutTime = 0;
 
 // Gesture state
 export let currentGesture = 'idle';
@@ -64,9 +67,15 @@ export function toggleCompanionFollow(sfxRef = Sfx) {
   companionFollowMode = !companionFollowMode;
   if (sfxRef && sfxRef.playSmallBell) sfxRef.playSmallBell(companionFollowMode ? 2600 : 1800, 0.45);
 
-  const text = companionFollowMode
-    ? "Siap bro, gua ikutin lu dari belakang! Ayo jalan!"
-    : "Oke, gua jaga di sini sambil mantau musuh! Panggil kalau lu butuh!";
+  const isEarly = (!window.__STORY_PHASE || window.__STORY_PHASE === 'orientation' || window.__STORY_PHASE === 'complication');
+  let text = '';
+  if (companionFollowMode) {
+    text = isEarly
+      ? 'KRISTIN: "Ayo Rod, ikuti gue! Gue tunjukin jalan ke objektif kita!"'
+      : 'KRISTIN: "Siap Rod, gue cover dan dampingi lo! Ayo maju!"';
+  } else {
+    text = 'KRISTIN: "Oke Rod, gue tunggu di sini dulu. Jangan lama-lama ya!"';
+  }
 
   showDialogSubtitle(text, 3800);
 }
@@ -160,33 +169,39 @@ let storyConvIndex = 0;
 
 export const GESTURE_CONFIG = {
   wave: {
-    tag: '👋 REKAN RISET',
-    text: '"Woi bro! Syukurlah lu beneran sadar! Gua kira lu udah abis diseret sihir gelap pas ledakan mantra di kamp tadi!"',
+    tag: '👋 SAPAAN',
+    text: '"Rod! Syukurlah kita selamat sampai di desa Coldbrook ini. Kabutnya tebal banget... Ikuti gue, ayo kita cari tahu apa yang terjadi!"',
     sound: (sfx) => { if (sfx && sfx.playSmallBell) sfx.playSmallBell(2400, 0.45); },
     duration: 3.8
   },
+  point: {
+    tag: '👉 PENUNJUK ARAH',
+    text: '"Rod! Jalannya lewat sini, ikuti gue!"',
+    sound: (sfx) => { if (sfx && sfx.playSmallBell) sfx.playSmallBell(2600, 0.4); },
+    duration: 3.5
+  },
+  beckon: {
+    tag: '👉 AJAK JALAN',
+    text: '"Rod! Jangan melamun di belakang, ayo lekas ikuti gue!"',
+    sound: (sfx) => { if (sfx && sfx.playSmallBell) sfx.playSmallBell(2400, 0.4); },
+    duration: 3.6
+  },
   pump: {
     tag: '⚔ SIAP TEMPUR',
-    text: '"Gua nemu shotgun pemburu di rumah ini. Pegang senjata lu erat-erat, kita ga bakal mati konyol di hutan ini!"',
+    text: '"Pegang shotgun lo erat-erat, Rod! Kita habisi monster-monster ini!"',
     sound: (sfx) => { if (sfx && sfx.playPumpRack) sfx.playPumpRack(); },
     duration: 3.5
   },
   cheer: {
     tag: '👍 SOLIDARITAS',
-    text: '"Gokil, bidikan lu mantep juga pas kepepet! Tenang, gua jagain punggung lu. Kita harus kabur bareng-bareng!"',
+    text: '"Bagus banget tembakan lo, Rod! Gue jagain punggung lo!"',
     sound: (sfx) => { if (sfx && sfx.playSmallBell) sfx.playSmallBell(2800, 0.5); },
-    duration: 3.6
-  },
-  beckon: {
-    tag: '👉 AMBIL PELURU',
-    text: '"Amunisi peluru shells gua taro di peti samping gua nih. Ambil secukupnya, jangan sampai kehabisan di luar!"',
-    sound: (sfx) => { if (sfx && sfx.playShellInsert) sfx.playShellInsert(); },
     duration: 3.6
   }
 };
 
 export function triggerKristinGesture(name, sfxRef = Sfx) {
-  const keys = ['wave', 'pump', 'cheer', 'beckon'];
+  const keys = ['wave', 'point', 'beckon', 'cheer'];
   let target = name;
   let isCycling = false;
   if (!target || !GESTURE_CONFIG[target]) {
@@ -198,32 +213,23 @@ export function triggerKristinGesture(name, sfxRef = Sfx) {
   currentGesture = target;
   gestureStartTime = performance.now();
   const cfg = GESTURE_CONFIG[target];
-  gestureDuration = cfg.duration;
+  gestureDuration = (cfg && cfg.duration) ? cfg.duration : 3.5;
 
   // Audio trigger
-  if (cfg.sound) cfg.sound(sfxRef);
+  if (cfg && cfg.sound) cfg.sound(sfxRef);
 
   // Spoken text line
-  let spokenText = cfg.text;
+  let spokenText = (cfg && cfg.text) ? cfg.text : '';
   if (isCycling) {
     const storyLine = STORY_CONVERSATIONS[storyConvIndex % STORY_CONVERSATIONS.length];
     storyConvIndex++;
     spokenText = storyLine;
   }
-  showDialogSubtitle(spokenText, 4800);
-
-  // Weapon switch sync for combat gesture
-  if (kristinModel && kristinModel.setWeapon) {
-    if (target === 'unarmed') {
-      kristinModel.setWeapon('unarmed');
-    } else if (target === 'pump') {
-      kristinModel.setWeapon('pump');
-    } else if (target === 'golok') {
-      kristinModel.setWeapon('golok');
-    } else {
-      kristinModel.setWeapon('spin');
-    }
+  if (spokenText) {
+    showDialogSubtitle(spokenText, 4800);
   }
+
+  // NOTE: Gestures NEVER force weapon changes! Weapons are controlled strictly by setWeapon().
 }
 
 export function createMiniWeapon(type) {
@@ -348,6 +354,12 @@ export function buildKristinCharacter(textures) {
   const miniPump = createMiniWeapon('pump');
   const miniGolok = createMiniWeapon('golok');
   const miniResearch = createMiniWeapon('research');
+
+  // Strictly initialize weapons hidden so she starts unarmed with research clipboard
+  miniSpin.visible = false;
+  miniPump.visible = false;
+  miniGolok.visible = false;
+  miniResearch.visible = true;
 
   // Base socket position attached naturally to right hand in rest pose
   const weaponSocket = new THREE.Group();
@@ -475,11 +487,21 @@ export function buildKristinCharacter(textures) {
     get vertexWeights() { return vertexWeights; },
     get vertexCount() { return vertexCount; },
     setWeapon(w) {
-      const isUnarmed = (w === 'unarmed' || !w);
-      miniSpin.visible = (w === 'spin');
-      miniPump.visible = (w === 'pump');
-      miniGolok.visible = (w === 'golok');
-      miniResearch.visible = isUnarmed || (w === 'research');
+      // In prologue, orientation, and complication, firearms and weapons are strictly prohibited.
+      // Kristin holds only her research field clipboard and water sample vial.
+      const isEarlyPhase = !window.__STORY_PHASE || window.__STORY_PHASE === 'orientation' || window.__STORY_PHASE === 'complication';
+      if (isEarlyPhase) {
+        miniSpin.visible = false;
+        miniPump.visible = false;
+        miniGolok.visible = false;
+        miniResearch.visible = true;
+        return;
+      }
+      const isUnarmed = (w === 'unarmed' || !w || w === 'research');
+      miniSpin.visible = !isUnarmed && (w === 'spin');
+      miniPump.visible = !isUnarmed && (w === 'pump');
+      miniGolok.visible = !isUnarmed && (w === 'golok');
+      miniResearch.visible = isUnarmed;
     }
   };
 }
@@ -527,42 +549,113 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
   const now = performance.now();
   const t = now * 0.002;
 
+  // Check story phase: Orientation & Complication use Guide/Leader AI (Player follows Kristin!)
+  const storyPhase = window.__STORY_PHASE || 'orientation';
+  const isGuideMode = (storyPhase === 'orientation' || storyPhase === 'complication');
+
   // Use actual survivor player position
-  const targetX = (typeof playerPos !== 'undefined') ? playerPos.x : camera.position.x;
-  const targetZ = (typeof playerPos !== 'undefined') ? playerPos.z : camera.position.z;
+  const playerX = (typeof playerPos !== 'undefined') ? playerPos.x : camera.position.x;
+  const playerZ = (typeof playerPos !== 'undefined') ? playerPos.z : camera.position.z;
 
-  const dx = targetX - kristinModel.root.position.x;
-  const dz = targetZ - kristinModel.root.position.z;
-  const distToPlayer = Math.hypot(dx, dz);
+  const curX = kristinModel.root.position.x;
+  const curZ = kristinModel.root.position.z;
 
-  // 1. Companion Following AI (Moves & Follows the Player)
+  const dToPlayerX = playerX - curX;
+  const dToPlayerZ = playerZ - curZ;
+  const distToPlayer = Math.hypot(dToPlayerX, dToPlayerZ);
+
   let isWalking = false;
   let isSprinting = false;
 
-  if (companionFollowMode) {
-    // Catch-up reposition if player runs too far
-    if (distToPlayer > 32.0) {
-      const pYaw = (typeof yaw !== 'undefined') ? yaw : camera.rotation.y;
-      kristinModel.root.position.x = targetX - Math.sin(pYaw) * 3.5;
-      kristinModel.root.position.z = targetZ - Math.cos(pYaw) * 3.5;
+  if (isGuideMode && companionFollowMode) {
+    // =============================================================
+    // GUIDE & LEADER AI: KRISTIN LEADS THE PLAYER TO OBJECTIVES
+    // Player follows Kristin; Kristin directs the path!
+    // =============================================================
+    const actObj = (typeof window.getActiveObjective === 'function') ? window.getActiveObjective() : null;
+    let goalX = 2.2;
+    let goalZ = 15.5; // Default: Old Thomas at Coldbrook gate
+    if (actObj && actObj.marker) {
+      goalX = actObj.marker.x;
+      goalZ = actObj.marker.z;
     }
 
-    const stopDist = 2.1;
-    if (distToPlayer > stopDist) {
+    const dGoalX = goalX - curX;
+    const dGoalZ = goalZ - curZ;
+    const distToGoal = Math.hypot(dGoalX, dGoalZ);
+
+    // Initial greeting right after cutscene
+    if (!hasAutoGreeted && distToPlayer < 7.0) {
+      hasAutoGreeted = true;
+      showDialogSubtitle('KRISTIN: "Rod! Kabutnya tebal banget dan hawa desa ini aneh... Ikuti gue, ayo kita cari tahu apa yang terjadi!"', 6000);
+      triggerKristinGesture('point', Sfx);
+    }
+
+    if (distToGoal <= 2.4) {
+      // 1. ARRIVED AT DESTINATION: Wait at objective, point and direct player
+      isWalking = false;
+      isSprinting = false;
+
+      if (distToPlayer > 5.5) {
+        // Player is behind: turn towards player and beckon them over
+        const facePlayerYaw = Math.atan2(dToPlayerX, dToPlayerZ);
+        kristinModel.root.rotation.y = THREE.MathUtils.lerp(kristinModel.root.rotation.y, facePlayerYaw, 0.14);
+        if (now - lastWaitCalloutTime > 8000) {
+          lastWaitCalloutTime = now;
+          triggerKristinGesture('beckon', Sfx);
+          showDialogSubtitle('KRISTIN: "Rod! Gue udah sampai di sini! Ayo cepat ke sini!"', 4500);
+        }
+      } else {
+        // Player is close: turn towards the destination/NPC and point arm
+        const faceGoalYaw = Math.atan2(dGoalX, dGoalZ);
+        kristinModel.root.rotation.y = THREE.MathUtils.lerp(kristinModel.root.rotation.y, faceGoalYaw, 0.12);
+        if (now - lastArriveCalloutTime > 10000) {
+          lastArriveCalloutTime = now;
+          triggerKristinGesture('point', Sfx);
+          if (storyPhase === 'orientation') {
+            showDialogSubtitle('KRISTIN: "Rod, kita udah sampai! Coba kamu bicara sama mereka (tekan [E])!"', 5000);
+          } else if (storyPhase === 'complication') {
+            showDialogSubtitle('KRISTIN: "Rod, cepat masuk ke pondok Darrell dan ambil senapan di mejanya!"', 5000);
+          }
+        }
+      }
+
+      // Idle breathing on terrain
+      const curGY = getTerrainHeight(curX, curZ);
+      kristinModel.root.position.y = curGY + 0.10 + Math.sin(t * 1.8) * 0.008;
+      walkCadence = THREE.MathUtils.lerp(walkCadence, 0, 0.1);
+
+    } else if (distToPlayer > 12.0) {
+      // 2. PLAYER IS TOO FAR BEHIND: Kristin pauses and beckons player to hurry up!
+      isWalking = false;
+      isSprinting = false;
+
+      // Turn around to face player
+      const facePlayerYaw = Math.atan2(dToPlayerX, dToPlayerZ);
+      kristinModel.root.rotation.y = THREE.MathUtils.lerp(kristinModel.root.rotation.y, facePlayerYaw, 0.14);
+
+      if (now - lastWaitCalloutTime > 7500) {
+        lastWaitCalloutTime = now;
+        triggerKristinGesture('beckon', Sfx);
+        showDialogSubtitle('KRISTIN: "Rod! Jangan melamun di belakang, ayo lekas ikuti gue!"', 4000);
+      }
+
+      const curGY = getTerrainHeight(curX, curZ);
+      kristinModel.root.position.y = curGY + 0.10 + Math.sin(t * 1.8) * 0.008;
+      walkCadence = THREE.MathUtils.lerp(walkCadence, 0, 0.1);
+
+    } else {
+      // 3. ACTIVELY LEADING FORWARD: Kristin walks/sprints ahead toward goal!
       isWalking = true;
-      isSprinting = distToPlayer > 5.5;
-      const speed = isSprinting ? 6.8 : 3.8;
+      isSprinting = distToPlayer < 4.8; // Sprint ahead if player is close behind
+      const speed = isSprinting ? 5.8 : 3.8;
 
-      const dirX = dx / distToPlayer;
-      const dirZ = dz / distToPlayer;
-
+      const dirX = dGoalX / distToGoal;
+      const dirZ = dGoalZ / distToGoal;
       const stepX = dirX * speed * dt;
       const stepZ = dirZ * speed * dt;
 
-      const curX = kristinModel.root.position.x;
-      const curZ = kristinModel.root.position.z;
-
-      // Smart sliding & obstacle avoidance
+      // Smart collision check & tangent sliding
       let movedX = false;
       let movedZ = false;
 
@@ -575,7 +668,6 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
         movedZ = true;
       }
 
-      // If directly blocked on both axes, try tangent lateral sliding
       if (!movedX && !movedZ) {
         const perpX = -dirZ * speed * dt;
         const perpZ = dirX * speed * dt;
@@ -588,12 +680,12 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
         }
       }
 
-      // Smoothly turn to face travel direction
+      // Smoothly turn to face forward heading
       const moveYaw = Math.atan2(dirX, dirZ);
       kristinModel.root.rotation.y = THREE.MathUtils.lerp(
         kristinModel.root.rotation.y,
         moveYaw,
-        0.16
+        0.18
       );
 
       // Walking stride & step height on undulating terrain
@@ -607,11 +699,83 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
         lastFootstepTime = now;
         if (Sfx && Sfx.playSnowStep) Sfx.playSnowStep();
       }
+
+      // Occasional guidance shout while leading
+      if (now - lastLeadCalloutTime > 14000) {
+        lastLeadCalloutTime = now;
+        if (storyPhase === 'complication') {
+          showDialogSubtitle('KRISTIN: "Ikuti gue lari ke pondok Darrell, Rod! Jangan berhenti!"', 4500);
+        } else {
+          showDialogSubtitle('KRISTIN: "Ikuti gue Rod, jalannya lewat sini!"', 4000);
+        }
+      }
+    }
+
+  } else if (companionFollowMode) {
+    // =============================================================
+    // COMBAT BODYGUARD AI: RESOLUTION & CODA (FOLLOWS & COVERS RODRICK)
+    // =============================================================
+    const stopDist = 2.4;
+    if (distToPlayer > 32.0) {
+      const pYaw = (typeof yaw !== 'undefined') ? yaw : camera.rotation.y;
+      kristinModel.root.position.x = playerX - Math.sin(pYaw) * 3.5;
+      kristinModel.root.position.z = playerZ - Math.cos(pYaw) * 3.5;
+    }
+
+    if (distToPlayer > stopDist) {
+      isWalking = true;
+      isSprinting = distToPlayer > 6.0;
+      const speed = isSprinting ? 6.8 : 4.0;
+
+      const dirX = dToPlayerX / distToPlayer;
+      const dirZ = dToPlayerZ / distToPlayer;
+      const stepX = dirX * speed * dt;
+      const stepZ = dirZ * speed * dt;
+
+      let movedX = false;
+      let movedZ = false;
+
+      if (!checkWallCollision(curX + stepX, curZ)) {
+        kristinModel.root.position.x += stepX;
+        movedX = true;
+      }
+      if (!checkWallCollision(kristinModel.root.position.x, curZ + stepZ)) {
+        kristinModel.root.position.z += stepZ;
+        movedZ = true;
+      }
+
+      if (!movedX && !movedZ) {
+        const perpX = -dirZ * speed * dt;
+        const perpZ = dirX * speed * dt;
+        if (!checkWallCollision(curX + perpX, curZ + perpZ)) {
+          kristinModel.root.position.x += perpX;
+          kristinModel.root.position.z += perpZ;
+        } else if (!checkWallCollision(curX - perpX, curZ - perpZ)) {
+          kristinModel.root.position.x -= perpX;
+          kristinModel.root.position.z -= perpZ;
+        }
+      }
+
+      const moveYaw = Math.atan2(dirX, dirZ);
+      kristinModel.root.rotation.y = THREE.MathUtils.lerp(
+        kristinModel.root.rotation.y,
+        moveYaw,
+        0.16
+      );
+
+      walkCadence += dt * (speed * 1.8);
+      const stride = Math.sin(walkCadence);
+      const curGY = getTerrainHeight(kristinModel.root.position.x, kristinModel.root.position.z);
+      kristinModel.root.position.y = curGY + 0.10 + Math.abs(stride) * 0.055;
+
+      if (Math.abs(stride) > 0.85 && now - lastFootstepTime > (isSprinting ? 260 : 370)) {
+        lastFootstepTime = now;
+        if (Sfx && Sfx.playSnowStep) Sfx.playSnowStep();
+      }
     } else {
-      // Stopped near player, breathing on terrain height
       const curGY = getTerrainHeight(kristinModel.root.position.x, kristinModel.root.position.z);
       kristinModel.root.position.y = curGY + 0.10 + Math.sin(t * 1.8) * 0.008;
-      const targetAngle = Math.atan2(dx, dz);
+      const targetAngle = Math.atan2(dToPlayerX, dToPlayerZ);
       kristinModel.root.rotation.y = THREE.MathUtils.lerp(
         kristinModel.root.rotation.y,
         targetAngle,
@@ -623,7 +787,7 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
     // Hold position mode: stays in place, breathing on terrain height
     const curGY = getTerrainHeight(kristinModel.root.position.x, kristinModel.root.position.z);
     kristinModel.root.position.y = curGY + 0.10 + Math.sin(t * 1.8) * 0.008;
-    const targetAngle = Math.atan2(dx, dz);
+    const targetAngle = Math.atan2(dToPlayerX, dToPlayerZ);
     kristinModel.root.rotation.y = THREE.MathUtils.lerp(
       kristinModel.root.rotation.y,
       targetAngle,
@@ -632,10 +796,10 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
     walkCadence = THREE.MathUtils.lerp(walkCadence, 0, 0.1);
   }
 
-  // 2. Combat Defense (Kristin shoots and protects player from nearby zombies)
-  if (zombies && zombies.length > 0) {
+  // Combat Defense: ONLY ACTIVE IN RESOLUTION / CODA PHASES (Combat Armed)
+  if (!isGuideMode && zombies && zombies.length > 0) {
     let nearestZ = null;
-    let minZDist = 7.5;
+    let minZDist = 8.5;
     for (let i = 0; i < zombies.length; i++) {
       const z = zombies[i];
       if (!z.isDead && z.hp > 0) {
@@ -658,20 +822,14 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
 
       // Show combat shout
       const shouts = [
-        "Mampus lu monster!",
-        "Gua tembak yang di situ, awas!",
-        "Jangan deket-deket teman gua!",
+        "Mampus lo monster!",
+        "Gue tembak yang di situ, awas!",
+        "Jangan deket-deket Rodrick!",
         "Rasain timah panas!"
       ];
       const shoutText = shouts[Math.floor(Math.random() * shouts.length)];
-      showDialogSubtitle(shoutText, 2500);
+      showDialogSubtitle(`KRISTIN: "${shoutText}"`, 2500);
     }
-  }
-
-  // Dynamic Initial Greeting (plays greeting subtitle once when first meeting)
-  if (!hasAutoGreeted && distToPlayer < 4.4) {
-    hasAutoGreeted = true;
-    triggerKristinGesture('wave', Sfx);
   }
 
   // Kinematic Rig & Mesh Gesture Deformation

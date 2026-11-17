@@ -578,6 +578,7 @@ export function finishCutscene() {
   if (kristinModel && kristinModel.root) {
     kristinModel.root.position.set(1.2, gyK, 13.8);
     kristinModel.root.rotation.set(0, -0.35, 0);
+    if (kristinModel.setWeapon) kristinModel.setWeapon('unarmed');
   }
 
   // Restore camera to default player eye-level spawn facing into Coldbrook Village (negative Z)
@@ -610,6 +611,7 @@ export function finishCutscene() {
 
   // Activate Orientasi Objective: Eksplorasi & Wawancara Warga
   setObjective('orientation');
+  window.__STORY_PHASE = 'orientation';
 
   // Request pointer lock for FPS gameplay
   try {

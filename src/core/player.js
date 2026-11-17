@@ -105,6 +105,7 @@ export const state = {
     isInvulnerable: false
   }
 };
+window.__STORY_PHASE = state.storyPhase;
 
 export const keys = { w: false, a: false, s: false, d: false, shift: false };
 export const touchMove = { x: 0, z: 0, active: false };
@@ -295,6 +296,7 @@ export function handleVillagerTalked(talkedNPC) {
 export function triggerComplicationPhase() {
   if (state.storyPhase !== 'orientation') return;
   state.storyPhase = 'complication';
+  window.__STORY_PHASE = 'complication';
   setObjective('complication');
 
   // Lonceng biara berdentang kencang bertubi-tubi + erangan zombie
@@ -320,6 +322,7 @@ export function triggerComplicationPhase() {
 window.__triggerDarrellPickup = () => {
   if (state.storyPhase === 'complication' || state.storyPhase === 'orientation') {
     state.storyPhase = 'resolution';
+    window.__STORY_PHASE = 'resolution';
     state.resolutionKills = 0;
     setObjective('resolution');
     // Kristin equips shotgun too once weapons are acquired!
@@ -344,6 +347,7 @@ window.__triggerDarrellPickup = () => {
 window.__triggerCodaPhase = () => {
   if (state.storyPhase !== 'resolution') return;
   state.storyPhase = 'coda';
+  window.__STORY_PHASE = 'coda';
   setObjective('coda');
   showPickupAlert("PONDOK DARRELL BERHASIL DIAMANKAN!", true);
   if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(1400, 0.6);
@@ -767,6 +771,7 @@ export function startWinterSurvive(scene) {
   startIntroCutscene(cameraRef, Sfx, () => {
     state.running = true;
     state.storyPhase = 'orientation';
+    window.__STORY_PHASE = 'orientation';
     state.talkedVillagers = new Set();
     state.resolutionKills = 0;
     setObjective('orientation');

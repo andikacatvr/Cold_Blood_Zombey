@@ -121,12 +121,13 @@ export const OBJECTIVES = {
   }
 };
 
-let currentObjectiveId = '1.1';
+let currentObjectiveId = 'orientation';
 window.__ACTIVE_OBJECTIVE_ID = currentObjectiveId;
 
 export function getActiveObjective() {
-  return OBJECTIVES[currentObjectiveId] || OBJECTIVES['1.1'];
+  return OBJECTIVES[currentObjectiveId] || OBJECTIVES['orientation'];
 }
+window.getActiveObjective = getActiveObjective;
 
 export function setObjective(objId, showBanner = true) {
   if (!OBJECTIVES[objId]) return;
