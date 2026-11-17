@@ -20,7 +20,14 @@ export function updateHUD(state) {
   }
 
   const scoreEl = document.getElementById('hud-score');
-  if (scoreEl) scoreEl.innerText = `CRIMSON PURGED: ${String(state.kills).padStart(3, '0')}`;
+  if (scoreEl) {
+    if (state.gameMode === 'endless') {
+      scoreEl.style.display = 'block';
+      scoreEl.innerText = `CRIMSON PURGED: ${String(state.kills).padStart(3, '0')}`;
+    } else {
+      scoreEl.style.display = 'none';
+    }
+  }
 
   const p = state.player;
   const ammoEl = document.getElementById('hud-ammo');
