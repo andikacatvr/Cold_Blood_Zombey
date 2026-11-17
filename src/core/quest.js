@@ -150,6 +150,15 @@ export function setObjective(objId, showBanner = true) {
 }
 
 export function updateQuestHUD() {
+  const panel = document.getElementById('hud-quest-panel');
+  if (panel) {
+    if (window.__GAME_MODE !== 'story' || !window.__GAME_RUNNING) {
+      panel.style.display = 'none';
+      return;
+    }
+    panel.style.display = 'block';
+  }
+
   const obj = getActiveObjective();
   const chapterEl = document.getElementById('quest-chapter-tag');
   const titleEl = document.getElementById('quest-title-text');

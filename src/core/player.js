@@ -192,6 +192,7 @@ export function triggerInteract() {
     triggerKristinGesture();
   }
 }
+window.__triggerInteract = triggerInteract;
 
 let cameraRef = null;
 
@@ -740,6 +741,7 @@ export function nextWave() {
 export function returnToMainMenu() {
   state.running = false;
   state.isPaused = false;
+  window.__GAME_RUNNING = false;
   clearEnemies();
   const go = document.getElementById('screen-gameover');
   if (go) go.style.display = 'none';
@@ -747,6 +749,12 @@ export function returnToMainMenu() {
   if (st) st.style.display = 'none';
   const hud = document.getElementById('hud');
   if (hud) hud.style.display = 'none';
+  const qp = document.getElementById('hud-quest-panel');
+  if (qp) qp.style.display = 'none';
+  const np = document.getElementById('npc-interaction-prompt');
+  if (np) np.style.display = 'none';
+  const so = document.getElementById('story-dialogue-overlay');
+  if (so) so.style.display = 'none';
   const reticle = document.getElementById('reticle');
   if (reticle) reticle.style.display = 'none';
   const cinOverlay = document.getElementById('cinematic-overlay');
@@ -771,6 +779,7 @@ export function returnToMainMenu() {
 export function startWinterSurvive(scene, mode = 'story') {
   state.gameMode = mode;
   window.__GAME_MODE = mode;
+  window.__GAME_RUNNING = true;
   Sfx.init(state);
   respawnHousePickups();
 
@@ -921,11 +930,14 @@ export function startWinterSurvive(scene, mode = 'story') {
 export function setupPlayerControls() {
   window.addEventListener('keydown', (e) => {
     if (isCinematicActive) return;
-    const c = e.code;
+    if (e.repeat) return; // Prevent key repeat from rapid-fire advancing or skipping dialogue
 
-    // If story dialogue is open, KeyE / Space / Enter advances dialogue, Escape closes it
+    const c = e.code;
+    const k = (e.key || '').toLowerCase();
+
+    // If story dialogue is open, KeyE / 'e' / Space / Enter advances dialogue, Escape closes it
     if (isStoryDialogueOpen()) {
-      if (c === 'KeyE' || c === 'Space' || c === 'Enter') {
+      if (c === 'KeyE' || k === 'e' || c === 'Space' || c === 'Enter') {
         e.preventDefault();
         advanceStoryDialogue();
         return;
@@ -950,7 +962,7 @@ export function setupPlayerControls() {
       }
       return;
     }
-    if (c === 'KeyM') {
+    if (c === 'KeyM' || k === 'm') {
       if (!isSettingsOpen) {
         toggleMap(state);
       }
@@ -958,37 +970,38 @@ export function setupPlayerControls() {
     }
     if (state.isPaused || isMapOpen) return;
 
-    if (c === 'KeyW') keys.w = true;
-    if (c === 'KeyA') keys.a = true;
-    if (c === 'KeyS') keys.s = true;
-    if (c === 'KeyD') keys.d = true;
-    if (c === 'ShiftLeft' || c === 'ShiftRight') keys.shift = true;
+    if (c === 'KeyW' || k === 'w') keys.w = true;
+    if (c === 'KeyA' || k === 'a') keys.a = true;
+    if (c === 'KeyS' || k === 's') keys.s = true;
+    if (c === 'KeyD' || k === 'd') keys.d = true;
+    if (c === 'ShiftLeft' || c === 'ShiftRight' || e.shiftKey) keys.shift = true;
     if (c === 'Space') {
       triggerPlayerJump();
     }
-    if (c === 'KeyR') reloadWeapon();
-    if (c === 'KeyT') {
+    if (c === 'KeyR' || k === 'r') reloadWeapon();
+    if (c === 'KeyT' || k === 't') {
       toggleCompanionFollow();
       if (state.nataliaSpawned) toggleNataliaFollow();
     }
-    if (c === 'KeyH') {
+    if (c === 'KeyH' || k === 'h') {
       giveKristinHint(window.__ACTIVE_OBJECTIVE_ID || '1.1');
     }
-    if (c === 'KeyC') {
+    if (c === 'KeyC' || k === 'c') {
       const mode = toggleCameraMode();
       if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(mode === 'tps' ? 2800 : 1800, 0.4);
     }
-    if (c === 'KeyE') {
+    if (c === 'KeyE' || k === 'e') {
       triggerInteract();
     }
   });
 
   window.addEventListener('keyup', (e) => {
     const c = e.code;
-    if (c === 'KeyW') keys.w = false;
-    if (c === 'KeyA') keys.a = false;
-    if (c === 'KeyS') keys.s = false;
-    if (c === 'KeyD') keys.d = false;
+    const k = (e.key || '').toLowerCase();
+    if (c === 'KeyW' || k === 'w') keys.w = false;
+    if (c === 'KeyA' || k === 'a') keys.a = false;
+    if (c === 'KeyS' || k === 's') keys.s = false;
+    if (c === 'KeyD' || k === 'd') keys.d = false;
     if (c === 'ShiftLeft' || c === 'ShiftRight') keys.shift = false;
   });
 
@@ -1004,12 +1017,26 @@ export function setupPlayerControls() {
 
   document.addEventListener('mousedown', (e) => {
     if (!state.running || state.isPaused || isSettingsOpen || isMapOpen) return;
+
+    // Clicking while reading story dialogue advances dialogue
+    if (isStoryDialogueOpen()) {
+      advanceStoryDialogue();
+      return;
+    }
+
     if (document.pointerLockElement !== document.body) {
       try {
         document.body.requestPointerLock();
       } catch (err) {}
     }
+
     if (e.button === 0) {
+      // If player is looking at / standing near interactive villager in Orientation phase, clicking talks to them!
+      const nearestVillager = getNearestVillager(playerPos, 3.8);
+      if (nearestVillager && state.storyPhase === 'orientation') {
+        triggerInteract();
+        return;
+      }
       fireCombatShotgun();
     }
   });

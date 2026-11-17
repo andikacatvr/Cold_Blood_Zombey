@@ -69,20 +69,20 @@
       </div>
     </div>
 
-    <!-- INTERACTIVE NPC PROMPT (E to Talk) -->
-    <div id="npc-interaction-prompt" style="display:none; position:absolute; bottom:220px; left:50%; transform:translateX(-50%); background:rgba(12,18,14,0.92); border:1px solid #78e08f; border-left:4px solid #78e08f; color:#ffffff; font-family:'VT323', monospace; padding:10px 24px; border-radius:6px; box-shadow:0 0 20px rgba(0,0,0,0.85); z-index:45; pointer-events:none; text-align:center; transition:opacity 0.2s ease;">
-      <span style="background:#1a3d24; color:#a2f0b5; border:1px solid #4a825b; padding:3px 9px; border-radius:4px; font-size:18px; margin-right:8px; font-weight:bold;">TEKAN [E]</span>
+    <!-- INTERACTIVE NPC PROMPT (E or Click to Talk) -->
+    <div id="npc-interaction-prompt" style="display:none; position:absolute; bottom:220px; left:50%; transform:translateX(-50%); background:rgba(12,18,14,0.92); border:1px solid #78e08f; border-left:4px solid #78e08f; color:#ffffff; font-family:'VT323', monospace; padding:10px 24px; border-radius:6px; box-shadow:0 0 20px rgba(0,0,0,0.85); z-index:45; pointer-events:auto; cursor:pointer; text-align:center; transition:opacity 0.2s ease;" title="Tekan [E] atau Klik di sini untuk bicara">
+      <span style="background:#1a3d24; color:#a2f0b5; border:1px solid #4a825b; padding:3px 9px; border-radius:4px; font-size:18px; margin-right:8px; font-weight:bold;">TEKAN [E] / KLIK</span>
       <span id="npc-prompt-text" style="font-size:22px; color:#f0f5f2; letter-spacing:1px;">BICARA DENGAN WARGA</span>
     </div>
 
     <!-- STORY DIALOGUE BOX (Orientation / Narrative Dialogue) -->
-    <div id="story-dialogue-overlay" style="display:none; position:absolute; bottom:30px; left:50%; transform:translateX(-50%); width:90%; max-width:820px; background:rgba(14,18,22,0.96); border:2px solid #5a8a68; border-radius:8px; box-shadow:0 0 35px rgba(0,0,0,0.95); z-index:50; padding:16px 24px; font-family:'VT323', monospace;">
+    <div id="story-dialogue-overlay" style="display:none; position:absolute; bottom:30px; left:50%; transform:translateX(-50%); width:90%; max-width:820px; background:rgba(14,18,22,0.96); border:2px solid #5a8a68; border-radius:8px; box-shadow:0 0 35px rgba(0,0,0,0.95); z-index:9999; padding:16px 24px; font-family:'VT323', monospace; cursor:pointer; pointer-events:auto;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #2b4533; padding-bottom:6px; margin-bottom:10px;">
         <div>
           <span id="story-dialog-speaker" style="color:#78e08f; font-size:26px; font-weight:bold; letter-spacing:1px;">OLD THOMAS</span>
           <span id="story-dialog-title" style="color:#8ba394; font-size:16px; margin-left:10px;">Warga Tua Coldbrook</span>
         </div>
-        <button id="story-dialog-close-btn" style="background:#223629; color:#a2f0b5; border:1px solid #4a825b; padding:3px 12px; border-radius:4px; font-size:16px; cursor:pointer; font-family:'VT323', monospace;">LANJUT [E / SPASI]</button>
+        <button id="story-dialog-close-btn" style="background:#223629; color:#a2f0b5; border:1px solid #4a825b; padding:3px 12px; border-radius:4px; font-size:16px; cursor:pointer; font-family:'VT323', monospace;">LANJUT [E / KLIK / SPASI]</button>
       </div>
       <div id="story-dialog-content" style="color:#eef4f0; font-size:22px; line-height:1.35; margin-bottom:12px; min-height:48px;">
         "Selamat datang di Coldbrook..."
@@ -113,7 +113,7 @@
       </div>
 
       <!-- ACTIVE SURVIVAL OBJECTIVE / QUEST TRACKER (NESTED IN HUD) -->
-      <div id="hud-quest-panel" style="position:absolute; top:75px; left:25px; z-index:40; pointer-events:none; font-family:'VT323', monospace; max-width:380px;">
+      <div id="hud-quest-panel" style="display:none; position:absolute; top:75px; left:25px; z-index:40; pointer-events:none; font-family:'VT323', monospace; max-width:380px;">
         <div style="background:rgba(8,12,10,0.92); border-left:3px solid #78e08f; border-top:1px solid #233e2b; border-right:1px solid #233e2b; border-bottom:1px solid #233e2b; padding:8px 14px; border-radius:4px; box-shadow:0 0 16px rgba(0,0,0,0.85);">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <span id="quest-chapter-tag" style="color:#78e08f; font-size:16px; letter-spacing:1px; font-weight:bold;">BAB 1: DESA SUNYI</span>

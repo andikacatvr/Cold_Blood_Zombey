@@ -127,6 +127,7 @@ export function buildSurvivorPlayerModel() {
   const gunStock = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.07, 0.22), new THREE.MeshLambertMaterial({ color: 0x3d2215 }));
   gunStock.position.set(0, -0.02, -0.16);
   playerMiniShotgun.add(gunStock);
+  playerMiniShotgun.visible = false; // Strictly hidden by default until a firearm is equipped
   playerWeaponSocket.add(playerMiniShotgun);
 
   // Mini Golok Rimba / Pipe
@@ -196,9 +197,12 @@ export function buildSurvivorPlayerModel() {
 export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeapon) {
   if (!playerMeshRoot || !playerMeshRoot.visible) return;
 
-  // Weapon visibility sync
+  // Weapon visibility sync (Unarmed means player holds NOTHING in hand)
   if (playerMiniShotgun && playerMiniGolok) {
-    if (activeWeapon === 'golok') {
+    if (activeWeapon === 'unarmed') {
+      playerMiniGolok.visible = false;
+      playerMiniShotgun.visible = false;
+    } else if (activeWeapon === 'golok') {
       playerMiniGolok.visible = true;
       playerMiniShotgun.visible = false;
     } else {

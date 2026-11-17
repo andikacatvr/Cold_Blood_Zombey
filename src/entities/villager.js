@@ -724,7 +724,12 @@ export const VILLAGE_NPCS = [
         'Selamat datang di Coldbrook, anak-anak muda... Dinginnya Blackwood Moors menusuk tulang, bukan?',
         'Silakan basuh tenggorokan dengan air suci sumur biara. Pastor Raksha selalu membuka pintu bagi jiwa-jiwa yang haus keselamatan...'
       ],
-      kristinResponse: 'Rod, perhatikan pupil matanya... melebar penuh dan pandangannya kosong. Senyumnya terasa sangat dipaksakan.'
+      kristinResponse: 'Rod, perhatikan pupil matanya... melebar penuh dan pandangannya kosong. Senyumnya terasa sangat dipaksakan.',
+      repeatLines: [
+        'Pergilah mencari perlindungan sebelum malam tiba, anak-anak muda... kabut Blackwood Moors tidak pernah membiarkan orang luar pulang.',
+        'Pastor Raksha selalu mengamati dari menara biara...'
+      ],
+      repeatKristinResponse: 'Rod, kita sudah dengar perkataan kakek ini. Sekarang lekas kita datangi pondok Darrell si pemburu di timur!'
     }
   },
   {
@@ -744,7 +749,12 @@ export const VILLAGE_NPCS = [
         'Jangan pernah sekali-kali meminum air sumur yang mereka bagi-bagikan! Dan ingat: jangan percaya siapapun yang terus tersenyum tanpa henti!',
         'Jika terjadi sesuatu yang buruk, aku menyimpan senapan laras ganda dan amunisi di atas meja kayu dalam pondokku.'
       ],
-      kristinResponse: 'Bapak pemburu ini tidak tersenyum aneh seperti warga lainnya, Rod. Dia tahu sesuatu yang mengerikan tentang air sumur biara!'
+      kristinResponse: 'Bapak pemburu ini tidak tersenyum aneh seperti warga lainnya, Rod. Dia tahu sesuatu yang mengerikan tentang air sumur biara!',
+      repeatLines: [
+        'Kalian masih di sini?! Cepat pergi ke arah barat menemui Mrs. Eleanor di dekat mata air kuno, dia tahu jalan rahasia!',
+        'Dan ingat: jika bahaya datang, senapan laras ganda di atas mejaku bisa kalian pakai!'
+      ],
+      repeatKristinResponse: 'Ayo Rod, kita temui Mrs. Eleanor di jalur barat seperti anjuran Darrell!'
     }
   },
   {
@@ -763,7 +773,12 @@ export const VILLAGE_NPCS = [
         '*bergumam pelan sambil menatap air* "Tiga sujud, dua sembah, satu keheningan... begitulah nyanyian mereka..."',
         'Lonceng biara akan segera berdentang menyambut senja... dan saat itu tiba, kami semua akan diampuni...'
       ],
-      kristinResponse: 'Lagi-lagi kalimat "kami semua diampuni"... intonasi dan jeda bicaranya sama persis dengan Old Thomas!'
+      kristinResponse: 'Lagi-lagi kalimat "kami semua diampuni"... intonasi dan jeda bicaranya sama persis dengan Old Thomas!',
+      repeatLines: [
+        'Tiga sujud, dua sembah, satu keheningan... ingat urutan patung di mata air kuno jika pintu gerbang desa dirantai...',
+        'Lonceng itu... lonceng kematian akan segera berbunyi...'
+      ],
+      repeatKristinResponse: 'Urutan patung itu kunci rahasia pelarian kita nanti, Rod! Kita catat baik-baik!'
     }
   },
   {
@@ -782,7 +797,12 @@ export const VILLAGE_NPCS = [
         'Pastor Raksha telah berjanji kepada kita semua... dinginnya malam tidak akan lagi menyakitkan jika kita menyerahkan beban kita padanya.',
         'Jangan tolak berkat biara. Minumlah, dan kalian tidak akan pernah merasakan lapar atau rasa takut lagi...'
       ],
-      kristinResponse: 'Rod, sensor kimia air di ranselku mulai berdering! Air sumur itu bukan air murni... itu cairan kimia biara!'
+      kristinResponse: 'Rod, sensor kimia air di ranselku mulai berdering! Air sumur itu bukan air murni... itu cairan kimia biara!',
+      repeatLines: [
+        'Dinginnya malam tidak akan terasa sakit lagi jika berserah... minumlah air suci biara...',
+        'Pastor Raksha membersihkan kita semua...'
+      ],
+      repeatKristinResponse: 'Pikirannya sudah benar-benar dicuci oleh biara. Kita harus tetap waspada, Rod!'
     }
   }
 ];
