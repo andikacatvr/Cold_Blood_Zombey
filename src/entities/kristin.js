@@ -45,8 +45,13 @@ export function showDialogSubtitle(text, duration = 4500) {
   if (!bannerEl) return;
 
   if (text && textEl) {
-    const clean = text.trim();
-    textEl.textContent = clean.startsWith('"') ? clean : `"${clean}"`;
+    let clean = text.trim();
+    // Strip leading name prefixes like "KRISTIN: " to avoid double rendering with the name banner
+    clean = clean.replace(/^(KRISTIN|RODRICK|WARGA|DARRELL|MRS\. ELEANOR|EDWARD):\s*/i, '');
+    clean = clean.replace(/^["']|["']$/g, '').trim();
+    // Remove browser-like "(tekan [E])" from spoken character dialogue
+    clean = clean.replace(/\s*\(tekan\s*\[.*?\]\)!?/gi, '');
+    textEl.textContent = `"${clean}"`;
   }
 
   bannerEl.style.display = 'block';
@@ -617,7 +622,7 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
           lastArriveCalloutTime = now;
           triggerKristinGesture('point', Sfx);
           if (storyPhase === 'orientation') {
-            showDialogSubtitle('KRISTIN: "Rod, kita udah sampai! Coba kamu bicara sama mereka (tekan [E])!"', 5000);
+            showDialogSubtitle('Rod, kita udah sampai di gerbang Coldbrook. Coba dekati bapak tua itu, dia dari tadi tersenyum aneh ke arah kita.', 5500);
           } else if (storyPhase === 'complication') {
             showDialogSubtitle('KRISTIN: "Rod, cepat masuk ke pondok Darrell dan ambil senapan di mejanya!"', 5000);
           }

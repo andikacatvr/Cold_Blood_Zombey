@@ -9,11 +9,11 @@ export function updateHUD(state) {
   const waveEl = document.getElementById('hud-wave');
   if (waveEl) {
     if (state.gameMode === 'story') {
-      const ch = (state.storyPhase === 'orientation') ? 'BAB 1: ORIENTASI'
-               : (state.storyPhase === 'complication') ? 'BAB 1: KOMPLIKASI'
-               : (state.storyPhase === 'resolution') ? 'BAB 1: RESOLUSI'
-               : 'BAB 1: KODA';
-      waveEl.innerText = `MODE CERITA • ${ch}`;
+      const ch = (state.storyPhase === 'orientation') ? 'ACT I • ORIENTASI'
+               : (state.storyPhase === 'complication') ? 'ACT I • KOMPLIKASI'
+               : (state.storyPhase === 'resolution') ? 'ACT I • RESOLUSI'
+               : 'ACT I • KODA';
+      waveEl.innerText = `${ch}`;
     } else {
       waveEl.innerText = `ENDLESS HORDE: WAVE ${state.wave}`;
     }
@@ -33,16 +33,16 @@ export function updateHUD(state) {
   const ammoEl = document.getElementById('hud-ammo');
   if (ammoEl) {
     if (p.weapon === 'unarmed') {
-      ammoEl.innerText = 'SENJATA: TANGAN KOSONG (CARI SHOTGUN)';
+      ammoEl.innerText = 'EQUIP: [TANGAN KOSONG]';
       ammoEl.style.color = '#ff9933';
     } else if (p.weapon === 'golok') {
-      ammoEl.innerText = 'MELEE: ∞ (TAJAM)';
+      ammoEl.innerText = 'EQUIP: [GOLOK RIMBA]';
       ammoEl.style.color = '#e6edf5';
     } else if (p.isReloading) {
-      ammoEl.innerText = 'RELOAD CEPAT (1s)...';
+      ammoEl.innerText = '[ R ] RELOADING...';
       ammoEl.style.color = '#ffcc00';
     } else if (p.clip === 0) {
-      ammoEl.innerText = `KOSONG! [TEKAN R] (0 / ${p.reserve})`;
+      ammoEl.innerText = `EMPTY! [ R ] RELOAD (0 / ${p.reserve})`;
       ammoEl.style.color = '#ff3344';
     } else {
       ammoEl.innerText = `SHELLS: ${p.clip} / ${p.reserve}`;
@@ -52,7 +52,8 @@ export function updateHUD(state) {
 
   const vitalEl = document.getElementById('hud-vital');
   if (vitalEl) {
-    vitalEl.innerText = `VITAL: ${p.hp}%`;
+    const condition = p.hp > 65 ? 'FINE' : p.hp > 30 ? 'CAUTION' : 'DANGER';
+    vitalEl.innerText = `CONDITION: ${condition} [${p.hp}%]`;
     if (p.hp <= 30) {
       vitalEl.classList.add('hud-danger');
     } else {

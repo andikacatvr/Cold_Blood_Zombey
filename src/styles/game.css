@@ -85,6 +85,20 @@
       color: #cfd9e1;
       box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.95);
     }
+    .hud-key-cap {
+      background: #14281c;
+      color: #78e08f;
+      border: 1px solid #4a825b;
+      border-bottom: 2px solid #234d31;
+      border-right: 2px solid #234d31;
+      padding: 2px 8px;
+      font-family: 'VT323', monospace;
+      font-size: 20px;
+      letter-spacing: 2px;
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      display: inline-block;
+    }
     .hud-danger {
       color: #ff2233 !important;
       text-shadow: 0 0 12px #c00010 !important;

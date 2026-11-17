@@ -156,7 +156,7 @@ function updateSimulation(dt) {
       const nearest = getNearestVillager(playerPos, 3.8);
       if (nearest && !isStoryDialogueOpen()) {
         promptEl.style.display = 'block';
-        if (promptText) promptText.textContent = `BICARA DENGAN ${nearest.name.toUpperCase()}`;
+        if (promptText) promptText.textContent = `BICARA • ${nearest.name.toUpperCase()}`;
       } else {
         promptEl.style.display = 'none';
       }

@@ -11,7 +11,7 @@ export const OBJECTIVES = {
     id: 'orientation',
     chapter: 'ORIENTASI: EKSPLORASI COLDBROOK',
     title: 'Wawancara Warga Desa (0/3)',
-    journal: 'Pelajari situasi desa Coldbrook yang ganjil. Dekati dan sapa warga desa (tekan [E] Bicara) untuk mengumpulkan rekaman lapangan.',
+    journal: 'Pelajari situasi desa Coldbrook yang ganjil. Sapa warga desa yang tersisa untuk mengumpulkan rekaman investigasi lapangan.',
     location: 'Area Pemukiman & Gerbang Coldbrook',
     marker: { x: 2.2, z: 15.5 }
   },
