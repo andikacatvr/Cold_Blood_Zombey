@@ -1345,14 +1345,6 @@
   text-overflow: ellipsis;
   text-align: center;
 }
-#hud-map-btn {
-  color: #ffd15c;
-  border-color: #7a5a2a;
-}
-#hud-map-btn:hover {
-  background: rgba(50, 36, 16, 0.95);
-  border-color: #ffd15c;
-}
 
 /* FULLSCREEN TACTICAL MAP MODAL */
 .tactical-map-dialog {
