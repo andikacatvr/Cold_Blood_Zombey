@@ -67,9 +67,14 @@ export function applyGraphicFidelity(mode = 'ps1') {
   gameSettings.graphicMode = 'ps1';
   canvas.classList.remove('ps2-mode');
 
-  // Authentic PS1 1997 4:3 Aspect Ratio (Native 320x240 with Pillarbox Black Bars)
-  renderer.setSize(320, 240, false);
-  camera.aspect = 320 / 240;
+  // Unified Full-Bleed Retro PS1 Viewport:
+  // Preserves authentic 240p vertical scanlines (PS1 NTSC raster density)
+  // while dynamically matching width to screen aspect ratio, eliminating detached black bars
+  const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+  const h = 240;
+  const w = Math.max(320, Math.round(240 * aspect));
+  renderer.setSize(w, h, false);
+  camera.aspect = aspect;
   camera.updateProjectionMatrix();
 
   renderer.shadowMap.enabled = false;

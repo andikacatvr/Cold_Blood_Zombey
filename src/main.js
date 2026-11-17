@@ -1148,20 +1148,16 @@ function init() {
   // Disable default browser context menu so game behaves like a native PC console application
   window.addEventListener('contextmenu', (e) => e.preventDefault());
 
-  // Prevent browser zoom shortcuts (Ctrl + Plus, Ctrl + Minus, Ctrl + 0, Ctrl + Mouse Wheel)
+  // Prevent browser zoom shortcuts (Ctrl + Plus, Ctrl + Minus, Ctrl + 0, Ctrl + Mouse Wheel, Pinch)
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey) {
+      const k = e.key;
+      const c = e.code;
       if (
-        e.key === '+' ||
-        e.key === '-' ||
-        e.key === '=' ||
-        e.key === '_' ||
-        e.key === '0' ||
-        e.code === 'NumpadAdd' ||
-        e.code === 'NumpadSubtract' ||
-        e.code === 'Digit0' ||
-        e.code === 'Equal' ||
-        e.code === 'Minus'
+        k === '+' || k === '-' || k === '=' || k === '_' || k === '0' ||
+        k === 'Add' || k === 'Subtract' ||
+        c === 'NumpadAdd' || c === 'NumpadSubtract' ||
+        c === 'Digit0' || c === 'Equal' || c === 'Minus'
       ) {
         e.preventDefault();
       }
@@ -1173,6 +1169,17 @@ function init() {
       e.preventDefault();
     }
   }, { passive: false });
+
+  // Block pinch-to-zoom on mobile devices
+  document.addEventListener('touchmove', (e) => {
+    if (e.touches && e.touches.length > 1) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  document.addEventListener('gesturestart', (e) => e.preventDefault());
+  document.addEventListener('gesturechange', (e) => e.preventDefault());
+  document.addEventListener('gestureend', (e) => e.preventDefault());
 
   // Attach retro console UI sound effects to all interactive buttons
   document.querySelectorAll('button, .menu-action-btn, .mode-card, .btn-play, .hud-btn, .btn-sec, .hud-box').forEach(el => {

@@ -34,9 +34,9 @@
     </div>
 
     <!-- PURE CINEMATIC COMPANION DIALOGUE SUBTITLE (KRISTIN) -->
-    <div id="kristin-npc-banner" style="display:none; position:absolute; bottom:85px; left:50%; transform:translateX(-50%); background:rgba(8,14,10,0.92); border:1px solid #3d6849; color:#cbe3d3; font-family:'VT323', monospace; padding:10px 22px; border-radius:6px; box-shadow:0 0 24px rgba(0,0,0,0.85); text-align:left; z-index:45; pointer-events:none; max-width:85%; min-width:300px; transition:opacity 0.4s ease;">
+    <div id="kristin-npc-banner" style="display:none; position:absolute; bottom:85px; left:50%; transform:translateX(-50%); background:rgba(8,14,10,0.95); border:2px solid #3d6849; color:#cbe3d3; font-family:'VT323', monospace; padding:10px 20px; box-shadow:0 0 24px rgba(0,0,0,0.9); text-align:left; z-index:45; pointer-events:none; max-width:85%; min-width:300px; transition:opacity 0.4s ease;">
       <div style="display:inline-flex; align-items:center; gap:14px;">
-        <img src="/textures/kristin_face_hd.png" alt="Kristin" style="width:42px; height:42px; border-radius:50%; border:2px solid #9de8b7; object-fit:cover; box-shadow:0 0 10px rgba(157,232,183,0.5); flex-shrink:0;">
+        <img src="/textures/kristin_face_hd.png" alt="Kristin" style="width:44px; height:44px; border-radius:0; border:2px solid #9de8b7; object-fit:cover; box-shadow:0 0 8px rgba(157,232,183,0.4); flex-shrink:0;">
         <div>
           <div style="color:#9de8b7; font-weight:bold; font-size:24px; line-height:1.1;">KRISTIN</div>
           <div id="kristin-dialog-text" style="color:#f0f7f3; font-size:22px; margin-top:3px; line-height:1.25;">"Woi bro! Sumpah lu beneran masih hidup?! Masuk sini cepetan!"</div>
@@ -45,9 +45,9 @@
     </div>
 
     <!-- PURE CINEMATIC AGENT DIALOGUE SUBTITLE (AGENT NATALIA) -->
-    <div id="natalia-npc-banner" style="display:none; position:absolute; bottom:145px; left:50%; transform:translateX(-50%); background:rgba(18,14,10,0.94); border:1px solid #a87232; color:#f0e2d0; font-family:'VT323', monospace; padding:10px 22px; border-radius:6px; box-shadow:0 0 24px rgba(0,0,0,0.9); text-align:left; z-index:46; pointer-events:none; max-width:85%; min-width:320px; transition:opacity 0.4s ease;">
+    <div id="natalia-npc-banner" style="display:none; position:absolute; bottom:145px; left:50%; transform:translateX(-50%); background:rgba(18,14,10,0.96); border:2px solid #a87232; color:#f0e2d0; font-family:'VT323', monospace; padding:10px 20px; box-shadow:0 0 24px rgba(0,0,0,0.9); text-align:left; z-index:46; pointer-events:none; max-width:85%; min-width:320px; transition:opacity 0.4s ease;">
       <div style="display:inline-flex; align-items:center; gap:14px;">
-        <img id="natalia-avatar-img" src="/textures/agent_avatar.png" alt="Agent Natalia" style="width:46px; height:46px; border-radius:50%; border:2px solid #f5ba42; object-fit:cover; box-shadow:0 0 14px rgba(245,186,66,0.6); flex-shrink:0;">
+        <img id="natalia-avatar-img" src="/textures/agent_avatar.png" alt="Agent Natalia" style="width:46px; height:46px; border-radius:0; border:2px solid #f5ba42; object-fit:cover; box-shadow:0 0 10px rgba(245,186,66,0.5); flex-shrink:0;">
         <div>
           <div id="natalia-title-tag" style="color:#f5ba42; font-weight:bold; font-size:24px; line-height:1.1; letter-spacing:1px;">AGENT NATALIA</div>
           <div id="natalia-dialog-text" style="color:#fbf7f0; font-size:22px; margin-top:3px; line-height:1.25;">"Siapa kamu?! Apa urusanmu di sini?! Tetap di belakang gua, kita habisi zombienya bareng-bareng!"</div>
@@ -70,13 +70,13 @@
     </div>
 
     <!-- INTERACTIVE NPC PROMPT (Retro Console Action Prompt) -->
-    <div id="npc-interaction-prompt" style="display:none; position:absolute; bottom:180px; left:50%; transform:translateX(-50%); background:rgba(10,18,14,0.95); border:2px solid #5cf0a5; border-left:5px solid #5cf0a5; color:#ffffff; font-family:'VT323', monospace; padding:8px 24px; box-shadow:0 0 25px rgba(0,0,0,0.9), inset 0 0 10px rgba(92,240,165,0.25); z-index:45; pointer-events:auto; cursor:crosshair; text-align:center;">
+    <div id="npc-interaction-prompt">
       <span class="hud-key-cap">[ E ]</span>
       <span id="npc-prompt-text" style="font-size:24px; color:#f0f5f2; letter-spacing:2px; margin-left:8px; font-weight:bold;">BICARA</span>
     </div>
 
     <!-- STORY DIALOGUE BOX (Orientation / Narrative Dialogue) -->
-    <div id="story-dialogue-overlay" style="display:none; position:absolute; bottom:30px; left:50%; transform:translateX(-50%); width:90%; max-width:820px; background:rgba(14,18,22,0.96); border:2px solid #5a8a68; border-radius:8px; box-shadow:0 0 35px rgba(0,0,0,0.95); z-index:9999; padding:16px 24px; font-family:'VT323', monospace; cursor:crosshair; pointer-events:auto;">
+    <div id="story-dialogue-overlay">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #2b4533; padding-bottom:6px; margin-bottom:10px;">
         <div>
           <span id="story-dialog-speaker" style="color:#78e08f; font-size:26px; font-weight:bold; letter-spacing:1px;">OLD THOMAS</span>
@@ -87,7 +87,7 @@
       <div id="story-dialog-content" style="color:#eef4f0; font-size:22px; line-height:1.35; margin-bottom:12px; min-height:48px;">
         "Selamat datang di Coldbrook..."
       </div>
-      <div id="story-dialog-kristin-box" style="display:none; background:rgba(20,38,28,0.7); border-left:3px solid #5cf0a5; padding:8px 14px; border-radius:4px; margin-top:8px;">
+      <div id="story-dialog-kristin-box" style="display:none; background:rgba(20,38,28,0.7); border-left:3px solid #5cf0a5; padding:8px 14px; margin-top:8px;">
         <span style="color:#5cf0a5; font-size:20px; font-weight:bold;">KRISTIN (Bisik):</span>
         <span id="story-dialog-kristin-text" style="color:#d5ebe0; font-size:20px; margin-left:6px;">"Rod, pupil matanya..."</span>
       </div>

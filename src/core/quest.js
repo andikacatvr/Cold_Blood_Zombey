@@ -136,10 +136,9 @@ export function setObjective(objId, showBanner = true) {
 
   updateQuestHUD();
 
-  if (showBanner) {
-    const obj = OBJECTIVES[objId];
+  if (showBanner && window.__GAME_RUNNING && window.__GAME_MODE === 'story') {
     const panel = document.getElementById('hud-quest-panel');
-    if (panel) {
+    if (panel && panel.style.display !== 'none') {
       panel.style.transform = 'scale(1.04)';
       panel.style.transition = 'transform 0.25s ease';
       setTimeout(() => {
@@ -174,6 +173,8 @@ export function requestKristinHint(sfxRef) {
 }
 
 export function initQuestSystem(sfxRef) {
+  const panel = document.getElementById('hud-quest-panel');
+  if (panel) panel.style.display = 'none';
   updateQuestHUD();
 
   const hintBtn = document.getElementById('quest-hint-key-btn');
