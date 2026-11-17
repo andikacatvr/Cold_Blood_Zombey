@@ -273,13 +273,4 @@ export function setupSettingsListeners(context) {
       }
     });
   }
-
-  // Pointer lock change handler
-  document.addEventListener('pointerlockchange', () => {
-    if (document.pointerLockElement !== document.body) {
-      if (state.running && !isSettingsOpen && state.player.lives > 0) {
-        openSettings(state, gameSettings);
-      }
-    }
-  });
 }

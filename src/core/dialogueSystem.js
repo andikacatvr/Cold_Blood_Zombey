@@ -48,11 +48,6 @@ export function openStoryDialogue(npc, onComplete = null) {
     overlay.style.opacity = '1';
   }
 
-  // Release pointer lock so user can interact/read
-  try {
-    if (document.exitPointerLock) document.exitPointerLock();
-  } catch (e) {}
-
   if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(1900, 0.4);
 }
 

@@ -153,7 +153,7 @@ function updateSimulation(dt) {
   const promptText = document.getElementById('npc-prompt-text');
   if (promptEl) {
     if (state.storyPhase === 'orientation') {
-      const nearest = getNearestVillager(playerPos, 3.2);
+      const nearest = getNearestVillager(playerPos, 3.8);
       if (nearest && !isStoryDialogueOpen()) {
         promptEl.style.display = 'block';
         if (promptText) promptText.textContent = `BICARA DENGAN ${nearest.name.toUpperCase()}`;

@@ -55,7 +55,7 @@ import { startIntroCutscene, isCinematicActive } from './cutscene.js';
 import { updateTouchControlsVisibility } from '../ui/touchControls.js';
 import { setObjective, getActiveObjective, updateQuestHUD } from './quest.js';
 import { getNearestVillager, spawnVillageNPCs } from '../entities/villager.js';
-import { openStoryDialogue, isStoryDialogueOpen } from './dialogueSystem.js';
+import { openStoryDialogue, isStoryDialogueOpen, advanceStoryDialogue, closeStoryDialogue } from './dialogueSystem.js';
 import {
   buildSurvivorPlayerModel,
   updatePlayerModelAnimation,
@@ -161,8 +161,13 @@ export function setPlayerYawPitch(newYaw, newPitch = 0) {
 export function triggerInteract() {
   if (!state.running || state.isPaused) return;
 
+  if (isStoryDialogueOpen()) {
+    advanceStoryDialogue();
+    return;
+  }
+
   // 1. Check interactive village NPCs during Orientation
-  const nearestVillager = getNearestVillager(playerPos, 3.4);
+  const nearestVillager = getNearestVillager(playerPos, 3.8);
   if (nearestVillager && state.storyPhase === 'orientation') {
     openStoryDialogue(nearestVillager, (talkedNPC) => {
       handleVillagerTalked(talkedNPC);
@@ -171,11 +176,18 @@ export function triggerInteract() {
   }
 
   // 2. Otherwise trigger Kristin/Natalia companion gesture
-  if (kristinModel) {
-    const dist = playerPos.distanceTo(kristinModel.root.position);
-    if (dist < 6.5) {
+  if (state.nataliaSpawned && nataliaModel && kristinModel) {
+    const dNatalia = playerPos.distanceTo(nataliaModel.root.position);
+    const dKristin = playerPos.distanceTo(kristinModel.root.position);
+    if (dNatalia < 6.5 && dNatalia <= dKristin) {
+      triggerNataliaGesture();
+    } else if (dKristin < 6.5) {
       triggerKristinGesture();
     }
+  } else if (state.nataliaSpawned && nataliaModel && playerPos.distanceTo(nataliaModel.root.position) < 6.5) {
+    triggerNataliaGesture();
+  } else if (kristinModel && playerPos.distanceTo(kristinModel.root.position) < 6.5) {
+    triggerKristinGesture();
   } else {
     triggerKristinGesture();
   }
@@ -902,6 +914,22 @@ export function setupPlayerControls() {
   window.addEventListener('keydown', (e) => {
     if (isCinematicActive) return;
     const c = e.code;
+
+    // If story dialogue is open, KeyE / Space / Enter advances dialogue, Escape closes it
+    if (isStoryDialogueOpen()) {
+      if (c === 'KeyE' || c === 'Space' || c === 'Enter') {
+        e.preventDefault();
+        advanceStoryDialogue();
+        return;
+      }
+      if (c === 'Escape') {
+        e.preventDefault();
+        closeStoryDialogue();
+        return;
+      }
+      return;
+    }
+
     if (c === 'Escape') {
       if (isMapOpen) {
         closeMap(state);
@@ -943,26 +971,7 @@ export function setupPlayerControls() {
       if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(mode === 'tps' ? 2800 : 1800, 0.4);
     }
     if (c === 'KeyE') {
-      const nearestVillager = getNearestVillager(playerPos, 3.4);
-      if (nearestVillager && state.storyPhase === 'orientation') {
-        openStoryDialogue(nearestVillager, (talkedNPC) => {
-          handleVillagerTalked(talkedNPC);
-        });
-        return;
-      }
-      if (state.nataliaSpawned && nataliaModel && kristinModel) {
-        const dNatalia = playerPos.distanceTo(nataliaModel.root.position);
-        const dKristin = playerPos.distanceTo(kristinModel.root.position);
-        if (dNatalia < 6.5 && dNatalia <= dKristin) {
-          triggerNataliaGesture();
-        } else if (dKristin < 6.5) {
-          triggerKristinGesture();
-        }
-      } else if (state.nataliaSpawned && nataliaModel && playerPos.distanceTo(nataliaModel.root.position) < 6.5) {
-        triggerNataliaGesture();
-      } else if (kristinModel && playerPos.distanceTo(kristinModel.root.position) < 6.5) {
-        triggerKristinGesture();
-      }
+      triggerInteract();
     }
   });
 
