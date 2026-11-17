@@ -1148,6 +1148,32 @@ function init() {
   // Disable default browser context menu so game behaves like a native PC console application
   window.addEventListener('contextmenu', (e) => e.preventDefault());
 
+  // Prevent browser zoom shortcuts (Ctrl + Plus, Ctrl + Minus, Ctrl + 0, Ctrl + Mouse Wheel)
+  window.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      if (
+        e.key === '+' ||
+        e.key === '-' ||
+        e.key === '=' ||
+        e.key === '_' ||
+        e.key === '0' ||
+        e.code === 'NumpadAdd' ||
+        e.code === 'NumpadSubtract' ||
+        e.code === 'Digit0' ||
+        e.code === 'Equal' ||
+        e.code === 'Minus'
+      ) {
+        e.preventDefault();
+      }
+    }
+  }, { passive: false });
+
+  window.addEventListener('wheel', (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
   // Attach retro console UI sound effects to all interactive buttons
   document.querySelectorAll('button, .menu-action-btn, .mode-card, .btn-play, .hud-btn, .btn-sec, .hud-box').forEach(el => {
     el.addEventListener('mouseenter', () => {
