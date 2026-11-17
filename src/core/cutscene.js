@@ -9,7 +9,7 @@
 import {
   getTerrainHeight
 } from '../world/environment.js';
-import { andikaModel } from '../entities/kristin.js';
+import { kristinModel } from '../entities/kristin.js';
 import {
   nataliaModel,
   showNataliaSubtitle
@@ -21,6 +21,7 @@ import { scene, playerFlashlight } from '../graphics/engine.js';
 import { playerPos, state, setPlayerYawPitch } from './player.js';
 import { zombies } from '../entities/enemies.js';
 import { updateTouchControlsVisibility } from '../ui/touchControls.js';
+import { setObjective } from './quest.js';
 
 const THREE = window.THREE;
 
@@ -102,37 +103,49 @@ const NONA_BATAVIA_STAGES = [
 const CUTSCENE_STAGES = [
   {
     start: 0.0,
-    end: 4.5,
+    end: 6.5,
     camStart: new THREE.Vector3(4.8, 3.2, 24.5),
     camEnd: new THREE.Vector3(1.8, 1.8, 17.5),
     lookStart: new THREE.Vector3(0.2, 1.0, 15.5),
     lookEnd: new THREE.Vector3(0.4, 0.55, 14.0),
-    subtitle: `<span style="color:#ffffff;">Malam membeku di Hutan Long Way Hill... Gelombang sihir gelap kuno bangkit menyelimuti tanah!</span>`,
+    subtitle: `<span style="color:#d8b26e; font-size:22px; font-weight:bold;">RODRICK (Rekaman Suara):</span> <i>*suara perekam berderak*</i> "Catatan lapangan hari pertama. Desa Karang Wening, lereng gunung. Dua minggu penelitian ritual dan kepercayaan lokal..."<br><span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN:</span> "Dan dua minggu sampel air! Jangan lupa bagian gue juga masuk laporan, Rod."`,
     onEnter: (sfx) => {
       if (sfx && sfx.playChurchBellToll) sfx.playChurchBellToll();
       if (sfx && sfx.playSnowStep) sfx.playSnowStep();
     }
   },
   {
-    start: 4.5,
-    end: 9.8,
+    start: 6.5,
+    end: 13.5,
     camStart: new THREE.Vector3(-1.15, 1.15, 15.5),
     camEnd: new THREE.Vector3(-0.65, 0.85, 14.8),
     lookStart: new THREE.Vector3(0.55, 0.45, 13.9),
     lookEnd: new THREE.Vector3(0.70, 0.50, 13.9),
-    subtitle: `<span style="color:#5cf0a5; font-size:22px; font-weight:bold;">KRISTIN:</span> <i>*jongkok panik mengguncang bahumu*</i> <span style="color:#ffffff; font-size:21px; font-weight:bold;">"Woii bangun! Woii bangun bro! Sadar woy!"</span>`,
+    subtitle: `<span style="color:#e0e6ed; font-size:21px; font-weight:bold;">WARGA DESA:</span> "Selamat datang, anak-anak. Silakan minum air suci dulu. Guru kami menyambut siapa saja..."<br><span style="color:#d8b26e; font-size:20px; font-weight:bold;">RODRICK (Rekaman):</span> "Hari kedua... Gue putar tiga wawancara warga berbeda, kalimatnya sama persis: 'Kami semua diampuni.' Sama intonasinya. Sama jedanya."`,
     onEnter: (sfx) => {
       if (sfx && sfx.playZombieGroan) sfx.playZombieGroan();
     }
   },
   {
-    start: 9.8,
-    end: 15.5,
+    start: 13.5,
+    end: 20.5,
+    camStart: new THREE.Vector3(-1.5, 1.25, 15.8),
+    camEnd: new THREE.Vector3(-0.55, 0.75, 14.5),
+    lookStart: new THREE.Vector3(0.65, 0.55, 13.9),
+    lookEnd: new THREE.Vector3(0.75, 0.65, 13.9),
+    subtitle: `<span style="color:#5cf0a5; font-size:22px; font-weight:bold;">KRISTIN:</span> "Rod, lihat ini! Sampel dari air suci... ada senyawa yang nggak ada di sumber air mana pun! Seseorang menambahkannya, dan kita sudah meminumnya dua hari!"<br><span style="color:#ff7878; font-size:20px; font-weight:bold;">IBU WARUNG:</span> <i>*tatapan kosong*</i> "Kami semua diampuni..."`,
+    onEnter: (sfx) => {
+      if (sfx && sfx.playSnowStep) sfx.playSnowStep();
+    }
+  },
+  {
+    start: 20.5,
+    end: 28.0,
     camStart: new THREE.Vector3(-0.15, 0.55, 14.6),
     camEnd: new THREE.Vector3(0.0, 1.80, 14.0),
     lookStart: new THREE.Vector3(0.80, 0.85, 13.9),
     lookEnd: new THREE.Vector3(0.85, 1.65, 13.9),
-    subtitle: `<span style="color:#5cf0a5; font-size:22px; font-weight:bold;">KRISTIN:</span> "Woii bangun! Syukurlah lu selamat bro! Mayat-mayat pada bangkit karena kutukan sihir gelap! Cepat berdiri, ambil senjatamu, kita harus bertahan hidup!"`,
+    subtitle: `<span style="color:#5cf0a5; font-size:22px; font-weight:bold;">KRISTIN:</span> "Rod, bangun! Itu bukan kutukan, wabah ini sengaja diberikan ke mereka! Gerbang desa dijaga ketat sama umat dan nggak ada sinyal!"<br><span style="color:#d8b26e; font-size:21px; font-weight:bold;">RODRICK:</span> "Berarti kita bertahan sampai pagi! Cari rumah Pak Darmo di ujung timur desa, dia punya senjata!"`,
     onEnter: (sfx) => {
       if (sfx && sfx.playPumpRack) sfx.playPumpRack();
       if (sfx && sfx.playSnowThud) sfx.playSnowThud(1.0);
@@ -233,10 +246,10 @@ export function startIntroCutscene(camera, sfx, onComplete) {
   createDroppedShotgun();
 
   // Position Kristin crouching down beside the unconscious player
-  if (andikaModel && andikaModel.root) {
+  if (kristinModel && kristinModel.root) {
     const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.82, 13.9) : 0.1;
-    andikaModel.root.position.set(0.82, gy - 0.58, 13.9);
-    andikaModel.root.rotation.set(0.42, -Math.PI / 2 - 0.28, 0.16); // Leaning down close over player
+    kristinModel.root.position.set(0.82, gy - 0.58, 13.9);
+    kristinModel.root.rotation.set(0.42, -Math.PI / 2 - 0.28, 0.16); // Leaning down close over player
   }
 
   // Show cinema overlay & letterbox
@@ -308,7 +321,7 @@ export function startNonaBataviaCutscene(bossZombie, camera, sfx, onComplete) {
   updateTouchControlsVisibility();
   const bossHud = document.getElementById('boss-hud-container');
   if (bossHud) bossHud.style.display = 'none';
-  const npcBanner = document.getElementById('andika-npc-banner');
+  const npcBanner = document.getElementById('kristin-npc-banner');
   if (npcBanner) npcBanner.style.display = 'none';
   const bossFlash = document.getElementById('boss-warning-flash');
   if (bossFlash) {
@@ -467,32 +480,32 @@ export function updateCutscene(dt) {
   }
 
   // 1. Character Posing & Dynamic Awakening Transition
-  if (cutsceneTime < 9.8) {
+  if (cutsceneTime < 20.5) {
     // Player remains unconscious flat on the snow
     setPlayerCutscenePose('unconscious');
 
-    // Kristin crouched down over player, shaking player's shoulder and shouting "woii bangun"
-    if (andikaModel && andikaModel.root) {
+    // Kristin crouched down over player, listening and analyzing
+    if (kristinModel && kristinModel.root) {
       const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.82, 13.9) : 0.1;
-      const shake = (cutsceneTime > 4.2) ? Math.sin(cutsceneTime * 11.0) * 0.028 : Math.sin(cutsceneTime * 2.5) * 0.010;
-      const headNod = (cutsceneTime > 4.2) ? Math.sin(cutsceneTime * 5.5) * 0.04 : 0;
-      andikaModel.root.position.set(0.82 + shake * 0.6, gy - 0.58 + Math.abs(shake) * 0.25, 13.9);
-      andikaModel.root.rotation.set(0.42 + headNod, -Math.PI / 2 - 0.28, 0.16);
+      const shake = (cutsceneTime > 13.5) ? Math.sin(cutsceneTime * 8.0) * 0.020 : Math.sin(cutsceneTime * 2.5) * 0.008;
+      const headNod = (cutsceneTime > 13.5) ? Math.sin(cutsceneTime * 4.5) * 0.04 : 0;
+      kristinModel.root.position.set(0.82 + shake * 0.6, gy - 0.58 + Math.abs(shake) * 0.25, 13.9);
+      kristinModel.root.rotation.set(0.42 + headNod, -Math.PI / 2 - 0.28, 0.16);
     }
   } else {
-    // Stage 3: Player awakens and rises up
-    const wakeProgress = Math.min(1.0, (cutsceneTime - 9.8) / 4.2);
+    // Stage 4: Player awakens and rises up
+    const wakeProgress = Math.min(1.0, (cutsceneTime - 20.5) / 5.5);
     setPlayerCutscenePose('waking', wakeProgress);
 
     // Kristin stands up from crouching to full standing height as player wakes up
-    if (andikaModel && andikaModel.root) {
+    if (kristinModel && kristinModel.root) {
       const ease = wakeProgress * wakeProgress * (3 - 2 * wakeProgress);
       const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.82, 13.9) : 0.1;
       const curY = THREE.MathUtils.lerp(gy - 0.58, gy, ease);
       const curRotX = THREE.MathUtils.lerp(0.42, 0, ease);
       const curRotZ = THREE.MathUtils.lerp(0.16, 0, ease);
-      andikaModel.root.position.set(0.82, curY, 13.9);
-      andikaModel.root.rotation.set(curRotX, -Math.PI / 2 - 0.28, curRotZ);
+      kristinModel.root.position.set(0.82, curY, 13.9);
+      kristinModel.root.rotation.set(curRotX, -Math.PI / 2 - 0.28, curRotZ);
     }
 
     // Player retrieves dropped shotgun from snow
@@ -502,7 +515,7 @@ export function updateCutscene(dt) {
     }
   }
 
-  if (cutsceneTime >= 15.5) {
+  if (cutsceneTime >= 28.0) {
     finishCutscene();
     return;
   }
@@ -553,10 +566,10 @@ export function finishCutscene() {
   if (state && state.player) state.player.isInvulnerable = false;
 
   // Position Kristin beside player ready for escort mode
-  if (andikaModel && andikaModel.root) {
+  if (kristinModel && kristinModel.root) {
     const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.2, 13.8) : 0.1;
-    andikaModel.root.position.set(1.2, gy, 13.8);
-    andikaModel.root.rotation.set(0, -0.35, 0);
+    kristinModel.root.position.set(1.2, gy, 13.8);
+    kristinModel.root.rotation.set(0, -0.35, 0);
   }
 
   // Restore camera to default player eye-level spawn
@@ -584,6 +597,9 @@ export function finishCutscene() {
   if (playerFlashlight) playerFlashlight.visible = true;
   if (playerMeshRoot) playerMeshRoot.visible = (cameraMode === 'tps');
   if (weaponHolder) weaponHolder.visible = (cameraMode === 'fps');
+
+  // Activate Chapter 1 Objective 1.1: Cari Tempat Aman & Senjata
+  setObjective('1.1');
 
   // Request pointer lock for FPS gameplay
   try {

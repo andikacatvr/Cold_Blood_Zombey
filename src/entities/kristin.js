@@ -14,7 +14,7 @@ import { playerPos, yaw } from '../core/player.js';
 
 const THREE = window.THREE;
 
-export let andikaModel = null;
+export let kristinModel = null;
 export const NPC_SCALE = 1.38; // Rescaled larger and heroic
 
 // Companion AI & Following State
@@ -37,8 +37,8 @@ let dialogHideTimeout = null;
  * Show pure cinematic dialogue subtitle that automatically fades out
  */
 export function showDialogSubtitle(text, duration = 4500) {
-  const bannerEl = document.getElementById('andika-npc-banner');
-  const textEl = document.getElementById('andika-dialog-text');
+  const bannerEl = document.getElementById('kristin-npc-banner');
+  const textEl = document.getElementById('kristin-dialog-text');
   if (!bannerEl) return;
 
   if (text && textEl) {
@@ -69,6 +69,64 @@ export function toggleCompanionFollow(sfxRef = Sfx) {
     : "Oke, gua jaga di sini sambil mantau musuh! Panggil kalau lu butuh!";
 
   showDialogSubtitle(text, 3800);
+}
+
+export const KRISTIN_OBJECTIVE_HINTS = {
+  '1.1': [
+    "Warga yang berani nolak ajaran Guru pasti tinggal agak jauh dari pusat. Coba arah timur, Rod.",
+    "Tadi siang Pak Darmo cerita dia berburu babi hutan. Rumahnya yang ada tengkorak babi hutan di tiang pagar, Rod!",
+    "Gang paling timur, rumah Pak Darmo. Cek celah lemari kayu di sana, cari shotgun! Ayo cepat."
+  ],
+  '1.2': [
+    "Gerbang dijaga ketat sama umat. Kita harus cari tetua yang nggak pernah ikut ritual Guru...",
+    "Ibu Sumi! Rumahnya dekat mata air tua (Sendang) di barat desa, Rod.",
+    "Ikuti jalan setapak berbatu ke barat arah sendang. Temui Ibu Sumi sekarang, dia tahu jalan rahasia!"
+  ],
+  '1.3': [
+    "Putar lagi rekaman nyanyian umat di dekat sendang, Rod. Dengarkan baik-baik hitungannya.",
+    "Liriknya menyebut pola: 'Tiga sujud, dua tunduk, satu diam.'",
+    "Ada tiga patung di sendang! Tekan 3 kali patung kiri, 2 kali patung tengah, 1 kali patung kanan!"
+  ],
+  '2.1': [
+    "Lorong kuno ini tembus ke bawah rumah ibadah. Hati-hati, cari bukti eksperimen mereka.",
+    "Ada suara di balik lemari lorong! Cek di sana, mungkin ada orang yang masih sadar!"
+  ],
+  '2.2': [
+    "Panel listrik butuh tiga sekring buat nyalain generator dan radio. Cari benda kaca kecil berbentuk tabung.",
+    "Sekringnya tersebar di Ruang Rawat, Dapur Air, dan Ruang Arsip. Kumpulkan ketiganya, Rod!"
+  ],
+  '2.3': [
+    "Kode pintu Lab Utama ada 4 angka. Hitung: ranjang (7), tong (3), berkas merah (9), lilin (1). Kodenya 7391!",
+    "Dapur Air! Katup pipanya merah. Ibu Asuh mengejar suara, tutup ketiga katupnya buat melemahkannya!"
+  ],
+  '2.4': [
+    "Catatan medis bilang yang paling stabil ditaruh duluan. Masukkan ampul Bima dulu, Rod!",
+    "Urutan meja racik: Ampul Dasar Bima -> Stabilizer lemari es -> Sampel air suci murni!"
+  ],
+  '3.1': [
+    "Ritual massal Guru Raksa diadakan di alun-alun dekat menara lonceng. Kita harus naik ke atas!",
+    "Hati-hati sama umat di alun-alun, mereka mengepung tapi bisa dialihkan dengan suara!"
+  ],
+  '3.2': [
+    "Putus 3 katup air suci di lantai dasar, tengah, dan atas menara lonceng sebelum racun tersebar!",
+    "Dada Guru Raksa bercahaya saat bermutasi! Tembak tepat di tanda bercahaya di dadanya, itu titik lemahnya!"
+  ]
+};
+
+let hintCycleState = {};
+
+export function giveKristinHint(objectiveId = '1.1', sfxRef = Sfx) {
+  const hints = KRISTIN_OBJECTIVE_HINTS[objectiveId] || KRISTIN_OBJECTIVE_HINTS['1.1'];
+  if (!hintCycleState[objectiveId]) hintCycleState[objectiveId] = 0;
+  const index = hintCycleState[objectiveId] % hints.length;
+  hintCycleState[objectiveId]++;
+
+  const hintText = hints[index];
+  showDialogSubtitle(hintText, 5500);
+  if (sfxRef && sfxRef.playSmallBell) {
+    sfxRef.playSmallBell(2400 + index * 200, 0.5);
+  }
+  return hintText;
 }
 
 export const STORY_CONVERSATIONS = [
@@ -107,7 +165,7 @@ export const GESTURE_CONFIG = {
   }
 };
 
-export function triggerAndikaGesture(name, sfxRef = Sfx) {
+export function triggerKristinGesture(name, sfxRef = Sfx) {
   const keys = ['wave', 'pump', 'cheer', 'beckon'];
   let target = name;
   let isCycling = false;
@@ -135,11 +193,11 @@ export function triggerAndikaGesture(name, sfxRef = Sfx) {
   showDialogSubtitle(spokenText, 4800);
 
   // Weapon switch sync for combat gesture
-  if (andikaModel && andikaModel.setWeapon) {
+  if (kristinModel && kristinModel.setWeapon) {
     if (target === 'pump') {
-      andikaModel.setWeapon('pump');
+      kristinModel.setWeapon('pump');
     } else {
-      andikaModel.setWeapon('spin');
+      kristinModel.setWeapon('spin');
     }
   }
 }
@@ -231,7 +289,7 @@ function makeRotator(rx, ry, rz, px, py, pz) {
   };
 }
 
-export function buildAndikaCharacter(textures) {
+export function buildKristinCharacter(textures) {
   const root = new THREE.Group();
   root.name = 'Kristin_Companion_GLB';
   root.scale.set(NPC_SCALE, NPC_SCALE, NPC_SCALE);
@@ -372,21 +430,21 @@ export function buildAndikaCharacter(textures) {
   };
 }
 
-export function initAndikaCompanion(scene, textures) {
-  andikaModel = buildAndikaCharacter(textures);
+export function initKristinCompanion(scene, textures) {
+  kristinModel = buildKristinCharacter(textures);
   // Spawn companion Kristin right near player start at bus crash site
-  andikaModel.root.position.set(1.6, 0.10, 13.8);
-  andikaModel.root.rotation.y = -0.35;
-  scene.add(andikaModel.root);
-  andikaModel.setWeapon('spin');
+  kristinModel.root.position.set(1.6, 0.10, 13.8);
+  kristinModel.root.rotation.y = -0.35;
+  scene.add(kristinModel.root);
+  kristinModel.setWeapon('spin');
 
   // Wire up gesture buttons in DOM
-  const btns = document.querySelectorAll('.andika-gesture-btn');
+  const btns = document.querySelectorAll('.kristin-gesture-btn');
   btns.forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const g = btn.getAttribute('data-gesture');
-      triggerAndikaGesture(g);
+      triggerKristinGesture(g);
     });
   });
 
@@ -398,18 +456,18 @@ export function initAndikaCompanion(scene, textures) {
     });
   }
 
-  const bannerEl = document.getElementById('andika-npc-banner');
+  const bannerEl = document.getElementById('kristin-npc-banner');
   if (bannerEl) {
     bannerEl.addEventListener('click', (e) => {
       if (e.target.tagName !== 'BUTTON') {
-        triggerAndikaGesture();
+        triggerKristinGesture();
       }
     });
   }
 }
 
-export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
-  if (!andikaModel) return;
+export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
+  if (!kristinModel) return;
 
   const now = performance.now();
   const t = now * 0.002;
@@ -418,8 +476,8 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
   const targetX = (typeof playerPos !== 'undefined') ? playerPos.x : camera.position.x;
   const targetZ = (typeof playerPos !== 'undefined') ? playerPos.z : camera.position.z;
 
-  const dx = targetX - andikaModel.root.position.x;
-  const dz = targetZ - andikaModel.root.position.z;
+  const dx = targetX - kristinModel.root.position.x;
+  const dz = targetZ - kristinModel.root.position.z;
   const distToPlayer = Math.hypot(dx, dz);
 
   // 1. Companion Following AI (Moves & Follows the Player)
@@ -430,8 +488,8 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
     // Catch-up reposition if player runs too far
     if (distToPlayer > 32.0) {
       const pYaw = (typeof yaw !== 'undefined') ? yaw : camera.rotation.y;
-      andikaModel.root.position.x = targetX - Math.sin(pYaw) * 3.5;
-      andikaModel.root.position.z = targetZ - Math.cos(pYaw) * 3.5;
+      kristinModel.root.position.x = targetX - Math.sin(pYaw) * 3.5;
+      kristinModel.root.position.z = targetZ - Math.cos(pYaw) * 3.5;
     }
 
     const stopDist = 2.1;
@@ -446,19 +504,19 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
       const stepX = dirX * speed * dt;
       const stepZ = dirZ * speed * dt;
 
-      const curX = andikaModel.root.position.x;
-      const curZ = andikaModel.root.position.z;
+      const curX = kristinModel.root.position.x;
+      const curZ = kristinModel.root.position.z;
 
       // Smart sliding & obstacle avoidance
       let movedX = false;
       let movedZ = false;
 
       if (!checkWallCollision(curX + stepX, curZ)) {
-        andikaModel.root.position.x += stepX;
+        kristinModel.root.position.x += stepX;
         movedX = true;
       }
-      if (!checkWallCollision(andikaModel.root.position.x, curZ + stepZ)) {
-        andikaModel.root.position.z += stepZ;
+      if (!checkWallCollision(kristinModel.root.position.x, curZ + stepZ)) {
+        kristinModel.root.position.z += stepZ;
         movedZ = true;
       }
 
@@ -467,18 +525,18 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
         const perpX = -dirZ * speed * dt;
         const perpZ = dirX * speed * dt;
         if (!checkWallCollision(curX + perpX, curZ + perpZ)) {
-          andikaModel.root.position.x += perpX;
-          andikaModel.root.position.z += perpZ;
+          kristinModel.root.position.x += perpX;
+          kristinModel.root.position.z += perpZ;
         } else if (!checkWallCollision(curX - perpX, curZ - perpZ)) {
-          andikaModel.root.position.x -= perpX;
-          andikaModel.root.position.z -= perpZ;
+          kristinModel.root.position.x -= perpX;
+          kristinModel.root.position.z -= perpZ;
         }
       }
 
       // Smoothly turn to face travel direction
       const moveYaw = Math.atan2(dirX, dirZ);
-      andikaModel.root.rotation.y = THREE.MathUtils.lerp(
-        andikaModel.root.rotation.y,
+      kristinModel.root.rotation.y = THREE.MathUtils.lerp(
+        kristinModel.root.rotation.y,
         moveYaw,
         0.16
       );
@@ -486,8 +544,8 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
       // Walking stride & step height on undulating terrain
       walkCadence += dt * (speed * 1.8);
       const stride = Math.sin(walkCadence);
-      const curGY = getTerrainHeight(andikaModel.root.position.x, andikaModel.root.position.z);
-      andikaModel.root.position.y = curGY + 0.10 + Math.abs(stride) * 0.055;
+      const curGY = getTerrainHeight(kristinModel.root.position.x, kristinModel.root.position.z);
+      kristinModel.root.position.y = curGY + 0.10 + Math.abs(stride) * 0.055;
 
       // Footsteps in snow synchronized to walk cadence
       if (Math.abs(stride) > 0.85 && now - lastFootstepTime > (isSprinting ? 260 : 370)) {
@@ -496,11 +554,11 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
       }
     } else {
       // Stopped near player, breathing on terrain height
-      const curGY = getTerrainHeight(andikaModel.root.position.x, andikaModel.root.position.z);
-      andikaModel.root.position.y = curGY + 0.10 + Math.sin(t * 1.8) * 0.008;
+      const curGY = getTerrainHeight(kristinModel.root.position.x, kristinModel.root.position.z);
+      kristinModel.root.position.y = curGY + 0.10 + Math.sin(t * 1.8) * 0.008;
       const targetAngle = Math.atan2(dx, dz);
-      andikaModel.root.rotation.y = THREE.MathUtils.lerp(
-        andikaModel.root.rotation.y,
+      kristinModel.root.rotation.y = THREE.MathUtils.lerp(
+        kristinModel.root.rotation.y,
         targetAngle,
         0.08
       );
@@ -508,11 +566,11 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
     }
   } else {
     // Hold position mode: stays in place, breathing on terrain height
-    const curGY = getTerrainHeight(andikaModel.root.position.x, andikaModel.root.position.z);
-    andikaModel.root.position.y = curGY + 0.10 + Math.sin(t * 1.8) * 0.008;
+    const curGY = getTerrainHeight(kristinModel.root.position.x, kristinModel.root.position.z);
+    kristinModel.root.position.y = curGY + 0.10 + Math.sin(t * 1.8) * 0.008;
     const targetAngle = Math.atan2(dx, dz);
-    andikaModel.root.rotation.y = THREE.MathUtils.lerp(
-      andikaModel.root.rotation.y,
+    kristinModel.root.rotation.y = THREE.MathUtils.lerp(
+      kristinModel.root.rotation.y,
       targetAngle,
       0.08
     );
@@ -526,7 +584,7 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
     for (let i = 0; i < zombies.length; i++) {
       const z = zombies[i];
       if (!z.isDead && z.hp > 0) {
-        const d = Math.hypot(z.x - andikaModel.root.position.x, z.z - andikaModel.root.position.z);
+        const d = Math.hypot(z.x - kristinModel.root.position.x, z.z - kristinModel.root.position.z);
         if (d < minZDist) {
           minZDist = d;
           nearestZ = z;
@@ -536,10 +594,10 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
 
     if (nearestZ && now > combatShootCooldown) {
       combatShootCooldown = now + 2400; // Shotgun firing cooldown
-      const aimAngle = Math.atan2(nearestZ.x - andikaModel.root.position.x, nearestZ.z - andikaModel.root.position.z);
-      andikaModel.root.rotation.y = aimAngle;
+      const aimAngle = Math.atan2(nearestZ.x - kristinModel.root.position.x, nearestZ.z - kristinModel.root.position.z);
+      kristinModel.root.rotation.y = aimAngle;
 
-      triggerAndikaGesture('pump', Sfx);
+      triggerKristinGesture('pump', Sfx);
       nearestZ.hp -= 45;
       if (Sfx && Sfx.playShotgun) Sfx.playShotgun();
 
@@ -558,15 +616,15 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
   // Dynamic Initial Greeting (plays greeting subtitle once when first meeting)
   if (!hasAutoGreeted && distToPlayer < 4.4) {
     hasAutoGreeted = true;
-    triggerAndikaGesture('wave', Sfx);
+    triggerKristinGesture('wave', Sfx);
   }
 
   // Kinematic Rig & Mesh Gesture Deformation
-  if (andikaModel.charMesh && andikaModel.origPositions && andikaModel.vertexWeights) {
-    const vCount = andikaModel.vertexCount;
-    const orig = andikaModel.origPositions;
-    const weights = andikaModel.vertexWeights;
-    const posArr = andikaModel.charMesh.geometry.attributes.position.array;
+  if (kristinModel.charMesh && kristinModel.origPositions && kristinModel.vertexWeights) {
+    const vCount = kristinModel.vertexCount;
+    const orig = kristinModel.origPositions;
+    const weights = kristinModel.vertexWeights;
+    const posArr = kristinModel.charMesh.geometry.attributes.position.array;
 
     // Base Rotations
     let h_rx = 0, h_ry = 0, h_rz = 0;
@@ -598,13 +656,13 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
 
     // Head Tracking towards camera / player
     if (distToPlayer < 7.0) {
-      const headWorldY = andikaModel.root.position.y + 1.45 * NPC_SCALE;
-      const dx = camera.position.x - andikaModel.root.position.x;
+      const headWorldY = kristinModel.root.position.y + 1.45 * NPC_SCALE;
+      const dx = camera.position.x - kristinModel.root.position.x;
       const dy = camera.position.y - headWorldY;
-      const dz = camera.position.z - andikaModel.root.position.z;
+      const dz = camera.position.z - kristinModel.root.position.z;
 
       const worldAngle = Math.atan2(dx, dz);
-      const charAngle = andikaModel.root.rotation.y;
+      const charAngle = kristinModel.root.rotation.y;
       let relYaw = THREE.MathUtils.euclideanModulo(worldAngle - charAngle + Math.PI, Math.PI * 2) - Math.PI;
       relYaw = Math.max(-0.6, Math.min(0.6, relYaw));
 
@@ -651,8 +709,8 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
         la_rz += -0.22 * blend;
         h_rx += (0.16 + Math.sin(gTime * 6) * 0.08) * blend;
         // Animate mini pump slide mesh if active
-        if (andikaModel.miniPump && andikaModel.miniPump.pumpSlideMesh) {
-          andikaModel.miniPump.pumpSlideMesh.position.z = 0.20 + pumpSlide * 0.05 * blend;
+        if (kristinModel.miniPump && kristinModel.miniPump.pumpSlideMesh) {
+          kristinModel.miniPump.pumpSlideMesh.position.z = 0.20 + pumpSlide * 0.05 * blend;
         }
       } else if (currentGesture === 'cheer') {
         // Thumbs up / salute forward
@@ -740,21 +798,14 @@ export function updateAndikaCompanion(camera, Sfx, dt = 0.016) {
       posArr[idx3 + 1] = fy;
       posArr[idx3 + 2] = fz;
     }
-    andikaModel.charMesh.geometry.attributes.position.needsUpdate = true;
+    kristinModel.charMesh.geometry.attributes.position.needsUpdate = true;
 
     // Attach weapon socket seamlessly to transformed right hand
     const [rhX, rhY, rhZ] = rotRArm(0.46, 0.98, 0.04);
     const [finX, finY, finZ] = rotTorso(rhX, rhY, rhZ);
-    andikaModel.weaponSocket.position.set(finX, finY, finZ);
-    andikaModel.weaponSocket.rotation.x = -Math.PI / 2.7 + ra_rx * 0.9 + t_rx * 0.5;
-    andikaModel.weaponSocket.rotation.y = -0.15 + ra_ry * 0.9 + t_ry * 0.5;
-    andikaModel.weaponSocket.rotation.z = ra_rz * 0.9 + t_rz * 0.5;
+    kristinModel.weaponSocket.position.set(finX, finY, finZ);
+    kristinModel.weaponSocket.rotation.x = -Math.PI / 2.7 + ra_rx * 0.9 + t_rx * 0.5;
+    kristinModel.weaponSocket.rotation.y = -0.15 + ra_ry * 0.9 + t_ry * 0.5;
+    kristinModel.weaponSocket.rotation.z = ra_rz * 0.9 + t_rz * 0.5;
   }
 }
-
-export {
-  andikaModel as kristinModel,
-  initAndikaCompanion as initKristinCompanion,
-  updateAndikaCompanion as updateKristinCompanion,
-  buildAndikaCharacter as buildKristinCharacter
-};

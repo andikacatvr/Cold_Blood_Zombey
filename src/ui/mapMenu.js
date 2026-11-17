@@ -8,11 +8,12 @@
    ========================================================================= */
 
 import { playerPos, yaw, state } from '../core/player.js';
-import { andikaModel } from '../entities/kristin.js';
+import { kristinModel } from '../entities/kristin.js';
 import { nataliaModel } from '../entities/natalia.js';
 import { zombies, currentBoss } from '../entities/enemies.js';
 import { getRiverCenterX, getRiverWaterY, getTerrainHeight, MAP_LIMIT } from '../world/environment.js';
 import { updateTouchControlsVisibility } from './touchControls.js';
+import { getActiveObjective } from '../core/quest.js';
 
 export let isMapOpen = false;
 let mapAnimId = null;
@@ -53,6 +54,19 @@ export function openMap(gameState) {
   const mapScreen = document.getElementById('screen-tactical-map');
   if (mapScreen) {
     mapScreen.style.display = 'flex';
+  }
+
+  // Sync active survivor objective in journal box
+  const obj = getActiveObjective();
+  if (obj) {
+    const cEl = document.getElementById('map-journal-chapter');
+    const tEl = document.getElementById('map-journal-title');
+    const dEl = document.getElementById('map-journal-desc');
+    const lEl = document.getElementById('map-journal-loc');
+    if (cEl) cEl.textContent = obj.chapter;
+    if (tEl) tEl.textContent = obj.title;
+    if (dEl) dEl.textContent = `"${obj.journal}"`;
+    if (lEl) lEl.textContent = `📍 Lokasi: ${obj.location}`;
   }
 
   updateTouchControlsVisibility();
@@ -316,11 +330,36 @@ function drawFullTacticalMap() {
   ctx.fillText('PERAHU', toCanvasX(44) + 12, toCanvasY(116));
   ctx.fillText('LAUTAN SELATAN', toCanvasX(-45), toCanvasY(148));
 
+  // 10b. Active Objective Marker (Gold Pulsing Beacon)
+  const actObj = getActiveObjective();
+  if (actObj && actObj.marker) {
+    const ox = toCanvasX(actObj.marker.x);
+    const oz = toCanvasY(actObj.marker.z);
+    const pulse = 7 + Math.sin(performance.now() * 0.007) * 2.5;
+
+    ctx.fillStyle = 'rgba(255, 215, 0, 0.28)';
+    ctx.beginPath();
+    ctx.arc(ox, oz, pulse + 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffd700';
+    ctx.beginPath();
+    ctx.arc(ox, oz, pulse, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+
+    ctx.font = 'bold 12px "VT323", monospace';
+    ctx.fillStyle = '#ffe066';
+    ctx.fillText('★ ' + actObj.title, ox + 14, oz + 4);
+  }
+
   // 11. Companions Markers
   // Kristin (Cyan Marker)
-  if (andikaModel && andikaModel.root) {
-    const kx = toCanvasX(andikaModel.root.position.x);
-    const kz = toCanvasY(andikaModel.root.position.z);
+  if (kristinModel && kristinModel.root) {
+    const kx = toCanvasX(kristinModel.root.position.x);
+    const kz = toCanvasY(kristinModel.root.position.z);
     ctx.fillStyle = '#2de8a0';
     ctx.beginPath();
     ctx.arc(kx, kz, 5.5, 0, Math.PI * 2);
@@ -536,8 +575,8 @@ export function updateMinimapRadar() {
   }
 
   // Kristin (Cyan dot)
-  if (andikaModel && andikaModel.root) {
-    const kp = toRadar(andikaModel.root.position.x, andikaModel.root.position.z);
+  if (kristinModel && kristinModel.root) {
+    const kp = toRadar(kristinModel.root.position.x, kristinModel.root.position.z);
     ctx.fillStyle = '#2de8a0';
     ctx.beginPath();
     ctx.arc(kp.x, kp.y, 4, 0, Math.PI * 2);
@@ -551,6 +590,19 @@ export function updateMinimapRadar() {
     ctx.beginPath();
     ctx.arc(np.x, np.y, 4, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  // Active Objective (Gold Star dot on Radar)
+  const actObj = getActiveObjective();
+  if (actObj && actObj.marker) {
+    const op = toRadar(actObj.marker.x, actObj.marker.z);
+    ctx.fillStyle = '#ffd700';
+    ctx.beginPath();
+    ctx.arc(op.x, op.y, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
   }
 
   // Player at Center (Facing UP on radar)

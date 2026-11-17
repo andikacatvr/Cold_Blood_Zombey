@@ -70,8 +70,8 @@ import {
   buildLeft4DeadInfected
 } from './entities/enemies.js';
 import {
-  initAndikaCompanion,
-  updateAndikaCompanion
+  initKristinCompanion,
+  updateKristinCompanion
 } from './entities/kristin.js';
 import {
   initNataliaAgent,
@@ -115,6 +115,7 @@ import {
   updateMinimapRadar,
   isMapOpen
 } from './ui/mapMenu.js';
+import { initQuestSystem } from './core/quest.js';
 
 const THREE = window.THREE;
 
@@ -222,7 +223,7 @@ function updateSimulation(dt) {
   }
 
   // 2. Kristin Companion NPC update (Follows Player & Support)
-  updateAndikaCompanion(camera, Sfx, dt);
+  updateKristinCompanion(camera, Sfx, dt);
 
   // 2b. Agent Natalia Combat Companion update (Flanking, Combat Defense & Shotgun Shooting)
   updateNataliaAgent(camera, Sfx, dt);
@@ -975,9 +976,10 @@ function init() {
   preloadNonaBataviaModel(scene);
   preloadVictorianBrideModel(scene);
   preloadZombieGLBModels(scene);
-  initAndikaCompanion(scene, textures);
+  initKristinCompanion(scene, textures);
   initNataliaAgent(scene, textures);
   initPlayer(camera, scene);
+  initQuestSystem(Sfx);
   setupPlayerControls();
   initTouchControls();
 

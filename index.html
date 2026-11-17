@@ -34,12 +34,32 @@
     </div>
 
     <!-- PURE CINEMATIC COMPANION DIALOGUE SUBTITLE (KRISTIN) -->
-    <div id="andika-npc-banner" style="display:none; position:absolute; bottom:85px; left:50%; transform:translateX(-50%); background:rgba(8,14,10,0.92); border:1px solid #3d6849; color:#cbe3d3; font-family:'VT323', monospace; padding:10px 22px; border-radius:6px; box-shadow:0 0 24px rgba(0,0,0,0.85); text-align:left; z-index:45; pointer-events:none; max-width:85%; min-width:300px; transition:opacity 0.4s ease;">
+    <div id="kristin-npc-banner" style="display:none; position:absolute; bottom:85px; left:50%; transform:translateX(-50%); background:rgba(8,14,10,0.92); border:1px solid #3d6849; color:#cbe3d3; font-family:'VT323', monospace; padding:10px 22px; border-radius:6px; box-shadow:0 0 24px rgba(0,0,0,0.85); text-align:left; z-index:45; pointer-events:none; max-width:85%; min-width:300px; transition:opacity 0.4s ease;">
       <div style="display:inline-flex; align-items:center; gap:14px;">
-        <img src="/textures/andika_face_hd.png" alt="Kristin" style="width:42px; height:42px; border-radius:50%; border:2px solid #9de8b7; object-fit:cover; box-shadow:0 0 10px rgba(157,232,183,0.5); flex-shrink:0;">
+        <img src="/textures/kristin_face_hd.png" alt="Kristin" style="width:42px; height:42px; border-radius:50%; border:2px solid #9de8b7; object-fit:cover; box-shadow:0 0 10px rgba(157,232,183,0.5); flex-shrink:0;">
         <div>
           <div style="color:#9de8b7; font-weight:bold; font-size:24px; line-height:1.1;">KRISTIN</div>
-          <div id="andika-dialog-text" style="color:#f0f7f3; font-size:22px; margin-top:3px; line-height:1.25;">"Woi bro! Sumpah lu beneran masih hidup?! Masuk sini cepetan!"</div>
+          <div id="kristin-dialog-text" style="color:#f0f7f3; font-size:22px; margin-top:3px; line-height:1.25;">"Woi bro! Sumpah lu beneran masih hidup?! Masuk sini cepetan!"</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVE SURVIVAL OBJECTIVE / QUEST TRACKER -->
+    <div id="hud-quest-panel" style="position:absolute; top:75px; left:25px; z-index:40; pointer-events:none; font-family:'VT323', monospace; max-width:380px;">
+      <div style="background:rgba(8,12,10,0.90); border-left:3px solid #78e08f; border-top:1px solid #233e2b; border-right:1px solid #233e2b; border-bottom:1px solid #233e2b; padding:8px 14px; border-radius:4px; box-shadow:0 0 16px rgba(0,0,0,0.85);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span id="quest-chapter-tag" style="color:#78e08f; font-size:16px; letter-spacing:1px; font-weight:bold;">BAB 1: DESA SUNYI</span>
+          <span style="color:#8ca693; font-size:14px;">[JURNAL]</span>
+        </div>
+        <div id="quest-title-text" style="color:#ffffff; font-size:22px; margin-top:3px; line-height:1.2; text-shadow:0 0 8px rgba(120,224,143,0.4);">
+          OBJEKTIF 1.1: Cari Tempat Aman &amp; Senjata
+        </div>
+        <div id="quest-desc-text" style="color:#b2c9b9; font-size:16px; margin-top:3px; line-height:1.2;">
+          "Gerbang dijaga umat. Cari rumah Pak Darmo di ujung gang timur (tanda tengkorak babi hutan)."
+        </div>
+        <div style="margin-top:6px; display:flex; align-items:center; gap:8px;">
+          <span style="background:#1a3823; color:#a2f0b5; border:1px solid #4a825b; padding:2px 7px; border-radius:3px; font-size:14px; pointer-events:auto; cursor:pointer;" id="quest-hint-key-btn">TEKAN [H]</span>
+          <span style="color:#92a898; font-size:15px;">Minta Petunjuk ke Kristin</span>
         </div>
       </div>
     </div>
@@ -287,6 +307,23 @@
           </div>
 
           <div class="map-sidebar-legend">
+            <!-- ACTIVE SURVIVOR JOURNAL & OBJECTIVE IN MAP -->
+            <div id="map-journal-box" style="background:rgba(12,20,16,0.92); border:1px solid #3d6849; border-left:3px solid #78e08f; padding:10px 12px; border-radius:4px; margin-bottom:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span id="map-journal-chapter" style="color:#78e08f; font-size:14px; font-weight:bold; letter-spacing:1px;">BAB 1: DESA SUNYI</span>
+                <span style="color:#ffd15c; font-size:13px;">[JURNAL RODRICK]</span>
+              </div>
+              <div id="map-journal-title" style="color:#ffffff; font-size:17px; font-weight:bold; margin-top:3px; line-height:1.2;">
+                OBJEKTIF 1.1: Cari Tempat Aman &amp; Senjata
+              </div>
+              <div id="map-journal-desc" style="color:#b2c9b9; font-size:13px; margin-top:4px; line-height:1.25;">
+                "Gerbang dijaga umat. Cari rumah warga yang menolak ajaran Guru (Pak Darmo), mungkin dia menyimpan sesuatu."
+              </div>
+              <div id="map-journal-loc" style="color:#e0b460; font-size:12px; margin-top:5px;">
+                📍 Lokasi: Rumah Pak Darmo (ujung timur, tanda tengkorak babi hutan)
+              </div>
+            </div>
+
             <div class="map-legend-title">KETERANGAN &amp; LOKASI PENTING</div>
             
             <div class="legend-item">

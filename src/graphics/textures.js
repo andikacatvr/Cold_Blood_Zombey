@@ -345,7 +345,7 @@ const THREE = window.THREE;
         for (let i = 0; i < 40; i++) {
           ctx.fillRect(Math.random() * 64, Math.random() * 64, 2, 2);
         }
-      } else if (type === 'andika_sweater') {
+      } else if (type === 'kristin_sweater') {
         // Green & ivory white knit horizontal stripes matching concept art
         c.width = 64; c.height = 64;
         ctx.fillStyle = '#2f5938';
@@ -358,7 +358,7 @@ const THREE = window.THREE;
         for (let y = 0; y < 64; y += 2) {
           ctx.fillRect(0, y, 64, 0.6);
         }
-      } else if (type === 'andika_cargo') {
+      } else if (type === 'kristin_cargo') {
         // Dark black cargo fabric with stitched seams & pocket flaps
         c.width = 64; c.height = 64;
         ctx.fillStyle = '#1a1b1f';
@@ -371,7 +371,7 @@ const THREE = window.THREE;
         ctx.lineWidth = 1.6;
         ctx.strokeRect(6, 10, 52, 42);
         ctx.strokeRect(14, 18, 36, 26);
-      } else if (type === 'andika_face') {
+      } else if (type === 'kristin_face') {
         // Asian female face with mischievous toothy grin
         c.width = 64; c.height = 64;
         ctx.fillStyle = '#e8c4ab';
@@ -498,7 +498,7 @@ const THREE = window.THREE;
         for (let i = 0; i < 200; i++) {
           ctx.fillRect(Math.random() * 64, Math.random() * 64, 1.5, 1.5);
         }
-      } else if (type === 'andika_sneaker') {
+      } else if (type === 'kristin_sneaker') {
         c.width = 64; c.height = 64;
         ctx.fillStyle = '#222328';
         ctx.fillRect(0, 0, 64, 64);
@@ -837,19 +837,19 @@ const THREE = window.THREE;
       }
     });
 
-    // ANDIKA (Def Jam PS2 Character) Textures
-    const andikaSweaterTex = createProceduralTexture('andika_sweater');
-    andikaSweaterTex.wrapS = THREE.RepeatWrapping;
-    andikaSweaterTex.wrapT = THREE.RepeatWrapping;
-    andikaSweaterTex.repeat.set(2, 2);
+    // KRISTIN (Companion Character) Textures
+    const kristinSweaterTex = createProceduralTexture('kristin_sweater');
+    kristinSweaterTex.wrapS = THREE.RepeatWrapping;
+    kristinSweaterTex.wrapT = THREE.RepeatWrapping;
+    kristinSweaterTex.repeat.set(2, 2);
 
-    const andikaCargoTex = createProceduralTexture('andika_cargo');
-    andikaCargoTex.wrapS = THREE.RepeatWrapping;
-    andikaCargoTex.wrapT = THREE.RepeatWrapping;
-    andikaCargoTex.repeat.set(1, 2);
+    const kristinCargoTex = createProceduralTexture('kristin_cargo');
+    kristinCargoTex.wrapS = THREE.RepeatWrapping;
+    kristinCargoTex.wrapT = THREE.RepeatWrapping;
+    kristinCargoTex.repeat.set(1, 2);
 
-    const andikaFaceTex = createProceduralTexture('andika_face');
-    const andikaSneakerTex = createProceduralTexture('andika_sneaker');
+    const kristinFaceTex = createProceduralTexture('kristin_face');
+    const kristinSneakerTex = createProceduralTexture('kristin_sneaker');
     const katzSignTex = createProceduralTexture('katz_street_sign');
     const martinSignTex = createProceduralTexture('martin_street_sign');
     const parkingSignTex = createProceduralTexture('parking_sign');
@@ -942,10 +942,10 @@ export const textures = {
   l4dFaceTex,
   l4dNecroticSkinTex,
   l4dClawsTex,
-  andikaSweaterTex,
-  andikaCargoTex,
-  andikaFaceTex,
-  andikaSneakerTex,
+  kristinSweaterTex,
+  kristinCargoTex,
+  kristinFaceTex,
+  kristinSneakerTex,
   katzSignTex,
   martinSignTex,
   parkingSignTex,
@@ -960,5 +960,5 @@ export const textures = {
   faceFemaleMeghanTex
 };
 
-export { createProceduralTexture, snowTex, beachSandTex, wetBeachSandTex, oceanWaterTex, shorelineFoamTex, asphaltRoadTex, riverWaterTex, waterfallTex, waterfallMistTex, topStreamTex, crestFoamTex, chainlinkTex, bloodSnowTex, bloodDripTex, houseWallTex, woodPlanksTex, brickHearthTex, creamCabinTex, creamBarnTex, creamStoneTex, nunFaceTex, l4dFlannelTex, l4dHoodieTex, l4dPatientTex, l4dBruiserTex, l4dDenimTex, l4dDarkPantsTex, l4dFaceTex, l4dNecroticSkinTex, l4dClawsTex, andikaSweaterTex, andikaCargoTex, andikaFaceTex, andikaSneakerTex, katzSignTex, martinSignTex, parkingSignTex, drainGrateTex, storefrontBrickTex, awningFabricTex, concreteCurbTex, faceFemaleShaggyTex, faceMaleTiredTex, faceMaleFadeTex, faceFemaleSleekTex, faceFemaleMeghanTex };
+export { createProceduralTexture, snowTex, beachSandTex, wetBeachSandTex, oceanWaterTex, shorelineFoamTex, asphaltRoadTex, riverWaterTex, waterfallTex, waterfallMistTex, topStreamTex, crestFoamTex, chainlinkTex, bloodSnowTex, bloodDripTex, houseWallTex, woodPlanksTex, brickHearthTex, creamCabinTex, creamBarnTex, creamStoneTex, nunFaceTex, l4dFlannelTex, l4dHoodieTex, l4dPatientTex, l4dBruiserTex, l4dDenimTex, l4dDarkPantsTex, l4dFaceTex, l4dNecroticSkinTex, l4dClawsTex, kristinSweaterTex, kristinCargoTex, kristinFaceTex, kristinSneakerTex, katzSignTex, martinSignTex, parkingSignTex, drainGrateTex, storefrontBrickTex, awningFabricTex, concreteCurbTex, faceFemaleShaggyTex, faceMaleTiredTex, faceMaleFadeTex, faceFemaleSleekTex, faceFemaleMeghanTex };
 
