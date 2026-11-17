@@ -253,6 +253,7 @@ export function startIntroCutscene(camera, sfx, onComplete) {
     const gyK = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.45, 14.4) : 0;
     kristinModel.root.position.set(0.45, gyK, 14.4);
     kristinModel.root.rotation.set(0, 0.15, 0);
+    if (kristinModel.setWeapon) kristinModel.setWeapon('unarmed');
   }
 
   // Show cinema overlay & letterbox

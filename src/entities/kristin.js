@@ -214,8 +214,12 @@ export function triggerKristinGesture(name, sfxRef = Sfx) {
 
   // Weapon switch sync for combat gesture
   if (kristinModel && kristinModel.setWeapon) {
-    if (target === 'pump') {
+    if (target === 'unarmed') {
+      kristinModel.setWeapon('unarmed');
+    } else if (target === 'pump') {
       kristinModel.setWeapon('pump');
+    } else if (target === 'golok') {
+      kristinModel.setWeapon('golok');
     } else {
       kristinModel.setWeapon('spin');
     }
@@ -285,6 +289,32 @@ export function createMiniWeapon(type) {
     hilt.rotation.x = Math.PI / 2;
     hilt.position.set(0, 0, -0.10);
     g.add(hilt);
+  } else if (type === 'research') {
+    // Environmental Science Field Clipboard & Water Sample Tube
+    const boardMat = new THREE.MeshLambertMaterial({ color: 0x4a3319 });
+    const paperMat = new THREE.MeshBasicMaterial({ color: 0xf4f1ea });
+    const clipMat = new THREE.MeshStandardMaterial({ color: 0xb0b8c0, metalness: 0.85, roughness: 0.3 });
+    const vialMat = new THREE.MeshStandardMaterial({ color: 0x44ddff, roughness: 0.1, transparent: true, opacity: 0.85 });
+
+    // Wooden Clipboard
+    const board = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.32, 0.02), boardMat);
+    board.position.set(0, 0, 0.08);
+    g.add(board);
+
+    // Research Paper with notes
+    const paper = new THREE.Mesh(new THREE.PlaneGeometry(0.20, 0.28), paperMat);
+    paper.position.set(0, 0, 0.092);
+    g.add(paper);
+
+    // Top metal clamp
+    const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.04, 0.03), clipMat);
+    clamp.position.set(0, 0.13, 0.095);
+    g.add(clamp);
+
+    // Water sample test tube
+    const vial = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.12, 8), vialMat);
+    vial.position.set(0.14, 0, 0.08);
+    g.add(vial);
   }
   return g;
 }
@@ -317,6 +347,7 @@ export function buildKristinCharacter(textures) {
   const miniSpin = createMiniWeapon('spin');
   const miniPump = createMiniWeapon('pump');
   const miniGolok = createMiniWeapon('golok');
+  const miniResearch = createMiniWeapon('research');
 
   // Base socket position attached naturally to right hand in rest pose
   const weaponSocket = new THREE.Group();
@@ -326,6 +357,7 @@ export function buildKristinCharacter(textures) {
   weaponSocket.add(miniSpin);
   weaponSocket.add(miniPump);
   weaponSocket.add(miniGolok);
+  weaponSocket.add(miniResearch);
   root.add(weaponSocket);
 
   // Mesh deformation rig variables
@@ -443,20 +475,23 @@ export function buildKristinCharacter(textures) {
     get vertexWeights() { return vertexWeights; },
     get vertexCount() { return vertexCount; },
     setWeapon(w) {
+      const isUnarmed = (w === 'unarmed' || !w);
       miniSpin.visible = (w === 'spin');
       miniPump.visible = (w === 'pump');
       miniGolok.visible = (w === 'golok');
+      miniResearch.visible = isUnarmed || (w === 'research');
     }
   };
 }
 
 export function initKristinCompanion(scene, textures) {
   kristinModel = buildKristinCharacter(textures);
-  // Spawn companion Kristin right near player start at bus crash site
+  // Spawn companion Kristin right near player start at Coldbrook Village gate
   kristinModel.root.position.set(1.6, 0.10, 13.8);
   kristinModel.root.rotation.y = -0.35;
   scene.add(kristinModel.root);
-  kristinModel.setWeapon('spin');
+  // Kristin starts holding her research field clipboard, NOT a weapon!
+  kristinModel.setWeapon('unarmed');
 
   // Wire up gesture buttons in DOM
   const btns = document.querySelectorAll('.kristin-gesture-btn');
@@ -747,6 +782,13 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
         la_ry += 0.45 * blend;
         t_ry += 0.14 * blend;
         h_ry += -0.16 * blend;
+      } else if (currentGesture === 'point') {
+        // Directing arm gesture pointing straight towards active objective
+        la_rx += -1.35 * blend;
+        la_rz += 0.18 * blend;
+        la_ry += 0.25 * blend;
+        h_rx += 0.10 * blend;
+        t_ry += 0.12 * blend;
       }
     } else if (currentGesture !== 'idle') {
       currentGesture = 'idle';

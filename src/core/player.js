@@ -258,6 +258,29 @@ export function handleVillagerTalked(talkedNPC) {
   const obj = getActiveObjective();
   if (obj && state.storyPhase === 'orientation') {
     obj.title = `Wawancara Warga Desa (${count}/3)`;
+
+    // Kristin dynamically directs player to next objective
+    if (talkedNPC.id === 'old_thomas') {
+      obj.location = 'Pondok Darrell di Timur (Tengkorak Babi Hutan)';
+      obj.marker = { x: -11.0, z: -3.5 };
+      setTimeout(() => {
+        showDialogSubtitle('KRISTIN: "Rod, orang tua tadi aneh banget! Lihat ke arah timur sana—ada pondok kayu berpagar tengkorak babi (Darrell). Ayo kita ke sana!"', 6500);
+        triggerKristinGesture('point');
+      }, 600);
+    } else if (talkedNPC.id === 'darrell') {
+      obj.location = 'Mrs. Eleanor di Jalur Barat';
+      obj.marker = { x: -28.0, z: 14.0 };
+      setTimeout(() => {
+        showDialogSubtitle('KRISTIN: "Darrell bilang jangan percaya orang yang terus tersenyum... Sekarang kita ke jalur barat, kita tanya nenek tua di dekat mata air (Mrs. Eleanor)!"', 6500);
+        triggerKristinGesture('point');
+      }, 600);
+    } else {
+      setTimeout(() => {
+        showDialogSubtitle('KRISTIN: "Ayo kita sapa warga yang ada di persimpangan desa sebelum hari gelap, Rod!"', 5500);
+        triggerKristinGesture('point');
+      }, 600);
+    }
+
     updateQuestHUD();
   }
 
@@ -265,7 +288,7 @@ export function handleVillagerTalked(talkedNPC) {
   if (count >= 3 || (state.talkedVillagers.has('darrell') && count >= 2)) {
     setTimeout(() => {
       triggerComplicationPhase();
-    }, 1200);
+    }, 1800);
   }
 }
 
@@ -281,7 +304,8 @@ export function triggerComplicationPhase() {
   }
   if (Sfx && Sfx.playZombieGroan) Sfx.playZombieGroan();
 
-  showDialogSubtitle('KRISTIN: "ROD! Sensor hidrologi gue selesai analisis! Air sumur biara itu bukan air suci—itu senyawa neurotoksin kultus! LIHAT WARGA-WARGA ITU BERMUTASI! LARI KE PONDOK DARRELL!"', 8000);
+  showDialogSubtitle('KRISTIN: "ROD! Sensor hidrologi gue selesai analisis! Air sumur biara itu bukan air suci—itu senyawa neurotoksin kultus! LIHAT WARGA-WARGA ITU BERMUTASI! IKUTI GUE LARI KE PONDOK DARRELL!"', 8000);
+  triggerKristinGesture('point');
 
   // Spawn initial outbreak zombies (Infected Devout)
   setTimeout(() => {
@@ -298,7 +322,10 @@ window.__triggerDarrellPickup = () => {
     state.storyPhase = 'resolution';
     state.resolutionKills = 0;
     setObjective('resolution');
-    showDialogSubtitle("Mantap Rod, lo dapet shotgun laras ganda Darrell! Mayat hidup mengepung pintu pondok! Tembak jatuh semuanya!", 6000);
+    // Kristin equips shotgun too once weapons are acquired!
+    if (kristinModel && kristinModel.setWeapon) kristinModel.setWeapon('pump');
+    showDialogSubtitle('KRISTIN: "Mantap Rod, lo dapet senapannya! Zombie-zombie itu mengepung pintu depan pondok! Habisi mereka semua!"', 6000);
+    triggerKristinGesture('pump');
 
     // Spawn zombies besieging Darrell's cottage
     setTimeout(() => {
@@ -324,7 +351,8 @@ window.__triggerCodaPhase = () => {
   setTimeout(() => {
     showDialogSubtitle('RODRICK (Perekam Suara): *suara pita kaset berputar* "Catatan lapangan hari pertama... Selesai. Coldbrook telah jatuh ke tangan kultus. Ini bukan wabah biasa, melainkan konspirasi keji kultus biara Father Raksha. Kami terjebak di Blackwood Moors... tapi kami tidak akan mati di sini. Kita harus mencari Mrs. Eleanor dan menemukan lorong rahasia di bawah biara..."', 8000);
     setTimeout(() => {
-      showDialogSubtitle('KRISTIN: "Gue ada di samping lo, Rod. Ayo kita temui Mrs. Eleanor di Ancient Spring dan temukan jalan keluar rahasia itu!"', 5500);
+      showDialogSubtitle('KRISTIN: "Gue ada di samping lo, Rod. Darrell sudah beritahu petunjuknya: ayo ikuti gue ke bukit barat menuju Ancient Spring!"', 6000);
+      triggerKristinGesture('point');
       setObjective('1.2');
     }, 8200);
   }, 1200);
@@ -744,7 +772,10 @@ export function startWinterSurvive(scene) {
     setObjective('orientation');
     updateHUD(state);
     updateTouchControlsVisibility();
-    showDialogSubtitle("Kita sudah sampai di Coldbrook, Rod. Suasananya tenang... Ayo kita sapa warga sekitar dulu (tekan [E] untuk bicara).", 6000);
+    setTimeout(() => {
+      showDialogSubtitle('KRISTIN: "Rod, kita mulai riset dari bapak tua di depan gerbang itu dulu (Old Thomas). Dia bawa cawan air, ayo kita ke sana!"', 6500);
+      triggerKristinGesture('point');
+    }, 800);
   });
 }
 

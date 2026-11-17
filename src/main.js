@@ -115,7 +115,7 @@ import {
   updateMinimapRadar,
   isMapOpen
 } from './ui/mapMenu.js';
-import { initQuestSystem } from './core/quest.js';
+import { initQuestSystem, getActiveObjective } from './core/quest.js';
 import {
   spawnVillageNPCs,
   updateVillageNPCs,
@@ -161,6 +161,30 @@ function updateSimulation(dt) {
       }
     } else {
       promptEl.style.display = 'none';
+    }
+  }
+
+  // Update Kristin's Live Navigation Directive Compass
+  const compassEl = document.getElementById('kristin-compass-text');
+  if (compassEl) {
+    const actObj = getActiveObjective();
+    if (actObj && actObj.marker) {
+      const dx = actObj.marker.x - playerPos.x;
+      const dz = actObj.marker.z - playerPos.z;
+      const dist = Math.round(Math.sqrt(dx * dx + dz * dz));
+
+      const targetAngle = Math.atan2(dx, -dz);
+      let diff = targetAngle - yaw;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+
+      let arrow = '▲ Lurus';
+      if (diff > 0.4 && diff < 2.0) arrow = '▶ Kanan';
+      else if (diff >= 2.0 || diff <= -2.0) arrow = '▼ Balik Arah';
+      else if (diff < -0.4 && diff > -2.0) arrow = '◀ Kiri';
+
+      const locName = actObj.location ? actObj.location.split('(')[0].trim() : 'Tujuan';
+      compassEl.textContent = `"${arrow} ke ${locName} (${dist}m)"`;
     }
   }
 
