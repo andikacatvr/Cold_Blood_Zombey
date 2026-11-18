@@ -2472,7 +2472,7 @@ export function initWorld(scene, textures) {
     sctx.lineTo(170, 115);
     sctx.stroke();
 
-    sctx.font = 'bold 28px "DotGothic16", monospace';
+    sctx.font = 'bold 28px "Redaction 70", serif';
     sctx.fillStyle = '#ff2b3c';
     sctx.fillText('??', 188, 140);
 

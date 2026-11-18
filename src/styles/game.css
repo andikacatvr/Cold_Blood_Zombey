@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Redaction+70:ital,wght@0,400;0,700;1,400&display=swap');
 
 * {
   box-sizing: border-box;
@@ -15,7 +15,7 @@ button,
 input,
 select,
 textarea {
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
 }
 
 body,
@@ -26,7 +26,7 @@ html {
   touch-action: none;
   -ms-touch-action: none;
   background-color: #05080b;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   color: #cad6df;
   cursor: crosshair;
 }
@@ -114,7 +114,7 @@ html {
   border-bottom: 2px solid #234d31;
   border-right: 2px solid #234d31;
   padding: 2px 8px;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 20px;
   letter-spacing: 2px;
   font-weight: bold;
@@ -161,7 +161,7 @@ html {
 }
 
 #boss-name-banner {
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 20px;
   letter-spacing: 3px;
   color: #ff3a4b;
@@ -233,7 +233,7 @@ html {
   top: 30%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 38px;
   color: #ff1c2e;
   letter-spacing: 5px;
@@ -322,7 +322,7 @@ html {
   width: auto !important;
   min-width: 270px !important;
   max-width: 380px !important;
-  font-family: 'DotGothic16', monospace, sans-serif !important;
+  font-family: 'Redaction 70', serif, monospace !important;
   font-size: clamp(22px, 2.4vmin, 28px) !important;
   padding: 12px 28px !important;
   display: flex !important;
@@ -368,7 +368,7 @@ html {
 }
 
 .menu-root-bottom-left .menu-footer-hint {
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 15px;
   color: #7b9485;
   letter-spacing: 1px;
@@ -397,7 +397,7 @@ html {
 }
 
 .title-banner {
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 48px;
   color: #ff3344;
   letter-spacing: 5px;
@@ -426,7 +426,7 @@ html {
 }
 
 .menu-retro-tag {
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: clamp(16px, 1.8vmin, 20px);
   letter-spacing: 3px;
   color: #78e08f;
@@ -491,7 +491,7 @@ html {
 }
 
 .menu-footer-hint {
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 19px;
   color: #8fa596;
   letter-spacing: 1.5px;
@@ -504,7 +504,7 @@ html {
 
 .mode-select-title {
   display: block;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 32px;
   color: #ffffff;
   letter-spacing: 3px;
@@ -513,7 +513,7 @@ html {
 
 .mode-select-subtitle {
   display: block;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 20px;
   color: #a2cfb0;
   letter-spacing: 1.5px;
@@ -576,7 +576,7 @@ html {
 }
 
 .mode-card-badge {
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 17px;
   padding: 3px 10px;
   border-radius: 0px;
@@ -600,7 +600,7 @@ html {
 }
 
 .mode-card-title {
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 30px;
   color: #ffffff;
   letter-spacing: 2px;
@@ -610,7 +610,7 @@ html {
 }
 
 .mode-card-desc {
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 19px;
   line-height: 1.35;
 }
@@ -627,7 +627,7 @@ html {
   list-style: none;
   padding: 0;
   margin: 14px 0 0 0;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 19px;
   line-height: 1.45;
 }
@@ -699,7 +699,7 @@ html {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 20px;
   color: #e0f2e8;
   padding: 4px 0;
@@ -724,7 +724,7 @@ html {
 }
 
 .btn-play {
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 32px;
   letter-spacing: 4px;
   padding: 10px 36px;
@@ -789,7 +789,7 @@ html {
   cursor: crosshair;
   pointer-events: auto;
   transition: all 0.15s ease;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 22px;
   letter-spacing: 2px;
   outline: none !important;
@@ -869,7 +869,7 @@ html {
 }
 
 .settings-title {
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 24px;
   color: #e4ecf4;
   letter-spacing: 2.5px;
@@ -895,7 +895,7 @@ html {
   align-items: center;
   justify-content: center;
   transition: all 0.15s ease;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   letter-spacing: 1px;
 }
 
@@ -963,7 +963,7 @@ html {
 
 .setting-label {
   color: #cad6e2;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 21px;
   letter-spacing: 1px;
 }
@@ -979,7 +979,7 @@ html {
   text-align: right;
   color: #e2ecf4;
   font-size: 20px;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
 }
 
 /* Simple Controls Grid */
@@ -1004,7 +1004,7 @@ html {
   color: #ffffff;
   font-weight: bold;
   letter-spacing: 1px;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 18px;
 }
 
@@ -1012,7 +1012,7 @@ html {
   color: #8090a0;
   letter-spacing: 0.5px;
   font-size: 16px;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
 }
 
 /* Fixed Modal Footer */
@@ -1095,7 +1095,7 @@ input[type=range]::-webkit-slider-thumb {
   background: #141a22;
   border: 1px solid #384654;
   color: #8293a3;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 19px;
   padding: 3px 12px;
   cursor: pointer;
@@ -1176,7 +1176,7 @@ input[type=range]::-webkit-slider-thumb {
   pointer-events: none;
   text-align: center;
   text-shadow: 0 0 8px rgba(90, 165, 114, 0.8);
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
 }
 
 #door-locked-prompt {
@@ -1195,7 +1195,7 @@ input[type=range]::-webkit-slider-thumb {
   z-index: 34;
   pointer-events: none;
   text-align: center;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   animation: alertPop 0.25s ease-out;
 }
 
@@ -1468,7 +1468,7 @@ input[type=range]::-webkit-slider-thumb {
   justify-content: center;
   pointer-events: auto;
   touch-action: none;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
   transition: all 0.15s ease;
 }
@@ -1536,7 +1536,7 @@ input[type=range]::-webkit-slider-thumb {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   text-shadow: 0 1px 4px #000;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
   transition: transform 0.08s ease, filter 0.08s ease;
@@ -1766,7 +1766,7 @@ input[type=range]::-webkit-slider-thumb {
   background: rgba(10, 16, 12, 0.92);
   border: 1px solid #3d6849;
   color: #ffd15c;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   font-size: 15px;
   padding: 1px 8px;
   border-radius: 3px;
@@ -1791,7 +1791,7 @@ input[type=range]::-webkit-slider-thumb {
   flex-direction: column;
   overflow: hidden;
   animation: modalFadeIn 0.25s ease-out;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
 }
 
 .map-dialog-header {
@@ -1953,7 +1953,7 @@ input[type=range]::-webkit-slider-thumb {
   border-top-color: #8affc5;
   border-left: 4px solid #5cf0a5;
   color: #ffffff;
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   padding: clamp(4px, 0.8vmin, 8px) clamp(14px, 2vmin, 24px);
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.95), inset 0 0 8px rgba(92, 240, 165, 0.25);
   z-index: 45;
@@ -1980,7 +1980,7 @@ input[type=range]::-webkit-slider-thumb {
   box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.98), 0 8px 32px rgba(0, 0, 0, 0.95);
   z-index: 9999;
   padding: clamp(10px, 1.8vmin, 18px) clamp(14px, 2.4vmin, 24px);
-  font-family: 'DotGothic16', monospace, sans-serif;
+  font-family: 'Redaction 70', serif, monospace;
   cursor: crosshair;
   pointer-events: auto;
 }
