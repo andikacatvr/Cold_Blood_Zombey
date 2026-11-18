@@ -372,9 +372,6 @@ export function buildKristinCharacter(textures) {
   weaponSocket.rotation.x = -Math.PI / 2.7;
   weaponSocket.rotation.y = -0.15;
   weaponSocket.rotation.z = -0.34;
-  weaponSocket.add(miniSpin);
-  weaponSocket.add(miniPump);
-  weaponSocket.add(miniGolok);
   weaponSocket.add(miniResearch);
   root.add(weaponSocket);
 
@@ -493,22 +490,11 @@ export function buildKristinCharacter(textures) {
     get vertexWeights() { return vertexWeights; },
     get vertexCount() { return vertexCount; },
     setWeapon(w) {
-      // In Story Mode (prologue, orientation, complication), firearms are locked.
-      // In Endless Mode, weapons are unlocked immediately from wave 1!
-      const isStoryMode = (window.__GAME_MODE === 'story' || !window.__GAME_MODE);
-      const isEarlyPhase = isStoryMode && (!window.__STORY_PHASE || window.__STORY_PHASE === 'orientation' || window.__STORY_PHASE === 'complication');
-      if (isEarlyPhase) {
-        miniSpin.visible = false;
-        miniPump.visible = false;
-        miniGolok.visible = false;
-        miniResearch.visible = true;
-        return;
-      }
-      const isUnarmed = (w === 'unarmed' || !w || w === 'research');
-      miniSpin.visible = !isUnarmed && (w === 'spin');
-      miniPump.visible = !isUnarmed && (w === 'pump');
-      miniGolok.visible = !isUnarmed && (w === 'golok');
-      miniResearch.visible = isUnarmed;
+      // Kristin is strictly a civilian research companion - NEVER holds weapons!
+      miniSpin.visible = false;
+      miniPump.visible = false;
+      miniGolok.visible = false;
+      miniResearch.visible = (w !== 'empty');
     }
   };
 }
@@ -806,10 +792,10 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
     walkCadence = THREE.MathUtils.lerp(walkCadence, 0, 0.1);
   }
 
-  // Combat Defense: ONLY ACTIVE IN RESOLUTION / CODA PHASES (Combat Armed)
-  if (!isGuideMode && zombies && zombies.length > 0) {
+  // Zombie Proximity Alert (Kristin is civilian, points & warns Rodrick when mutants get close)
+  if (zombies && zombies.length > 0 && now > combatShootCooldown) {
     let nearestZ = null;
-    let minZDist = 8.5;
+    let minZDist = 6.0;
     for (let i = 0; i < zombies.length; i++) {
       const z = zombies[i];
       if (!z.isDead && z.hp > 0) {
@@ -821,23 +807,19 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
       }
     }
 
-    if (nearestZ && now > combatShootCooldown) {
-      combatShootCooldown = now + 2400; // Shotgun firing cooldown
+    if (nearestZ) {
+      combatShootCooldown = now + 4500;
       const aimAngle = Math.atan2(nearestZ.x - kristinModel.root.position.x, nearestZ.z - kristinModel.root.position.z);
       kristinModel.root.rotation.y = aimAngle;
 
-      triggerKristinGesture('pump', Sfx);
-      nearestZ.hp -= 45;
-      if (Sfx && Sfx.playShotgun) Sfx.playShotgun();
-
-      // Show combat shout
-      const shouts = [
-        "Mampus lo monster!",
-        "Gue tembak yang di situ, awas!",
-        "Jangan deket-deket Rodrick!",
-        "Rasain timah panas!"
+      triggerKristinGesture('point', Sfx);
+      const warnings = [
+        "Rod, ada zombie mendekat!",
+        "Awas Rodrick, di arah sana!",
+        "Rod, hati-hati! Mereka mendekat!",
+        "Rodrick, awas di belakangmu!"
       ];
-      const shoutText = shouts[Math.floor(Math.random() * shouts.length)];
+      const shoutText = warnings[Math.floor(Math.random() * warnings.length)];
       showDialogSubtitle(`KRISTIN: "${shoutText}"`, 2500);
     }
   }

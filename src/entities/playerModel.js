@@ -88,7 +88,8 @@ function loadRodrickGLBModel(root) {
     if (glbRightArm) {
       playerRightArm = glbRightArm;
       if (playerWeaponSocket) {
-        playerWeaponSocket.position.set(0, -0.48, 0.06);
+        playerWeaponSocket.position.set(-0.02, -0.48, 0.08);
+        playerWeaponSocket.rotation.set(0.35, -0.06, 0.02);
         playerRightArm.add(playerWeaponSocket);
       }
     }
@@ -311,8 +312,8 @@ export function buildSurvivorPlayerModel() {
 
   // Weapon socket
   playerWeaponSocket = new THREE.Group();
-  playerWeaponSocket.position.set(0, -0.46, 0.08);
-  playerWeaponSocket.rotation.x = -Math.PI / 2.5;
+  playerWeaponSocket.position.set(-0.02, -0.48, 0.08);
+  playerWeaponSocket.rotation.set(0.35, -0.06, 0.02);
 
   // Mini Shotgun
   playerMiniShotgun = new THREE.Group();
@@ -433,11 +434,36 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
 
     // Counter arm swinging & weapon posture
     if (activeWeapon !== 'unarmed') {
-      if (playerRightArm) playerRightArm.rotation.x = -0.68 + stride * 0.08;
-      if (playerLeftArm) playerLeftArm.rotation.x = -0.55 - stride * 0.08;
+      if (activeWeapon === 'golok') {
+        // One-handed melee ready posture
+        if (playerRightArm) {
+          playerRightArm.rotation.x = -0.42 + stride * 0.08;
+          playerRightArm.rotation.y = 0.08;
+          playerRightArm.rotation.z = 0.05;
+        }
+        if (playerLeftArm) {
+          playerLeftArm.rotation.x = -0.22 - stride * 0.06;
+          playerLeftArm.rotation.y = 0.12;
+          playerLeftArm.rotation.z = -0.08;
+        }
+      } else {
+        // Authentic Two-Handed Survival Horror Shotgun Ready Stance (Leon S. Kennedy / James Sunderland)
+        // Right hand holds trigger/grip forward at hip level pointing downrange
+        if (playerRightArm) {
+          playerRightArm.rotation.x = -0.38 + stride * 0.05;
+          playerRightArm.rotation.y = 0.08;
+          playerRightArm.rotation.z = -0.06;
+        }
+        // Left hand reaches forward across the chest to support the forend
+        if (playerLeftArm) {
+          playerLeftArm.rotation.x = -0.62 - stride * 0.05;
+          playerLeftArm.rotation.y = 0.36;
+          playerLeftArm.rotation.z = -0.22;
+        }
+      }
     } else {
-      if (playerLeftArm) playerLeftArm.rotation.x = -stride * 0.45;
-      if (playerRightArm) playerRightArm.rotation.x = stride * 0.45;
+      if (playerLeftArm) playerLeftArm.rotation.set(-stride * 0.45, 0, 0);
+      if (playerRightArm) playerRightArm.rotation.set(stride * 0.45, 0, 0);
     }
 
     // Hip bobbing & subtle sway
@@ -453,11 +479,40 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
     if (playerRightLeg) playerRightLeg.rotation.x = THREE.MathUtils.lerp(playerRightLeg.rotation.x, 0, 0.15);
 
     if (activeWeapon !== 'unarmed') {
-      if (playerRightArm) playerRightArm.rotation.x = THREE.MathUtils.lerp(playerRightArm.rotation.x, -0.68, 0.15);
-      if (playerLeftArm) playerLeftArm.rotation.x = THREE.MathUtils.lerp(playerLeftArm.rotation.x, -0.55, 0.15);
+      if (activeWeapon === 'golok') {
+        if (playerRightArm) {
+          playerRightArm.rotation.x = THREE.MathUtils.lerp(playerRightArm.rotation.x, -0.42, 0.15);
+          playerRightArm.rotation.y = THREE.MathUtils.lerp(playerRightArm.rotation.y, 0.08, 0.15);
+          playerRightArm.rotation.z = THREE.MathUtils.lerp(playerRightArm.rotation.z, 0.05, 0.15);
+        }
+        if (playerLeftArm) {
+          playerLeftArm.rotation.x = THREE.MathUtils.lerp(playerLeftArm.rotation.x, -0.22, 0.15);
+          playerLeftArm.rotation.y = THREE.MathUtils.lerp(playerLeftArm.rotation.y, 0.12, 0.15);
+          playerLeftArm.rotation.z = THREE.MathUtils.lerp(playerLeftArm.rotation.z, -0.08, 0.15);
+        }
+      } else {
+        if (playerRightArm) {
+          playerRightArm.rotation.x = THREE.MathUtils.lerp(playerRightArm.rotation.x, -0.38, 0.15);
+          playerRightArm.rotation.y = THREE.MathUtils.lerp(playerRightArm.rotation.y, 0.08, 0.15);
+          playerRightArm.rotation.z = THREE.MathUtils.lerp(playerRightArm.rotation.z, -0.06, 0.15);
+        }
+        if (playerLeftArm) {
+          playerLeftArm.rotation.x = THREE.MathUtils.lerp(playerLeftArm.rotation.x, -0.62, 0.15);
+          playerLeftArm.rotation.y = THREE.MathUtils.lerp(playerLeftArm.rotation.y, 0.36, 0.15);
+          playerLeftArm.rotation.z = THREE.MathUtils.lerp(playerLeftArm.rotation.z, -0.22, 0.15);
+        }
+      }
     } else {
-      if (playerLeftArm) playerLeftArm.rotation.x = THREE.MathUtils.lerp(playerLeftArm.rotation.x, 0.05, 0.15);
-      if (playerRightArm) playerRightArm.rotation.x = THREE.MathUtils.lerp(playerRightArm.rotation.x, -0.05, 0.15);
+      if (playerLeftArm) {
+        playerLeftArm.rotation.x = THREE.MathUtils.lerp(playerLeftArm.rotation.x, 0.05, 0.15);
+        playerLeftArm.rotation.y = THREE.MathUtils.lerp(playerLeftArm.rotation.y, 0, 0.15);
+        playerLeftArm.rotation.z = THREE.MathUtils.lerp(playerLeftArm.rotation.z, 0, 0.15);
+      }
+      if (playerRightArm) {
+        playerRightArm.rotation.x = THREE.MathUtils.lerp(playerRightArm.rotation.x, -0.05, 0.15);
+        playerRightArm.rotation.y = THREE.MathUtils.lerp(playerRightArm.rotation.y, 0, 0.15);
+        playerRightArm.rotation.z = THREE.MathUtils.lerp(playerRightArm.rotation.z, 0, 0.15);
+      }
     }
 
     if (playerTorso) {

@@ -340,10 +340,10 @@ window.__triggerDarrellPickup = () => {
     window.__STORY_PHASE = 'resolution';
     state.resolutionKills = 0;
     setObjective('resolution');
-    // Kristin equips shotgun too once weapons are acquired!
-    if (kristinModel && kristinModel.setWeapon) kristinModel.setWeapon('pump');
+    // Kristin is strictly an unarmed civilian researcher
+    if (kristinModel && kristinModel.setWeapon) kristinModel.setWeapon('unarmed');
     showDialogSubtitle('KRISTIN: "Mantap Rod, lo dapet senapannya! Zombie-zombie itu mengepung pintu depan pondok! Habisi mereka semua!"', 6000);
-    triggerKristinGesture('pump');
+    triggerKristinGesture('point');
 
     // Spawn zombies besieging Darrell's cottage
     setTimeout(() => {
@@ -882,7 +882,7 @@ export function startWinterSurvive(scene, mode = 'story') {
     if (kristinModel && kristinModel.root) {
       kristinModel.root.position.set(1.4, gyK, 14.0);
       kristinModel.root.rotation.set(0, -0.25, 0);
-      if (kristinModel.setWeapon) kristinModel.setWeapon('pump');
+      if (kristinModel.setWeapon) kristinModel.setWeapon('unarmed');
     }
 
     // Hide cinematic overlay & show HUD
