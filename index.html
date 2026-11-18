@@ -374,16 +374,16 @@
         <!-- MODAL HEADER -->
         <div class="settings-header">
           <div>
-            <div class="settings-title">OPTION / CONFIGURATION</div>
-            <div class="settings-subtitle">SURVIVAL SYSTEM SETTINGS</div>
+            <div class="settings-title">Option / Configuration</div>
+            <div class="settings-subtitle">Survival System Settings</div>
           </div>
-          <button class="settings-close-x" id="btn-close-settings-x" title="Tutup Pengaturan (ESC)">[ ESC ]</button>
+          <button class="settings-close-x" id="btn-close-settings-x" title="Tutup Pengaturan (ESC)">[ Esc ]</button>
         </div>
 
         <!-- SCROLLABLE SETTINGS BODY -->
         <div class="settings-box">
           <div class="setting-row">
-            <div class="setting-label">VOLUME SUARA</div>
+            <div class="setting-label">Volume Suara</div>
             <div class="setting-ctrl">
               <input type="range" id="setting-volume" min="0" max="100" step="5" value="80">
               <span class="setting-val-badge" id="val-volume">80%</span>
@@ -391,7 +391,7 @@
           </div>
 
           <div class="setting-row">
-            <div class="setting-label">SENSITIVITAS KAMERA</div>
+            <div class="setting-label">Sensitivitas Kamera</div>
             <div class="setting-ctrl">
               <input type="range" id="setting-sens" min="0.2" max="2.5" step="0.1" value="1.0">
               <span class="setting-val-badge" id="val-sens">1.0x</span>
@@ -399,77 +399,75 @@
           </div>
 
           <div class="setting-row">
-            <div class="setting-label">TOMBOL KONTROL HP</div>
+            <div class="setting-label">Tombol Kontrol HP</div>
             <div class="setting-ctrl">
               <div class="btn-group" id="group-touch">
-                <button class="btn-opt active" data-touch="auto">OTOMATIS</button>
-                <button class="btn-opt" data-touch="on">AKTIF</button>
-                <button class="btn-opt" data-touch="off">NONAKTIF</button>
+                <button class="btn-opt active" data-touch="auto">Otomatis</button>
+                <button class="btn-opt" data-touch="on">Aktif</button>
+                <button class="btn-opt" data-touch="off">Nonaktif</button>
               </div>
             </div>
           </div>
 
           <div class="setting-row">
-            <div class="setting-label">MODE LAYAR</div>
+            <div class="setting-label">Mode Layar</div>
             <div class="setting-ctrl">
-              <button class="btn-opt" id="btn-fullscreen">LAYAR PENUH</button>
+              <button class="btn-opt" id="btn-fullscreen">Layar Penuh</button>
             </div>
           </div>
 
           <div class="setting-row">
-            <div class="setting-label">CRT SCANLINES</div>
+            <div class="setting-label">CRT Scanlines</div>
             <div class="setting-ctrl">
               <div class="btn-group" id="group-crt">
-                <button class="btn-opt active" data-crt="true">AKTIF</button>
-                <button class="btn-opt" data-crt="false">NONAKTIF</button>
+                <button class="btn-opt active" data-crt="true">Aktif</button>
+                <button class="btn-opt" data-crt="false">Nonaktif</button>
               </div>
             </div>
           </div>
 
           <div class="setting-row">
-            <div class="setting-label">WARNA RETIKEL</div>
+            <div class="setting-label">Warna Retikel</div>
             <div class="setting-ctrl">
               <div class="btn-group" id="group-cross">
-                <button class="btn-opt active" data-color="#c5d5e2">PUTIH</button>
-                <button class="btn-opt" data-color="#ff3344">MERAH</button>
-                <button class="btn-opt" data-color="#39ff14">HIJAU</button>
+                <button class="btn-opt active" data-color="#c5d5e2">Putih</button>
+                <button class="btn-opt" data-color="#ff3344">Merah</button>
+                <button class="btn-opt" data-color="#39ff14">Hijau</button>
               </div>
             </div>
           </div>
 
           <div class="setting-row">
-            <div class="setting-label">TINGKAT KESULITAN</div>
+            <div class="setting-label">Tingkat Kesulitan</div>
             <div class="setting-ctrl">
               <div class="btn-group" id="group-diff">
-                <button class="btn-opt" data-diff="easy">MUDAH</button>
-                <button class="btn-opt active" data-diff="normal">NORMAL</button>
-                <button class="btn-opt" data-diff="hard">SULIT</button>
+                <button class="btn-opt" data-diff="easy">Mudah</button>
+                <button class="btn-opt active" data-diff="normal">Normal</button>
+                <button class="btn-opt" data-diff="hard">Sulit</button>
               </div>
             </div>
           </div>
 
           <!-- KONTROL / BUTTON CONFIG (SIMPLE PS1 STYLE) -->
-          <div class="settings-section-divider">PANDUAN TOMBOL (CONTROLS)</div>
+          <div class="settings-section-divider">Panduan Tombol (Controls)</div>
           <div class="controls-simple-list">
-            <div class="ctrl-item"><span class="ctrl-key">W A S D</span><span class="ctrl-act">GERAK</span></div>
-            <div class="ctrl-item"><span class="ctrl-key">SHIFT</span><span class="ctrl-act">LARI CEPAT</span></div>
-            <div class="ctrl-item"><span class="ctrl-key">SPACE</span><span class="ctrl-act">MELOMPAT</span></div>
-            <div class="ctrl-item"><span class="ctrl-key">KLIK KIRI</span><span class="ctrl-act">TEMBAK / SERANG</span>
-            </div>
-            <div class="ctrl-item"><span class="ctrl-key">R</span><span class="ctrl-act">RELOAD</span></div>
-            <div class="ctrl-item"><span class="ctrl-key">C</span><span class="ctrl-act">KAMERA FPS / TPS</span></div>
-            <div class="ctrl-item"><span class="ctrl-key">E</span><span class="ctrl-act">INTERAKSI / BICARA</span></div>
-            <div class="ctrl-item"><span class="ctrl-key">T</span><span class="ctrl-act">PERINTAH KRISTIN</span></div>
-            <div class="ctrl-item"><span class="ctrl-key">M</span><span class="ctrl-act">PETA TAKTIS</span></div>
-            <div class="ctrl-item"><span class="ctrl-key">ESC</span><span class="ctrl-act">PENGATURAN / PAUSE</span>
-            </div>
+            <div class="ctrl-item"><span class="ctrl-key">W A S D</span><span class="ctrl-act">Gerak</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">Shift</span><span class="ctrl-act">Lari Cepat</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">Spasi</span><span class="ctrl-act">Melompat</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">Klik Kiri</span><span class="ctrl-act">Tembak / Serang</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">R</span><span class="ctrl-act">Reload</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">C</span><span class="ctrl-act">Kamera FPS / TPS</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">E</span><span class="ctrl-act">Interaksi / Bicara</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">T</span><span class="ctrl-act">Perintah Kristin</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">M</span><span class="ctrl-act">Peta Taktis</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">Esc</span><span class="ctrl-act">Pengaturan / Pause</span></div>
           </div>
         </div>
 
         <!-- FIXED MODAL FOOTER -->
         <div class="settings-footer">
-          <button class="btn-play" id="btn-close-settings">SIMPAN &amp; KEMBALI</button>
-          <button class="btn-play btn-sec" id="btn-reset-settings">RESET DEFAULT</button>
+          <button class="btn-play" id="btn-close-settings">Simpan &amp; Kembali</button>
+          <button class="btn-play btn-sec" id="btn-reset-settings">Reset Default</button>
         </div>
       </div>
     </div>

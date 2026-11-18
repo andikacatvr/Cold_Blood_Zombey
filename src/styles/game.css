@@ -838,6 +838,12 @@ html {
   flex-direction: column;
   overflow: hidden;
   animation: modalFadeIn 0.2s ease-out;
+  font-style: italic !important;
+}
+
+.settings-dialog * {
+  font-style: italic !important;
+  text-transform: none !important;
 }
 
 @keyframes modalFadeIn {
@@ -874,7 +880,7 @@ html {
   font-size: 13px;
   letter-spacing: 1.5px;
   color: #788796;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .settings-close-x {
@@ -937,7 +943,7 @@ html {
   padding: 12px 0 4px;
   margin-top: 6px;
   border-bottom: 1px solid #222d37;
-  text-transform: uppercase;
+  text-transform: none;
   font-weight: bold;
 }
 
