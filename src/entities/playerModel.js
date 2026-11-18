@@ -7,10 +7,12 @@
 
 const THREE = window.THREE;
 import { getTerrainHeight } from '../world/environment.js';
+import { renderer } from '../graphics/engine.js';
 
 export let cameraMode = 'fps'; // Default: Pure FPS (First-Person Shooter)
 export let playerMeshRoot = null;
 export let isRodrickGLBLoaded = false;
+export let hasCapturedPortrait = false;
 export const RODRICK_SCALE = 1.34; // Perfectly matches Kristin's heroic height (~2.34m)
 let placeholderGroup = null;
 let rodrickGLBScene = null;
@@ -52,6 +54,8 @@ function loadRodrickGLBModel(root) {
 
     // Scale Rodrick so his height matches Kristin's heroic stature (~2.34m)
     charScene.scale.set(RODRICK_SCALE, RODRICK_SCALE, RODRICK_SCALE);
+    // Face forward along -Z (Three.js camera forward) so Rodrick faces the direction of travel
+    charScene.rotation.y = Math.PI;
 
     charScene.traverse((child) => {
       if (child.isMesh) {
@@ -99,6 +103,10 @@ function loadRodrickGLBModel(root) {
     root.add(charScene);
     isRodrickGLBLoaded = true;
     console.log(`[PLAYER] rodrick.glb loaded successfully from ${src} as official player model!`);
+
+    setTimeout(() => {
+      if (renderer) captureRodrickPortrait(renderer);
+    }, 150);
   }
 
   loader.load(
@@ -115,6 +123,104 @@ function loadRodrickGLBModel(root) {
       );
     }
   );
+}
+
+export function drawInitialPortraitPlaceholder() {
+  const canvas = document.getElementById('hud-portrait-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.fillStyle = '#0a1015';
+  ctx.fillRect(0, 0, w, h);
+
+  // Retro stylized survivor bust silhouette (PS1 scanline grid)
+  ctx.fillStyle = '#16232b';
+  ctx.beginPath();
+  ctx.ellipse(w / 2, h * 0.95, w * 0.42, h * 0.35, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#223842';
+  ctx.beginPath();
+  ctx.ellipse(w / 2, h * 0.48, w * 0.22, h * 0.28, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#111d24';
+  ctx.beginPath();
+  ctx.ellipse(w / 2, h * 0.32, w * 0.24, h * 0.16, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#78e08f';
+  ctx.fillRect(w / 2 - 2, h * 0.82, 4, 2);
+}
+
+export function captureRodrickPortrait(rndr = renderer) {
+  const targetCanvas = document.getElementById('hud-portrait-canvas');
+  if (!targetCanvas || !rndr || !rodrickGLBScene) return;
+
+  const w = 96;
+  const h = 96;
+
+  try {
+    const renderTarget = new THREE.WebGLRenderTarget(w, h, {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.NearestFilter,
+      format: THREE.RGBAFormat
+    });
+
+    const portraitScene = new THREE.Scene();
+    portraitScene.background = new THREE.Color(0x0a1015);
+
+    // Dynamic PS1 Survivor Portrait Lighting
+    const amb = new THREE.AmbientLight(0xffffff, 1.45);
+    portraitScene.add(amb);
+    const key = new THREE.DirectionalLight(0xffeedd, 2.0);
+    key.position.set(1.2, 2.2, 2.2);
+    portraitScene.add(key);
+    const rim = new THREE.DirectionalLight(0x78e08f, 1.3);
+    rim.position.set(-1.6, 1.2, 1.6);
+    portraitScene.add(rim);
+
+    // Clone rodrick scene for portrait snapshot
+    const rigClone = rodrickGLBScene.clone(true);
+    // In rodrick.glb, Head_Pivot is at Y = 1.503, center of face is at Y = 1.62
+    rigClone.scale.set(1.0, 1.0, 1.0);
+    rigClone.rotation.set(0, 0, 0); // Face points +Z straight at portrait camera
+    rigClone.position.set(0, 0, 0);
+    portraitScene.add(rigClone);
+
+    const cam = new THREE.PerspectiveCamera(28, 1.0, 0.1, 10);
+    cam.position.set(0, 1.62, 0.68);
+    cam.lookAt(0, 1.58, 0);
+
+    const oldTarget = rndr.getRenderTarget();
+    rndr.setRenderTarget(renderTarget);
+    rndr.render(portraitScene, cam);
+
+    const pixels = new Uint8Array(w * h * 4);
+    rndr.readRenderTargetPixels(renderTarget, 0, 0, w, h, pixels);
+    rndr.setRenderTarget(oldTarget);
+    renderTarget.dispose();
+
+    const ctx = targetCanvas.getContext('2d');
+    const imgData = ctx.createImageData(w, h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const srcIdx = ((h - 1 - y) * w + x) * 4;
+        const dstIdx = (y * w + x) * 4;
+        imgData.data[dstIdx] = pixels[srcIdx];
+        imgData.data[dstIdx + 1] = pixels[srcIdx + 1];
+        imgData.data[dstIdx + 2] = pixels[srcIdx + 2];
+        imgData.data[dstIdx + 3] = 255;
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+    hasCapturedPortrait = true;
+    console.log('[PORTRAIT] Rodrick face portrait captured successfully to HUD canvas!');
+  } catch (err) {
+    console.warn('[PORTRAIT] Could not capture Rodrick portrait:', err);
+  }
 }
 
 export function buildSurvivorPlayerModel() {
@@ -278,10 +384,13 @@ export function buildSurvivorPlayerModel() {
   playerRightLeg.add(rBoot);
 
   placeholderGroup.add(playerRightLeg);
+  placeholderGroup.rotation.y = Math.PI;
   root.add(placeholderGroup);
 
   // Load official Rodrick GLB asset
   loadRodrickGLBModel(root);
+
+  drawInitialPortraitPlaceholder();
 
   root.visible = false; // Default: hidden for pure FPS view
   playerMeshRoot = root;
@@ -289,6 +398,11 @@ export function buildSurvivorPlayerModel() {
 }
 
 export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeapon) {
+  // Capture 3D face portrait once WebGL is active and model is loaded
+  if (isRodrickGLBLoaded && !hasCapturedPortrait && renderer) {
+    captureRodrickPortrait(renderer);
+  }
+
   if (!playerMeshRoot || !playerMeshRoot.visible) return;
 
   // Weapon visibility sync (Unarmed means player holds NOTHING in hand)
@@ -439,7 +553,7 @@ export function setPlayerCutscenePose(mode, progress = 0) {
     // Laying down flat on back in the snow
     // Pivot is at feet, head rests naturally near Z = 14.3
     playerMeshRoot.position.set(0, gy + 0.22, 12.8);
-    playerMeshRoot.rotation.set(-Math.PI / 2, 0, 0.12);
+    playerMeshRoot.rotation.set(-Math.PI / 2, Math.PI, 0.12);
 
     // Limp, unconscious limbs sprawled naturally in the snow
     if (playerHead) playerHead.rotation.set(0.12, 0.45, -0.06);
@@ -457,6 +571,7 @@ export function setPlayerCutscenePose(mode, progress = 0) {
       THREE.MathUtils.lerp(12.8, 14.0, ease)
     );
     playerMeshRoot.rotation.x = THREE.MathUtils.lerp(-Math.PI / 2, 0, ease);
+    playerMeshRoot.rotation.y = THREE.MathUtils.lerp(Math.PI, 0, ease);
     playerMeshRoot.rotation.z = THREE.MathUtils.lerp(0.12, 0, ease);
 
     if (playerHead) playerHead.rotation.set(

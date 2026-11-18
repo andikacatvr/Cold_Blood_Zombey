@@ -96,8 +96,23 @@
     <!-- IN-GAME HUD -->
     <div id="hud">
       <div class="hud-row">
-        <div style="display: flex; gap: 10px; align-items: center;">
-          <div class="hud-box" id="hud-vital">CONDITION: FINE [100%]</div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <!-- RETRO PS1 CHARACTER STATUS CARD WITH PORTRAIT -->
+          <div class="hud-box" id="hud-character-card" style="display: flex; gap: 10px; align-items: center; padding: 4px 10px;">
+            <div id="hud-portrait-frame" style="width: 46px; height: 46px; min-width: 46px; border: 2px solid #78e08f; background: #080d10; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 6px rgba(0,0,0,0.9), 0 0 8px rgba(120, 224, 143, 0.35);">
+              <canvas id="hud-portrait-canvas" width="96" height="96" style="width: 100%; height: 100%; object-fit: cover; display: block; image-rendering: pixelated;"></canvas>
+              <div id="hud-portrait-scanlines" style="position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.35) 0px, rgba(0,0,0,0.35) 1px, transparent 1px, transparent 2px); opacity: 0.65;"></div>
+              <div id="hud-portrait-status-tint" style="position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: 0; transition: opacity 0.3s ease;"></div>
+            </div>
+            <div style="display: flex; flex-direction: column; justify-content: center; gap: 1px;">
+              <div style="display: flex; align-items: baseline; gap: 6px;">
+                <span id="hud-character-name" style="color: #78e08f; font-size: 18px; font-weight: bold; letter-spacing: 1.5px; text-shadow: 0 0 4px rgba(120,224,143,0.5);">RODRICK</span>
+                <span style="color: #6d8274; font-size: 13px; letter-spacing: 0.5px;">[SURVIVOR]</span>
+              </div>
+              <div id="hud-vital" style="color: #78e08f; font-size: 20px; line-height: 1.1; font-weight: bold;">CONDITION: FINE [100%]</div>
+            </div>
+          </div>
+
           <div class="hud-box" id="hud-lives">
             <span style="color: #ff3a4b; margin-right: 4px;">NYAWA:</span>
             <span id="hud-lives-icons"><span class="life-heart full">♥</span><span class="life-heart full">♥</span><span class="life-heart full">♥</span></span>

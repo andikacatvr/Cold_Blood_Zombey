@@ -110,6 +110,10 @@
       border-color: #a0101b !important;
       animation: pulseDanger 0.75s infinite alternate;
     }
+    .hud-caution {
+      color: #e5a038 !important;
+      text-shadow: 0 0 8px rgba(229, 160, 56, 0.4) !important;
+    }
     @keyframes pulseDanger {
       from { border-color: #55070c; }
       to { border-color: #ff2233; }
@@ -1343,6 +1347,17 @@
   .hud-box {
     padding: 3px 8px;
     font-size: 18px;
+  }
+  #hud-portrait-frame {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+  }
+  #hud-character-name {
+    font-size: 15px !important;
+  }
+  #hud-vital {
+    font-size: 16px !important;
   }
   #cinematic-skip-btn {
     font-size: 15px;
