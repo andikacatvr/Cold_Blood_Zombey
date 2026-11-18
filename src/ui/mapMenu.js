@@ -321,7 +321,7 @@ function drawFullTacticalMap() {
   ctx.setLineDash([]);
 
   // 10. Landmark Text Labels
-  ctx.font = 'bold 12px "VT323", monospace';
+  ctx.font = 'bold 12px "DotGothic16", monospace';
   ctx.fillStyle = '#d2e4ea';
   ctx.fillText('AIR TERJUN', toCanvasX(42) + 12, toCanvasY(-58) + 4);
   ctx.fillText('PONDOK DARRELL', toCanvasX(-13) - 75, toCanvasY(-6));
@@ -370,7 +370,7 @@ function drawFullTacticalMap() {
     ctx.lineWidth = 1.8;
     ctx.stroke();
 
-    ctx.font = 'bold 12px "VT323", monospace';
+    ctx.font = 'bold 12px "DotGothic16", monospace';
     ctx.fillStyle = '#ffe066';
     ctx.fillText('★ ' + actObj.title, ox + 14, oz + 4);
   }

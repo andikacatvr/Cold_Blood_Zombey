@@ -7,6 +7,9 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>COLD BLOOD ZOMBEY (PS1 1997 RETRO)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/src/styles/game.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="/libs/GLTFLoader.js"></script>
@@ -28,13 +31,13 @@
     <div id="cinematic-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; z-index:100; pointer-events:none; transition:opacity 0.5s ease;">
       <div id="cinema-bar-top" style="position:absolute; top:0; left:0; width:100%; height:13%; background:#0a0d0c; border-bottom:2px solid #1e3325; box-shadow:0 8px 25px rgba(0,0,0,0.9); z-index:102;"></div>
       <div id="cinema-bar-bottom" style="position:absolute; bottom:0; left:0; width:100%; height:15%; background:#0a0d0c; border-top:2px solid #1e3325; box-shadow:0 -8px 25px rgba(0,0,0,0.9); z-index:102; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:0 30px;">
-        <div id="cinematic-subtitles" style="color:#ffffff; font-family:'VT323', monospace; font-size:26px; letter-spacing:1px; text-shadow:0 0 10px rgba(0,0,0,1), 0 2px 4px #000; text-align:center; max-width:90%; line-height:1.25;"></div>
+        <div id="cinematic-subtitles" style="color:#ffffff; font-family:'DotGothic16', monospace, sans-serif; font-size:26px; letter-spacing:1px; text-shadow:0 0 10px rgba(0,0,0,1), 0 2px 4px #000; text-align:center; max-width:90%; line-height:1.25;"></div>
       </div>
-      <button id="cinematic-skip-btn" style="position:absolute; top:22px; right:28px; z-index:110; pointer-events:auto; background:rgba(18,28,22,0.9); color:#a2cfb0; border:1px solid #4a825b; padding:6px 16px; font-family:'VT323', monospace; font-size:19px; border-radius:4px; cursor:pointer; box-shadow:0 0 14px rgba(0,0,0,0.8);">SKIP</button>
+      <button id="cinematic-skip-btn" style="position:absolute; top:22px; right:28px; z-index:110; pointer-events:auto; background:rgba(18,28,22,0.9); color:#a2cfb0; border:1px solid #4a825b; padding:6px 16px; font-family:'DotGothic16', monospace, sans-serif; font-size:19px; border-radius:4px; cursor:pointer; box-shadow:0 0 14px rgba(0,0,0,0.8);">SKIP</button>
     </div>
 
     <!-- PURE CINEMATIC COMPANION DIALOGUE SUBTITLE (KRISTIN) -->
-    <div id="kristin-npc-banner" style="display:none; position:absolute; bottom:85px; left:50%; transform:translateX(-50%); background:rgba(8,14,10,0.95); border:2px solid #3d6849; color:#cbe3d3; font-family:'VT323', monospace; padding:10px 20px; box-shadow:0 0 24px rgba(0,0,0,0.9); text-align:left; z-index:45; pointer-events:none; max-width:85%; min-width:300px; transition:opacity 0.4s ease;">
+    <div id="kristin-npc-banner" style="display:none; position:absolute; bottom:85px; left:50%; transform:translateX(-50%); background:rgba(8,14,10,0.95); border:2px solid #3d6849; color:#cbe3d3; font-family:'DotGothic16', monospace, sans-serif; padding:10px 20px; box-shadow:0 0 24px rgba(0,0,0,0.9); text-align:left; z-index:45; pointer-events:none; max-width:85%; min-width:300px; transition:opacity 0.4s ease;">
       <div style="display:inline-flex; align-items:center; gap:14px;">
         <img src="/textures/kristin_face_hd.png" alt="Kristin" style="width:44px; height:44px; border-radius:0; border:2px solid #9de8b7; object-fit:cover; box-shadow:0 0 8px rgba(157,232,183,0.4); flex-shrink:0;">
         <div>
@@ -45,7 +48,7 @@
     </div>
 
     <!-- PURE CINEMATIC AGENT DIALOGUE SUBTITLE (AGENT NATALIA) -->
-    <div id="natalia-npc-banner" style="display:none; position:absolute; bottom:145px; left:50%; transform:translateX(-50%); background:rgba(18,14,10,0.96); border:2px solid #a87232; color:#f0e2d0; font-family:'VT323', monospace; padding:10px 20px; box-shadow:0 0 24px rgba(0,0,0,0.9); text-align:left; z-index:46; pointer-events:none; max-width:85%; min-width:320px; transition:opacity 0.4s ease;">
+    <div id="natalia-npc-banner" style="display:none; position:absolute; bottom:145px; left:50%; transform:translateX(-50%); background:rgba(18,14,10,0.96); border:2px solid #a87232; color:#f0e2d0; font-family:'DotGothic16', monospace, sans-serif; padding:10px 20px; box-shadow:0 0 24px rgba(0,0,0,0.9); text-align:left; z-index:46; pointer-events:none; max-width:85%; min-width:320px; transition:opacity 0.4s ease;">
       <div style="display:inline-flex; align-items:center; gap:14px;">
         <img id="natalia-avatar-img" src="/textures/agent_avatar.png" alt="Agent Natalia" style="width:46px; height:46px; border-radius:0; border:2px solid #f5ba42; object-fit:cover; box-shadow:0 0 10px rgba(245,186,66,0.5); flex-shrink:0;">
         <div>
@@ -82,7 +85,7 @@
           <span id="story-dialog-speaker" style="color:#78e08f; font-size:26px; font-weight:bold; letter-spacing:1px;">OLD THOMAS</span>
           <span id="story-dialog-title" style="color:#8ba394; font-size:16px; margin-left:10px;">Warga Tua Coldbrook</span>
         </div>
-        <button id="story-dialog-close-btn" class="hud-key-cap" style="background:#1b3324; color:#a2f0b5; border:1px solid #4a825b; padding:4px 14px; font-size:18px; cursor:crosshair; font-family:'VT323', monospace; letter-spacing:1px;">[ E ] NEXT ▶</button>
+        <button id="story-dialog-close-btn" class="hud-key-cap" style="background:#1b3324; color:#a2f0b5; border:1px solid #4a825b; padding:4px 14px; font-size:18px; cursor:crosshair; font-family:'DotGothic16', monospace, sans-serif; letter-spacing:1px;">[ E ] NEXT ▶</button>
       </div>
       <div id="story-dialog-content" style="color:#eef4f0; font-size:22px; line-height:1.35; margin-bottom:12px; min-height:48px;">
         "Selamat datang di Coldbrook..."
@@ -127,7 +130,7 @@
       </div>
 
       <!-- ACTIVE SURVIVAL OBJECTIVE / QUEST TRACKER (NESTED IN HUD) -->
-      <div id="hud-quest-panel" style="display:none; position:absolute; top:75px; left:25px; z-index:40; pointer-events:none; font-family:'VT323', monospace; max-width:380px;">
+      <div id="hud-quest-panel" style="display:none; position:absolute; top:75px; left:25px; z-index:40; pointer-events:none; font-family:'DotGothic16', monospace, sans-serif; max-width:380px;">
         <div style="background:rgba(8,12,10,0.92); border-left:3px solid #78e08f; border-top:1px solid #233e2b; border-right:1px solid #233e2b; border-bottom:1px solid #233e2b; padding:8px 14px; border-radius:4px; box-shadow:0 0 16px rgba(0,0,0,0.85);">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <span id="quest-chapter-tag" style="color:#78e08f; font-size:16px; letter-spacing:1px; font-weight:bold;">BAB 1: DESA SUNYI</span>
@@ -522,7 +525,7 @@
 
         <div class="map-dialog-footer">
           <button class="btn-play" id="btn-close-map">KEMBALI BERMAIN [M]</button>
-          <div style="font-size: 15px; color: #8ba2b3; font-family: 'VT323', monospace;">TEKAN [M] ATAU [ESC] UNTUK MEMBUKA / MENUTUP PETA</div>
+          <div style="font-size: 15px; color: #8ba2b3; font-family: 'DotGothic16', monospace, sans-serif;">TEKAN [M] ATAU [ESC] UNTUK MEMBUKA / MENUTUP PETA</div>
         </div>
       </div>
     </div>
