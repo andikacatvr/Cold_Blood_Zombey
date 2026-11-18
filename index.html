@@ -98,57 +98,78 @@
 
     <!-- IN-GAME HUD -->
     <div id="hud">
-      <div class="hud-row">
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <!-- RETRO PS1 CHARACTER STATUS CARD WITH PORTRAIT -->
-          <div class="hud-box" id="hud-character-card" style="display: flex; gap: 10px; align-items: center; padding: 4px 10px;">
-            <div id="hud-portrait-frame" style="width: 46px; height: 46px; min-width: 46px; border: 2px solid #78e08f; background: #080d10; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 6px rgba(0,0,0,0.9), 0 0 8px rgba(120, 224, 143, 0.35);">
-              <canvas id="hud-portrait-canvas" width="96" height="96" style="width: 100%; height: 100%; object-fit: cover; display: block; image-rendering: pixelated;"></canvas>
-              <div id="hud-portrait-scanlines" style="position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.35) 0px, rgba(0,0,0,0.35) 1px, transparent 1px, transparent 2px); opacity: 0.65;"></div>
-              <div id="hud-portrait-status-tint" style="position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: 0; transition: opacity 0.3s ease;"></div>
-            </div>
-            <div style="display: flex; flex-direction: column; justify-content: center; gap: 1px;">
-              <div style="display: flex; align-items: baseline; gap: 6px;">
-                <span id="hud-character-name" style="color: #78e08f; font-size: 18px; font-weight: bold; letter-spacing: 1.5px; text-shadow: 0 0 4px rgba(120,224,143,0.5);">RODRICK</span>
-                <span style="color: #6d8274; font-size: 13px; letter-spacing: 0.5px;">[SURVIVOR]</span>
-              </div>
-              <div id="hud-vital" style="color: #78e08f; font-size: 20px; line-height: 1.1; font-weight: bold;">CONDITION: FINE [100%]</div>
+      <div class="hud-row" style="align-items: flex-start;">
+        <!-- TOP-LEFT: TACTICAL HEALTH & LIVES (PS2 007 NIGHTFIRE / BLACK STYLE) -->
+        <div id="tactical-health-widget">
+          <!-- Top Chamfered Gauge Plate: Slanted Green Segments -->
+          <div class="tac-gauge-plate">
+            <div id="tactical-health-segments" class="tac-segments-bar">
+              <span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span>
+              <span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span>
+              <span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span>
+              <span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span>
             </div>
           </div>
-
-          <div class="hud-box" id="hud-lives">
-            <span style="color: #ff3a4b; margin-right: 4px;">NYAWA:</span>
-            <span id="hud-lives-icons"><span class="life-heart full">♥</span><span class="life-heart full">♥</span><span class="life-heart full">♥</span></span>
-            <span id="hud-lives-count" style="margin-left: 6px; font-size: 19px; color: #a9b7c6;">(3/3)</span>
+          <!-- Bottom Chamfered Subplate: 3 Medical/Life Crosses (+ + +) -->
+          <div class="tac-subplate">
+            <div id="tactical-crosses" class="tac-crosses-wrap">
+              <span class="tac-cross full">+</span>
+              <span class="tac-cross full">+</span>
+              <span class="tac-cross full">+</span>
+            </div>
+            <span class="tac-tag">RODRICK</span>
           </div>
         </div>
 
-        <div style="display: flex; gap: 10px; align-items: center;">
-          <div class="hud-box" id="hud-score" style="display: none;">CRIMSON PURGED: 000</div>
+        <!-- TOP-RIGHT: TACTICAL WEAPON & AMMO METER (PS2 007 NIGHTFIRE STYLE) -->
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <div id="tactical-ammo-widget" title="Klik atau tekan [R] untuk Reload">
+            <div class="tac-ammo-top">
+              <span class="tac-ticks">\\\\\\\\</span>
+              <span id="tactical-weapon-name" class="tac-weapon-label">SHOTGUN 12G</span>
+            </div>
+            <div class="tac-ammo-bottom">
+              <div id="tactical-ammo-display" class="tac-ammo-digits">
+                <span class="tac-ammo-clip">07</span>
+                <span class="tac-ammo-slash">\</span>
+                <span class="tac-ammo-res">40</span>
+              </div>
+            </div>
+          </div>
+
           <button class="hud-box hud-btn" id="hud-settings-btn" title="Menu Opsi [ESC]">[ESC] OPTION</button>
         </div>
       </div>
 
-      <!-- ACTIVE SURVIVAL OBJECTIVE / QUEST TRACKER (NESTED IN HUD) -->
-      <div id="hud-quest-panel" style="display:none; position:absolute; top:75px; left:25px; z-index:40; pointer-events:none; font-family:'DotGothic16', monospace, sans-serif; max-width:380px;">
-        <div style="background:rgba(8,12,10,0.92); border-left:3px solid #78e08f; border-top:1px solid #233e2b; border-right:1px solid #233e2b; border-bottom:1px solid #233e2b; padding:8px 14px; border-radius:4px; box-shadow:0 0 16px rgba(0,0,0,0.85);">
+      <!-- Hidden fallbacks for legacy code references -->
+      <div style="display: none;">
+        <canvas id="hud-portrait-canvas" width="96" height="96"></canvas>
+        <div id="hud-portrait-frame"><div id="hud-portrait-status-tint"></div></div>
+        <div id="hud-vital"></div>
+        <div id="hud-lives"><span id="hud-lives-icons"></span><span id="hud-lives-count"></span></div>
+        <div id="hud-score"></div>
+      </div>
+
+      <!-- ACTIVE SURVIVAL OBJECTIVE / QUEST TRACKER (STREAMLINED) -->
+      <div id="hud-quest-panel" style="display:none; position:absolute; top:72px; left:22px; z-index:25; pointer-events:none; font-family:'DotGothic16', monospace, sans-serif; max-width:320px;">
+        <div style="background:rgba(8,12,10,0.92); border-left:3px solid #78e08f; border-top:1px solid #233e2b; border-right:1px solid #233e2b; border-bottom:1px solid #233e2b; padding:6px 12px; border-radius:3px; box-shadow:0 0 14px rgba(0,0,0,0.85);">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span id="quest-chapter-tag" style="color:#78e08f; font-size:16px; letter-spacing:1px; font-weight:bold;">BAB 1: DESA SUNYI</span>
-            <span style="color:#8ca693; font-size:14px;">[JURNAL]</span>
+            <span id="quest-chapter-tag" style="color:#78e08f; font-size:15px; letter-spacing:1px; font-weight:bold;">BAB 1: DESA SUNYI</span>
+            <span style="color:#8ca693; font-size:13px;">[JURNAL]</span>
           </div>
-          <div id="quest-title-text" style="color:#ffffff; font-size:22px; margin-top:3px; line-height:1.2; text-shadow:0 0 8px rgba(120,224,143,0.4);">
+          <div id="quest-title-text" style="color:#ffffff; font-size:18px; margin-top:2px; line-height:1.2; text-shadow:0 0 8px rgba(120,224,143,0.4);">
             OBJEKTIF 1.1: Cari Tempat Aman &amp; Senjata
           </div>
-          <div id="quest-desc-text" style="color:#b2c9b9; font-size:16px; margin-top:3px; line-height:1.2;">
-            "Gerbang Coldbrook dirantai. Temukan pondok Darrell di timur desa (tanda tengkorak babi hutan)."
+          <div id="quest-desc-text" style="color:#b2c9b9; font-size:14px; margin-top:2px; line-height:1.2;">
+            "Gerbang Coldbrook dirantai. Temukan pondok Darrell di timur desa."
           </div>
-          <div id="kristin-live-compass" style="margin-top:6px; background:rgba(18,36,26,0.92); border:1px solid #4a825b; border-left:3px solid #5cf0a5; border-radius:3px; padding:3px 8px; display:flex; align-items:center; gap:8px;">
-            <span style="color:#5cf0a5; font-size:16px; font-weight:bold;">TARGET:</span>
-            <span id="kristin-compass-text" style="color:#e0f7ea; font-size:16px;">"Dekati Old Thomas di gerbang (▲ 14m)"</span>
+          <div id="kristin-live-compass" style="margin-top:5px; background:rgba(18,36,26,0.92); border:1px solid #4a825b; border-left:3px solid #5cf0a5; border-radius:2px; padding:2px 6px; display:flex; align-items:center; gap:6px;">
+            <span style="color:#5cf0a5; font-size:14px; font-weight:bold;">TARGET:</span>
+            <span id="kristin-compass-text" style="color:#e0f7ea; font-size:14px;">"Dekati Old Thomas (▲ 14m)"</span>
           </div>
-          <div style="margin-top:6px; display:flex; align-items:center; gap:8px;">
-            <span class="hud-key-cap" id="quest-hint-key-btn" style="cursor:crosshair; pointer-events:auto;">[ H ]</span>
-            <span style="color:#92a898; font-size:15px; letter-spacing:1px;">RADIO KRISTIN</span>
+          <div style="margin-top:4px; display:flex; align-items:center; gap:6px;">
+            <span class="hud-key-cap" id="quest-hint-key-btn" style="cursor:crosshair; pointer-events:auto; font-size:14px; padding:1px 6px;">[ H ]</span>
+            <span style="color:#92a898; font-size:13px; letter-spacing:1px;">RADIO KRISTIN</span>
           </div>
         </div>
       </div>
@@ -164,9 +185,9 @@
         <div class="cross-v"></div>
       </div>
 
-      <div class="hud-row">
-        <div class="hud-box" id="hud-wave">ENDLESS HORDE: WAVE I</div>
-        <div class="hud-box" id="hud-ammo" style="cursor: pointer; pointer-events: auto;" title="Tekan R atau Klik untuk Reload">SHELLS: 5 / 24</div>
+      <div class="hud-row" style="align-items: flex-end;">
+        <div class="hud-box" id="hud-wave" style="font-size: 14px; padding: 2px 8px; background: rgba(8,12,10,0.85); border: 1px solid #233529; color: #78a287;">ACT I • ORIENTASI</div>
+        <div id="hud-ammo" style="display: none;"></div>
       </div>
     </div>
 

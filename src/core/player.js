@@ -1060,4 +1060,11 @@ export function setupPlayerControls() {
       reloadWeapon();
     });
   }
+  const tacAmmo = document.getElementById('tactical-ammo-widget');
+  if (tacAmmo) {
+    tacAmmo.addEventListener('click', (e) => {
+      e.stopPropagation();
+      reloadWeapon();
+    });
+  }
 }

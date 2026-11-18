@@ -30,6 +30,63 @@ export function updateHUD(state) {
   }
 
   const p = state.player;
+
+  // 1. TACTICAL SLANTED HEALTH BAR (PS2 007 NIGHTFIRE / BLACK STYLE - 20 SEGMENTS)
+  const healthSegmentsEl = document.getElementById('tactical-health-segments');
+  if (healthSegmentsEl) {
+    const totalSegments = 20;
+    const activeSegments = Math.max(0, Math.min(totalSegments, Math.ceil((p.hp / 100) * totalSegments)));
+    const condition = p.hp > 65 ? 'fine' : p.hp > 30 ? 'caution' : 'danger';
+    let segsHtml = '';
+    for (let i = 0; i < totalSegments; i++) {
+      if (i < activeSegments) {
+        segsHtml += `<span class="tac-seg active ${condition}"></span>`;
+      } else {
+        segsHtml += '<span class="tac-seg inactive"></span>';
+      }
+    }
+    healthSegmentsEl.innerHTML = segsHtml;
+  }
+
+  // 2. TACTICAL 3 LIVES / MEDKIT CROSSES (+ + +)
+  const crossesWrap = document.getElementById('tactical-crosses');
+  if (crossesWrap) {
+    let crossHtml = '';
+    for (let i = 0; i < p.maxLives; i++) {
+      if (i < p.lives) {
+        crossHtml += '<span class="tac-cross full">+</span>';
+      } else {
+        crossHtml += '<span class="tac-cross lost">+</span>';
+      }
+    }
+    crossesWrap.innerHTML = crossHtml;
+  }
+
+  // 3. TACTICAL WEAPON & AMMO METER (TOP-RIGHT DISPLAY: 07 \ 40)
+  const ammoDigitsEl = document.getElementById('tactical-ammo-display');
+  const weaponNameEl = document.getElementById('tactical-weapon-name');
+  if (ammoDigitsEl) {
+    if (p.weapon === 'unarmed') {
+      ammoDigitsEl.innerHTML = '<span class="tac-ammo-clip">--</span><span class="tac-ammo-slash">\\</span><span class="tac-ammo-res">--</span>';
+      if (weaponNameEl) weaponNameEl.innerText = 'TANGAN KOSONG';
+    } else if (p.weapon === 'golok') {
+      ammoDigitsEl.innerHTML = '<span class="tac-ammo-clip">--</span><span class="tac-ammo-slash">\\</span><span class="tac-ammo-res">--</span>';
+      if (weaponNameEl) weaponNameEl.innerText = 'GOLOK RIMBA';
+    } else if (p.isReloading) {
+      ammoDigitsEl.innerHTML = '<span class="tac-ammo-reload">RELOAD...</span>';
+      if (weaponNameEl) weaponNameEl.innerText = 'SHOTGUN 12G';
+    } else if (p.clip === 0) {
+      ammoDigitsEl.innerHTML = `<span class="tac-ammo-empty">00</span><span class="tac-ammo-slash">\\</span><span class="tac-ammo-res">${String(p.reserve).padStart(2, '0')}</span>`;
+      if (weaponNameEl) weaponNameEl.innerText = 'SHOTGUN [EMPTY]';
+    } else {
+      const clipStr = String(p.clip).padStart(2, '0');
+      const resStr = String(p.reserve).padStart(2, '0');
+      ammoDigitsEl.innerHTML = `<span class="tac-ammo-clip">${clipStr}</span><span class="tac-ammo-slash">\\</span><span class="tac-ammo-res">${resStr}</span>`;
+      if (weaponNameEl) weaponNameEl.innerText = 'SHOTGUN 12G';
+    }
+  }
+
+  // Legacy fallback HUD ammo
   const ammoEl = document.getElementById('hud-ammo');
   if (ammoEl) {
     if (p.weapon === 'unarmed') {
@@ -50,6 +107,7 @@ export function updateHUD(state) {
     }
   }
 
+  // Legacy fallback Vital / Portrait
   const vitalEl = document.getElementById('hud-vital');
   const portraitFrame = document.getElementById('hud-portrait-frame');
   const portraitTint = document.getElementById('hud-portrait-status-tint');
@@ -57,54 +115,16 @@ export function updateHUD(state) {
 
   if (vitalEl) {
     vitalEl.innerText = `CONDITION: ${condition} [${p.hp}%]`;
-    if (condition === 'FINE') {
-      vitalEl.style.color = '#78e08f';
-      vitalEl.classList.remove('hud-danger', 'hud-caution');
-    } else if (condition === 'CAUTION') {
-      vitalEl.style.color = '#e5a038';
-      vitalEl.classList.remove('hud-danger');
-      vitalEl.classList.add('hud-caution');
-    } else {
-      vitalEl.style.color = '#ff3a4b';
-      vitalEl.classList.remove('hud-caution');
-      vitalEl.classList.add('hud-danger');
-    }
   }
-
   if (portraitFrame) {
-    if (condition === 'FINE') {
-      portraitFrame.style.borderColor = '#78e08f';
-      portraitFrame.style.boxShadow = 'inset 0 0 6px rgba(0,0,0,0.9), 0 0 8px rgba(120, 224, 143, 0.4)';
-      if (portraitTint) {
-        portraitTint.style.opacity = '0';
-        portraitTint.style.background = 'transparent';
-      }
-    } else if (condition === 'CAUTION') {
-      portraitFrame.style.borderColor = '#e5a038';
-      portraitFrame.style.boxShadow = 'inset 0 0 6px rgba(0,0,0,0.9), 0 0 8px rgba(229, 160, 56, 0.4)';
-      if (portraitTint) {
-        portraitTint.style.opacity = '0.22';
-        portraitTint.style.background = '#e5a038';
-      }
-    } else {
-      portraitFrame.style.borderColor = '#ff3a4b';
-      portraitFrame.style.boxShadow = 'inset 0 0 8px rgba(0,0,0,0.9), 0 0 12px rgba(255, 58, 75, 0.75)';
-      if (portraitTint) {
-        portraitTint.style.opacity = '0.38';
-        portraitTint.style.background = '#ff3a4b';
-      }
-    }
+    portraitFrame.style.borderColor = condition === 'FINE' ? '#78e08f' : condition === 'CAUTION' ? '#e5a038' : '#ff3a4b';
   }
 
   const iconsContainer = document.getElementById('hud-lives-icons');
   if (iconsContainer) {
     let html = '';
     for (let i = 0; i < p.maxLives; i++) {
-      if (i < p.lives) {
-        html += '<span class="life-heart full">♥</span>';
-      } else {
-        html += '<span class="life-heart lost">♡</span>';
-      }
+      html += (i < p.lives ? '<span class="life-heart full">♥</span>' : '<span class="life-heart lost">♡</span>');
     }
     iconsContainer.innerHTML = html;
     const countEl = document.getElementById('hud-lives-count');
@@ -113,20 +133,25 @@ export function updateHUD(state) {
 }
 
 export function showLifeLostAlert(remainingLives) {
-  const banner = document.getElementById('life-alert-banner');
-  const remEl = document.getElementById('life-alert-remaining');
-  if (banner && remEl) {
-    let icons = '';
-    for (let i = 0; i < 3; i++) {
-      icons += (i < remainingLives ? '♥ ' : '♡ ');
-    }
-    remEl.innerText = `${icons.trim()} (${remainingLives}/3 Nyawa Tersisa)`;
-    banner.style.display = 'flex';
+  // 1. Flash top-left tactical health widget (subtle, non-intrusive red pulse)
+  const tacWidget = document.getElementById('tactical-health-widget');
+  if (tacWidget) {
+    tacWidget.classList.add('hit-flash');
     setTimeout(() => {
-      banner.style.display = 'none';
-    }, 2200);
+      tacWidget.classList.remove('hit-flash');
+    }, 850);
   }
 
+  // 2. Flash screen damage vignette without blocking central vision
+  const damageFlash = document.getElementById('damage-flash');
+  if (damageFlash) {
+    damageFlash.style.opacity = '0.65';
+    setTimeout(() => {
+      damageFlash.style.opacity = '0';
+    }, 380);
+  }
+
+  // 3. Invulnerability aura
   const aura = document.getElementById('invuln-aura');
   if (aura) {
     aura.style.display = 'block';

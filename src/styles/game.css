@@ -860,35 +860,9 @@
       border-color: #78a2c5;
       box-shadow: 0 0 16px rgba(100, 160, 220, 0.5);
     }
-    /* LIFE ALERT & REVIVAL EFFECT */
+    /* LIFE ALERT & REVIVAL EFFECT - FORCED HIDDEN TO PREVENT BLOCKING RETICLE */
     #life-alert-banner {
-      position: absolute;
-      top: 24%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      background: rgba(16, 6, 9, 0.95);
-      border: 3px solid #ff2233;
-      box-shadow: 0 0 35px rgba(255, 30, 40, 0.8), inset 0 0 18px rgba(255, 0, 0, 0.4);
-      padding: 12px 28px;
-      z-index: 35;
-      pointer-events: none;
-      text-align: center;
-    }
-    #life-alert-title {
-      font-family: 'DotGothic16', monospace, sans-serif;
-      font-size: 32px;
-      color: #ff2233;
-      letter-spacing: 4px;
-      text-shadow: 2px 2px 0 #000, 0 0 15px #f00;
-    }
-    #life-alert-remaining {
-      font-size: 22px;
-      color: #d8e5ee;
-      letter-spacing: 2px;
-      margin-top: 4px;
+      display: none !important;
     }
     #invuln-aura {
       position: absolute;
@@ -1411,7 +1385,7 @@
    ========================================================================= */
 #hud-minimap {
   position: absolute;
-  top: 62px;
+  top: 76px;
   right: 20px;
   width: 130px;
   height: 154px;
@@ -1655,4 +1629,217 @@
 
 #hud-quest-panel * {
   border-radius: 0 !important;
+}
+
+/* =========================================================================
+   PS2 TACTICAL HUD (007 NIGHTFIRE / BLACK STYLE)
+   ========================================================================= */
+
+/* Top-Left Tactical Health & Lives Widget */
+#tactical-health-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  pointer-events: auto;
+  user-select: none;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.85));
+  transition: transform 0.15s ease;
+}
+
+#tactical-health-widget.hit-flash {
+  animation: tacHitPulse 0.4s ease 2;
+}
+
+@keyframes tacHitPulse {
+  0% { filter: drop-shadow(0 0 14px rgba(255, 30, 40, 0.9)); transform: scale(1.04); }
+  50% { filter: drop-shadow(0 0 4px rgba(255, 30, 40, 0.4)); transform: scale(0.99); }
+  100% { filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.85)); transform: scale(1); }
+}
+
+/* Gauge Plate: chamfered right end */
+.tac-gauge-plate {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(180deg, rgba(14, 22, 17, 0.95) 0%, rgba(6, 10, 8, 0.98) 100%);
+  border: 1.5px solid #2a3d30;
+  border-top: 2px solid #4d7358;
+  border-bottom: 2px solid #18261e;
+  padding: 5px 16px 5px 8px;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 4px 14px rgba(0, 0, 0, 0.9);
+}
+
+.tac-segments-bar {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.tac-seg {
+  width: 7px;
+  height: 14px;
+  transform: skewX(-24deg);
+  display: inline-block;
+  border-radius: 1px;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tac-seg.active.fine {
+  background: #1aff66;
+  box-shadow: 0 0 7px rgba(26, 255, 102, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.tac-seg.active.caution {
+  background: #ffb703;
+  box-shadow: 0 0 7px rgba(255, 183, 3, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.tac-seg.active.danger {
+  background: #ff2a44;
+  box-shadow: 0 0 9px rgba(255, 42, 68, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  animation: pulseDanger 0.6s infinite alternate;
+}
+
+.tac-seg.inactive {
+  background: rgba(18, 28, 22, 0.45);
+  border: 1px solid rgba(40, 60, 48, 0.35);
+  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.8);
+}
+
+/* Subplate: 3 Lives Crosses (+ + +) */
+.tac-subplate {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(180deg, rgba(10, 16, 12, 0.95) 0%, rgba(5, 8, 6, 0.98) 100%);
+  border: 1.5px solid #23372b;
+  border-top: 1px solid #324e3d;
+  padding: 2px 16px 2px 8px;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.9), 0 3px 10px rgba(0, 0, 0, 0.8);
+}
+
+.tac-crosses-wrap {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tac-cross {
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+  display: inline-block;
+  user-select: none;
+  transition: all 0.25s ease;
+}
+
+.tac-cross.full {
+  color: #ffffff;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.9), 0 0 10px rgba(120, 255, 170, 0.5);
+}
+
+.tac-cross.lost {
+  color: rgba(255, 255, 255, 0.16);
+  text-shadow: none;
+}
+
+.tac-tag {
+  font-size: 13px;
+  color: #6c8a77;
+  letter-spacing: 2px;
+  font-weight: bold;
+}
+
+/* Top-Right Tactical Ammo Widget */
+#tactical-ammo-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.85));
+  transition: transform 0.15s ease;
+}
+
+#tactical-ammo-widget:hover {
+  transform: scale(1.02);
+}
+
+.tac-ammo-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(180deg, rgba(14, 22, 17, 0.95) 0%, rgba(6, 10, 8, 0.98) 100%);
+  border: 1.5px solid #2a3d30;
+  border-top: 2px solid #4d7358;
+  border-bottom: 2px solid #18261e;
+  padding: 4px 10px 4px 14px;
+  clip-path: polygon(14px 0, 100% 0, 100% 100%, 0 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 4px 14px rgba(0, 0, 0, 0.9);
+}
+
+.tac-ticks {
+  color: #405c49;
+  font-size: 12px;
+  letter-spacing: 2px;
+  font-weight: bold;
+}
+
+.tac-weapon-label {
+  color: #92b59e;
+  font-size: 14px;
+  letter-spacing: 2px;
+  font-weight: bold;
+}
+
+.tac-ammo-bottom {
+  display: flex;
+  align-items: baseline;
+  background: linear-gradient(180deg, rgba(10, 16, 12, 0.95) 0%, rgba(5, 8, 6, 0.98) 100%);
+  border: 1.5px solid #23372b;
+  border-top: 1px solid #324e3d;
+  padding: 2px 12px 2px 16px;
+  clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.9), 0 3px 10px rgba(0, 0, 0, 0.8);
+}
+
+.tac-ammo-digits {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 26px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #eaf3ed;
+  text-shadow: 0 0 8px rgba(120, 224, 143, 0.35);
+}
+
+.tac-ammo-slash {
+  color: #557962;
+  font-size: 24px;
+  transform: skewX(-20deg);
+  display: inline-block;
+  margin: 0 3px;
+}
+
+.tac-ammo-res {
+  color: #8daea0;
+  font-size: 20px;
+}
+
+.tac-ammo-empty {
+  color: #ff3344;
+  text-shadow: 0 0 10px rgba(255, 51, 68, 0.85);
+  animation: pulseDanger 0.6s infinite alternate;
+}
+
+.tac-ammo-reload {
+  color: #ffb703;
+  font-size: 17px;
+  letter-spacing: 2px;
+  animation: pulseDanger 0.75s infinite alternate;
 }
