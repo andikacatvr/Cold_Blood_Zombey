@@ -368,9 +368,10 @@ export function buildKristinCharacter(textures) {
 
   // Base socket position attached naturally to right hand in rest pose
   const weaponSocket = new THREE.Group();
-  weaponSocket.position.set(0.46, 0.98, 0.04);
+  weaponSocket.position.set(0.36, 0.95, 0.05);
   weaponSocket.rotation.x = -Math.PI / 2.7;
   weaponSocket.rotation.y = -0.15;
+  weaponSocket.rotation.z = -0.34;
   weaponSocket.add(miniSpin);
   weaponSocket.add(miniPump);
   weaponSocket.add(miniGolok);
@@ -848,10 +849,10 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
     const weights = kristinModel.vertexWeights;
     const posArr = kristinModel.charMesh.geometry.attributes.position.array;
 
-    // Base Rotations
+    // Base Rotations (Natural relaxed resting posture - arms relaxed close to body, not flared in open A-pose)
     let h_rx = 0, h_ry = 0, h_rz = 0;
-    let la_rx = 0, la_ry = 0, la_rz = 0;
-    let ra_rx = 0, ra_ry = 0, ra_rz = 0;
+    let la_rx = -0.04, la_ry = 0, la_rz = 0.38;
+    let ra_rx = -0.04, ra_ry = 0, ra_rz = -0.38;
     let t_rx = 0, t_ry = 0, t_rz = 0;
     let ll_rx = 0, ll_ry = 0, ll_rz = 0;
     let rl_rx = 0, rl_ry = 0, rl_rz = 0;
@@ -923,7 +924,7 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
         t_rz += -0.04 * blend;
         // Raise shotgun to chest height
         ra_rx += -0.52 * blend;
-        ra_rz += -0.16 * blend;
+        ra_rz += 0.22 * blend;
         const pumpSlide = Math.sin(gTime * 8);
         ra_ry += pumpSlide * 0.14 * blend;
         // Support arm
@@ -937,7 +938,7 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
       } else if (currentGesture === 'cheer') {
         // Thumbs up / salute forward
         la_rx += -0.80 * blend;
-        la_rz += (0.38 + Math.sin(gTime * 8) * 0.12) * blend;
+        la_rz += (0.15 + Math.sin(gTime * 8) * 0.12) * blend;
         la_ry += -0.35 * blend;
         t_rz += -0.06 * blend;
         // Proud head nod
@@ -952,7 +953,7 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
       } else if (currentGesture === 'point') {
         // Directing arm gesture pointing straight towards active objective
         la_rx += -1.35 * blend;
-        la_rz += 0.18 * blend;
+        la_rz += -0.20 * blend;
         la_ry += 0.25 * blend;
         h_rx += 0.10 * blend;
         t_ry += 0.12 * blend;
