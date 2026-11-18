@@ -763,7 +763,7 @@ export function returnToMainMenu() {
   if (bossHud) bossHud.style.display = 'none';
 
   const menuRoot = document.getElementById('menu-view-root');
-  if (menuRoot) menuRoot.style.display = 'block';
+  if (menuRoot) menuRoot.style.display = 'flex';
   const menuModes = document.getElementById('menu-view-modes');
   if (menuModes) menuModes.style.display = 'none';
   const menuControls = document.getElementById('menu-view-controls');

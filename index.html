@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -15,6 +17,7 @@
   <script src="/libs/GLTFLoader.js"></script>
   <script src="/libs/OBJLoader.js"></script>
 </head>
+
 <body>
 
   <div id="game-container">
@@ -28,32 +31,47 @@
     <div id="boss-warning-flash">THE CORRUPTED SISTER AWAKENS...</div>
 
     <!-- INTRO CINEMATIC CUTSCENE OVERLAY -->
-    <div id="cinematic-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; z-index:100; pointer-events:none; transition:opacity 0.5s ease;">
-      <div id="cinema-bar-top" style="position:absolute; top:0; left:0; width:100%; height:13%; background:#0a0d0c; border-bottom:2px solid #1e3325; box-shadow:0 8px 25px rgba(0,0,0,0.9); z-index:102;"></div>
-      <div id="cinema-bar-bottom" style="position:absolute; bottom:0; left:0; width:100%; height:15%; background:#0a0d0c; border-top:2px solid #1e3325; box-shadow:0 -8px 25px rgba(0,0,0,0.9); z-index:102; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:0 30px;">
-        <div id="cinematic-subtitles" style="color:#ffffff; font-family:'DotGothic16', monospace, sans-serif; font-size:26px; letter-spacing:1px; text-shadow:0 0 10px rgba(0,0,0,1), 0 2px 4px #000; text-align:center; max-width:90%; line-height:1.25;"></div>
+    <div id="cinematic-overlay"
+      style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; z-index:100; pointer-events:none; transition:opacity 0.5s ease;">
+      <div id="cinema-bar-top"
+        style="position:absolute; top:0; left:0; width:100%; height:13%; background:#0a0d0c; border-bottom:2px solid #1e3325; box-shadow:0 8px 25px rgba(0,0,0,0.9); z-index:102;">
       </div>
-      <button id="cinematic-skip-btn" style="position:absolute; top:22px; right:28px; z-index:110; pointer-events:auto; background:rgba(18,28,22,0.9); color:#a2cfb0; border:1px solid #4a825b; padding:6px 16px; font-family:'DotGothic16', monospace, sans-serif; font-size:19px; border-radius:4px; cursor:pointer; box-shadow:0 0 14px rgba(0,0,0,0.8);">SKIP</button>
+      <div id="cinema-bar-bottom"
+        style="position:absolute; bottom:0; left:0; width:100%; height:15%; background:#0a0d0c; border-top:2px solid #1e3325; box-shadow:0 -8px 25px rgba(0,0,0,0.9); z-index:102; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:0 30px;">
+        <div id="cinematic-subtitles"
+          style="color:#ffffff; font-family:'DotGothic16', monospace, sans-serif; font-size:26px; letter-spacing:1px; text-shadow:0 0 10px rgba(0,0,0,1), 0 2px 4px #000; text-align:center; max-width:90%; line-height:1.25;">
+        </div>
+      </div>
+      <button id="cinematic-skip-btn"
+        style="position:absolute; top:22px; right:28px; z-index:110; pointer-events:auto; background:rgba(18,28,22,0.9); color:#a2cfb0; border:1px solid #4a825b; padding:6px 16px; font-family:'DotGothic16', monospace, sans-serif; font-size:19px; border-radius:4px; cursor:pointer; box-shadow:0 0 14px rgba(0,0,0,0.8);">SKIP</button>
     </div>
 
     <!-- PURE CINEMATIC COMPANION DIALOGUE SUBTITLE (KRISTIN) -->
-    <div id="kristin-npc-banner" style="display:none; position:absolute; bottom:85px; left:50%; transform:translateX(-50%); background:rgba(8,14,10,0.95); border:2px solid #3d6849; color:#cbe3d3; font-family:'DotGothic16', monospace, sans-serif; padding:10px 20px; box-shadow:0 0 24px rgba(0,0,0,0.9); text-align:left; z-index:45; pointer-events:none; max-width:85%; min-width:300px; transition:opacity 0.4s ease;">
+    <div id="kristin-npc-banner"
+      style="display:none; position:absolute; bottom:85px; left:50%; transform:translateX(-50%); background:rgba(8,14,10,0.95); border:2px solid #3d6849; color:#cbe3d3; font-family:'DotGothic16', monospace, sans-serif; padding:10px 20px; box-shadow:0 0 24px rgba(0,0,0,0.9); text-align:left; z-index:45; pointer-events:none; max-width:85%; min-width:300px; transition:opacity 0.4s ease;">
       <div style="display:inline-flex; align-items:center; gap:14px;">
-        <img src="/textures/kristin_face_hd.png" alt="Kristin" style="width:44px; height:44px; border-radius:0; border:2px solid #9de8b7; object-fit:cover; box-shadow:0 0 8px rgba(157,232,183,0.4); flex-shrink:0;">
+        <img src="/textures/kristin_face_hd.png" alt="Kristin"
+          style="width:44px; height:44px; border-radius:0; border:2px solid #9de8b7; object-fit:cover; box-shadow:0 0 8px rgba(157,232,183,0.4); flex-shrink:0;">
         <div>
           <div style="color:#9de8b7; font-weight:bold; font-size:24px; line-height:1.1;">KRISTIN</div>
-          <div id="kristin-dialog-text" style="color:#f0f7f3; font-size:22px; margin-top:3px; line-height:1.25;">"Woi bro! Sumpah lu beneran masih hidup?! Masuk sini cepetan!"</div>
+          <div id="kristin-dialog-text" style="color:#f0f7f3; font-size:22px; margin-top:3px; line-height:1.25;">"Woi
+            bro! Sumpah lu beneran masih hidup?! Masuk sini cepetan!"</div>
         </div>
       </div>
     </div>
 
     <!-- PURE CINEMATIC AGENT DIALOGUE SUBTITLE (AGENT NATALIA) -->
-    <div id="natalia-npc-banner" style="display:none; position:absolute; bottom:145px; left:50%; transform:translateX(-50%); background:rgba(18,14,10,0.96); border:2px solid #a87232; color:#f0e2d0; font-family:'DotGothic16', monospace, sans-serif; padding:10px 20px; box-shadow:0 0 24px rgba(0,0,0,0.9); text-align:left; z-index:46; pointer-events:none; max-width:85%; min-width:320px; transition:opacity 0.4s ease;">
+    <div id="natalia-npc-banner"
+      style="display:none; position:absolute; bottom:145px; left:50%; transform:translateX(-50%); background:rgba(18,14,10,0.96); border:2px solid #a87232; color:#f0e2d0; font-family:'DotGothic16', monospace, sans-serif; padding:10px 20px; box-shadow:0 0 24px rgba(0,0,0,0.9); text-align:left; z-index:46; pointer-events:none; max-width:85%; min-width:320px; transition:opacity 0.4s ease;">
       <div style="display:inline-flex; align-items:center; gap:14px;">
-        <img id="natalia-avatar-img" src="/textures/agent_avatar.png" alt="Agent Natalia" style="width:46px; height:46px; border-radius:0; border:2px solid #f5ba42; object-fit:cover; box-shadow:0 0 10px rgba(245,186,66,0.5); flex-shrink:0;">
+        <img id="natalia-avatar-img" src="/textures/agent_avatar.png" alt="Agent Natalia"
+          style="width:46px; height:46px; border-radius:0; border:2px solid #f5ba42; object-fit:cover; box-shadow:0 0 10px rgba(245,186,66,0.5); flex-shrink:0;">
         <div>
-          <div id="natalia-title-tag" style="color:#f5ba42; font-weight:bold; font-size:24px; line-height:1.1; letter-spacing:1px;">AGENT NATALIA</div>
-          <div id="natalia-dialog-text" style="color:#fbf7f0; font-size:22px; margin-top:3px; line-height:1.25;">"Siapa kamu?! Apa urusanmu di sini?! Tetap di belakang gua, kita habisi zombienya bareng-bareng!"</div>
+          <div id="natalia-title-tag"
+            style="color:#f5ba42; font-weight:bold; font-size:24px; line-height:1.1; letter-spacing:1px;">AGENT NATALIA
+          </div>
+          <div id="natalia-dialog-text" style="color:#fbf7f0; font-size:22px; margin-top:3px; line-height:1.25;">"Siapa
+            kamu?! Apa urusanmu di sini?! Tetap di belakang gua, kita habisi zombienya bareng-bareng!"</div>
         </div>
       </div>
     </div>
@@ -75,24 +93,33 @@
     <!-- INTERACTIVE NPC PROMPT (Retro Console Action Prompt) -->
     <div id="npc-interaction-prompt">
       <span class="hud-key-cap">[ E ]</span>
-      <span id="npc-prompt-text" style="font-size:24px; color:#f0f5f2; letter-spacing:2px; margin-left:8px; font-weight:bold;">BICARA</span>
+      <span id="npc-prompt-text"
+        style="font-size:24px; color:#f0f5f2; letter-spacing:2px; margin-left:8px; font-weight:bold;">BICARA</span>
     </div>
 
     <!-- STORY DIALOGUE BOX (Orientation / Narrative Dialogue) -->
     <div id="story-dialogue-overlay">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #2b4533; padding-bottom:6px; margin-bottom:10px;">
+      <div
+        style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #2b4533; padding-bottom:6px; margin-bottom:10px;">
         <div>
-          <span id="story-dialog-speaker" style="color:#78e08f; font-size:26px; font-weight:bold; letter-spacing:1px;">OLD THOMAS</span>
-          <span id="story-dialog-title" style="color:#8ba394; font-size:16px; margin-left:10px;">Warga Tua Coldbrook</span>
+          <span id="story-dialog-speaker"
+            style="color:#78e08f; font-size:26px; font-weight:bold; letter-spacing:1px;">OLD THOMAS</span>
+          <span id="story-dialog-title" style="color:#8ba394; font-size:16px; margin-left:10px;">Warga Tua
+            Coldbrook</span>
         </div>
-        <button id="story-dialog-close-btn" class="hud-key-cap" style="background:#1b3324; color:#a2f0b5; border:1px solid #4a825b; padding:4px 14px; font-size:18px; cursor:crosshair; font-family:'DotGothic16', monospace, sans-serif; letter-spacing:1px;">[ E ] NEXT ▶</button>
+        <button id="story-dialog-close-btn" class="hud-key-cap"
+          style="background:#1b3324; color:#a2f0b5; border:1px solid #4a825b; padding:4px 14px; font-size:18px; cursor:crosshair; font-family:'DotGothic16', monospace, sans-serif; letter-spacing:1px;">[
+          E ] NEXT ▶</button>
       </div>
-      <div id="story-dialog-content" style="color:#eef4f0; font-size:22px; line-height:1.35; margin-bottom:12px; min-height:48px;">
+      <div id="story-dialog-content"
+        style="color:#eef4f0; font-size:22px; line-height:1.35; margin-bottom:12px; min-height:48px;">
         "Selamat datang di Coldbrook..."
       </div>
-      <div id="story-dialog-kristin-box" style="display:none; background:rgba(20,38,28,0.7); border-left:3px solid #5cf0a5; padding:8px 14px; margin-top:8px;">
+      <div id="story-dialog-kristin-box"
+        style="display:none; background:rgba(20,38,28,0.7); border-left:3px solid #5cf0a5; padding:8px 14px; margin-top:8px;">
         <span style="color:#5cf0a5; font-size:20px; font-weight:bold;">KRISTIN (Bisik):</span>
-        <span id="story-dialog-kristin-text" style="color:#d5ebe0; font-size:20px; margin-left:6px;">"Rod, pupil matanya..."</span>
+        <span id="story-dialog-kristin-text" style="color:#d5ebe0; font-size:20px; margin-left:6px;">"Rod, pupil
+          matanya..."</span>
       </div>
     </div>
 
@@ -104,10 +131,18 @@
           <!-- Top Chamfered Gauge Plate: Slanted Green Segments -->
           <div class="tac-gauge-plate">
             <div id="tactical-health-segments" class="tac-segments-bar">
-              <span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span>
-              <span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span>
-              <span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span>
-              <span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span class="tac-seg active fine"></span>
+              <span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span
+                class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span
+                class="tac-seg active fine"></span>
+              <span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span
+                class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span
+                class="tac-seg active fine"></span>
+              <span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span
+                class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span
+                class="tac-seg active fine"></span>
+              <span class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span
+                class="tac-seg active fine"></span><span class="tac-seg active fine"></span><span
+                class="tac-seg active fine"></span>
             </div>
           </div>
           <!-- Bottom Chamfered Subplate: 3 Medical/Life Crosses (+ + +) -->
@@ -144,31 +179,39 @@
       <!-- Hidden fallbacks for legacy code references -->
       <div style="display: none;">
         <canvas id="hud-portrait-canvas" width="96" height="96"></canvas>
-        <div id="hud-portrait-frame"><div id="hud-portrait-status-tint"></div></div>
+        <div id="hud-portrait-frame">
+          <div id="hud-portrait-status-tint"></div>
+        </div>
         <div id="hud-vital"></div>
         <div id="hud-lives"><span id="hud-lives-icons"></span><span id="hud-lives-count"></span></div>
         <div id="hud-score"></div>
       </div>
 
       <!-- ACTIVE SURVIVAL OBJECTIVE / QUEST TRACKER (STREAMLINED) -->
-      <div id="hud-quest-panel" style="display:none; position:absolute; top:72px; left:22px; z-index:25; pointer-events:none; font-family:'DotGothic16', monospace, sans-serif; max-width:320px;">
-        <div style="background:rgba(8,12,10,0.92); border-left:3px solid #78e08f; border-top:1px solid #233e2b; border-right:1px solid #233e2b; border-bottom:1px solid #233e2b; padding:6px 12px; border-radius:3px; box-shadow:0 0 14px rgba(0,0,0,0.85);">
+      <div id="hud-quest-panel"
+        style="display:none; position:absolute; top:72px; left:22px; z-index:25; pointer-events:none; font-family:'DotGothic16', monospace, sans-serif; max-width:320px;">
+        <div
+          style="background:rgba(8,12,10,0.92); border-left:3px solid #78e08f; border-top:1px solid #233e2b; border-right:1px solid #233e2b; border-bottom:1px solid #233e2b; padding:6px 12px; border-radius:3px; box-shadow:0 0 14px rgba(0,0,0,0.85);">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span id="quest-chapter-tag" style="color:#78e08f; font-size:15px; letter-spacing:1px; font-weight:bold;">BAB 1: DESA SUNYI</span>
+            <span id="quest-chapter-tag"
+              style="color:#78e08f; font-size:15px; letter-spacing:1px; font-weight:bold;">BAB 1: DESA SUNYI</span>
             <span style="color:#8ca693; font-size:13px;">[JURNAL]</span>
           </div>
-          <div id="quest-title-text" style="color:#ffffff; font-size:18px; margin-top:2px; line-height:1.2; text-shadow:0 0 8px rgba(120,224,143,0.4);">
+          <div id="quest-title-text"
+            style="color:#ffffff; font-size:18px; margin-top:2px; line-height:1.2; text-shadow:0 0 8px rgba(120,224,143,0.4);">
             OBJEKTIF 1.1: Cari Tempat Aman &amp; Senjata
           </div>
           <div id="quest-desc-text" style="color:#b2c9b9; font-size:14px; margin-top:2px; line-height:1.2;">
             "Gerbang Coldbrook dirantai. Temukan pondok Darrell di timur desa."
           </div>
-          <div id="kristin-live-compass" style="margin-top:5px; background:rgba(18,36,26,0.92); border:1px solid #4a825b; border-left:3px solid #5cf0a5; border-radius:2px; padding:2px 6px; display:flex; align-items:center; gap:6px;">
+          <div id="kristin-live-compass"
+            style="margin-top:5px; background:rgba(18,36,26,0.92); border:1px solid #4a825b; border-left:3px solid #5cf0a5; border-radius:2px; padding:2px 6px; display:flex; align-items:center; gap:6px;">
             <span style="color:#5cf0a5; font-size:14px; font-weight:bold;">TARGET:</span>
             <span id="kristin-compass-text" style="color:#e0f7ea; font-size:14px;">"Dekati Old Thomas (▲ 14m)"</span>
           </div>
           <div style="margin-top:4px; display:flex; align-items:center; gap:6px;">
-            <span class="hud-key-cap" id="quest-hint-key-btn" style="cursor:crosshair; pointer-events:auto; font-size:14px; padding:1px 6px;">[ H ]</span>
+            <span class="hud-key-cap" id="quest-hint-key-btn"
+              style="cursor:crosshair; pointer-events:auto; font-size:14px; padding:1px 6px;">[ H ]</span>
             <span style="color:#92a898; font-size:13px; letter-spacing:1px;">RADIO KRISTIN</span>
           </div>
         </div>
@@ -186,39 +229,34 @@
       </div>
 
       <div class="hud-row" style="align-items: flex-end;">
-        <div class="hud-box" id="hud-wave" style="font-size: 14px; padding: 2px 8px; background: rgba(8,12,10,0.85); border: 1px solid #233529; color: #78a287;">ACT I • ORIENTASI</div>
+        <div class="hud-box" id="hud-wave"
+          style="font-size: 14px; padding: 2px 8px; background: rgba(8,12,10,0.85); border: 1px solid #233529; color: #78a287;">
+          ACT I • ORIENTASI</div>
         <div id="hud-ammo" style="display: none;"></div>
       </div>
     </div>
 
-    <!-- GRAND RETRO PS1 MAIN MENU & MODE SELECTION SYSTEM -->
+    <!-- GRAND RETRO PS1 MAIN MENU (THE LIVING END BACKGROUND) -->
     <div class="menu-panel" id="screen-start">
-      <div class="start-card main-menu-frame">
-        <!-- Retro PS1 Horror Tag -->
-        <div class="menu-retro-tag">PS1 SURVIVAL HORROR &bull; 1997 RETRO EDITION</div>
-
-        <!-- Massive Atmospheric Horror Title -->
-        <h1 class="title-banner">COLD BLOOD ZOMBEY</h1>
-        <div class="sub-banner">THE BLACKWOOD MOORS EXPEDITION &bull; DARK OCCULT INCIDENT</div>
-
-        <!-- SUBVIEW 1: ROOT MAIN MENU -->
-        <div id="menu-view-root" class="menu-subview">
-          <div class="menu-btn-column">
-            <button class="btn-play menu-action-btn" id="btn-menu-play">
-              <span class="btn-arrow">▶</span> MULAI PERMAINAN
-            </button>
-            <button class="btn-play btn-sec menu-action-btn" id="btn-menu-settings">
-              <span class="btn-arrow">⚙</span> PENGATURAN GAME
-            </button>
-            <button class="btn-play btn-sec menu-action-btn" id="btn-menu-controls">
-              <span class="btn-arrow">🎮</span> PANDUAN KONTROL
-            </button>
-          </div>
-          <div class="menu-footer-hint">Gunakan Mouse / Layar Sentuh HP &bull; Tekan [ESC] saat bermain untuk jeda</div>
+      <!-- SUBVIEW 1: ROOT MAIN MENU (BOTTOM-LEFT AS REQUESTED) -->
+      <div id="menu-view-root" class="menu-root-bottom-left">
+        <div class="menu-btn-column">
+          <button class="btn-play menu-action-btn" id="btn-menu-play">
+            <span class="btn-arrow">▶</span> MULAI PERMAINAN
+          </button>
+          <button class="btn-play btn-sec menu-action-btn" id="btn-menu-settings">
+            <span class="btn-arrow">⚙</span> PENGATURAN GAME
+          </button>
+          <button class="btn-play btn-sec menu-action-btn" id="btn-menu-controls">
+            <span class="btn-arrow">🎮</span> PANDUAN KONTROL
+          </button>
         </div>
+        <div class="menu-footer-hint">Gunakan Mouse / Layar Sentuh HP &bull; Tekan [ESC] saat bermain untuk jeda</div>
+      </div>
 
-        <!-- SUBVIEW 2: MODE SELECTION (STORY VS ENDLESS) -->
-        <div id="menu-view-modes" class="menu-subview" style="display: none;">
+      <!-- SUBVIEW 2: MODE SELECTION (MODAL OVERLAY OVER ARTWORK) -->
+      <div id="menu-view-modes" class="menu-modal-backdrop" style="display: none;">
+        <div class="start-card main-menu-frame">
           <div class="mode-select-header">
             <span class="mode-select-title">PILIH MODE PERMAINAN</span>
             <span class="mode-select-subtitle">Pilih gaya bermain yang kamu inginkan untuk bertahan hidup</span>
@@ -234,7 +272,8 @@
                 </div>
                 <div class="mode-card-title">MODE CERITA (STORY MODE)</div>
                 <div class="mode-card-desc">
-                  Investigasi misteri desa Coldbrook. Mulai dari kedatangan mobil pick-up di gerbang desa berkabut, Kristin sebagai pemandu jalan, wawancara warga, hingga wabah neurotoksin biara meletus!
+                  Investigasi misteri desa Coldbrook. Mulai dari kedatangan mobil pick-up di gerbang desa berkabut,
+                  Kristin sebagai pemandu jalan, wawancara warga, hingga wabah neurotoksin biara meletus!
                 </div>
                 <ul class="mode-features-list">
                   <li>✓ Prolog Sinematik Mobil Pick-Up</li>
@@ -257,7 +296,8 @@
                 </div>
                 <div class="mode-card-title">MODE BERTAHAN (ENDLESS MODE)</div>
                 <div class="mode-card-desc">
-                  Aksi tembak instan tanpa henti! Langsung dipersenjatai Shotgun M1887 Putar &amp; amunisi penuh, didampingi Kristin tempur membantai kawanan zombie dan boss pengantin!
+                  Aksi tembak instan tanpa henti! Langsung dipersenjatai Shotgun M1887 Putar &amp; amunisi penuh,
+                  didampingi Kristin tempur membantai kawanan zombie dan boss pengantin!
                 </div>
                 <ul class="mode-features-list">
                   <li>✓ Langsung Bersenjata Shotgun M1887 Putar</li>
@@ -278,9 +318,11 @@
             </button>
           </div>
         </div>
+      </div>
 
-        <!-- SUBVIEW 3: CONTROLS & HOW TO PLAY -->
-        <div id="menu-view-controls" class="menu-subview" style="display: none;">
+      <!-- SUBVIEW 3: CONTROLS & HOW TO PLAY (MODAL OVERLAY OVER ARTWORK) -->
+      <div id="menu-view-controls" class="menu-modal-backdrop" style="display: none;">
+        <div class="start-card main-menu-frame">
           <div class="mode-select-header">
             <span class="mode-select-title">PANDUAN KONTROL PERMAINAN</span>
             <span class="mode-select-subtitle">Daftar tombol keyboard PC dan sentuh smartphone</span>
@@ -311,11 +353,13 @@
 
     <!-- GAME OVER SCREEN -->
     <div class="menu-panel" id="screen-gameover" style="display: none;">
-      <div class="title-banner" style="color: #ff3344; text-shadow: 3px 3px 0 #300, 0 0 25px #b00;">CONSUMED BY THE BLOOD</div>
+      <div class="title-banner" style="color: #ff3344; text-shadow: 3px 3px 0 #300, 0 0 25px #b00;">CONSUMED BY THE
+        BLOOD</div>
       <div class="sub-banner" style="color: #a4454b;" id="go-wave-text">LOST IN THE SNOW</div>
       <div class="scroll-box" style="text-align: center;">
         <div style="font-size: 30px; color: #d6e2eb;" id="go-kills">CRIMSON PURGED: 0</div>
-        <p style="margin-top: 10px; font-size: 17px; color: #7f909e;">Semua 3 nyawa survivor telah musnah. Jiwamu telah ditelan oleh kegelapan hutan salju.</p>
+        <p style="margin-top: 10px; font-size: 17px; color: #7f909e;">Semua 3 nyawa survivor telah musnah. Jiwamu telah
+          ditelan oleh kegelapan hutan salju.</p>
       </div>
       <div style="display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap;">
         <button class="btn-play" id="btn-restart">TRY ONCE MORE</button>
@@ -410,13 +454,15 @@
             <div class="ctrl-item"><span class="ctrl-key">W A S D</span><span class="ctrl-act">GERAK</span></div>
             <div class="ctrl-item"><span class="ctrl-key">SHIFT</span><span class="ctrl-act">LARI CEPAT</span></div>
             <div class="ctrl-item"><span class="ctrl-key">SPACE</span><span class="ctrl-act">MELOMPAT</span></div>
-            <div class="ctrl-item"><span class="ctrl-key">KLIK KIRI</span><span class="ctrl-act">TEMBAK / SERANG</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">KLIK KIRI</span><span class="ctrl-act">TEMBAK / SERANG</span>
+            </div>
             <div class="ctrl-item"><span class="ctrl-key">R</span><span class="ctrl-act">RELOAD</span></div>
             <div class="ctrl-item"><span class="ctrl-key">C</span><span class="ctrl-act">KAMERA FPS / TPS</span></div>
             <div class="ctrl-item"><span class="ctrl-key">E</span><span class="ctrl-act">INTERAKSI / BICARA</span></div>
             <div class="ctrl-item"><span class="ctrl-key">T</span><span class="ctrl-act">PERINTAH KRISTIN</span></div>
             <div class="ctrl-item"><span class="ctrl-key">M</span><span class="ctrl-act">PETA TAKTIS</span></div>
-            <div class="ctrl-item"><span class="ctrl-key">ESC</span><span class="ctrl-act">PENGATURAN / PAUSE</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">ESC</span><span class="ctrl-act">PENGATURAN / PAUSE</span>
+            </div>
           </div>
         </div>
 
@@ -450,16 +496,20 @@
 
           <div class="map-sidebar-legend">
             <!-- ACTIVE SURVIVOR JOURNAL & OBJECTIVE IN MAP -->
-            <div id="map-journal-box" style="background:rgba(12,20,16,0.92); border:1px solid #3d6849; border-left:3px solid #78e08f; padding:10px 12px; border-radius:4px; margin-bottom:12px;">
+            <div id="map-journal-box"
+              style="background:rgba(12,20,16,0.92); border:1px solid #3d6849; border-left:3px solid #78e08f; padding:10px 12px; border-radius:4px; margin-bottom:12px;">
               <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span id="map-journal-chapter" style="color:#78e08f; font-size:14px; font-weight:bold; letter-spacing:1px;">BAB 1: DESA SUNYI</span>
+                <span id="map-journal-chapter"
+                  style="color:#78e08f; font-size:14px; font-weight:bold; letter-spacing:1px;">BAB 1: DESA SUNYI</span>
                 <span style="color:#ffd15c; font-size:13px;">[JURNAL RODRICK]</span>
               </div>
-              <div id="map-journal-title" style="color:#ffffff; font-size:17px; font-weight:bold; margin-top:3px; line-height:1.2;">
+              <div id="map-journal-title"
+                style="color:#ffffff; font-size:17px; font-weight:bold; margin-top:3px; line-height:1.2;">
                 OBJEKTIF 1.1: Cari Tempat Aman &amp; Senjata
               </div>
               <div id="map-journal-desc" style="color:#b2c9b9; font-size:13px; margin-top:4px; line-height:1.25;">
-                "Gerbang Coldbrook dirantai para Devout. Temukan pondok Darrell di timur desa, dia menolak ajaran Father Raksha dan menyimpan senapan."
+                "Gerbang Coldbrook dirantai para Devout. Temukan pondok Darrell di timur desa, dia menolak ajaran Father
+                Raksha dan menyimpan senapan."
               </div>
               <div id="map-journal-loc" style="color:#e0b460; font-size:12px; margin-top:5px;">
                 📍 Lokasi: Pondok Pemburu Darrell (ujung jalan timur, tengkorak babi hutan)
@@ -467,7 +517,7 @@
             </div>
 
             <div class="map-legend-title">KETERANGAN &amp; LOKASI PENTING</div>
-            
+
             <div class="legend-item">
               <span class="legend-icon" style="color: #ffdd33;">📍</span>
               <div>
@@ -546,7 +596,8 @@
 
         <div class="map-dialog-footer">
           <button class="btn-play" id="btn-close-map">KEMBALI BERMAIN [M]</button>
-          <div style="font-size: 15px; color: #8ba2b3; font-family: 'DotGothic16', monospace, sans-serif;">TEKAN [M] ATAU [ESC] UNTUK MEMBUKA / MENUTUP PETA</div>
+          <div style="font-size: 15px; color: #8ba2b3; font-family: 'DotGothic16', monospace, sans-serif;">TEKAN [M]
+            ATAU [ESC] UNTUK MEMBUKA / MENUTUP PETA</div>
         </div>
       </div>
     </div>
@@ -617,4 +668,5 @@
 
   <script type="module" src="/src/main.js"></script>
 </body>
+
 </html>

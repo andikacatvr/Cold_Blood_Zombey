@@ -1102,9 +1102,9 @@ function init() {
   const menuViewControls = document.getElementById('menu-view-controls');
 
   function showMenuView(view) {
-    if (menuViewRoot) menuViewRoot.style.display = (view === 'root') ? 'block' : 'none';
-    if (menuViewModes) menuViewModes.style.display = (view === 'modes') ? 'block' : 'none';
-    if (menuViewControls) menuViewControls.style.display = (view === 'controls') ? 'block' : 'none';
+    if (menuViewRoot) menuViewRoot.style.display = (view === 'root') ? 'flex' : 'none';
+    if (menuViewModes) menuViewModes.style.display = (view === 'modes') ? 'flex' : 'none';
+    if (menuViewControls) menuViewControls.style.display = (view === 'controls') ? 'flex' : 'none';
     if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(2400, 0.4);
   }
 
