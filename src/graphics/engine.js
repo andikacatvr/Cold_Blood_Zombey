@@ -75,6 +75,18 @@ export function applyGraphicFidelity(mode = 'ps1') {
   const w = Math.max(320, Math.round(240 * aspect));
   renderer.setSize(w, h, false);
   camera.aspect = aspect;
+
+  // Adaptive FOV for ultrawide & widescreen aspect ratios
+  // Keeps vertical viewing angle open and prevents claustrophobic vertical cropping
+  if (aspect >= 2.0) {
+    camera.fov = 68;
+  } else if (aspect >= 1.7) {
+    camera.fov = 65;
+  } else if (aspect <= 1.35) {
+    camera.fov = 60;
+  } else {
+    camera.fov = 62;
+  }
   camera.updateProjectionMatrix();
 
   renderer.shadowMap.enabled = false;

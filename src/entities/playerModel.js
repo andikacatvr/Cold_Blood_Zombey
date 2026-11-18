@@ -541,10 +541,10 @@ export function updateHorrorCamera(camera, playerPos, yaw, pitch, dt) {
     playerMeshRoot.position.set(playerPos.x, playerPos.y, playerPos.z);
     playerMeshRoot.rotation.y = yaw;
 
-    // Silent Hill 2 Elevated Over-the-Shoulder Camera position (Scaled for Rodrick's heroic height)
-    const camDist = 2.95;
-    const camHeight = 2.30;
-    const camSideOffset = 0.44;
+    // Resident Evil 4 / Silent Hill 2 Balanced Over-the-Shoulder Camera position
+    const camDist = 3.35;
+    const camHeight = 2.15;
+    const camSideOffset = 0.42;
 
     // In Three.js, with yaw=0 forward is -Z and backward is +Z
     // In TPS mode, camera sits behind player (+Z) and slightly over right shoulder (+X)
@@ -562,9 +562,9 @@ export function updateHorrorCamera(camera, playerPos, yaw, pitch, dt) {
     camera.position.set(targetCamX, targetCamY, targetCamZ);
 
     // Look at target in front of player (towards -Z when yaw=0)
-    const lookAheadDist = 6.0;
+    const lookAheadDist = 6.5;
     const lookTargetX = playerPos.x - sinY * lookAheadDist;
-    const lookTargetY = playerPos.y + 1.85 + Math.sin(pitch) * 2.4;
+    const lookTargetY = playerPos.y + 1.75 + Math.sin(pitch) * 2.4;
     const lookTargetZ = playerPos.z - cosY * lookAheadDist;
 
     camera.lookAt(lookTargetX, lookTargetY, lookTargetZ);
