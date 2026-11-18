@@ -11,6 +11,7 @@ import { getTerrainHeight } from '../world/environment.js';
 export let cameraMode = 'fps'; // Default: Pure FPS (First-Person Shooter)
 export let playerMeshRoot = null;
 export let isRodrickGLBLoaded = false;
+export const RODRICK_SCALE = 1.34; // Perfectly matches Kristin's heroic height (~2.34m)
 let placeholderGroup = null;
 let rodrickGLBScene = null;
 let rodrickTorsoBaseY = 0.893;
@@ -48,6 +49,9 @@ function loadRodrickGLBModel(root) {
   function applyGLB(gltf, src) {
     const charScene = gltf.scene;
     charScene.name = 'Rodrick_GLB_Player_Mesh';
+
+    // Scale Rodrick so his height matches Kristin's heroic stature (~2.34m)
+    charScene.scale.set(RODRICK_SCALE, RODRICK_SCALE, RODRICK_SCALE);
 
     charScene.traverse((child) => {
       if (child.isMesh) {
@@ -368,10 +372,10 @@ export function updateHorrorCamera(camera, playerPos, yaw, pitch, dt) {
     playerMeshRoot.position.set(playerPos.x, playerPos.y, playerPos.z);
     playerMeshRoot.rotation.y = yaw;
 
-    // Silent Hill 2 Elevated Over-the-Shoulder Camera position
-    const camDist = 2.65;
-    const camHeight = 1.95;
-    const camSideOffset = 0.38;
+    // Silent Hill 2 Elevated Over-the-Shoulder Camera position (Scaled for Rodrick's heroic height)
+    const camDist = 2.95;
+    const camHeight = 2.30;
+    const camSideOffset = 0.44;
 
     // In Three.js, with yaw=0 forward is -Z and backward is +Z
     // In TPS mode, camera sits behind player (+Z) and slightly over right shoulder (+X)
@@ -391,14 +395,15 @@ export function updateHorrorCamera(camera, playerPos, yaw, pitch, dt) {
     // Look at target in front of player (towards -Z when yaw=0)
     const lookAheadDist = 6.0;
     const lookTargetX = playerPos.x - sinY * lookAheadDist;
-    const lookTargetY = playerPos.y + 1.45 + Math.sin(pitch) * 2.4;
+    const lookTargetY = playerPos.y + 1.85 + Math.sin(pitch) * 2.4;
     const lookTargetZ = playerPos.z - cosY * lookAheadDist;
 
     camera.lookAt(lookTargetX, lookTargetY, lookTargetZ);
   } else {
-    // FPS Mode
+    // FPS Mode: Eye level positioned at Rodrick's head height (~2.12m) to look straight at Kristin
     playerMeshRoot.visible = false;
-    camera.position.set(playerPos.x, playerPos.y + 1.8, playerPos.z);
+    const eyeHeight = isRodrickGLBLoaded ? 2.12 : 1.8;
+    camera.position.set(playerPos.x, playerPos.y + eyeHeight, playerPos.z);
     camera.rotation.order = 'YXZ';
     camera.rotation.y = yaw;
     camera.rotation.x = pitch;

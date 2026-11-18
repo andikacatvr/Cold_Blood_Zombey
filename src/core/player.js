@@ -538,7 +538,7 @@ export function fireCombatShotgun() {
   const spreadAngle = isSpin ? 0.088 : 0.075;
 
   const originPos = cameraMode === 'tps'
-    ? _tempOrigin.set(playerPos.x, playerPos.y + 1.25, playerPos.z)
+    ? _tempOrigin.set(playerPos.x, playerPos.y + 1.65, playerPos.z)
     : _tempOrigin.copy(cameraRef.position);
 
   for (let pellet = 0; pellet < pelletCount; pellet++) {
