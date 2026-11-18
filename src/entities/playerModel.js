@@ -10,6 +10,11 @@ import { getTerrainHeight } from '../world/environment.js';
 
 export let cameraMode = 'fps'; // Default: Pure FPS (First-Person Shooter)
 export let playerMeshRoot = null;
+export let isRodrickGLBLoaded = false;
+let placeholderGroup = null;
+let rodrickGLBScene = null;
+let rodrickTorsoBaseY = 0.893;
+
 let playerLeftLeg = null;
 let playerRightLeg = null;
 let playerLeftArm = null;
@@ -30,9 +35,90 @@ export function toggleCameraMode() {
   return cameraMode;
 }
 
+function loadRodrickGLBModel(root) {
+  if (typeof THREE === 'undefined' || !THREE.GLTFLoader) {
+    console.warn('[PLAYER] THREE.GLTFLoader unavailable, using placeholder');
+    return;
+  }
+
+  const loader = new THREE.GLTFLoader();
+  const primaryUrl = '/models/rodrick.glb';
+  const fallbackUrl = '/rodrick.glb';
+
+  function applyGLB(gltf, src) {
+    const charScene = gltf.scene;
+    charScene.name = 'Rodrick_GLB_Player_Mesh';
+
+    charScene.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        if (child.material) {
+          child.material.roughness = 0.82;
+          child.material.metalness = 0.06;
+          child.material.needsUpdate = true;
+        }
+      }
+    });
+
+    // Locate hierarchical joints
+    const glbHead = charScene.getObjectByName('Head_Pivot');
+    const glbRightArm = charScene.getObjectByName('Right_Arm_Pivot');
+    const glbLeftArm = charScene.getObjectByName('Left_Arm_Pivot');
+    const glbRightLeg = charScene.getObjectByName('Right_Leg_Pivot');
+    const glbLeftLeg = charScene.getObjectByName('Left_Leg_Pivot');
+    const glbTorsoMesh = charScene.getObjectByName('Torso_Smooth_Mesh');
+
+    // Hide geometric fallback boxes
+    if (placeholderGroup) {
+      placeholderGroup.visible = false;
+    }
+
+    // Rebind animated pivots
+    if (glbHead) playerHead = glbHead;
+    if (glbLeftArm) playerLeftArm = glbLeftArm;
+    if (glbRightArm) {
+      playerRightArm = glbRightArm;
+      if (playerWeaponSocket) {
+        playerWeaponSocket.position.set(0, -0.48, 0.06);
+        playerRightArm.add(playerWeaponSocket);
+      }
+    }
+    if (glbLeftLeg) playerLeftLeg = glbLeftLeg;
+    if (glbRightLeg) playerRightLeg = glbRightLeg;
+    if (glbTorsoMesh) {
+      playerTorso = glbTorsoMesh;
+      rodrickTorsoBaseY = glbTorsoMesh.position.y || 0.893;
+    }
+
+    rodrickGLBScene = charScene;
+    root.add(charScene);
+    isRodrickGLBLoaded = true;
+    console.log(`[PLAYER] rodrick.glb loaded successfully from ${src} as official player model!`);
+  }
+
+  loader.load(
+    primaryUrl,
+    (gltf) => applyGLB(gltf, primaryUrl),
+    undefined,
+    (err) => {
+      console.warn(`[PLAYER] Failed loading ${primaryUrl}, retrying fallback ${fallbackUrl}:`, err);
+      loader.load(
+        fallbackUrl,
+        (gltf) => applyGLB(gltf, fallbackUrl),
+        undefined,
+        (fErr) => console.error('[PLAYER] Could not load rodrick.glb from any location:', fErr)
+      );
+    }
+  );
+}
+
 export function buildSurvivorPlayerModel() {
   const root = new THREE.Group();
   root.name = 'Survivor_Player_Model';
+
+  placeholderGroup = new THREE.Group();
+  placeholderGroup.name = 'Survivor_Placeholder_Mesh';
 
   // Materials
   const jacketOliveMat = new THREE.MeshLambertMaterial({ color: 0x3d4d38, flatShading: false });
@@ -145,7 +231,7 @@ export function buildSurvivorPlayerModel() {
   playerRightArm.add(playerWeaponSocket);
   playerTorso.add(playerRightArm);
 
-  root.add(playerTorso);
+  placeholderGroup.add(playerTorso);
 
   // 5. Left Leg (Hip Joint pivot at y = 0.95)
   playerLeftLeg = new THREE.Group();
@@ -166,7 +252,7 @@ export function buildSurvivorPlayerModel() {
   lBoot.castShadow = true;
   playerLeftLeg.add(lBoot);
 
-  root.add(playerLeftLeg);
+  placeholderGroup.add(playerLeftLeg);
 
   // 6. Right Leg (Hip Joint pivot at y = 0.95)
   playerRightLeg = new THREE.Group();
@@ -187,9 +273,13 @@ export function buildSurvivorPlayerModel() {
   rBoot.castShadow = true;
   playerRightLeg.add(rBoot);
 
-  root.add(playerRightLeg);
-  root.visible = false; // Default: hidden for pure FPS view
+  placeholderGroup.add(playerRightLeg);
+  root.add(placeholderGroup);
 
+  // Load official Rodrick GLB asset
+  loadRodrickGLBModel(root);
+
+  root.visible = false; // Default: hidden for pure FPS view
   playerMeshRoot = root;
   return root;
 }
@@ -212,32 +302,50 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
   }
 
   // Locomotion Stride Kinematics
+  const baseY = isRodrickGLBLoaded ? rodrickTorsoBaseY : 0.95;
+
   if (isMoving) {
     const freq = isSprinting ? 12.5 : 8.5;
     const amp = isSprinting ? 0.75 : 0.55;
     walkTime += dt * freq;
 
     const stride = Math.sin(walkTime);
-    playerLeftLeg.rotation.x = stride * amp;
-    playerRightLeg.rotation.x = -stride * amp;
+    if (playerLeftLeg) playerLeftLeg.rotation.x = stride * amp;
+    if (playerRightLeg) playerRightLeg.rotation.x = -stride * amp;
 
-    // Counter arm swinging
-    playerLeftArm.rotation.x = -stride * 0.45;
-    playerRightArm.rotation.x = -0.35 + stride * 0.18;
+    // Counter arm swinging & weapon posture
+    if (activeWeapon !== 'unarmed') {
+      if (playerRightArm) playerRightArm.rotation.x = -0.68 + stride * 0.08;
+      if (playerLeftArm) playerLeftArm.rotation.x = -0.55 - stride * 0.08;
+    } else {
+      if (playerLeftArm) playerLeftArm.rotation.x = -stride * 0.45;
+      if (playerRightArm) playerRightArm.rotation.x = stride * 0.45;
+    }
 
     // Hip bobbing & subtle sway
-    playerTorso.position.y = 0.95 + Math.abs(stride) * 0.04;
-    playerTorso.rotation.y = Math.sin(walkTime) * 0.06;
+    if (playerTorso) {
+      playerTorso.position.y = baseY + Math.abs(stride) * 0.035;
+      playerTorso.rotation.y = Math.sin(walkTime) * 0.05;
+    }
   } else {
     // Idle breathing
     walkTime += dt * 2.0;
     const breath = Math.sin(walkTime);
-    playerLeftLeg.rotation.x = THREE.MathUtils.lerp(playerLeftLeg.rotation.x, 0, 0.15);
-    playerRightLeg.rotation.x = THREE.MathUtils.lerp(playerRightLeg.rotation.x, 0, 0.15);
-    playerLeftArm.rotation.x = THREE.MathUtils.lerp(playerLeftArm.rotation.x, 0.05, 0.15);
-    playerRightArm.rotation.x = THREE.MathUtils.lerp(playerRightArm.rotation.x, -0.30, 0.15);
-    playerTorso.position.y = 0.95 + breath * 0.008;
-    playerTorso.rotation.y = THREE.MathUtils.lerp(playerTorso.rotation.y, 0, 0.1);
+    if (playerLeftLeg) playerLeftLeg.rotation.x = THREE.MathUtils.lerp(playerLeftLeg.rotation.x, 0, 0.15);
+    if (playerRightLeg) playerRightLeg.rotation.x = THREE.MathUtils.lerp(playerRightLeg.rotation.x, 0, 0.15);
+
+    if (activeWeapon !== 'unarmed') {
+      if (playerRightArm) playerRightArm.rotation.x = THREE.MathUtils.lerp(playerRightArm.rotation.x, -0.68, 0.15);
+      if (playerLeftArm) playerLeftArm.rotation.x = THREE.MathUtils.lerp(playerLeftArm.rotation.x, -0.55, 0.15);
+    } else {
+      if (playerLeftArm) playerLeftArm.rotation.x = THREE.MathUtils.lerp(playerLeftArm.rotation.x, 0.05, 0.15);
+      if (playerRightArm) playerRightArm.rotation.x = THREE.MathUtils.lerp(playerRightArm.rotation.x, -0.05, 0.15);
+    }
+
+    if (playerTorso) {
+      playerTorso.position.y = baseY + breath * 0.008;
+      playerTorso.rotation.y = THREE.MathUtils.lerp(playerTorso.rotation.y, 0, 0.1);
+    }
   }
 }
 

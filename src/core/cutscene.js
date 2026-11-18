@@ -108,6 +108,11 @@ const CUTSCENE_STAGES = [
   {
     start: 0.0,
     end: 7.0,
+    camStart: new THREE.Vector3(5.2, 2.6, 12.0),
+    camEnd: new THREE.Vector3(2.5, 1.8, 15.5),
+    lookStart: new THREE.Vector3(0.0, 1.6, 17.5),
+    lookEnd: new THREE.Vector3(0.0, 1.5, 17.5),
+    subtitle: `<span style="color:#a8c4da; font-size:15px; letter-spacing:2px; font-family:serif;">COLDBROOK VILLAGE — BLACKWOOD MOORS, ENGLAND</span><br><span style="color:#d8b26e; font-size:21px; font-weight:bold;">RODRICK (Perekam Suara):</span> <i>*suara kaset berderak*</i> "Catatan lapangan hari pertama. Mobil bak tua ini menurunkan kita tepat di gerbang Coldbrook. Dua minggu riset cerita rakyat dan catatan gereja tua..."<br><span style="color:#5cf0a5; font-size:20px; font-weight:bold;">KRISTIN:</span> "Dan dua minggu penelitian sampel air sumur! Jangan lupa riset lingkungan gue juga masuk publikasi, Rod."`,
     camStart: new THREE.Vector3(0.0, 2.2, 4.0),
     camEnd: new THREE.Vector3(2.2, 1.8, 14.5),
     lookStart: new THREE.Vector3(0.0, 3.6, 18.0),
