@@ -264,19 +264,19 @@ html {
 
 /* GRAND RETRO PS1 / THE LIVING END MAIN MENU */
 #screen-start {
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  z-index: 30 !important;
-  background: #05080b url('/textures/The_Living_End.png') no-repeat center center !important;
-  background-size: cover !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: flex-end !important;
-  align-items: flex-start !important;
-  padding: 0 !important;
-  overflow: hidden !important;
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 30;
+  background: #05080b url('/textures/The_Living_End.png') no-repeat center center;
+  background-size: cover;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 0;
+  overflow: hidden;
 }
 
 /* Subtle dark vignette so bottom-left buttons and artwork harmonize */
@@ -378,16 +378,16 @@ html {
 
 /* Modal overlay backdrop for subviews (modes & controls) */
 .menu-modal-backdrop {
-  position: absolute !important;
-  inset: 0 !important;
-  background: rgba(4, 6, 5, 0.85) !important;
-  backdrop-filter: blur(4px) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 45 !important;
-  padding: 20px !important;
-  box-sizing: border-box !important;
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 6, 5, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 45;
+  padding: 20px;
+  box-sizing: border-box;
   animation: menuBackdropFade 0.25s ease-out;
 }
 
