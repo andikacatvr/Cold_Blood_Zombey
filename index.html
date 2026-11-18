@@ -187,34 +187,19 @@
         <div id="hud-score"></div>
       </div>
 
-      <!-- ACTIVE SURVIVAL OBJECTIVE / QUEST TRACKER (STREAMLINED) -->
-      <div id="hud-quest-panel"
-        style="display:none; position:absolute; top:72px; left:22px; z-index:25; pointer-events:none; font-family:'Redaction 70', serif, monospace; max-width:320px;">
-        <div
-          style="background:rgba(8,12,10,0.92); border-left:3px solid #78e08f; border-top:1px solid #233e2b; border-right:1px solid #233e2b; border-bottom:1px solid #233e2b; padding:6px 12px; border-radius:3px; box-shadow:0 0 14px rgba(0,0,0,0.85);">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span id="quest-chapter-tag"
-              style="color:#78e08f; font-size:15px; letter-spacing:1px; font-weight:bold;">BAB 1: DESA SUNYI</span>
-            <span style="color:#8ca693; font-size:13px;">[JURNAL]</span>
-          </div>
-          <div id="quest-title-text"
-            style="color:#ffffff; font-size:18px; margin-top:2px; line-height:1.2; text-shadow:0 0 8px rgba(120,224,143,0.4);">
-            OBJEKTIF 1.1: Cari Tempat Aman &amp; Senjata
-          </div>
-          <div id="quest-desc-text" style="color:#b2c9b9; font-size:14px; margin-top:2px; line-height:1.2;">
-            "Gerbang Coldbrook dirantai. Temukan pondok Darrell di timur desa."
-          </div>
-          <div id="kristin-live-compass"
-            style="margin-top:5px; background:rgba(18,36,26,0.92); border:1px solid #4a825b; border-left:3px solid #5cf0a5; border-radius:2px; padding:2px 6px; display:flex; align-items:center; gap:6px;">
-            <span style="color:#5cf0a5; font-size:14px; font-weight:bold;">TARGET:</span>
-            <span id="kristin-compass-text" style="color:#e0f7ea; font-size:14px;">"Dekati Old Thomas (▲ 14m)"</span>
-          </div>
-          <div style="margin-top:4px; display:flex; align-items:center; gap:6px;">
-            <span class="hud-key-cap" id="quest-hint-key-btn"
-              style="cursor:crosshair; pointer-events:auto; font-size:14px; padding:1px 6px;">[ H ]</span>
-            <span style="color:#92a898; font-size:13px; letter-spacing:1px;">RADIO KRISTIN</span>
-          </div>
+      <!-- ACTIVE SURVIVAL OBJECTIVE / QUEST TRACKER (MINIMALIST & CLEAN) -->
+      <div id="hud-quest-panel" class="tactical-quest-hud" style="display:none;">
+        <div class="tac-quest-row">
+          <span class="tac-quest-badge">MISI</span>
+          <span id="quest-title-text" class="tac-quest-title">Wawancara Warga (0/3)</span>
         </div>
+        <div class="tac-quest-row tac-quest-nav">
+          <span id="kristin-compass-text" class="tac-quest-compass">▶ Pondok Darrell (14m)</span>
+          <span class="hud-key-cap tac-quest-hint" id="quest-hint-key-btn" title="Minta Petunjuk Kristin [H]">[ H ]</span>
+        </div>
+        <!-- Hidden fallbacks for legacy references -->
+        <span id="quest-chapter-tag" style="display: none;"></span>
+        <div id="quest-desc-text" style="display: none;"></div>
       </div>
 
       <!-- IN-GAME TACTICAL RADAR MINIMAP -->

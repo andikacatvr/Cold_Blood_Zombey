@@ -2005,6 +2005,82 @@ input[type=range]::-webkit-slider-thumb {
   border-radius: 0 !important;
 }
 
+/* Minimalist Tactical Quest Strip */
+#hud-quest-panel.tactical-quest-hud {
+  position: absolute;
+  top: 72px;
+  left: 22px;
+  z-index: 25;
+  display: none;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 320px;
+  background: rgba(8, 14, 11, 0.88);
+  border: 1px solid #1f3526;
+  border-left: 3px solid #00ff66;
+  padding: 5px 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85);
+  font-family: 'Redaction 70', serif, monospace;
+  pointer-events: none;
+  user-select: none;
+}
+
+.tac-quest-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tac-quest-badge {
+  background: #14281c;
+  color: #00ff66;
+  border: 1px solid #2e593c;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 1px 5px;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+.tac-quest-title {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tac-quest-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.tac-quest-compass {
+  color: #a5d8b8;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tac-quest-hint {
+  font-size: 11px !important;
+  padding: 0 4px !important;
+  color: #78e08f !important;
+  background: #14281c !important;
+  border: 1px solid #2e593c !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  flex-shrink: 0;
+}
+
 /* =========================================================================
    PS2 TACTICAL HUD (007 NIGHTFIRE / BLACK STYLE)
    ========================================================================= */

@@ -728,10 +728,8 @@ export function nextWave() {
   if (state.gameMode === 'endless') {
     const chapterEl = document.getElementById('quest-chapter-tag');
     const titleEl = document.getElementById('quest-title-text');
-    const descEl = document.getElementById('quest-desc-text');
-    if (chapterEl) chapterEl.textContent = 'MODE BERTAHAN: HORDE SALJU';
-    if (titleEl) titleEl.textContent = `GELOMBANG ${nw}: BERSIHKAN ZOMBIE`;
-    if (descEl) descEl.textContent = `"Gelombang ${nw} telah tiba! Tetap waspada terhadap sprinter dan mutant biara!"`;
+    if (chapterEl) chapterEl.textContent = 'MODE BERTAHAN';
+    if (titleEl) titleEl.textContent = `GELOMBANG ${nw}: HABISI ZOMBIE`;
   }
 
   updateHUD(state);
@@ -901,12 +899,10 @@ export function startWinterSurvive(scene, mode = 'story') {
     // Endless Mode Quest HUD
     const chapterEl = document.getElementById('quest-chapter-tag');
     const titleEl = document.getElementById('quest-title-text');
-    const descEl = document.getElementById('quest-desc-text');
     const compassEl = document.getElementById('kristin-compass-text');
-    if (chapterEl) chapterEl.textContent = 'MODE BERTAHAN: HORDE SALJU';
+    if (chapterEl) chapterEl.textContent = 'MODE BERTAHAN';
     if (titleEl) titleEl.textContent = 'GELOMBANG 1: BERSIHKAN ZOMBIE';
-    if (descEl) descEl.textContent = '"Gunakan Shotgun dan persenjataanmu untuk menahan gempuran kawanan zombie dan monster pengantin!"';
-    if (compassEl) compassEl.textContent = '"Waspada, zombie menyerang dari segala arah!"';
+    if (compassEl) compassEl.textContent = 'Waspada, zombie menyerang!';
 
     updateHUD(state);
     updateTouchControlsVisibility();

@@ -185,7 +185,7 @@ function updateSimulation(dt) {
       else if (diff < -0.4 && diff > -2.0) arrow = '◀ Kiri';
 
       const locName = actObj.location ? actObj.location.split('(')[0].trim() : 'Tujuan';
-      compassEl.textContent = `"${arrow} ke ${locName} (${dist}m)"`;
+      compassEl.textContent = `${arrow} ke ${locName} (${dist}m)`;
     }
   }
 
