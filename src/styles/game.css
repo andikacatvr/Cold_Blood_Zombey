@@ -603,19 +603,19 @@
     }
     .settings-dialog {
       width: 95%;
-      max-width: 680px;
+      max-width: 640px;
       max-height: 88vh;
-      background: #0c1015;
-      border: 2px solid #8e1b24;
-      box-shadow: 0 10px 45px rgba(0, 0, 0, 0.95), 0 0 30px rgba(220, 30, 40, 0.3);
-      border-radius: 6px;
+      background: #0b0e13;
+      border: 2px solid #4a5765;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.95);
+      border-radius: 4px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
       animation: modalFadeIn 0.2s ease-out;
     }
     @keyframes modalFadeIn {
-      from { opacity: 0; transform: scale(0.96); }
+      from { opacity: 0; transform: scale(0.97); }
       to { opacity: 1; transform: scale(1); }
     }
     .settings-header {
@@ -623,59 +623,56 @@
       justify-content: space-between;
       align-items: center;
       padding: 12px 20px 10px;
-      background: rgba(22, 10, 14, 0.96);
-      border-bottom: 2px solid #5a141b;
+      background: #13181f;
+      border-bottom: 2px solid #33404d;
       flex-shrink: 0;
     }
     .settings-title {
       font-family: 'Special Elite', cursive, monospace;
-      font-size: 26px;
-      color: #ff3a4b;
-      letter-spacing: 3px;
-      text-shadow: 2px 2px 0 #000, 0 0 15px rgba(255, 40, 60, 0.6);
+      font-size: 24px;
+      color: #e4ecf4;
+      letter-spacing: 2.5px;
       margin-bottom: 1px;
     }
     .settings-subtitle {
-      font-size: 15px;
+      font-size: 13px;
       letter-spacing: 1.5px;
-      color: #8e9fae;
+      color: #788796;
       text-transform: uppercase;
     }
     .settings-close-x {
-      background: #201014;
-      border: 1px solid #7a1d26;
-      color: #ff4a5a;
-      font-size: 20px;
-      width: 32px;
-      height: 32px;
+      background: #182028;
+      border: 1px solid #42505e;
+      color: #cad6e2;
+      font-size: 17px;
+      padding: 3px 10px;
       cursor: pointer;
-      border-radius: 4px;
+      border-radius: 3px;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.15s ease;
-      font-family: monospace;
-      font-weight: bold;
+      font-family: 'VT323', monospace;
+      letter-spacing: 1px;
     }
     .settings-close-x:hover {
-      background: #c81d28;
-      border-color: #ff4a5a;
+      background: #283442;
+      border-color: #7b8e9e;
       color: #ffffff;
-      transform: scale(1.08);
     }
     .settings-box {
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 8px 20px 16px;
-      background: rgba(10, 13, 17, 0.95);
+      padding: 8px 22px 16px;
+      background: #0a0d12;
       margin-bottom: 0;
       width: 100%;
       box-sizing: border-box;
       border: none;
       box-shadow: none;
     }
-    /* Custom sleek crimson scrollbar */
+    /* Monochromatic PS1 slate scrollbar */
     .settings-box::-webkit-scrollbar {
       width: 6px;
     }
@@ -683,19 +680,19 @@
       background: #080b0f;
     }
     .settings-box::-webkit-scrollbar-thumb {
-      background: #8e1b24;
+      background: #34404d;
       border-radius: 3px;
     }
     .settings-box::-webkit-scrollbar-thumb:hover {
-      background: #bf2430;
+      background: #4c5d6e;
     }
-    .settings-section-header {
-      font-size: 17px;
-      color: #ff9944;
+    .settings-section-divider {
+      font-size: 16px;
+      color: #8293a3;
       letter-spacing: 2px;
-      padding: 10px 0 3px;
+      padding: 12px 0 4px;
       margin-top: 6px;
-      border-bottom: 1px solid rgba(255, 120, 40, 0.35);
+      border-bottom: 1px solid #222d37;
       text-transform: uppercase;
       font-weight: bold;
     }
@@ -703,8 +700,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(80, 25, 30, 0.35);
+      padding: 9px 0;
+      border-bottom: 1px solid #1a222a;
       font-size: 20px;
       letter-spacing: 1px;
     }
@@ -712,17 +709,10 @@
       border-bottom: none;
     }
     .setting-label {
-      color: #cad8e3;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      max-width: 65%;
-    }
-    .setting-desc {
-      font-size: 13px;
-      color: #7b8e9d;
-      letter-spacing: 0.5px;
-      line-height: 1.25;
+      color: #cad6e2;
+      font-family: 'VT323', monospace;
+      font-size: 21px;
+      letter-spacing: 1px;
     }
     .setting-ctrl {
       display: flex;
@@ -732,83 +722,129 @@
     .setting-val-badge {
       min-width: 48px;
       text-align: right;
-      color: #ff4a5a;
-      font-size: 21px;
+      color: #e2ecf4;
+      font-size: 20px;
       font-family: 'VT323', monospace;
     }
-    /* Controls Grid Layout */
-    .controls-grid {
+    /* Simple Controls Grid */
+    .controls-simple-list {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 6px;
+      gap: 5px 14px;
       padding-top: 8px;
     }
-    .ctrl-card {
-      background: rgba(16, 22, 28, 0.85);
-      border: 1px solid #2d3e4e;
-      padding: 5px 10px;
-      font-size: 16px;
-      color: #d0dee8;
+    .ctrl-item {
       display: flex;
       align-items: center;
-      gap: 8px;
-      border-radius: 3px;
+      justify-content: space-between;
+      padding: 4px 10px;
+      background: #12171e;
+      border: 1px solid #24303c;
+      border-radius: 2px;
+    }
+    .ctrl-key {
+      color: #ffffff;
+      font-weight: bold;
+      letter-spacing: 1px;
+      font-family: 'VT323', monospace;
+      font-size: 18px;
+    }
+    .ctrl-act {
+      color: #8090a0;
+      letter-spacing: 0.5px;
+      font-size: 16px;
+      font-family: 'VT323', monospace;
     }
     /* Fixed Modal Footer */
     .settings-footer {
       display: flex;
       gap: 14px;
       justify-content: center;
-      padding: 10px 20px;
-      background: rgba(14, 8, 11, 0.98);
-      border-top: 2px solid #5a141b;
+      padding: 12px 20px;
+      background: #11161d;
+      border-top: 2px solid #33404d;
       flex-shrink: 0;
     }
     .settings-footer .btn-play {
-      font-size: 22px;
-      padding: 6px 26px;
+      background: #1c2530 !important;
+      border: 1px solid #546678 !important;
+      color: #ffffff !important;
+      font-size: 20px;
+      padding: 6px 24px;
       letter-spacing: 2px;
+      box-shadow: none !important;
+      text-shadow: none !important;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .settings-footer .btn-play:hover {
+      background: #2b3947 !important;
+      border-color: #8fa5ba !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 10px rgba(180, 205, 230, 0.25) !important;
+    }
+    .settings-footer .btn-sec {
+      background: transparent !important;
+      border: 1px solid #384654 !important;
+      color: #8696a6 !important;
+      font-size: 18px;
+      padding: 6px 18px;
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+    .settings-footer .btn-sec:hover {
+      background: #18212a !important;
+      border-color: #586a7d !important;
+      color: #d0dae2 !important;
     }
     /* Retro PS1 Slider */
     input[type=range] {
       -webkit-appearance: none;
       appearance: none;
       width: 140px;
-      height: 8px;
-      background: #192027;
-      border: 1px solid #5b3036;
+      height: 6px;
+      background: #1c242c;
+      border: 1px solid #445160;
       outline: none;
       cursor: pointer;
     }
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 16px;
-      height: 20px;
-      background: #e63946;
+      width: 14px;
+      height: 18px;
+      background: #d4dfe8;
       border: 1px solid #ffffff;
       cursor: pointer;
-      box-shadow: 0 0 8px #ff2233;
+      box-shadow: none;
     }
     .btn-group {
       display: flex;
       gap: 6px;
     }
     .btn-opt {
-      background: #141a20;
-      border: 1px solid #4a3436;
-      color: #9cb0bf;
+      background: #141a22;
+      border: 1px solid #384654;
+      color: #8293a3;
       font-family: 'VT323', monospace;
-      font-size: 18px;
+      font-size: 19px;
       padding: 3px 12px;
       cursor: pointer;
       transition: all 0.15s ease;
+      border-radius: 2px;
+    }
+    .btn-opt:hover {
+      background: #1e2732;
+      border-color: #56687a;
+      color: #cdd9e4;
     }
     .btn-opt.active {
-      background: #871822;
-      border-color: #ff3344;
-      color: #ffffff;
-      box-shadow: 0 0 10px rgba(230, 40, 50, 0.5);
+      background: #e2ecf4 !important;
+      border-color: #ffffff !important;
+      color: #0a0e13 !important;
+      box-shadow: none !important;
+      font-weight: bold;
     }
     .btn-sec {
       background: #23313d;

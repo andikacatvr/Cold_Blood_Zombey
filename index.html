@@ -300,28 +300,22 @@
       </div>
     </div>
 
-    <!-- SETTINGS MODAL DIALOG -->
+    <!-- SETTINGS MODAL DIALOG (SIMPLE RETRO PS1 / RESIDENT EVIL CONFIG) -->
     <div id="screen-settings" class="settings-modal-backdrop">
       <div class="settings-dialog">
         <!-- MODAL HEADER -->
         <div class="settings-header">
           <div>
-            <div class="settings-title">⚙ PENGATURAN GAME</div>
-            <div class="settings-subtitle">KONFIGURASI SISTEM SURVIVOR &bull; SILENT HILL AESTHETIC</div>
+            <div class="settings-title">OPTION / CONFIGURATION</div>
+            <div class="settings-subtitle">SURVIVAL SYSTEM SETTINGS</div>
           </div>
-          <button class="settings-close-x" id="btn-close-settings-x" title="Tutup Pengaturan (ESC)">✕</button>
+          <button class="settings-close-x" id="btn-close-settings-x" title="Tutup Pengaturan (ESC)">[ ESC ]</button>
         </div>
 
         <!-- SCROLLABLE SETTINGS BODY -->
         <div class="settings-box">
-          <!-- SECTION 1: AUDIO & SISTEM -->
-          <div class="settings-section-header">AUDIO &amp; SISTEM KONTROL</div>
-
           <div class="setting-row">
-            <div class="setting-label">
-              <span>VOLUME SUARA (AUDIO SFX, ANGIN &amp; LONCENG)</span>
-              <span class="setting-desc">Keras/lemahnya audio desiran angin, lonceng misterius, suara air, dan jeritan zombie</span>
-            </div>
+            <div class="setting-label">VOLUME SUARA</div>
             <div class="setting-ctrl">
               <input type="range" id="setting-volume" min="0" max="100" step="5" value="80">
               <span class="setting-val-badge" id="val-volume">80%</span>
@@ -329,10 +323,7 @@
           </div>
 
           <div class="setting-row">
-            <div class="setting-label">
-              <span>SENSITIVITAS MOUSE &amp; SENTUH (SENSITIVITY)</span>
-              <span class="setting-desc">Kecepatan putaran sudut pandang kamera saat menggerakkan mouse atau geser layar HP</span>
-            </div>
+            <div class="setting-label">SENSITIVITAS KAMERA</div>
             <div class="setting-ctrl">
               <input type="range" id="setting-sens" min="0.2" max="2.5" step="0.1" value="1.0">
               <span class="setting-val-badge" id="val-sens">1.0x</span>
@@ -340,10 +331,7 @@
           </div>
 
           <div class="setting-row">
-            <div class="setting-label">
-              <span>TOMBOL KONTROL HP (TOUCH CONTROLS)</span>
-              <span class="setting-desc">Tampilkan analog virtual &amp; tombol aksi sentuh untuk bermain di smartphone</span>
-            </div>
+            <div class="setting-label">TOMBOL KONTROL HP</div>
             <div class="setting-ctrl">
               <div class="btn-group" id="group-touch">
                 <button class="btn-opt active" data-touch="auto">OTOMATIS</button>
@@ -354,23 +342,14 @@
           </div>
 
           <div class="setting-row">
-            <div class="setting-label">
-              <span>MODE LAYAR PENUH (FULLSCREEN)</span>
-              <span class="setting-desc">Perbesar ke layar penuh untuk pengalaman horor maksimal</span>
-            </div>
+            <div class="setting-label">MODE LAYAR</div>
             <div class="setting-ctrl">
-              <button class="btn-opt" id="btn-fullscreen">⛶ LAYAR PENUH</button>
+              <button class="btn-opt" id="btn-fullscreen">LAYAR PENUH</button>
             </div>
           </div>
 
-          <!-- SECTION 2: GRAFIK & TAMPILAN -->
-          <div class="settings-section-header">GRAFIK &amp; VISUAL HOROR</div>
-
           <div class="setting-row">
-            <div class="setting-label">
-              <span>EFEK SCANLINES CRT RETRO PS1</span>
-              <span class="setting-desc">Garis scanline dan vignette layar tabung jadul 1997</span>
-            </div>
+            <div class="setting-label">CRT SCANLINES</div>
             <div class="setting-ctrl">
               <div class="btn-group" id="group-crt">
                 <button class="btn-opt active" data-crt="true">AKTIF</button>
@@ -380,27 +359,18 @@
           </div>
 
           <div class="setting-row">
-            <div class="setting-label">
-              <span>WARNA RETIKEL BIDIKAN (CROSSHAIR)</span>
-              <span class="setting-desc">Pilihan warna garis bidik penargetan di tengah layar</span>
-            </div>
+            <div class="setting-label">WARNA RETIKEL</div>
             <div class="setting-ctrl">
               <div class="btn-group" id="group-cross">
-                <button class="btn-opt active" data-color="#c5d5e2" style="color: #c5d5e2;">PUTIH</button>
-                <button class="btn-opt" data-color="#ff3344" style="color: #ff3344;">MERAH</button>
-                <button class="btn-opt" data-color="#39ff14" style="color: #39ff14;">HIJAU</button>
+                <button class="btn-opt active" data-color="#c5d5e2">PUTIH</button>
+                <button class="btn-opt" data-color="#ff3344">MERAH</button>
+                <button class="btn-opt" data-color="#39ff14">HIJAU</button>
               </div>
             </div>
           </div>
 
-          <!-- SECTION 3: GAMEPLAY & ARSENAL -->
-          <div class="settings-section-header">GAMEPLAY &amp; ARSENAL SENJATA</div>
-
           <div class="setting-row">
-            <div class="setting-label">
-              <span>TINGKAT KESULITAN (DIFFICULTY)</span>
-              <span class="setting-desc">Mudah (Damage -30%), Normal, Sulit (Damage +40% &amp; mutant lebih agresif)</span>
-            </div>
+            <div class="setting-label">TINGKAT KESULITAN</div>
             <div class="setting-ctrl">
               <div class="btn-group" id="group-diff">
                 <button class="btn-opt" data-diff="easy">MUDAH</button>
@@ -410,20 +380,19 @@
             </div>
           </div>
 
-          <!-- SECTION 4: PANDUAN KONTROL & TOMBOL (COMPACT GRID) -->
-          <div class="settings-section-header">PANDUAN KONTROL KEYBOARD &amp; SMARTPHONE</div>
-          <div class="controls-grid">
-            <div class="ctrl-card"><span class="key-badge">W A S D</span> Gerak Karakter</div>
-            <div class="ctrl-card"><span class="key-badge">SHIFT</span> Lari Cepat (Sprint)</div>
-            <div class="ctrl-card"><span class="key-badge">SPACE</span> Melompat</div>
-            <div class="ctrl-card"><span class="key-badge">L-CLICK</span> Tembak Shotgun Putar</div>
-            <div class="ctrl-card"><span class="key-badge">R</span> Reload Peluru Shells</div>
-            <div class="ctrl-card"><span class="key-badge">C</span> Toggle Kamera (FPS / TPS)</div>
-            <div class="ctrl-card"><span class="key-badge">T</span> Perintah Kristin: Ikuti / Diam</div>
-            <div class="ctrl-card"><span class="key-badge">E</span> Dialog dengan Kristin</div>
-            <div class="ctrl-card"><span class="key-badge">M</span> Buka Peta Taktis (Map)</div>
-            <div class="ctrl-card"><span class="key-badge">ESC</span> Pause / Buka Pengaturan</div>
-            <div class="ctrl-card" style="grid-column: 1 / -1; border-color: #3d6849; background: rgba(18, 30, 22, 0.85);"><span class="key-badge" style="background:#22442c; color:#9de8b7; border-color:#4a825b;">📱 SMARTPHONE HP</span> Analog Kiri = Gerak | Geser Kanan Layar = Arah Kamera / Bidik | Tombol Kanan = Tembak, Reload, Lompat, Kristin, Peta</div>
+          <!-- KONTROL / BUTTON CONFIG (SIMPLE PS1 STYLE) -->
+          <div class="settings-section-divider">PANDUAN TOMBOL (CONTROLS)</div>
+          <div class="controls-simple-list">
+            <div class="ctrl-item"><span class="ctrl-key">W A S D</span><span class="ctrl-act">GERAK</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">SHIFT</span><span class="ctrl-act">LARI CEPAT</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">SPACE</span><span class="ctrl-act">MELOMPAT</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">KLIK KIRI</span><span class="ctrl-act">TEMBAK / SERANG</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">R</span><span class="ctrl-act">RELOAD</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">C</span><span class="ctrl-act">KAMERA FPS / TPS</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">E</span><span class="ctrl-act">INTERAKSI / BICARA</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">T</span><span class="ctrl-act">PERINTAH KRISTIN</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">M</span><span class="ctrl-act">PETA TAKTIS</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">ESC</span><span class="ctrl-act">PENGATURAN / PAUSE</span></div>
           </div>
         </div>
 
