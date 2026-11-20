@@ -460,10 +460,10 @@ function createKristinFaceTexture() {
   tex.minFilter = THREE.LinearFilter;
   tex.magFilter = THREE.LinearFilter;
 
-  // Asynchronously try loading `/textures/kristin_face_hd.png` to blend if available
+  // Asynchronously try loading `/textures/kristin_face.png` to blend if available
   if (THREE.TextureLoader) {
     const imgLoader = new THREE.TextureLoader();
-    imgLoader.load('/textures/kristin_face_hd.png', (loadedTex) => {
+    imgLoader.load('/textures/kristin_face.png', (loadedTex) => {
       if (loadedTex && loadedTex.image) {
         loadedTex.wrapS = THREE.ClampToEdgeWrapping;
         loadedTex.wrapT = THREE.ClampToEdgeWrapping;
@@ -523,18 +523,25 @@ function buildCivicPassengers() {
   const rHeadGroup = new THREE.Group();
   rHeadGroup.position.set(0, 0.50, 0.02);
 
-  const rHead = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.20, 0.18), rodrickSkinMat);
+  // Smooth rounded head base (cylindrical skull instead of sharp cube)
+  const rHead = new THREE.Mesh(new THREE.CylinderGeometry(0.088, 0.082, 0.20, 16), rodrickSkinMat);
   rHeadGroup.add(rHead);
 
   // Rodrick's textured expressive face on front head plane
-  const rFaceGeo = new THREE.PlaneGeometry(0.178, 0.198);
+  const rFaceGeo = new THREE.PlaneGeometry(0.174, 0.198);
   const rFaceMat = new THREE.MeshLambertMaterial({ map: createRodrickFaceTexture(), transparent: false });
   const rFaceMesh = new THREE.Mesh(rFaceGeo, rFaceMat);
-  rFaceMesh.position.set(0, 0, 0.091);
+  rFaceMesh.position.set(0, 0, 0.089);
   rHeadGroup.add(rFaceMesh);
 
-  const rHair = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.10, 0.20), rodrickHairMat);
-  rHair.position.set(0, 0.07, -0.01);
+  // 3D Nose bridge
+  const rNose = new THREE.Mesh(new THREE.BoxGeometry(0.026, 0.052, 0.038), rodrickSkinMat);
+  rNose.position.set(0, -0.01, 0.098);
+  rHeadGroup.add(rNose);
+
+  // 3D Hair cap with volume
+  const rHair = new THREE.Mesh(new THREE.CylinderGeometry(0.098, 0.092, 0.12, 16), rodrickHairMat);
+  rHair.position.set(0, 0.06, -0.01);
   rHeadGroup.add(rHair);
 
   driverGroup.add(rHeadGroup);
@@ -606,7 +613,8 @@ function buildCivicPassengers() {
   const kHeadGroup = new THREE.Group();
   kHeadGroup.position.set(0, 0.49, 0.02);
 
-  const kHead = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.19, 0.16), kristinSkinMat);
+  // Smooth rounded head base (cylindrical skull instead of sharp cube)
+  const kHead = new THREE.Mesh(new THREE.CylinderGeometry(0.080, 0.075, 0.19, 16), kristinSkinMat);
   kHeadGroup.add(kHead);
 
   // Kristin's textured expressive face on front head plane
@@ -616,20 +624,25 @@ function buildCivicPassengers() {
   kFaceMesh.position.set(0, 0, 0.081);
   kHeadGroup.add(kFaceMesh);
 
+  // 3D Cute Nose
+  const kNose = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.044, 0.032), kristinSkinMat);
+  kNose.position.set(0, -0.01, 0.090);
+  kHeadGroup.add(kNose);
+
   // Long flowing black hair
-  const kHairTop = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.18), kristinHairMat);
-  kHairTop.position.set(0, 0.08, 0);
+  const kHairTop = new THREE.Mesh(new THREE.CylinderGeometry(0.090, 0.085, 0.10, 16), kristinHairMat);
+  kHairTop.position.set(0, 0.07, -0.01);
   kHeadGroup.add(kHairTop);
 
-  const kHairBack = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.32, 0.08), kristinHairMat);
-  kHairBack.position.set(0, -0.05, -0.07);
+  const kHairBack = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.34, 0.08), kristinHairMat);
+  kHairBack.position.set(0, -0.05, -0.06);
   kHeadGroup.add(kHairBack);
 
-  const kHairLeft = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.28, 0.14), kristinHairMat);
+  const kHairLeft = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.30, 0.14), kristinHairMat);
   kHairLeft.position.set(-0.085, -0.04, 0.01);
   kHeadGroup.add(kHairLeft);
 
-  const kHairRight = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.28, 0.14), kristinHairMat);
+  const kHairRight = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.30, 0.14), kristinHairMat);
   kHairRight.position.set(0.085, -0.04, 0.01);
   kHeadGroup.add(kHairRight);
 
