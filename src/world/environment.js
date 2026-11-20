@@ -181,7 +181,7 @@ export function getTerrainHeight(x, z) {
     }
   }
 
-  // Highway and Mountain Tunnel Flat Roadway Corridor (x around 0, z from -48 to 32)
+  // Highway Flat Roadway Corridor (x around 0, z from -48 to 32)
   if (Math.abs(x) < 5.8 && z >= -48.0 && z <= 32.0) {
     const roadDist = Math.abs(x);
     if (roadDist < 3.8) {
@@ -190,16 +190,6 @@ export function getTerrainHeight(x, z) {
     } else {
       const f = (roadDist - 3.8) / (5.8 - 3.8);
       raw = THREE.MathUtils.lerp(0.05, raw, f * f);
-    }
-  }
-
-  // Mountain Ridge slopes rising beside and over the Tunnel
-  if (z >= -44.0 && z <= -6.0) {
-    const ridgeDistX = Math.abs(x);
-    if (ridgeDistX >= 4.0 && ridgeDistX < 18.0) {
-      const p = 1.0 - (ridgeDistX - 4.0) / 14.0;
-      const mountainY = 1.8 + p * p * 6.2;
-      raw = Math.max(raw, mountainY);
     }
   }
 
@@ -2158,132 +2148,41 @@ export function initWorld(scene, textures) {
       });
     }
 
-    // 2. THE BLACKWOOD MOORS STONE MOUNTAIN TUNNEL (z = -44 to z = -6)
-    const tunnelLen = 38.0;
-    const tunnelStart = -44.0;
-    const tunnelEnd = -6.0;
-    const tunnelZMid = (tunnelStart + tunnelEnd) / 2; // -25.0
-    const tunnelInnerW = 7.6;
-    const tunnelInnerH = 4.8;
-    const wallThick = 1.4;
+    // 2. OPEN HIGHWAY THROUGH BLACKWOOD MOORS (z = -46 to z = 10)
+    // Roadside snow guide posts with reflectors along both sides
+    for (let rz = -44; rz <= 10; rz += 5.5) {
+      [-3.6, 3.6].forEach(rx => {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.25, 0.12), darkWoodMat);
+        post.position.set(rx, 0.6, rz);
+        post.castShadow = true;
+        root.add(post);
 
-    // Tunnel Left & Right Massive Stone Walls
-    [-tunnelInnerW / 2 - wallThick / 2, tunnelInnerW / 2 + wallThick / 2].forEach(wx => {
-      const wall = new THREE.Mesh(new THREE.BoxGeometry(wallThick, tunnelInnerH + 2.0, tunnelLen), darkStoneMat);
-      wall.position.set(wx, (tunnelInnerH + 2.0) / 2 - 0.2, tunnelZMid);
-      wall.castShadow = true;
-      wall.receiveShadow = true;
-      root.add(wall);
+        const reflector = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.22, 0.08), yellowLampGlowMat);
+        reflector.position.set(rx, 1.05, rz);
+        root.add(reflector);
 
-      // Add physical colliders to prevent driving/walking out of tunnel walls
-      colliders.push({
-        minX: wx - wallThick / 2,
-        maxX: wx + wallThick / 2,
-        minZ: tunnelStart,
-        maxZ: tunnelEnd
-      });
-    });
-
-    // Tunnel Arched Ceiling Vault
-    const ceilGeo = new THREE.CylinderGeometry(tunnelInnerW / 2 + 0.6, tunnelInnerW / 2 + 0.6, tunnelLen, 14, 1, true, Math.PI, Math.PI);
-    ceilGeo.rotateZ(Math.PI / 2);
-    ceilGeo.rotateY(Math.PI / 2);
-    const ceilMesh = new THREE.Mesh(ceilGeo, tunnelCeilMat);
-    ceilMesh.position.set(0, tunnelInnerH - 0.2, tunnelZMid);
-    root.add(ceilMesh);
-
-    // Mountain Mass / Heavy Rock Ridge above Tunnel
-    const mountainCap = new THREE.Mesh(new THREE.BoxGeometry(tunnelInnerW + wallThick * 2 + 10.0, 4.2, tunnelLen), darkStoneMat);
-    mountainCap.position.set(0, tunnelInnerH + 2.8, tunnelZMid);
-    root.add(mountainCap);
-
-    // Thick snow blanket covering the mountain pass top
-    const mountainSnow = new THREE.Mesh(new THREE.BoxGeometry(tunnelInnerW + wallThick * 2 + 10.4, 0.8, tunnelLen + 0.4), snowCapMat);
-    mountainSnow.position.set(0, tunnelInnerH + 4.9, tunnelZMid);
-    root.add(mountainSnow);
-
-    // 2b. TUNNEL SOUTH EXIT PORTAL (Facing Player & Village at z = -6)
-    const portalPillarW = 1.6;
-    const portalPillarH = 5.8;
-    [-tunnelInnerW / 2 - portalPillarW / 2 + 0.2, tunnelInnerW / 2 + portalPillarW / 2 - 0.2].forEach(px => {
-      const pillar = new THREE.Mesh(new THREE.BoxGeometry(portalPillarW, portalPillarH, 2.2), stoneMat);
-      pillar.position.set(px, portalPillarH / 2, tunnelEnd);
-      pillar.castShadow = true;
-      root.add(pillar);
-
-      const pCap = new THREE.Mesh(new THREE.BoxGeometry(portalPillarW + 0.35, 0.35, 2.4), stoneMat);
-      pCap.position.set(px, portalPillarH + 0.17, tunnelEnd);
-      root.add(pCap);
-
-      const pSnow = new THREE.Mesh(new THREE.BoxGeometry(portalPillarW + 0.38, 0.28, 2.45), snowCapMat);
-      pSnow.position.set(px, portalPillarH + 0.45, tunnelEnd);
-      root.add(pSnow);
-    });
-
-    // Top Keystoned Arch Portal Header across mouth
-    const archHeader = new THREE.Mesh(new THREE.BoxGeometry(tunnelInnerW + 2.8, 1.35, 2.4), stoneMat);
-    archHeader.position.set(0, portalPillarH - 0.25, tunnelEnd);
-    root.add(archHeader);
-
-    const archHeaderSnow = new THREE.Mesh(new THREE.BoxGeometry(tunnelInnerW + 3.0, 0.4, 2.5), snowCapMat);
-    archHeaderSnow.position.set(0, portalPillarH + 0.55, tunnelEnd);
-    root.add(archHeaderSnow);
-
-    // Cast Bronze Tunnel Signboard: "BLACKWOOD PASS - TUNNEL NO. 4"
-    const tunnelSignCanvas = document.createElement('canvas');
-    tunnelSignCanvas.width = 512;
-    tunnelSignCanvas.height = 128;
-    const tctx = tunnelSignCanvas.getContext('2d');
-    tctx.fillStyle = '#1e1c18';
-    tctx.fillRect(0, 0, 512, 128);
-    tctx.strokeStyle = '#6e5832';
-    tctx.lineWidth = 6;
-    tctx.strokeRect(6, 6, 500, 116);
-    tctx.fillStyle = '#cca552';
-    tctx.font = 'bold 36px "Times New Roman", serif';
-    tctx.textAlign = 'center';
-    tctx.fillText('BLACKWOOD PASS', 256, 52);
-    tctx.font = '22px "Times New Roman", serif';
-    tctx.fillStyle = '#8f9c8d';
-    tctx.fillText('TUNNEL NO. 4 • ELEV. 1,420 FT', 256, 92);
-    const tunnelSignTex = new THREE.CanvasTexture(tunnelSignCanvas);
-    const tunnelSign = new THREE.Mesh(
-      new THREE.PlaneGeometry(3.6, 0.9),
-      new THREE.MeshLambertMaterial({ map: tunnelSignTex })
-    );
-    tunnelSign.position.set(0, portalPillarH - 0.25, tunnelEnd + 1.22);
-    root.add(tunnelSign);
-
-    // Industrial Caged Halogen Tunnel Mouth Lamps
-    [-tunnelInnerW / 2 + 0.6, tunnelInnerW / 2 - 0.6].forEach(lx => {
-      const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.6, 6), ironBarMat);
-      arm.position.set(lx, portalPillarH - 0.9, tunnelEnd + 0.35);
-      arm.rotateX(Math.PI / 4);
-      root.add(arm);
-
-      const cage = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.35, 0.3), yellowLampGlowMat);
-      cage.position.set(lx, portalPillarH - 1.25, tunnelEnd + 0.6);
-      root.add(cage);
-    });
-
-    // Tunnel Interior Caged Lighting (spaced along interior length)
-    for (let tz = -36; tz <= -12; tz += 9.0) {
-      [-tunnelInnerW / 2 + 0.3, tunnelInnerW / 2 - 0.3].forEach(lx => {
-        const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.3, 0.25), yellowLampGlowMat);
-        lamp.position.set(lx, 3.4, tz);
-        root.add(lamp);
+        const postSnow = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.08, 0.16), snowCapMat);
+        postSnow.position.set(rx, 1.25, rz);
+        root.add(postSnow);
       });
     }
 
-    // Tunnel North Entrance Rockfall Hazard Barricade (z = -43.5, block player from exiting world bounds)
-    const rockfallBarrier = new THREE.Mesh(new THREE.BoxGeometry(tunnelInnerW + 0.2, 5.0, 2.5), darkStoneMat);
-    rockfallBarrier.position.set(0, 2.5, tunnelStart + 1.2);
-    root.add(rockfallBarrier);
+    // Road Closed Barricade at world boundary (z = -46.0)
+    const barricadeW = 8.2;
+    const roadBlock = new THREE.Mesh(new THREE.BoxGeometry(barricadeW, 1.2, 0.4), darkWoodMat);
+    roadBlock.position.set(0, 0.6, -46.0);
+    roadBlock.castShadow = true;
+    root.add(roadBlock);
+
+    const snowDriftBarrier = new THREE.Mesh(new THREE.BoxGeometry(barricadeW + 2.0, 1.8, 2.0), snowCapMat);
+    snowDriftBarrier.position.set(0, 0.9, -46.8);
+    root.add(snowDriftBarrier);
+
     colliders.push({
-      minX: -tunnelInnerW / 2,
-      maxX: tunnelInnerW / 2,
-      minZ: tunnelStart,
-      maxZ: tunnelStart + 3.0
+      minX: -barricadeW / 2,
+      maxX: barricadeW / 2,
+      minZ: -48.0,
+      maxZ: -45.0
     });
 
     // -------------------------------------------------------------

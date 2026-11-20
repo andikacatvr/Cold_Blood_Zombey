@@ -109,19 +109,18 @@ const NONA_BATAVIA_STAGES = [
 const CUTSCENE_STAGES = [
   {
     start: 0.0,
-    end: 7.0,
-    camStart: new THREE.Vector3(1.2, 1.85, 3.8),
-    camEnd: new THREE.Vector3(2.0, 1.85, 12.2),
-    lookStart: new THREE.Vector3(0.0, 1.5, 9.5),
-    lookEnd: new THREE.Vector3(0.0, 1.6, 17.5),
-    subtitle: `<span style="color:#a8c4da; font-size:15px; letter-spacing:2px; font-family:serif;">COLDBROOK VILLAGE — BLACKWOOD MOORS, ENGLAND</span><br><span style="color:#d8b26e; font-size:21px; font-weight:bold;">RODRICK (Perekam Suara):</span> <i>*deru mesin Honda Civic & suara kaset berderak*</i> "Catatan lapangan hari pertama. Honda Civic merah ini mengantar kami menembus kabut Blackwood Moors menuju Coldbrook..."<br><span style="color:#5cf0a5; font-size:20px; font-weight:bold;">KRISTIN:</span> "Dan dua minggu penelitian sampel air sumur! Jangan lupa riset lingkungan gue juga masuk publikasi, Rod."`,
+    end: 7.5,
+    camStart: new THREE.Vector3(0.7, 1.35, -21.0),
+    camEnd: new THREE.Vector3(2.4, 1.85, 12.0),
+    lookStart: new THREE.Vector3(0.1, 1.0, -25.5),
+    lookEnd: new THREE.Vector3(0.0, 1.8, 17.5),
+    subtitle: `<span style="color:#a8c4da; font-size:15px; letter-spacing:2px; font-family:serif;">COLDBROOK ROADWAY — BLACKWOOD MOORS, ENGLAND</span><br><span style="color:#d8b26e; font-size:21px; font-weight:bold;">RODRICK (Perekam Suara):</span> <i>*deru mesin Honda Civic & suara kaset berderak*</i> "Catatan lapangan hari pertama. Kita baru saja tiba di perbatasan Coldbrook menyusuri jalan Blackwood Moors..."<br><span style="color:#5cf0a5; font-size:20px; font-weight:bold;">KRISTIN:</span> "Dan dua minggu penelitian sampel air sumur! Jangan lupa riset lingkungan gue juga masuk publikasi, Rod."`,
     onEnter: (sfx) => {
       if (sfx && sfx.playChurchBellToll) sfx.playChurchBellToll();
-      if (sfx && sfx.playSnowStep) sfx.playSnowStep();
     }
   },
   {
-    start: 7.0,
+    start: 7.5,
     end: 14.5,
     camStart: new THREE.Vector3(0.3, 1.55, 15.8),
     camEnd: new THREE.Vector3(0.7, 1.62, 16.6),
@@ -228,7 +227,7 @@ export function startIntroCutscene(camera, sfx, onComplete) {
     cutsceneVillageGate = null;
   }
 
-  // 2. Spawn 1985 Honda Civic Car
+  // 2. Spawn 1985 Honda Civic Car on open highway
   if (cutsceneCivicCar) {
     cutsceneCivicCar.dispose();
     cutsceneCivicCar = null;
@@ -238,39 +237,31 @@ export function startIntroCutscene(camera, sfx, onComplete) {
     cutsceneTruck = null;
   }
   cutsceneCivicCar = createHondaCivicCar();
-  const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.85, 1.0) : 0;
-  cutsceneCivicCar.root.position.set(1.85, gyCar, 1.0);
+  const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.0, -26.0) : 0;
+  cutsceneCivicCar.root.position.set(0.0, gyCar, -26.0);
   cutsceneCivicCar.root.rotation.set(0, 0, 0); // Faces forward along +Z toward Coldbrook gate
   cutsceneCivicCar.setHeadlights(true);
+  cutsceneCivicCar.setPassengersVisible(true); // Rodrick driving behind wheel, Kristin in passenger seat
   if (scene) scene.add(cutsceneCivicCar.root);
 
   if (sfxRef && sfxRef.startCarEngineAudio) {
     sfxRef.startCarEngineAudio();
   }
 
-  // 3. Spawn Old Thomas (Elderly British villager with creepy smile & chalice)
+  // 3. Spawn Old Thomas (Elderly British villager with creepy smile & chalice at Coldbrook arch)
   if (cutsceneOldThomas && scene) scene.remove(cutsceneOldThomas);
   cutsceneOldThomas = buildOldThomasModel();
   const gyThomas = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.8, 17.5) : 0;
   cutsceneOldThomas.position.set(0.8, gyThomas, 17.5);
-  cutsceneOldThomas.rotation.y = Math.PI; // Faces toward player & Kristin
+  cutsceneOldThomas.rotation.y = Math.PI; // Faces toward oncoming road & arrivals
   if (scene) scene.add(cutsceneOldThomas);
 
-  // 4. Position Rodrick & Kristin at start of walking path
-  const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.45, 6.8) : 0;
-  playerPos.set(-0.45, gyP, 6.8);
-
+  // 4. Rodrick & Kristin start inside the driving car
   if (playerMeshRoot) {
-    playerMeshRoot.visible = true;
-    playerMeshRoot.position.set(-0.45, gyP, 6.8);
-    playerMeshRoot.rotation.set(0, Math.PI - 0.05, 0); // Face forward along +Z toward Coldbrook gate
+    playerMeshRoot.visible = false; // Hidden during driving shot, visible when stepping out
   }
-
   if (kristinModel && kristinModel.root) {
-    const gyK = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.45, 7.0) : 0;
-    kristinModel.root.position.set(0.45, gyK, 7.0);
-    kristinModel.root.rotation.set(0, 0.10, 0); // Face forward along +Z
-    if (kristinModel.setWeapon) kristinModel.setWeapon('unarmed');
+    kristinModel.root.visible = false;
   }
 
   // Show cinema overlay & letterbox
@@ -512,52 +503,48 @@ export function updateCutscene(dt) {
     }
   }
 
-  // 2. Animate Rodrick & Kristin walking & speaking
-  if (cutsceneTime < 6.5) {
-    // Stage 1: Walking toward the gate
-    const walkT = Math.min(1.0, cutsceneTime / 6.5);
-    const easeWalk = walkT * walkT * (3 - 2 * walkT);
-    const pZ = THREE.MathUtils.lerp(6.8, 14.2, easeWalk);
-    const kZ = THREE.MathUtils.lerp(7.0, 14.4, easeWalk);
+  // 2. Animate Car & Characters (Driving Phase vs Stepped Out Phase)
+  if (cutsceneTime < 7.5) {
+    // Stage 1: Driving on highway toward Coldbrook gate
+    const driveT = Math.min(1.0, cutsceneTime / 7.2);
+    const easeDrive = driveT * (2 - driveT); // Smooth deceleration as car approaches gate
+    const carZ = THREE.MathUtils.lerp(-26.0, 13.5, easeDrive);
+    const carX = THREE.MathUtils.lerp(0.0, 1.85, driveT * driveT);
+    const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(carX, carZ) : 0;
 
-    const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.45, pZ) : 0;
-    const stridePhase = cutsceneTime * 5.4;
-    const pBob = Math.abs(Math.sin(stridePhase)) * 0.035;
-
-    if (playerMeshRoot && playerMeshRoot.visible) {
-      playerMeshRoot.position.set(-0.45, gyP + pBob, pZ);
-      playerMeshRoot.rotation.y = Math.PI - 0.05;
-      setPlayerCutscenePose('walk', stridePhase);
-    }
-    playerPos.set(-0.45, gyP, pZ);
-
-    if (kristinModel && kristinModel.root) {
-      const gyK = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.45, kZ) : 0;
-      kristinModel.root.position.set(0.45, gyK, kZ);
-      kristinModel.root.rotation.y = 0.10;
-      animateKristinCutsceneStep(dt, true);
-    }
-
-    // Car drives alongside them
     if (cutsceneCivicCar && cutsceneCivicCar.root) {
-      const carZ = THREE.MathUtils.lerp(1.0, 13.5, easeWalk);
-      const carX = THREE.MathUtils.lerp(1.85, 2.15, easeWalk);
-      const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(carX, carZ) : 0;
       cutsceneCivicCar.root.position.set(carX, gyCar, carZ);
-      const carSpeed = (1 - easeWalk) * 2.8 + 0.4;
-      cutsceneCivicCar.update(dt, carSpeed, true);
-      if (sfxRef && sfxRef.updateCarEnginePitch) sfxRef.updateCarEnginePitch(1.0 + (1 - easeWalk) * 0.4);
+      const carSpeed = (1 - easeDrive) * 16.0;
+      cutsceneCivicCar.update(dt, carSpeed, true, cutsceneTime);
+      cutsceneCivicCar.setPassengersVisible(true);
+      if (sfxRef && sfxRef.updateCarEnginePitch) sfxRef.updateCarEnginePitch(0.85 + (1 - easeDrive) * 0.75);
     }
-  } else {
-    // Stage 2 - 4: Standing alert side-by-side near gate
-    const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.45, 14.2) : 0;
-    const breath = Math.sin(cutsceneTime * 2.2) * 0.012;
 
-    if (playerMeshRoot && playerMeshRoot.visible) {
+    // Keep external models hidden during driving shot (they are inside the car!)
+    if (playerMeshRoot) playerMeshRoot.visible = false;
+    if (kristinModel && kristinModel.root) kristinModel.root.visible = false;
+    playerPos.set(carX, gyCar, carZ);
+  } else {
+    // Stage 2 - 4: Car is parked at road shoulder, Rodrick & Kristin have stepped out
+    if (cutsceneCivicCar && cutsceneCivicCar.root) {
+      const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.85, 13.5) : 0;
+      cutsceneCivicCar.root.position.set(1.85, gyCar, 13.5);
+      cutsceneCivicCar.update(dt, 0, false, cutsceneTime);
+      cutsceneCivicCar.setPassengersVisible(false); // Stepped out
+      if (sfxRef && sfxRef.updateCarEnginePitch) sfxRef.updateCarEnginePitch(0.80);
+    }
+
+    const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.45, 14.2) : 0;
+    const gyK = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.45, 14.4) : 0;
+    playerPos.set(-0.45, gyP, 14.2);
+
+    if (playerMeshRoot) {
+      playerMeshRoot.visible = true;
+      const breath = Math.sin(cutsceneTime * 2.2) * 0.012;
       playerMeshRoot.position.set(-0.45, gyP + breath, 14.2);
 
       if (cutsceneTime > 14.5 && cutsceneTime < 21.5) {
-        // Turn to face Kristin when she whispers about the tainted water
+        // Turn to face Kristin when she whispers about tainted water
         playerMeshRoot.rotation.y = THREE.MathUtils.lerp(playerMeshRoot.rotation.y, Math.PI - 0.55, dt * 2.5);
       } else {
         // Face forward toward Old Thomas & Coldbrook gate
@@ -567,7 +554,7 @@ export function updateCutscene(dt) {
     }
 
     if (kristinModel && kristinModel.root) {
-      const gyK = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.45, 14.4) : 0;
+      kristinModel.root.visible = true;
       kristinModel.root.position.set(0.45, gyK, 14.4);
       if (cutsceneTime > 14.5 && cutsceneTime < 21.5) {
         kristinModel.root.rotation.y = THREE.MathUtils.lerp(kristinModel.root.rotation.y, -0.65, dt * 2.5);
@@ -578,35 +565,6 @@ export function updateCutscene(dt) {
       }
       animateKristinCutsceneStep(dt, false);
     }
-
-    // Car behavior in stage 2 - 4
-    if (cutsceneCivicCar && cutsceneCivicCar.root) {
-      if (cutsceneTime < 21.5) {
-        // Parked at road shoulder, lights on gate, engine idling
-        const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(2.15, 13.5) : 0;
-        cutsceneCivicCar.root.position.set(2.15, gyCar, 13.5);
-        cutsceneCivicCar.update(dt, 0, false);
-        if (sfxRef && sfxRef.updateCarEnginePitch) sfxRef.updateCarEnginePitch(0.82);
-      } else {
-        // Stage 4: Car departs forward into the dark moors
-        const depT = Math.min(1.0, (cutsceneTime - 21.5) / 6.0);
-        const depEase = depT * depT;
-        const carZ = THREE.MathUtils.lerp(13.5, 52.0, depEase);
-        const carX = THREE.MathUtils.lerp(2.15, 2.6, depT);
-        const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(carX, carZ) : 0;
-        cutsceneCivicCar.root.position.set(carX, gyCar, carZ);
-        cutsceneCivicCar.update(dt, 4.5 * (0.3 + depT), true);
-        if (sfxRef && sfxRef.updateCarEnginePitch) sfxRef.updateCarEnginePitch(1.1 + depT * 0.7);
-        if (depT >= 0.98) {
-          cutsceneCivicCar.root.visible = false;
-        }
-      }
-    }
-  }
-
-  // 3. Stage 4 Departure: Vintage flatbed truck departs into the dark moors (if any)
-  if (cutsceneTime >= 21.5) {
-    if (cutsceneTruck && cutsceneTruck.visible) cutsceneTruck.visible = false;
   }
 
   if (cutsceneTime >= 28.5) {
@@ -636,12 +594,39 @@ export function updateCutscene(dt) {
       }
     }
 
-    const stageProgress = (cutsceneTime - stage.start) / (stage.end - stage.start);
-    const easeProg = 0.5 - 0.5 * Math.cos(stageProgress * Math.PI);
+    if (stageIdx === 0 && cutsceneCivicCar && cutsceneCivicCar.root) {
+      // Dynamic camera tracking with moving car in Stage 1
+      const carPos = cutsceneCivicCar.root.position;
+      if (cutsceneTime < 4.2) {
+        // Shot 1: Front windshield view looking directly at Rodrick driving & Kristin
+        const sT = cutsceneTime / 4.2;
+        cameraRef.position.set(carPos.x + 0.65 - sT * 0.35, carPos.y + 1.25, carPos.z + 3.8 + sT * 0.6);
+        cameraRef.lookAt(carPos.x + 0.12, carPos.y + 0.95, carPos.z - 0.2);
+      } else {
+        // Shot 2: Revealing Coldbrook gate ahead as car approaches and brakes
+        const sT = (cutsceneTime - 4.2) / 3.3;
+        const ease2 = sT * sT * (3 - 2 * sT);
+        cameraRef.position.set(
+          THREE.MathUtils.lerp(carPos.x + 2.8, 2.3, ease2),
+          THREE.MathUtils.lerp(carPos.y + 1.6, carPos.y + 1.85, ease2),
+          THREE.MathUtils.lerp(carPos.z - 3.5, 12.0, ease2)
+        );
+        const lookTarget = new THREE.Vector3().lerpVectors(
+          new THREE.Vector3(carPos.x, carPos.y + 1.1, carPos.z),
+          new THREE.Vector3(0.0, 1.8, 17.5),
+          ease2
+        );
+        cameraRef.lookAt(lookTarget);
+      }
+    } else {
+      // Stage 2 - 4: Standard smooth cinematic lerp
+      const stageProgress = (cutsceneTime - stage.start) / (stage.end - stage.start);
+      const easeProg = 0.5 - 0.5 * Math.cos(stageProgress * Math.PI);
 
-    cameraRef.position.lerpVectors(stage.camStart, stage.camEnd, easeProg);
-    const lookTarget = new THREE.Vector3().lerpVectors(stage.lookStart, stage.lookEnd, easeProg);
-    cameraRef.lookAt(lookTarget);
+      cameraRef.position.lerpVectors(stage.camStart, stage.camEnd, easeProg);
+      const lookTarget = new THREE.Vector3().lerpVectors(stage.lookStart, stage.lookEnd, easeProg);
+      cameraRef.lookAt(lookTarget);
+    }
   }
 }
 
@@ -649,10 +634,12 @@ export function finishCutscene() {
   if (!isCinematicActive || activeCutsceneType !== 'intro') return;
   isCinematicActive = false;
 
-  // Clean up Honda Civic & audio
+  // Keep Honda Civic parked at Coldbrook entrance with headlights on as their vehicle
   if (cutsceneCivicCar) {
-    cutsceneCivicCar.dispose();
-    cutsceneCivicCar = null;
+    cutsceneCivicCar.setPassengersVisible(false);
+    const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.85, 13.5) : 0;
+    cutsceneCivicCar.root.position.set(1.85, gyCar, 13.5);
+    cutsceneCivicCar.update(0, 0, false, 0);
   }
   if (sfxRef && sfxRef.stopCarEngineAudio) {
     sfxRef.stopCarEngineAudio();
