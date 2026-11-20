@@ -262,24 +262,52 @@ html {
   text-align: center;
 }
 
-/* GRAND RETRO PS1 / THE LIVING END MAIN MENU */
+/* GRAND RETRO PS1 / THE LIVING END MAIN MENU (SOLUTION 1: AMBIENT CONTAIN) */
 #screen-start {
   position: absolute;
   inset: 0;
   width: 100vw;
   height: 100vh;
   z-index: 30;
-  background-color: #05080b;
-  background-image: url('/textures/The_Living_End.png');
-  background-repeat: no-repeat;
-  background-position: center top;
-  background-size: cover;
+  background-color: #030507;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   align-items: flex-start;
   padding: 0;
   overflow: hidden;
+}
+
+/* 1. AMBIENT BACKDROP: Seamlessly covers the entire widescreen with blurred atmospheric fog & glow */
+.menu-ambient-backdrop {
+  position: absolute;
+  top: -5%;
+  left: -5%;
+  width: 110%;
+  height: 110%;
+  z-index: 31;
+  background-image: url('/textures/The_Living_End.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  filter: blur(36px) brightness(0.38) saturate(1.25);
+  transform: scale(1.06);
+  pointer-events: none;
+}
+
+/* 2. SHARP CONTAINED ARTWORK: Preserves 100% of the original painting with zero cropping on any screen */
+.menu-artwork-contain {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 32;
+  background-image: url('/textures/The_Living_End.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 0 45px rgba(0, 0, 0, 0.98));
 }
 
 /* Subtle dark vignette so bottom-left buttons and artwork harmonize */
@@ -290,19 +318,19 @@ html {
   pointer-events: none;
   background: radial-gradient(circle at 75% 25%, transparent 50%, rgba(2, 4, 3, 0.25) 85%, rgba(0, 0, 0, 0.6) 100%),
               linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.15) 35%, transparent 50%);
-  z-index: 31;
+  z-index: 33;
 }
 
 /* Bottom-Left Root Menu Container (Start, Settings, Controls) */
 .menu-root-bottom-left {
   position: absolute;
-  bottom: clamp(30px, 6vh, 55px);
-  left: clamp(30px, 5.5vw, 65px);
+  bottom: clamp(28px, 5.5vh, 52px);
+  left: clamp(26px, 4.5vw, 60px);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 14px;
-  z-index: 33;
+  z-index: 35;
   text-align: left;
   animation: menuSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
