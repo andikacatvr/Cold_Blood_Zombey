@@ -181,8 +181,8 @@ export function getTerrainHeight(x, z) {
     }
   }
 
-  // Highway Flat Roadway Corridor (x around 0, z from -48 to 32)
-  if (Math.abs(x) < 5.8 && z >= -48.0 && z <= 32.0) {
+  // Highway Flat Roadway Corridor (x around 0, z from -230.0 to 32.0)
+  if (Math.abs(x) < 5.8 && z >= -230.0 && z <= 32.0) {
     const roadDist = Math.abs(x);
     if (roadDist < 3.8) {
       raw = 0.05;
@@ -1132,8 +1132,8 @@ export function initWorld(scene, textures) {
       if (Math.hypot(x - (-22), z - 22) < 7.5) continue;
       if (Math.hypot(x - 16, z - 28) < 7.5) continue;
 
-      // Keep trees off the mountain highway & tunnel corridor
-      if (Math.abs(x) < 5.2 && z >= -48.0 && z <= 32.0) continue;
+      // Keep trees off the mountain highway & open road corridor
+      if (Math.abs(x) < 5.2 && z >= -230.0 && z <= 32.0) continue;
 
       // Keep trees out of the Coastal Beach & Sand Dunes zone (z >= 76)
       if (z >= 76.0) continue;
@@ -2100,20 +2100,27 @@ export function initWorld(scene, textures) {
     const whiteEdgeLineMat = new THREE.MeshBasicMaterial({ color: 0xdde7ef });
     const roadCurbMat = new THREE.MeshLambertMaterial({ color: 0x4f555d, flatShading: false });
 
-    // 1. ASPHALT MOUNTAIN HIGHWAY ROADWAY (from z = -46 to z = 28)
+    // 1. ASPHALT MOUNTAIN HIGHWAY ROADWAY (continuous from z = -220 to z = 28)
     const roadW = 6.8;
-    const roadZStart = -46.0;
+    const roadZStart = -220.0;
     const roadZEnd = 28.0;
-    const roadLen = roadZEnd - roadZStart; // 74m
-    const roadMidZ = (roadZStart + roadZEnd) / 2; // -9.0
+    const roadLen = roadZEnd - roadZStart; // 248m continuous roadway extending into the distant fog
+    const roadMidZ = (roadZStart + roadZEnd) / 2; // -96.0
 
     // Main asphalt roadbed
     const roadGeo = new THREE.PlaneGeometry(roadW, roadLen);
     roadGeo.rotateX(-Math.PI / 2);
+
+    const roadTexClone = asphaltRoadTex.clone();
+    roadTexClone.wrapS = THREE.RepeatWrapping;
+    roadTexClone.wrapT = THREE.RepeatWrapping;
+    roadTexClone.repeat.set(1, Math.round(roadLen / 4.0));
+    roadTexClone.needsUpdate = true;
+
     const roadMesh = new THREE.Mesh(
       roadGeo,
       new THREE.MeshLambertMaterial({
-        map: asphaltRoadTex,
+        map: roadTexClone,
         color: 0x30353b,
         polygonOffset: true,
         polygonOffsetFactor: -1.0,
@@ -2148,9 +2155,9 @@ export function initWorld(scene, textures) {
       });
     }
 
-    // 2. OPEN HIGHWAY THROUGH BLACKWOOD MOORS (z = -46 to z = 10)
-    // Roadside snow guide posts with reflectors along both sides
-    for (let rz = -44; rz <= 10; rz += 5.5) {
+    // 2. OPEN HIGHWAY THROUGH BLACKWOOD MOORS (z = -215 to z = 10)
+    // Roadside snow guide posts with reflectors along both sides extending continuously into fog
+    for (let rz = -215; rz <= 10; rz += 5.5) {
       [-3.6, 3.6].forEach(rx => {
         const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.25, 0.12), darkWoodMat);
         post.position.set(rx, 0.6, rz);
@@ -2166,24 +2173,6 @@ export function initWorld(scene, textures) {
         root.add(postSnow);
       });
     }
-
-    // Road Closed Barricade at world boundary (z = -46.0)
-    const barricadeW = 8.2;
-    const roadBlock = new THREE.Mesh(new THREE.BoxGeometry(barricadeW, 1.2, 0.4), darkWoodMat);
-    roadBlock.position.set(0, 0.6, -46.0);
-    roadBlock.castShadow = true;
-    root.add(roadBlock);
-
-    const snowDriftBarrier = new THREE.Mesh(new THREE.BoxGeometry(barricadeW + 2.0, 1.8, 2.0), snowCapMat);
-    snowDriftBarrier.position.set(0, 0.9, -46.8);
-    root.add(snowDriftBarrier);
-
-    colliders.push({
-      minX: -barricadeW / 2,
-      maxX: barricadeW / 2,
-      minZ: -48.0,
-      maxZ: -45.0
-    });
 
     // -------------------------------------------------------------
     // 3. THE GRAND GOTHIC "WELCOME TO COLDBROOK" ARCHWAY (z = 18.0)

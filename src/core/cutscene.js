@@ -237,8 +237,8 @@ export function startIntroCutscene(camera, sfx, onComplete) {
     cutsceneTruck = null;
   }
   cutsceneCivicCar = createHondaCivicCar();
-  const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.0, -26.0) : 0;
-  cutsceneCivicCar.root.position.set(0.0, gyCar, -26.0);
+  const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.0, -52.0) : 0;
+  cutsceneCivicCar.root.position.set(0.0, gyCar, -52.0);
   cutsceneCivicCar.root.rotation.set(0, 0, 0); // Faces forward along +Z toward Coldbrook gate
   cutsceneCivicCar.setHeadlights(true);
   cutsceneCivicCar.setPassengersVisible(true); // Rodrick driving behind wheel, Kristin in passenger seat
@@ -508,7 +508,7 @@ export function updateCutscene(dt) {
     // Stage 1: Driving on highway toward Coldbrook gate
     const driveT = Math.min(1.0, cutsceneTime / 7.2);
     const easeDrive = driveT * (2 - driveT); // Smooth deceleration as car approaches gate
-    const carZ = THREE.MathUtils.lerp(-26.0, 13.5, easeDrive);
+    const carZ = THREE.MathUtils.lerp(-52.0, 13.5, easeDrive);
     const carX = THREE.MathUtils.lerp(0.0, 2.45, driveT * driveT);
     const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(carX, carZ) : 0;
 

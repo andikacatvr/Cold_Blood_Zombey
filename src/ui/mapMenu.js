@@ -172,7 +172,7 @@ function drawFullTacticalMap() {
   // 2b. Mountain Highway Asphalt Road & Coldbrook Village Road System
   const roadLeft = toCanvasX(-3.4);
   const roadRight = toCanvasX(3.4);
-  const roadTop = toCanvasY(-46.0);
+  const roadTop = toCanvasY(-145.0);
   const roadBottom = toCanvasY(28.0);
   ctx.fillStyle = '#262b30';
   ctx.fillRect(roadLeft, roadTop, roadRight - roadLeft, roadBottom - roadTop);
@@ -190,12 +190,11 @@ function drawFullTacticalMap() {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Blackwood Moors Tunnel Entrance (z = -46)
-  ctx.fillStyle = '#111317';
-  ctx.fillRect(toCanvasX(-5.5), roadTop - 4, toCanvasX(5.5) - toCanvasX(-5.5), 6);
-  ctx.strokeStyle = '#5a626d';
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(toCanvasX(-5.5), roadTop - 4, toCanvasX(5.5) - toCanvasX(-5.5), 6);
+  // Highway Route Marker Label (Blackwood Moors Highway)
+  ctx.fillStyle = '#8f9aa6';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('HIGHWAY (BLACKWOOD MOORS)', toCanvasX(0), toCanvasY(-70.0));
 
   // Coldbrook Village Entrance Archway Gate (z = 16)
   const gateY = toCanvasY(16.0);
