@@ -135,8 +135,349 @@ function buildProceduralCivicFallback() {
  * Builds animated passenger figures inside the Honda Civic cabin:
  * - Driver (Rodrick): sitting on right seat (UK/JDM spec) with hands on steering wheel, turning wheel
  * - Passenger (Kristin): sitting on left seat in green jacket holding field research notebook
+ * - Expressive textured faces on both characters visible through windshield
  * - Soft interior cabin lighting for clear visibility through glass
  */
+
+/**
+ * Creates high-detail retro PS2 stylized face texture for Rodrick (Driver)
+ */
+function createRodrickFaceTexture() {
+  if (typeof document === 'undefined') return null;
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+
+  // Base warm tanned masculine skin
+  ctx.fillStyle = '#6d4c36';
+  ctx.fillRect(0, 0, 128, 128);
+
+  // Forehead highlight & cheek contour
+  const browGrad = ctx.createRadialGradient(64, 42, 4, 64, 42, 48);
+  browGrad.addColorStop(0, '#825c43');
+  browGrad.addColorStop(1, '#654531');
+  ctx.fillStyle = browGrad;
+  ctx.fillRect(16, 20, 96, 42);
+
+  // Cheeks & Jawline shadow contour
+  ctx.fillStyle = '#543826';
+  ctx.beginPath();
+  ctx.ellipse(22, 78, 14, 28, 0.1, 0, Math.PI * 2);
+  ctx.ellipse(106, 78, 14, 28, -0.1, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 5 o'clock stubble shadow around jaw and chin
+  ctx.fillStyle = 'rgba(28, 20, 15, 0.22)';
+  ctx.beginPath();
+  ctx.arc(64, 98, 26, 0, Math.PI);
+  ctx.fill();
+
+  // Strong, focused dark eyebrows (angled for determined driver gaze)
+  ctx.strokeStyle = '#18120e';
+  ctx.lineWidth = 4.5;
+  ctx.lineCap = 'round';
+  // Left brow
+  ctx.beginPath();
+  ctx.moveTo(26, 42);
+  ctx.quadraticCurveTo(42, 36, 56, 40);
+  ctx.stroke();
+  // Right brow
+  ctx.beginPath();
+  ctx.moveTo(102, 42);
+  ctx.quadraticCurveTo(86, 36, 72, 40);
+  ctx.stroke();
+
+  // Concentration brow crease
+  ctx.strokeStyle = '#3e281b';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(60, 38);
+  ctx.lineTo(60, 44);
+  ctx.moveTo(68, 38);
+  ctx.lineTo(68, 44);
+  ctx.stroke();
+
+  // Eyes (Focused forward through windshield)
+  // Left eye sclera
+  ctx.fillStyle = '#edf0ef';
+  ctx.beginPath();
+  ctx.ellipse(42, 51, 11, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Right eye sclera
+  ctx.beginPath();
+  ctx.ellipse(86, 51, 11, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Irises (Dark amber brown)
+  ctx.fillStyle = '#3a2012';
+  ctx.beginPath();
+  ctx.arc(43, 51, 5.5, 0, Math.PI * 2);
+  ctx.arc(85, 51, 5.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Pupils (Deep black)
+  ctx.fillStyle = '#0a0604';
+  ctx.beginPath();
+  ctx.arc(43, 51, 3.2, 0, Math.PI * 2);
+  ctx.arc(85, 51, 3.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // White specular glints (Lively reflection)
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(45, 49, 1.6, 0, Math.PI * 2);
+  ctx.arc(87, 49, 1.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Upper eyelid & lash line
+  ctx.strokeStyle = '#1b120c';
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  ctx.moveTo(30, 50);
+  ctx.quadraticCurveTo(42, 45, 54, 51);
+  ctx.moveTo(74, 51);
+  ctx.quadraticCurveTo(86, 45, 98, 50);
+  ctx.stroke();
+
+  // Nose bridge & tip
+  ctx.fillStyle = '#7a543b';
+  ctx.fillRect(62, 46, 4, 24);
+  // Nose tip & nostrils
+  ctx.fillStyle = '#523522';
+  ctx.beginPath();
+  ctx.arc(64, 73, 5.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#26160d';
+  ctx.beginPath();
+  ctx.ellipse(58, 75, 2.5, 1.8, 0, 0, Math.PI * 2);
+  ctx.ellipse(70, 75, 2.5, 1.8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Mouth (Serious, determined line)
+  ctx.strokeStyle = '#381e13';
+  ctx.lineWidth = 3.0;
+  ctx.beginPath();
+  ctx.moveTo(48, 93);
+  ctx.quadraticCurveTo(64, 95, 80, 93);
+  ctx.stroke();
+  // Lower lip shadow contour
+  ctx.fillStyle = '#503222';
+  ctx.beginPath();
+  ctx.ellipse(64, 99, 9, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Hair bangs at top of forehead (Dark hair matching 3D hair geometry)
+  ctx.fillStyle = '#14110f';
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(128, 0);
+  ctx.lineTo(128, 22);
+  ctx.lineTo(108, 16);
+  ctx.lineTo(92, 24);
+  ctx.lineTo(76, 15);
+  ctx.lineTo(58, 26);
+  ctx.lineTo(40, 16);
+  ctx.lineTo(24, 25);
+  ctx.lineTo(0, 18);
+  ctx.closePath();
+  ctx.fill();
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.ClampToEdgeWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+
+  // Asynchronously check for pre-rendered face texture
+  if (THREE.TextureLoader) {
+    const loader = new THREE.TextureLoader();
+    loader.load('/textures/rodrick_face.png', (loaded) => {
+      if (loaded && loaded.image) {
+        loaded.wrapS = THREE.ClampToEdgeWrapping;
+        loaded.wrapT = THREE.ClampToEdgeWrapping;
+        loaded.minFilter = THREE.LinearFilter;
+        loaded.magFilter = THREE.LinearFilter;
+        tex.image = loaded.image;
+        tex.needsUpdate = true;
+      }
+    }, undefined, () => {});
+  }
+
+  return tex;
+}
+
+/**
+ * Creates high-detail retro PS2 stylized face texture for Kristin (Passenger)
+ */
+function createKristinFaceTexture() {
+  if (typeof document === 'undefined') return null;
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+
+  // Base fair smooth skin
+  ctx.fillStyle = '#ebd1c0';
+  ctx.fillRect(0, 0, 128, 128);
+
+  // Soft rosy blush on cheeks
+  const lBlush = ctx.createRadialGradient(34, 69, 2, 34, 69, 18);
+  lBlush.addColorStop(0, 'rgba(230, 115, 110, 0.32)');
+  lBlush.addColorStop(1, 'rgba(235, 209, 192, 0)');
+  ctx.fillStyle = lBlush;
+  ctx.beginPath();
+  ctx.arc(34, 69, 18, 0, Math.PI * 2);
+  ctx.fill();
+
+  const rBlush = ctx.createRadialGradient(94, 69, 2, 94, 69, 18);
+  rBlush.addColorStop(0, 'rgba(230, 115, 110, 0.32)');
+  rBlush.addColorStop(1, 'rgba(235, 209, 192, 0)');
+  ctx.fillStyle = rBlush;
+  ctx.beginPath();
+  ctx.arc(94, 69, 18, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Arched, delicate dark brown eyebrows
+  ctx.strokeStyle = '#281711';
+  ctx.lineWidth = 2.6;
+  ctx.lineCap = 'round';
+  // Left brow
+  ctx.beginPath();
+  ctx.moveTo(25, 40);
+  ctx.quadraticCurveTo(42, 30, 57, 37);
+  ctx.stroke();
+  // Right brow
+  ctx.beginPath();
+  ctx.moveTo(103, 40);
+  ctx.quadraticCurveTo(86, 30, 71, 37);
+  ctx.stroke();
+
+  // Almond-shaped expressive eyes
+  // Left eye sclera
+  ctx.fillStyle = '#f8faf9';
+  ctx.beginPath();
+  ctx.ellipse(42, 51, 12, 6.5, 0.05, 0, Math.PI * 2);
+  ctx.fill();
+  // Right eye sclera
+  ctx.beginPath();
+  ctx.ellipse(86, 51, 12, 6.5, -0.05, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Dark chocolate brown irises
+  ctx.fillStyle = '#2b170e';
+  ctx.beginPath();
+  ctx.arc(42, 51, 5.8, 0, Math.PI * 2);
+  ctx.arc(86, 51, 5.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Deep pupils
+  ctx.fillStyle = '#0a0604';
+  ctx.beginPath();
+  ctx.arc(42, 51, 3.2, 0, Math.PI * 2);
+  ctx.arc(86, 51, 3.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Vibrant specular sparkle catchlights (Multiple glints for lively eyes)
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(44, 48.5, 1.8, 0, Math.PI * 2);
+  ctx.arc(40, 53.5, 1.0, 0, Math.PI * 2);
+  ctx.arc(88, 48.5, 1.8, 0, Math.PI * 2);
+  ctx.arc(84, 53.5, 1.0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Winged black eyeliner & eyelashes
+  ctx.strokeStyle = '#120c09';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(27, 52);
+  ctx.quadraticCurveTo(41, 44, 55, 51);
+  ctx.moveTo(101, 52);
+  ctx.quadraticCurveTo(87, 44, 73, 51);
+  ctx.stroke();
+
+  // Small cute nose
+  ctx.fillStyle = '#cca088';
+  ctx.beginPath();
+  ctx.arc(64, 71, 4.0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#9e6e58';
+  ctx.beginPath();
+  ctx.ellipse(59, 73, 2.0, 1.4, 0, 0, Math.PI * 2);
+  ctx.ellipse(69, 73, 2.0, 1.4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rosy lips with cheerful confident smile & toothy highlight
+  // Upper lip
+  ctx.fillStyle = '#b84d46';
+  ctx.beginPath();
+  ctx.moveTo(46, 89);
+  ctx.quadraticCurveTo(55, 86, 64, 88);
+  ctx.quadraticCurveTo(73, 86, 82, 89);
+  ctx.quadraticCurveTo(64, 91, 46, 89);
+  ctx.fill();
+
+  // White teeth slit
+  ctx.fillStyle = '#fcfcfc';
+  ctx.beginPath();
+  ctx.moveTo(50, 90);
+  ctx.quadraticCurveTo(64, 93, 78, 90);
+  ctx.quadraticCurveTo(64, 91, 50, 90);
+  ctx.fill();
+
+  // Lower lip
+  ctx.fillStyle = '#c95952';
+  ctx.beginPath();
+  ctx.moveTo(46, 89);
+  ctx.quadraticCurveTo(64, 99, 82, 89);
+  ctx.quadraticCurveTo(64, 93, 46, 89);
+  ctx.fill();
+
+  // Smile corner dimples
+  ctx.fillStyle = '#7a3028';
+  ctx.fillRect(45, 89, 2, 2);
+  ctx.fillRect(81, 89, 2, 2);
+
+  // Black bangs & front hairline framing forehead (seamlessly joins 3D hair)
+  ctx.fillStyle = '#110f0e';
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(128, 0);
+  ctx.lineTo(128, 20);
+  ctx.lineTo(105, 14);
+  ctx.lineTo(88, 22);
+  ctx.lineTo(64, 12);
+  ctx.lineTo(40, 22);
+  ctx.lineTo(22, 14);
+  ctx.lineTo(0, 20);
+  ctx.closePath();
+  ctx.fill();
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.ClampToEdgeWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+
+  // Asynchronously try loading `/textures/kristin_face_hd.png` to blend if available
+  if (THREE.TextureLoader) {
+    const imgLoader = new THREE.TextureLoader();
+    imgLoader.load('/textures/kristin_face_hd.png', (loadedTex) => {
+      if (loadedTex && loadedTex.image) {
+        loadedTex.wrapS = THREE.ClampToEdgeWrapping;
+        loadedTex.wrapT = THREE.ClampToEdgeWrapping;
+        loadedTex.minFilter = THREE.LinearFilter;
+        loadedTex.magFilter = THREE.LinearFilter;
+        tex.image = loadedTex.image;
+        tex.needsUpdate = true;
+      }
+    }, undefined, () => {});
+  }
+
+  return tex;
+}
+
 function buildCivicPassengers() {
   const group = new THREE.Group();
   group.name = 'Civic_Interior_Passengers';
@@ -184,6 +525,13 @@ function buildCivicPassengers() {
 
   const rHead = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.20, 0.18), rodrickSkinMat);
   rHeadGroup.add(rHead);
+
+  // Rodrick's textured expressive face on front head plane
+  const rFaceGeo = new THREE.PlaneGeometry(0.178, 0.198);
+  const rFaceMat = new THREE.MeshLambertMaterial({ map: createRodrickFaceTexture(), transparent: false });
+  const rFaceMesh = new THREE.Mesh(rFaceGeo, rFaceMat);
+  rFaceMesh.position.set(0, 0, 0.091);
+  rHeadGroup.add(rFaceMesh);
 
   const rHair = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.10, 0.20), rodrickHairMat);
   rHair.position.set(0, 0.07, -0.01);
@@ -261,6 +609,13 @@ function buildCivicPassengers() {
   const kHead = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.19, 0.16), kristinSkinMat);
   kHeadGroup.add(kHead);
 
+  // Kristin's textured expressive face on front head plane
+  const kFaceGeo = new THREE.PlaneGeometry(0.158, 0.188);
+  const kFaceMat = new THREE.MeshLambertMaterial({ map: createKristinFaceTexture(), transparent: false });
+  const kFaceMesh = new THREE.Mesh(kFaceGeo, kFaceMat);
+  kFaceMesh.position.set(0, 0, 0.081);
+  kHeadGroup.add(kFaceMesh);
+
   // Long flowing black hair
   const kHairTop = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.18), kristinHairMat);
   kHairTop.position.set(0, 0.08, 0);
@@ -299,10 +654,15 @@ function buildCivicPassengers() {
 
   group.add(passengerGroup);
 
-  // 3. Cabin Interior Ambient Glow
-  const cabinLight = new THREE.PointLight(0xffeed8, 1.35, 3.8, 1.4);
-  cabinLight.position.set(0, 1.15, -0.15);
+  // 3. Cabin Interior Ambient & Frontal Face Illumination
+  const cabinLight = new THREE.PointLight(0xfff3e2, 1.8, 4.2, 1.2);
+  cabinLight.position.set(0, 1.15, 0.12);
   group.add(cabinLight);
+
+  // Frontal fill light from dashboard directly illuminating both faces through windshield
+  const frontalFaceLight = new THREE.PointLight(0xffeedd, 1.4, 2.5, 1.1);
+  frontalFaceLight.position.set(0, 1.05, 0.35);
+  group.add(frontalFaceLight);
 
   return {
     group,
