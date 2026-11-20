@@ -363,7 +363,7 @@ export function createHondaCivicCar() {
   // Passengers inside cabin (Rodrick driving, Kristin beside him)
   const passengers = buildCivicPassengers();
   passengers.group.scale.set(1.15, 1.15, 1.15);
-  passengers.group.position.set(0, 1.07 * 1.15, 0);
+  passengers.group.position.set(0, 0, 0);
   root.add(passengers.group);
 
   // 1. Dual High-Beam Headlights (Lamps)
@@ -446,7 +446,7 @@ export function createHondaCivicCar() {
 
   if (civicTemplate) {
     civicMesh = civicTemplate.clone(true);
-    civicMesh.position.set(0, 1.07 * 1.15, 0); // Align bottom of wheels with ground level
+    civicMesh.position.set(0, 0, 0); // Wheels sit directly on ground
     root.add(civicMesh);
     attachWheels(civicMesh);
   } else {
@@ -459,7 +459,7 @@ export function createHondaCivicCar() {
           const model = gltf.scene;
           model.name = 'Honda_Civic_1985_Mesh';
           model.scale.set(1.15, 1.15, 1.15);
-          model.position.set(0, 1.07 * 1.15, 0);
+          model.position.set(0, 0, 0);
 
           model.traverse((child) => {
             if (child.isMesh) {
@@ -544,7 +544,7 @@ export function createHondaCivicCar() {
       // Engine chassis vibration & subtle suspension bounce
       if (civicMesh) {
         const bounce = Math.sin(performance.now() * 0.016) * (isDriving ? 0.012 : 0.003);
-        civicMesh.position.y = (1.07 * 1.15) + bounce;
+        civicMesh.position.y = bounce;
       }
 
       // Update passengers (steering wheel animation, driver hands, head rotation)
