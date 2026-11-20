@@ -452,14 +452,14 @@ html {
 }
 
 .main-menu-frame {
-  max-width: 980px !important;
-  width: 94% !important;
-  padding: clamp(24px, 4vmin, 44px) clamp(20px, 3.5vmin, 36px) !important;
-  border: 3px solid #8e1b24 !important;
-  border-radius: 0px !important;
-  clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px) !important;
-  background: radial-gradient(circle at center, rgba(38, 14, 18, 0.96) 0%, rgba(8, 10, 14, 0.98) 100%) !important;
-  box-shadow: 0 0 70px rgba(0, 0, 0, 0.98), 0 0 45px rgba(200, 25, 40, 0.45) !important;
+  max-width: 640px !important;
+  width: 92% !important;
+  padding: clamp(18px, 3vmin, 26px) clamp(16px, 2.5vmin, 24px) !important;
+  border: 2px solid rgba(180, 45, 55, 0.45) !important;
+  border-radius: 4px !important;
+  clip-path: none !important;
+  background: radial-gradient(circle at center, rgba(32, 12, 16, 0.96) 0%, rgba(8, 10, 12, 0.98) 100%) !important;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.98), 0 0 35px rgba(200, 25, 40, 0.35) !important;
 }
 
 .menu-retro-tag {
@@ -536,163 +536,116 @@ html {
 }
 
 .mode-select-header {
-  margin-bottom: 18px;
+  margin-bottom: 12px;
+  text-align: center;
 }
 
 .mode-select-title {
   display: block;
   font-family: 'Redaction 70', serif, monospace;
   font-style: italic;
-  font-size: 32px;
+  font-size: 28px;
   color: #ffffff;
   letter-spacing: 2px;
   text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
 }
 
-.mode-select-subtitle {
-  display: block;
-  font-family: 'Redaction 70', serif, monospace;
-  font-style: italic;
-  font-size: 19px;
-  color: #a2cfb0;
-  letter-spacing: 1px;
-  margin-top: 4px;
-}
-
 .mode-select-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 22px;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
   width: 100%;
-  margin: 16px 0;
+  margin: 10px 0 14px 0;
+}
+
+@media (max-width: 600px) {
+  .mode-select-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .mode-card {
-  padding: clamp(16px, 2.5vmin, 26px) clamp(14px, 2vmin, 22px) !important;
-  border-radius: 0px !important;
-  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px) !important;
+  padding: 18px 16px !important;
+  border-radius: 4px !important;
+  clip-path: none !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: space-between !important;
-  text-align: left !important;
-  cursor: crosshair !important;
-  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.85) !important;
-  transition: all 0.22s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+  text-align: center !important;
+  align-items: center !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.85) !important;
+  transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+  gap: 12px;
 }
 
 .mode-card:hover {
-  transform: translateY(-4px) scale(1.02) !important;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.95) !important;
+  transform: translateY(-3px) scale(1.02) !important;
 }
 
 .mode-story-card {
-  background: rgba(14, 32, 22, 0.92) !important;
-  border: 3px solid #3d724e !important;
+  background: linear-gradient(145deg, rgba(14, 26, 18, 0.85) 0%, rgba(8, 14, 10, 0.95) 100%) !important;
+  border: 1.5px solid rgba(60, 130, 85, 0.4) !important;
+  border-top: 3px solid #3d8a55 !important;
 }
 
 .mode-story-card:hover {
   border-color: #5cf0a5 !important;
-  background: rgba(18, 42, 28, 0.96) !important;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.95), 0 0 25px rgba(92, 240, 165, 0.4) !important;
+  background: linear-gradient(145deg, rgba(18, 36, 24, 0.92) 0%, rgba(10, 18, 12, 0.98) 100%) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.95), 0 0 20px rgba(92, 240, 165, 0.35) !important;
 }
 
 .mode-endless-card {
-  background: rgba(38, 14, 18, 0.92) !important;
-  border: 3px solid #8e1b24 !important;
+  background: linear-gradient(145deg, rgba(32, 12, 16, 0.85) 0%, rgba(16, 8, 10, 0.95) 100%) !important;
+  border: 1.5px solid rgba(160, 40, 50, 0.4) !important;
+  border-top: 3px solid #a82431 !important;
 }
 
 .mode-endless-card:hover {
   border-color: #ff3344 !important;
-  background: rgba(50, 18, 24, 0.96) !important;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 51, 68, 0.4) !important;
+  background: linear-gradient(145deg, rgba(45, 16, 22, 0.92) 0%, rgba(20, 8, 12, 0.98) 100%) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.95), 0 0 20px rgba(255, 51, 68, 0.35) !important;
 }
 
-.mode-card-top {
+.mode-card-header-clean {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  margin-bottom: 10px;
-}
-
-.mode-card-badge {
-  font-family: 'Redaction 70', serif, monospace;
-  font-style: italic;
-  font-size: 17px;
-  padding: 3px 10px;
-  border-radius: 0px;
-  letter-spacing: 1.5px;
-}
-
-.badge-story {
-  background: #1a442b;
-  color: #a2f0b5;
-  border: 1px solid #4a825b;
-}
-
-.badge-endless {
-  background: #4a151b;
-  color: #ff99a8;
-  border: 1px solid #a82431;
-}
-
-.mode-card-icon {
-  font-size: 26px;
+  gap: 6px;
 }
 
 .mode-card-title {
   font-family: 'Redaction 70', serif, monospace;
   font-style: italic;
-  font-size: 30px;
+  font-size: 26px;
   color: #ffffff;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   font-weight: bold;
-  margin-bottom: 6px;
-  line-height: 1.1;
+  margin: 0;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px #000;
 }
 
 .mode-card-desc {
   font-family: 'Redaction 70', serif, monospace;
   font-style: italic;
-  font-size: 18px;
+  font-size: 15px;
   line-height: 1.35;
-}
-
-.mode-story-card .mode-card-desc {
-  color: #c4e0d2;
-}
-
-.mode-endless-card .mode-card-desc {
-  color: #e8c6cc;
-}
-
-.mode-features-list {
-  list-style: none;
-  padding: 0;
-  margin: 14px 0 0 0;
-  font-family: 'Redaction 70', serif, monospace;
-  font-style: italic;
-  font-size: 18px;
-  line-height: 1.45;
-}
-
-.mode-story-card .mode-features-list {
-  color: #a8dfbc;
-}
-
-.mode-endless-card .mode-features-list {
-  color: #f7aab4;
+  color: #a4bab0;
+  margin: 0;
 }
 
 .mode-launch-btn {
-  margin-top: 18px !important;
+  margin-top: 6px !important;
   width: 100% !important;
   font-family: 'Redaction 70', serif, monospace !important;
   font-style: italic !important;
-  font-size: 26px !important;
-  padding: 12px 18px !important;
-  letter-spacing: 2px !important;
-  border-radius: 0px !important;
-  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px) !important;
+  font-size: 21px !important;
+  padding: 8px 16px !important;
+  letter-spacing: 1.5px !important;
+  border-radius: 3px !important;
+  clip-path: none !important;
+  text-transform: none !important;
 }
 
 .btn-story {
