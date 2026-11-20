@@ -1191,7 +1191,7 @@ function init() {
     });
   });
 
-  applyGraphicFidelity(gameSettings.graphicMode || 'ps1');
+  applyGraphicFidelity(gameSettings.graphicMode || 'hd');
   switchWeapon(gameSettings.weapon || 'spin');
   syncSettingsUI(gameSettings, state);
 

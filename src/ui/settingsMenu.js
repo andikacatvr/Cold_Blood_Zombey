@@ -34,7 +34,7 @@ export function syncSettingsUI(gameSettings, state) {
   // Graphic Fidelity
   const gfxGroup = document.getElementById('group-graphics');
   if (gfxGroup) {
-    const curGfx = gameSettings.graphicMode || 'ps2';
+    const curGfx = gameSettings.graphicMode || 'hd';
     gfxGroup.querySelectorAll('.btn-opt').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.gfx === curGfx);
     });
@@ -159,7 +159,7 @@ export function setupSettingsListeners(context) {
   // Graphic Fidelity
   document.querySelectorAll('#group-graphics .btn-opt').forEach(btn => {
     btn.addEventListener('click', () => {
-      const mode = btn.dataset.gfx || 'ps2';
+      const mode = btn.dataset.gfx || 'hd';
       gameSettings.graphicMode = mode;
       applyGraphicFidelity(mode);
       syncSettingsUI(gameSettings, state);
@@ -230,7 +230,7 @@ export function setupSettingsListeners(context) {
       Object.assign(gameSettings, DEFAULT_SETTINGS);
       saveSettings();
       Sfx.setVolume(gameSettings.volume);
-      applyGraphicFidelity(gameSettings.graphicMode || 'ps1');
+      applyGraphicFidelity(gameSettings.graphicMode || 'hd');
       syncSettingsUI(gameSettings, state);
       switchWeapon(gameSettings.weapon);
     });
