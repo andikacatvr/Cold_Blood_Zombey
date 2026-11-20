@@ -603,7 +603,19 @@ export function setPlayerCutscenePose(mode, progress = 0) {
 
   const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0, 14.0) : 0;
 
-  if (mode === 'unconscious') {
+  if (mode === 'intro') {
+    // Standing beside Kristin alert & observing Coldbrook gate
+    playerMeshRoot.visible = true;
+    const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.40, 14.2) : gy;
+    playerMeshRoot.position.set(-0.40, gyP, 14.2);
+    playerMeshRoot.rotation.set(0, -0.05, 0);
+    if (playerHead) playerHead.rotation.set(0, 0, 0);
+    if (playerLeftArm) playerLeftArm.rotation.set(0.08, 0, 0.05);
+    if (playerRightArm) playerRightArm.rotation.set(-0.10, 0, -0.05);
+    if (playerLeftLeg) playerLeftLeg.rotation.set(0, 0, 0);
+    if (playerRightLeg) playerRightLeg.rotation.set(0, 0, 0);
+    if (playerWeaponSocket) playerWeaponSocket.visible = false; // Unarmed during intro
+  } else if (mode === 'unconscious') {
     playerMeshRoot.visible = true;
     // Laying down flat on back in the snow
     // Pivot is at feet, head rests naturally near Z = 14.3

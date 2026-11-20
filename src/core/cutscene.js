@@ -221,8 +221,8 @@ export function startIntroCutscene(camera, sfx, onComplete) {
   if (weaponHolder) weaponHolder.visible = false;
   if (playerFlashlight) playerFlashlight.visible = false;
 
-  // Position upright player
-  setPlayerCutscenePose('reset');
+  // Position upright player standing beside Kristin
+  setPlayerCutscenePose('intro');
   if (state && state.player) state.player.isInvulnerable = true;
 
   // 1. Permanent "WELCOME TO COLDBROOK" Gothic Arch & Roadway is built into world environment
@@ -247,9 +247,15 @@ export function startIntroCutscene(camera, sfx, onComplete) {
   cutsceneOldThomas.rotation.y = Math.PI; // Faces toward player & Kristin
   if (scene) scene.add(cutsceneOldThomas);
 
-  // 4. Position player & Kristin standing alert
-  const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.35, 14.2) : 0;
-  playerPos.set(-0.35, gyP, 14.2);
+  // 4. Position Rodrick & Kristin standing alert side-by-side
+  const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.40, 14.2) : 0;
+  playerPos.set(-0.40, gyP, 14.2);
+
+  if (playerMeshRoot) {
+    playerMeshRoot.visible = true;
+    playerMeshRoot.position.set(-0.40, gyP, 14.2);
+    playerMeshRoot.rotation.set(0, -0.05, 0);
+  }
 
   if (kristinModel && kristinModel.root) {
     const gyK = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.45, 14.4) : 0;
@@ -497,7 +503,21 @@ export function updateCutscene(dt) {
     }
   }
 
-  // 2. Animate Kristin looking alert & speaking
+  // 2. Animate Rodrick & Kristin standing alert side-by-side
+  if (playerMeshRoot && playerMeshRoot.visible) {
+    const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.40, 14.2) : 0;
+    const breath = Math.sin(cutsceneTime * 2.2) * 0.012;
+    playerMeshRoot.position.set(-0.40, gyP + breath, 14.2);
+
+    if (cutsceneTime > 14.5 && cutsceneTime < 21.5) {
+      // Turn to face Kristin when she whispers about the tainted water
+      playerMeshRoot.rotation.y = THREE.MathUtils.lerp(playerMeshRoot.rotation.y, 0.45, dt * 2.5);
+    } else {
+      // Face forward toward Old Thomas & Coldbrook gate
+      playerMeshRoot.rotation.y = THREE.MathUtils.lerp(playerMeshRoot.rotation.y, -0.05, dt * 2.5);
+    }
+  }
+
   if (kristinModel && kristinModel.root) {
     if (cutsceneTime > 14.5 && cutsceneTime < 21.5) {
       // Turn to talk to Rodrick
@@ -505,6 +525,9 @@ export function updateCutscene(dt) {
     } else if (cutsceneTime >= 21.5) {
       // Turn forward toward village lane
       kristinModel.root.rotation.y = THREE.MathUtils.lerp(kristinModel.root.rotation.y, -0.2, dt * 2.5);
+    } else {
+      // Face forward toward gate
+      kristinModel.root.rotation.y = THREE.MathUtils.lerp(kristinModel.root.rotation.y, 0.15, dt * 2.5);
     }
   }
 
