@@ -849,14 +849,16 @@ html {
   transform: scale(0.97) translateY(1px);
 }
 
-/* SETTINGS MODAL DIALOG (CLEAN, COMPACT & NON-OVERFLOWING) */
-#screen-settings.settings-modal-backdrop {
-  position: absolute;
+/* MODAL BACKDROP (FOR SETTINGS & TACTICAL MAP) */
+.settings-modal-backdrop,
+#screen-settings,
+#screen-tactical-map {
+  position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 50;
+  z-index: 99999;
   display: none;
   align-items: center;
   justify-content: center;
@@ -1820,9 +1822,9 @@ input[type=range]::-webkit-slider-thumb {
 
 /* FULLSCREEN TACTICAL MAP MODAL */
 .tactical-map-dialog {
-  background: #0d1411;
-  border: 2px solid #3d6849;
-  box-shadow: 0 0 45px rgba(0, 0, 0, 0.95), 0 0 15px rgba(45, 100, 65, 0.3);
+  background: #0d0a0c;
+  border: 2px solid #5a1e28;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.98), 0 0 20px rgba(130, 20, 30, 0.4);
   width: 95vw;
   max-width: 1140px;
   max-height: 92vh;
@@ -1836,8 +1838,8 @@ input[type=range]::-webkit-slider-thumb {
 
 .map-dialog-header {
   padding: 14px 22px;
-  background: #131f1a;
-  border-bottom: 2px solid #233b2c;
+  background: #170d10;
+  border-bottom: 2px solid #3d141b;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1845,14 +1847,14 @@ input[type=range]::-webkit-slider-thumb {
 
 .map-dialog-title {
   font-size: 26px;
-  color: #9de8b7;
+  color: #f0c5cc;
   letter-spacing: 1.5px;
-  text-shadow: 0 0 10px rgba(157, 232, 183, 0.5);
+  text-shadow: 0 0 10px rgba(240, 197, 204, 0.4);
 }
 
 .map-dialog-subtitle {
   font-size: 18px;
-  color: #8da394;
+  color: #a89498;
   margin-top: 3px;
 }
 
@@ -1860,7 +1862,7 @@ input[type=range]::-webkit-slider-thumb {
   display: flex;
   flex: 1;
   overflow: hidden;
-  background: #090e0c;
+  background: #090607;
 }
 
 .map-canvas-container {
@@ -1869,24 +1871,24 @@ input[type=range]::-webkit-slider-thumb {
   justify-content: center;
   align-items: center;
   padding: 12px;
-  background: #0d1512;
-  border-right: 2px solid #1e3325;
+  background: #0d080a;
+  border-right: 2px solid #2e1016;
   overflow: auto;
 }
 
 #tactical-map-canvas {
   max-width: 100%;
   max-height: 68vh;
-  border: 1px solid #3d6849;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.85);
+  border: 1.5px solid #4a1922;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.95);
   border-radius: 4px;
-  background: #101715;
+  background: #0f0b0d;
 }
 
 .map-sidebar-legend {
   width: 320px;
   padding: 16px;
-  background: #111a15;
+  background: #140c0f;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -1896,7 +1898,7 @@ input[type=range]::-webkit-slider-thumb {
 .map-legend-title {
   font-size: 20px;
   color: #ffd15c;
-  border-bottom: 1px solid #3d6849;
+  border-bottom: 1px solid #4a1922;
   padding-bottom: 6px;
   margin-bottom: 4px;
   letter-spacing: 1px;
@@ -1908,8 +1910,8 @@ input[type=range]::-webkit-slider-thumb {
   align-items: flex-start;
   padding: 6px 8px;
   border-radius: 4px;
-  background: rgba(22, 34, 28, 0.6);
-  border: 1px solid rgba(61, 104, 73, 0.35);
+  background: rgba(32, 14, 18, 0.7);
+  border: 1px solid rgba(85, 25, 35, 0.45);
 }
 
 .legend-icon {
@@ -1922,27 +1924,27 @@ input[type=range]::-webkit-slider-thumb {
 .legend-item strong {
   display: block;
   font-size: 18px;
-  color: #d8ede0;
+  color: #f0d8dc;
   line-height: 1.1;
 }
 
 .legend-desc {
   font-size: 15px;
-  color: #8da394;
+  color: #a38c90;
   margin-top: 2px;
   line-height: 1.2;
 }
 
 .legend-divider {
   height: 1px;
-  background: #233b2c;
+  background: #3d141b;
   margin: 4px 0;
 }
 
 .map-dialog-footer {
   padding: 12px 22px;
-  background: #131f1a;
-  border-top: 2px solid #233b2c;
+  background: #170d10;
+  border-top: 2px solid #3d141b;
   display: flex;
   justify-content: space-between;
   align-items: center;

@@ -142,16 +142,16 @@ function drawFullTacticalMap() {
     return ((wz - worldMinZ) / (worldMaxZ - worldMinZ)) * h;
   }
 
-  // 1. Clear background (Dark military parchment tone)
-  ctx.fillStyle = '#101715';
+  // 1. Clear background (Dark cold parchment tone)
+  ctx.fillStyle = '#0f1412';
   ctx.fillRect(0, 0, w, h);
 
   // 2. Snowy Forest Background with subtle topography grid
-  ctx.fillStyle = '#22322b';
+  ctx.fillStyle = '#1c2621';
   ctx.fillRect(toCanvasX(-mapLim), toCanvasY(-mapLim), toCanvasX(mapLim) - toCanvasX(-mapLim), toCanvasY(mapLim) - toCanvasY(-mapLim));
 
   // Tactical Grid Lines
-  ctx.strokeStyle = 'rgba(74, 130, 91, 0.22)';
+  ctx.strokeStyle = 'rgba(90, 40, 50, 0.25)';
   ctx.lineWidth = 1;
   const gridStep = 25; // every 25m
   for (let gx = -mapLim; gx <= mapLim; gx += gridStep) {
@@ -168,6 +168,64 @@ function drawFullTacticalMap() {
     ctx.lineTo(w, cy);
     ctx.stroke();
   }
+
+  // 2b. Mountain Highway Asphalt Road & Coldbrook Village Road System
+  const roadLeft = toCanvasX(-3.4);
+  const roadRight = toCanvasX(3.4);
+  const roadTop = toCanvasY(-46.0);
+  const roadBottom = toCanvasY(28.0);
+  ctx.fillStyle = '#262b30';
+  ctx.fillRect(roadLeft, roadTop, roadRight - roadLeft, roadBottom - roadTop);
+  ctx.strokeStyle = '#434a54';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(roadLeft, roadTop, roadRight - roadLeft, roadBottom - roadTop);
+
+  // Center dashed yellow lane markings
+  ctx.strokeStyle = '#d4aa33';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(toCanvasX(0), roadTop);
+  ctx.lineTo(toCanvasX(0), roadBottom);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Blackwood Moors Tunnel Entrance (z = -46)
+  ctx.fillStyle = '#111317';
+  ctx.fillRect(toCanvasX(-5.5), roadTop - 4, toCanvasX(5.5) - toCanvasX(-5.5), 6);
+  ctx.strokeStyle = '#5a626d';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(toCanvasX(-5.5), roadTop - 4, toCanvasX(5.5) - toCanvasX(-5.5), 6);
+
+  // Coldbrook Village Entrance Archway Gate (z = 16)
+  const gateY = toCanvasY(16.0);
+  ctx.fillStyle = '#7a1f28';
+  ctx.fillRect(toCanvasX(-5.0), gateY - 2.5, toCanvasX(5.0) - toCanvasX(-5.0), 5);
+  ctx.strokeStyle = '#e63946';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(toCanvasX(-5.0), gateY - 2.5, toCanvasX(5.0) - toCanvasX(-5.0), 5);
+
+  // Village Dirt Walking Trails connecting points of interest
+  ctx.strokeStyle = '#5a4231';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  // Trail to Wooden Bridge
+  ctx.moveTo(toCanvasX(0), toCanvasY(8.0));
+  ctx.lineTo(toCanvasX(getRiverCenterX(4.0)), toCanvasY(4.0));
+  // Trail from Bridge to Sanctuary Farmhouse
+  ctx.moveTo(toCanvasX(getRiverCenterX(4.0)), toCanvasY(4.0));
+  ctx.lineTo(toCanvasX(-13.0), toCanvasY(-6.0));
+  // Trail from Road to East Cabins / Darrell's Cabin
+  ctx.moveTo(toCanvasX(0), toCanvasY(16.0));
+  ctx.lineTo(toCanvasX(18.0), toCanvasY(6.0));
+  ctx.lineTo(toCanvasX(22.0), toCanvasY(-20.0));
+  // Trail to South Shore Beach & Pier
+  ctx.moveTo(toCanvasX(0), toCanvasY(28.0));
+  ctx.lineTo(toCanvasX(14.0), toCanvasY(76.0));
+  ctx.lineTo(toCanvasX(14.0), toCanvasY(112.0));
+  ctx.stroke();
+  ctx.setLineDash([]);
 
   // 3. Ocean Water Area (z >= 125.5)
   const oceanTopY = toCanvasY(125.5);
@@ -322,30 +380,60 @@ function drawFullTacticalMap() {
 
   // 10. Landmark Text Labels
   ctx.font = 'bold 12px "Redaction 70", serif';
-  ctx.fillStyle = '#d2e4ea';
-  ctx.fillText('AIR TERJUN', toCanvasX(42) + 12, toCanvasY(-58) + 4);
-  ctx.fillText('PONDOK DARRELL', toCanvasX(-13) - 75, toCanvasY(-6));
-  ctx.fillText('JEMBATAN', toCanvasX(brX) + 16, toCanvasY(4) + 4);
+  ctx.fillStyle = '#e8d4d8';
+  ctx.fillText('AIR TERJUN UTARA', toCanvasX(42) + 12, toCanvasY(-58) + 4);
+  ctx.fillText('TEROWONGAN BLACKWOOD', toCanvasX(0) - 85, toCanvasY(-46) - 8);
+  ctx.fillText('GERBANG COLDBROOK', toCanvasX(0) + 12, toCanvasY(16) + 4);
+  ctx.fillText('RUMAH AMAN (FARMHOUSE)', toCanvasX(-13) - 85, toCanvasY(-6) - 10);
+  ctx.fillText('PONDOK DARRELL', toCanvasX(22) + 12, toCanvasY(-20) + 4);
+  ctx.fillText('JEMBATAN KAYU', toCanvasX(brX) + 16, toCanvasY(4) + 4);
   ctx.fillText('PANTAI PASIR EMAS', toCanvasX(-60), toCanvasY(96));
-  ctx.fillText('DERMAGA', toCanvasX(14) + 12, toCanvasY(128));
-  ctx.fillText('PERAHU', toCanvasX(44) + 12, toCanvasY(116));
+  ctx.fillText('DERMAGA NELAYAN', toCanvasX(14) + 12, toCanvasY(128));
+  ctx.fillText('PERAHU TERDAMPAR', toCanvasX(44) + 12, toCanvasY(116));
   ctx.fillText('LAUTAN SELATAN', toCanvasX(-45), toCanvasY(148));
 
-  // 10b. Interactive Village NPCs during Orientation
-  if (state && state.storyPhase === 'orientation') {
+  // Compass Rose (Top-Right)
+  const compX = w - 42;
+  const compY = 42;
+  ctx.strokeStyle = '#e63946';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(compX, compY + 16);
+  ctx.lineTo(compX, compY - 16);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(compX - 10, compY);
+  ctx.lineTo(compX + 10, compY);
+  ctx.stroke();
+  // North arrow
+  ctx.fillStyle = '#ff3344';
+  ctx.beginPath();
+  ctx.moveTo(compX, compY - 22);
+  ctx.lineTo(compX - 6, compY - 14);
+  ctx.lineTo(compX + 6, compY - 14);
+  ctx.closePath();
+  ctx.fill();
+  ctx.font = 'bold 12px monospace';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.fillText('N', compX, compY - 26);
+  ctx.textAlign = 'left';
+
+  // 10b. Interactive Village NPCs
+  if (state && (state.gameMode === 'story' || state.storyPhase)) {
     VILLAGE_NPCS.forEach(npc => {
       const nx = toCanvasX(npc.x);
       const nz = toCanvasY(npc.z);
-      ctx.fillStyle = npc.talked ? '#627d6a' : '#ffe169';
+      ctx.fillStyle = npc.talked ? '#7d525b' : '#ffd15c';
       ctx.beginPath();
-      ctx.arc(nx, nz, npc.talked ? 3.5 : 5, 0, Math.PI * 2);
+      ctx.arc(nx, nz, npc.talked ? 3.5 : 5.5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = '#223326';
+      ctx.strokeStyle = '#1a060a';
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
       ctx.font = 'bold 11px monospace';
-      ctx.fillStyle = npc.talked ? '#8da594' : '#fff3a8';
+      ctx.fillStyle = npc.talked ? '#a88d92' : '#fff3a8';
       ctx.fillText(npc.name, nx + 7, nz + 3);
     });
   }
@@ -710,6 +798,16 @@ export function setupMapListeners(gameState) {
     touchMapBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       toggleMap(gameState);
+    });
+  }
+
+  // Backdrop click to close map
+  const mapModal = document.getElementById('screen-tactical-map');
+  if (mapModal) {
+    mapModal.addEventListener('click', (e) => {
+      if (e.target === mapModal) {
+        closeMap(gameState);
+      }
     });
   }
 }
