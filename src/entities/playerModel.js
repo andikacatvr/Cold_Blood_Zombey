@@ -608,7 +608,7 @@ export function setPlayerCutscenePose(mode, progress = 0) {
     playerMeshRoot.visible = true;
     const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.40, 14.2) : gy;
     playerMeshRoot.position.set(-0.40, gyP, 14.2);
-    playerMeshRoot.rotation.set(0, -0.05, 0);
+    playerMeshRoot.rotation.set(0, Math.PI - 0.05, 0); // Face forward toward Coldbrook gate (same orientation as Kristin)
     if (playerHead) playerHead.rotation.set(0, 0, 0);
     if (playerLeftArm) playerLeftArm.rotation.set(0.08, 0, 0.05);
     if (playerRightArm) playerRightArm.rotation.set(-0.10, 0, -0.05);

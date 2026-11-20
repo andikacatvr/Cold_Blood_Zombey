@@ -254,7 +254,7 @@ export function startIntroCutscene(camera, sfx, onComplete) {
   if (playerMeshRoot) {
     playerMeshRoot.visible = true;
     playerMeshRoot.position.set(-0.40, gyP, 14.2);
-    playerMeshRoot.rotation.set(0, -0.05, 0);
+    playerMeshRoot.rotation.set(0, Math.PI - 0.05, 0); // Face forward along +Z toward gate, standing with Kristin
   }
 
   if (kristinModel && kristinModel.root) {
@@ -511,10 +511,10 @@ export function updateCutscene(dt) {
 
     if (cutsceneTime > 14.5 && cutsceneTime < 21.5) {
       // Turn to face Kristin when she whispers about the tainted water
-      playerMeshRoot.rotation.y = THREE.MathUtils.lerp(playerMeshRoot.rotation.y, 0.45, dt * 2.5);
+      playerMeshRoot.rotation.y = THREE.MathUtils.lerp(playerMeshRoot.rotation.y, Math.PI - 0.55, dt * 2.5);
     } else {
-      // Face forward toward Old Thomas & Coldbrook gate
-      playerMeshRoot.rotation.y = THREE.MathUtils.lerp(playerMeshRoot.rotation.y, -0.05, dt * 2.5);
+      // Face forward toward Old Thomas & Coldbrook gate (same as Kristin)
+      playerMeshRoot.rotation.y = THREE.MathUtils.lerp(playerMeshRoot.rotation.y, Math.PI - 0.05, dt * 2.5);
     }
   }
 
