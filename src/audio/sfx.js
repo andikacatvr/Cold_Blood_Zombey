@@ -15,6 +15,10 @@ import { gameSettings } from '../config/settings.js';
       bellTimer: null,
       bossVoiceAudio: null,
       nonaBataviaVoiceAudio: null,
+      carEngineOsc1: null,
+      carEngineOsc2: null,
+      carEngineGain: null,
+      carEngineFilter: null,
       lastStepTime: 0,
       gameState: null,
       isGameActive() {
@@ -855,6 +859,77 @@ import { gameSettings } from '../config/settings.js';
           osc.stop(now + 1.9);
         });
       },
+      // 1985 HONDA CIVIC INTRO ENGINE AUDIO (AUTHENTIC 4-CYLINDER RUMBLE)
+      startCarEngineAudio() {
+        if (!this.ctx || this.carEngineGain) return;
+        try {
+          const now = this.ctx.currentTime;
+          const osc1 = this.ctx.createOscillator();
+          const osc2 = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const filter = this.ctx.createBiquadFilter();
+
+          osc1.type = 'sawtooth';
+          osc1.frequency.setValueAtTime(44, now); // 4-cylinder engine idle frequency
+
+          osc2.type = 'triangle';
+          osc2.frequency.setValueAtTime(88, now);
+
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(200, now);
+
+          gain.gain.setValueAtTime(0.01, now);
+          gain.gain.linearRampToValueAtTime(0.20, now + 0.8);
+
+          osc1.connect(filter);
+          osc2.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.dest());
+
+          osc1.start(now);
+          osc2.start(now);
+
+          this.carEngineOsc1 = osc1;
+          this.carEngineOsc2 = osc2;
+          this.carEngineFilter = filter;
+          this.carEngineGain = gain;
+        } catch (e) {
+          console.warn('Car engine sound error:', e);
+        }
+      },
+      updateCarEnginePitch(rpmFactor = 1.0) {
+        if (!this.ctx || !this.carEngineOsc1) return;
+        const now = this.ctx.currentTime;
+        const baseFreq = 42 + Math.max(0, rpmFactor) * 45;
+        this.carEngineOsc1.frequency.setTargetAtTime(baseFreq, now, 0.12);
+        this.carEngineOsc2.frequency.setTargetAtTime(baseFreq * 2, now, 0.12);
+        if (this.carEngineFilter) {
+          this.carEngineFilter.frequency.setTargetAtTime(180 + Math.max(0, rpmFactor) * 140, now, 0.12);
+        }
+      },
+      stopCarEngineAudio() {
+        if (!this.ctx || !this.carEngineGain) return;
+        try {
+          const now = this.ctx.currentTime;
+          this.carEngineGain.gain.linearRampToValueAtTime(0.001, now + 0.8);
+          setTimeout(() => {
+            if (this.carEngineOsc1) {
+              try { this.carEngineOsc1.stop(); this.carEngineOsc1.disconnect(); } catch (e) {}
+            }
+            if (this.carEngineOsc2) {
+              try { this.carEngineOsc2.stop(); this.carEngineOsc2.disconnect(); } catch (e) {}
+            }
+            if (this.carEngineGain) {
+              try { this.carEngineGain.disconnect(); } catch (e) {}
+            }
+            this.carEngineOsc1 = null;
+            this.carEngineOsc2 = null;
+            this.carEngineGain = null;
+            this.carEngineFilter = null;
+          }, 850);
+        } catch (e) {}
+      },
+
       playTeleportWhoosh() {
         if (!this.ctx) return;
         const now = this.ctx.currentTime;

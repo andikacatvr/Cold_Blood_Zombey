@@ -69,6 +69,7 @@ import {
   killZombieWithKinematics,
   buildLeft4DeadInfected
 } from './entities/enemies.js';
+import { preloadHondaCivicModel } from './entities/car.js';
 import {
   initKristinCompanion,
   updateKristinCompanion
@@ -1038,6 +1039,7 @@ function init() {
   preloadNonaBataviaModel(scene);
   preloadVictorianBrideModel(scene);
   preloadZombieGLBModels(scene);
+  preloadHondaCivicModel();
   initKristinCompanion(scene, textures);
   initNataliaAgent(scene, textures);
   initPlayer(camera, scene);

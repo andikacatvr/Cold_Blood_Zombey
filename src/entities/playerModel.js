@@ -603,7 +603,21 @@ export function setPlayerCutscenePose(mode, progress = 0) {
 
   const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0, 14.0) : 0;
 
-  if (mode === 'intro') {
+  if (mode === 'walk') {
+    playerMeshRoot.visible = true;
+    const stride = Math.sin(progress);
+    if (playerLeftLeg) playerLeftLeg.rotation.x = stride * 0.55;
+    if (playerRightLeg) playerRightLeg.rotation.x = -stride * 0.55;
+    if (playerLeftArm) playerLeftArm.rotation.set(-stride * 0.45, 0, 0.05);
+    if (playerRightArm) playerRightArm.rotation.set(stride * 0.45, 0, -0.05);
+    if (playerHead) playerHead.rotation.set(0, 0, 0);
+    if (playerTorso) {
+      const baseY = isRodrickGLBLoaded ? rodrickTorsoBaseY : 0.95;
+      playerTorso.position.y = baseY + Math.abs(stride) * 0.035;
+      playerTorso.rotation.y = Math.sin(progress) * 0.04;
+    }
+    if (playerWeaponSocket) playerWeaponSocket.visible = false;
+  } else if (mode === 'intro') {
     // Standing beside Kristin alert & observing Coldbrook gate
     playerMeshRoot.visible = true;
     const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.40, 14.2) : gy;

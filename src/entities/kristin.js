@@ -1021,3 +1021,113 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
     kristinModel.weaponSocket.rotation.z = ra_rz * 0.9 + t_rz * 0.5;
   }
 }
+
+/**
+ * Animate Kristin during cutscenes (Walking or Alert Stance)
+ */
+export function animateKristinCutsceneStep(dt, isWalking = false) {
+  if (!kristinModel || !kristinModel.charMesh || !kristinModel.vertexWeights) return;
+  const t = performance.now() * 0.001;
+
+  if (isWalking) {
+    walkCadence += dt * 6.5;
+  } else {
+    walkCadence = THREE.MathUtils.lerp(walkCadence, 0, 0.1);
+  }
+
+  const vCount = kristinModel.vertexCount;
+  const orig = kristinModel.origPositions;
+  const weights = kristinModel.vertexWeights;
+  const posArr = kristinModel.charMesh.geometry.attributes.position.array;
+
+  let la_rx = -0.04, la_ry = 0, la_rz = 0.38;
+  let ra_rx = -0.04, ra_ry = 0, ra_rz = -0.38;
+  let t_rx = 0, t_ry = 0, t_rz = 0;
+  let ll_rx = 0, ll_ry = 0, ll_rz = 0;
+  let rl_rx = 0, rl_ry = 0, rl_rz = 0;
+
+  const breath = Math.sin(t * 1.8);
+  t_rx += breath * 0.016;
+  ra_rx += breath * 0.01;
+  la_rx += breath * 0.01;
+
+  if (isWalking) {
+    const strideAmp = 0.55;
+    ll_rx += Math.sin(walkCadence) * strideAmp;
+    rl_rx += -Math.sin(walkCadence) * strideAmp;
+    la_rx += -Math.sin(walkCadence) * 0.42;
+    ra_rx += Math.sin(walkCadence) * 0.14;
+    t_ry += Math.sin(walkCadence) * 0.08;
+    t_rz += -Math.sin(walkCadence) * 0.03;
+  }
+
+  const makeRotator = (rx, ry, rz, px, py, pz) => {
+    const cx = Math.cos(rx), sx = Math.sin(rx);
+    const cy = Math.cos(ry), sy = Math.sin(ry);
+    const cz = Math.cos(rz), sz = Math.sin(rz);
+    return (x, y, z) => {
+      let dx = x - px, dy = y - py, dz = z - pz;
+      let y1 = cy * dy - sy * dz;
+      let z1 = sy * dy + cy * dz;
+      let x2 = cx * dx + sx * z1;
+      let z2 = -sx * dx + cx * z1;
+      let x3 = cz * x2 - sz * y1;
+      let y3 = sz * x2 + cz * y1;
+      return [x3 + px, y3 + py, z2 + pz];
+    };
+  };
+
+  const rotRArm = makeRotator(ra_rx, ra_ry, ra_rz, 0.32, 1.25, 0);
+  const rotLArm = makeRotator(la_rx, la_ry, la_rz, -0.32, 1.25, 0);
+  const rotTorso = makeRotator(t_rx, t_ry, t_rz, 0, 0.85, 0);
+  const rotLLeg = makeRotator(ll_rx, ll_ry, ll_rz, -0.12, 0.82, 0);
+  const rotRLeg = makeRotator(rl_rx, rl_ry, rl_rz, 0.12, 0.82, 0);
+
+  for (let i = 0; i < vCount; i++) {
+    const idx3 = i * 3;
+    const idx6 = i * 6;
+    const x0 = orig[idx3], y0 = orig[idx3 + 1], z0 = orig[idx3 + 2];
+    const wLArm = weights[idx6 + 1];
+    const wRArm = weights[idx6 + 2];
+    const wTorso = weights[idx6 + 3];
+    const wLLeg = weights[idx6 + 4];
+    const wRLeg = weights[idx6 + 5];
+
+    let fx = x0, fy = y0, fz = z0;
+    if (wLArm > 0.001) {
+      const [lax, lay, laz] = rotLArm(x0, y0, z0);
+      fx += (lax - x0) * wLArm;
+      fy += (lay - y0) * wLArm;
+      fz += (laz - z0) * wLArm;
+    }
+    if (wRArm > 0.001) {
+      const [rax, ray, raz] = rotRArm(x0, y0, z0);
+      fx += (rax - x0) * wRArm;
+      fy += (ray - y0) * wRArm;
+      fz += (raz - z0) * wRArm;
+    }
+    if (wTorso > 0.001) {
+      const [tx, ty, tz] = rotTorso(x0, y0, z0);
+      fx += (tx - x0) * wTorso;
+      fy += (ty - y0) * wTorso;
+      fz += (tz - z0) * wTorso;
+    }
+    if (wLLeg > 0.001) {
+      const [llx, lly, llz] = rotLLeg(x0, y0, z0);
+      fx += (llx - x0) * wLLeg;
+      fy += (lly - y0) * wLLeg;
+      fz += (llz - z0) * wLLeg;
+    }
+    if (wRLeg > 0.001) {
+      const [rlx, rly, rlz] = rotRLeg(x0, y0, z0);
+      fx += (rlx - x0) * wRLeg;
+      fy += (rly - y0) * wRLeg;
+      fz += (rlz - z0) * wRLeg;
+    }
+
+    posArr[idx3] = fx;
+    posArr[idx3 + 1] = fy;
+    posArr[idx3 + 2] = fz;
+  }
+  kristinModel.charMesh.geometry.attributes.position.needsUpdate = true;
+}
