@@ -13,7 +13,7 @@ export const OBJECTIVES = {
     title: 'Wawancara Warga (0/3)',
     journal: 'Sapa 3 warga desa yang tersisa.',
     location: 'Warga Coldbrook',
-    marker: { x: 2.2, z: 15.5 }
+    marker: { x: 1.8, z: 17.5 }
   },
   'complication': {
     id: 'complication',

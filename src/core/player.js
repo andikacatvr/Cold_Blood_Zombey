@@ -327,7 +327,7 @@ export function triggerComplicationPhase() {
   // Spawn initial outbreak zombies (Infected Devout)
   setTimeout(() => {
     if (!state.running) return;
-    spawnWinterZombie(2.2, 15.5, state); // Old Thomas mutant
+    spawnWinterZombie(1.8, 17.5, state); // Old Thomas mutant
     spawnWinterZombie(8.5, -2.0, state); // Edward mutant
     spawnWinterZombie(0.0, 7.0, state);
     spawnWinterZombie(-5.0, 10.0, state);

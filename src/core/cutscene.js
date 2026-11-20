@@ -251,8 +251,8 @@ export function startIntroCutscene(camera, sfx, onComplete) {
   // 3. Spawn Old Thomas (Elderly British villager with creepy smile & chalice at Coldbrook arch)
   if (cutsceneOldThomas && scene) scene.remove(cutsceneOldThomas);
   cutsceneOldThomas = buildOldThomasModel();
-  const gyThomas = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.8, 17.5) : 0;
-  cutsceneOldThomas.position.set(0.8, gyThomas, 17.5);
+  const gyThomas = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.8, 17.5) : 0;
+  cutsceneOldThomas.position.set(1.8, gyThomas, 17.5);
   cutsceneOldThomas.rotation.y = Math.PI; // Faces toward oncoming road & arrivals
   if (scene) scene.add(cutsceneOldThomas);
 
@@ -508,8 +508,8 @@ export function updateCutscene(dt) {
     // Stage 1: Driving on highway toward Coldbrook gate
     const driveT = Math.min(1.0, cutsceneTime / 7.2);
     const easeDrive = driveT * (2 - driveT); // Smooth deceleration as car approaches gate
-    const carZ = THREE.MathUtils.lerp(-52.0, 13.5, easeDrive);
-    const carX = THREE.MathUtils.lerp(0.0, 2.45, driveT * driveT);
+    const carZ = THREE.MathUtils.lerp(-52.0, 5.0, easeDrive);
+    const carX = THREE.MathUtils.lerp(0.0, 3.2, driveT * driveT);
     const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(carX, carZ) : 0;
 
     if (cutsceneCivicCar && cutsceneCivicCar.root) {
@@ -527,8 +527,8 @@ export function updateCutscene(dt) {
   } else {
     // Stage 2 - 4: Car is parked at road shoulder, Rodrick & Kristin have stepped out
     if (cutsceneCivicCar && cutsceneCivicCar.root) {
-      const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(2.45, 13.5) : 0;
-      cutsceneCivicCar.root.position.set(2.45, gyCar, 13.5);
+      const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(3.2, 5.0) : 0;
+      cutsceneCivicCar.root.position.set(3.2, gyCar, 5.0);
       cutsceneCivicCar.update(dt, 0, false, cutsceneTime);
       cutsceneCivicCar.setPassengersVisible(false); // Stepped out
       if (sfxRef && sfxRef.updateCarEnginePitch) sfxRef.updateCarEnginePitch(0.80);
@@ -637,8 +637,8 @@ export function finishCutscene() {
   // Keep Honda Civic parked at Coldbrook entrance with headlights on as their vehicle
   if (cutsceneCivicCar) {
     cutsceneCivicCar.setPassengersVisible(false);
-    const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(2.45, 13.5) : 0;
-    cutsceneCivicCar.root.position.set(2.45, gyCar, 13.5);
+    const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(3.2, 5.0) : 0;
+    cutsceneCivicCar.root.position.set(3.2, gyCar, 5.0);
     cutsceneCivicCar.update(0, 0, false, 0);
   }
   if (sfxRef && sfxRef.stopCarEngineAudio) {

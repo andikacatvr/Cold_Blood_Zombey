@@ -569,8 +569,8 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
     // Player follows Kristin; Kristin directs the path!
     // =============================================================
     const actObj = (typeof window.getActiveObjective === 'function') ? window.getActiveObjective() : null;
-    let goalX = 2.2;
-    let goalZ = 15.5; // Default: Old Thomas at Coldbrook gate
+    let goalX = 1.8;
+    let goalZ = 17.5; // Default: Old Thomas at Coldbrook gate
     if (actObj && actObj.marker) {
       goalX = actObj.marker.x;
       goalZ = actObj.marker.z;
