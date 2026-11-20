@@ -12,6 +12,9 @@ import { getTerrainHeight } from '../world/environment.js';
 let civicTemplate = null;
 let isCivicLoading = false;
 
+// 1.58x car scale: Perfectly balances roof height (~2.05m) to character shoulder/chin level
+export const CAR_SCALE = 1.58;
+
 /**
  * Preload the Honda Civic 1985 GLB asset
  */
@@ -28,7 +31,7 @@ export function preloadHondaCivicModel() {
     (gltf) => {
       const model = gltf.scene;
       model.name = 'Honda_Civic_1985_Template';
-      model.scale.set(1.15, 1.15, 1.15); // Authentic vehicle scale
+      model.scale.set(1, 1, 1);
 
       model.traverse((child) => {
         if (child.isMesh) {
@@ -356,50 +359,56 @@ export function createHondaCivicCar() {
   const root = new THREE.Group();
   root.name = 'Honda_Civic_1985_Vehicle';
 
+  // Master Scaled Vehicle Container (Synchronizes scale of car, passengers, and lights)
+  const carHolder = new THREE.Group();
+  carHolder.name = 'Car_Scaled_Holder';
+  carHolder.scale.set(CAR_SCALE, CAR_SCALE, CAR_SCALE);
+  root.add(carHolder);
+
   let civicMesh = null;
   const wheelNodes = [];
   let wheelRotX = 0;
 
   // Passengers inside cabin (Rodrick driving, Kristin beside him)
   const passengers = buildCivicPassengers();
-  passengers.group.scale.set(1.15, 1.15, 1.15);
   passengers.group.position.set(0, 0, 0);
-  root.add(passengers.group);
+  passengers.group.scale.set(1, 1, 1);
+  carHolder.add(passengers.group);
 
   // 1. Dual High-Beam Headlights (Lamps)
-  const leftHeadlight = new THREE.SpotLight(0xfff6dd, 4.2, 55, Math.PI / 4.2, 0.55, 1.1);
-  leftHeadlight.position.set(-0.68, 0.65, 1.85);
+  const leftHeadlight = new THREE.SpotLight(0xfff6dd, 4.2, 45, Math.PI / 4.2, 0.55, 1.1);
+  leftHeadlight.position.set(-0.58, 0.58, 1.62);
   const leftTarget = new THREE.Object3D();
-  leftTarget.position.set(-0.68, 0.15, 35);
-  root.add(leftTarget);
+  leftTarget.position.set(-0.58, 0.10, 30);
+  carHolder.add(leftTarget);
   leftHeadlight.target = leftTarget;
   leftHeadlight.castShadow = true;
-  root.add(leftHeadlight);
+  carHolder.add(leftHeadlight);
 
-  const rightHeadlight = new THREE.SpotLight(0xfff6dd, 4.2, 55, Math.PI / 4.2, 0.55, 1.1);
-  rightHeadlight.position.set(0.68, 0.65, 1.85);
+  const rightHeadlight = new THREE.SpotLight(0xfff6dd, 4.2, 45, Math.PI / 4.2, 0.55, 1.1);
+  rightHeadlight.position.set(0.58, 0.58, 1.62);
   const rightTarget = new THREE.Object3D();
-  rightTarget.position.set(0.68, 0.15, 35);
-  root.add(rightTarget);
+  rightTarget.position.set(0.58, 0.10, 30);
+  carHolder.add(rightTarget);
   rightHeadlight.target = rightTarget;
   rightHeadlight.castShadow = true;
-  root.add(rightHeadlight);
+  carHolder.add(rightHeadlight);
 
   // Ambient road glow right under front bumper
-  const frontRoadGlow = new THREE.PointLight(0xffeedd, 1.6, 8.0, 1.5);
-  frontRoadGlow.position.set(0, 0.55, 2.4);
-  root.add(frontRoadGlow);
+  const frontRoadGlow = new THREE.PointLight(0xffeedd, 1.6, 6.0, 1.5);
+  frontRoadGlow.position.set(0, 0.45, 1.9);
+  carHolder.add(frontRoadGlow);
 
   // Glowing Headlight Lens Discs
-  const lensGeo = new THREE.CircleGeometry(0.12, 12);
+  const lensGeo = new THREE.CircleGeometry(0.10, 12);
   const lensMat = new THREE.MeshBasicMaterial({ color: 0xfffaea, side: THREE.DoubleSide });
   const leftLens = new THREE.Mesh(lensGeo, lensMat);
-  leftLens.position.set(-0.68, 0.65, 1.95);
-  root.add(leftLens);
+  leftLens.position.set(-0.58, 0.58, 1.69);
+  carHolder.add(leftLens);
 
   const rightLens = new THREE.Mesh(lensGeo, lensMat);
-  rightLens.position.set(0.68, 0.65, 1.95);
-  root.add(rightLens);
+  rightLens.position.set(0.58, 0.58, 1.69);
+  carHolder.add(rightLens);
 
   // Volumetric Headlight Beams (Cones cutting through the misty night air)
   const beamMat = new THREE.MeshBasicMaterial({
@@ -409,30 +418,30 @@ export function createHondaCivicCar() {
     side: THREE.DoubleSide,
     depthWrite: false
   });
-  const beamGeo = new THREE.ConeGeometry(1.8, 16, 12, 1, true);
+  const beamGeo = new THREE.ConeGeometry(1.4, 14, 12, 1, true);
   beamGeo.rotateX(Math.PI / 2);
-  beamGeo.translate(0, 0, 8);
+  beamGeo.translate(0, 0, 7);
 
   const leftBeam = new THREE.Mesh(beamGeo, beamMat);
-  leftBeam.position.set(-0.68, 0.65, 1.95);
-  root.add(leftBeam);
+  leftBeam.position.set(-0.58, 0.58, 1.69);
+  carHolder.add(leftBeam);
 
   const rightBeam = new THREE.Mesh(beamGeo, beamMat);
-  rightBeam.position.set(0.68, 0.65, 1.95);
-  root.add(rightBeam);
+  rightBeam.position.set(0.58, 0.58, 1.69);
+  carHolder.add(rightBeam);
 
   // Glowing Red Taillights (Rear)
-  const tailGeo = new THREE.PlaneGeometry(0.28, 0.12);
+  const tailGeo = new THREE.PlaneGeometry(0.24, 0.10);
   const tailMat = new THREE.MeshBasicMaterial({ color: 0xff1525, side: THREE.DoubleSide });
   const leftTail = new THREE.Mesh(tailGeo, tailMat);
-  leftTail.position.set(-0.72, 0.68, -1.98);
+  leftTail.position.set(-0.60, 0.62, -1.70);
   leftTail.rotation.y = Math.PI;
-  root.add(leftTail);
+  carHolder.add(leftTail);
 
   const rightTail = new THREE.Mesh(tailGeo, tailMat);
-  rightTail.position.set(0.72, 0.68, -1.98);
+  rightTail.position.set(0.60, 0.62, -1.70);
   rightTail.rotation.y = Math.PI;
-  root.add(rightTail);
+  carHolder.add(rightTail);
 
   // 2. Load GLB Mesh or use Procedural Fallback
   function attachWheels(node) {
@@ -447,7 +456,8 @@ export function createHondaCivicCar() {
   if (civicTemplate) {
     civicMesh = civicTemplate.clone(true);
     civicMesh.position.set(0, 0, 0); // Wheels sit directly on ground
-    root.add(civicMesh);
+    civicMesh.scale.set(1, 1, 1);
+    carHolder.add(civicMesh);
     attachWheels(civicMesh);
   } else {
     // Check if GLTFLoader is ready
@@ -458,7 +468,7 @@ export function createHondaCivicCar() {
         (gltf) => {
           const model = gltf.scene;
           model.name = 'Honda_Civic_1985_Mesh';
-          model.scale.set(1.15, 1.15, 1.15);
+          model.scale.set(1, 1, 1);
           model.position.set(0, 0, 0);
 
           model.traverse((child) => {
@@ -481,10 +491,10 @@ export function createHondaCivicCar() {
 
           // Replace fallback if present
           if (civicMesh && civicMesh.parent) {
-            root.remove(civicMesh);
+            carHolder.remove(civicMesh);
           }
           civicMesh = model;
-          root.add(civicMesh);
+          carHolder.add(civicMesh);
           wheelNodes.length = 0;
           attachWheels(civicMesh);
         },
@@ -493,14 +503,14 @@ export function createHondaCivicCar() {
           // Fallback to procedural
           if (!civicMesh) {
             civicMesh = buildProceduralCivicFallback();
-            root.add(civicMesh);
+            carHolder.add(civicMesh);
             attachWheels(civicMesh);
           }
         }
       );
     } else {
       civicMesh = buildProceduralCivicFallback();
-      root.add(civicMesh);
+      carHolder.add(civicMesh);
       attachWheels(civicMesh);
     }
   }

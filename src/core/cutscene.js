@@ -509,7 +509,7 @@ export function updateCutscene(dt) {
     const driveT = Math.min(1.0, cutsceneTime / 7.2);
     const easeDrive = driveT * (2 - driveT); // Smooth deceleration as car approaches gate
     const carZ = THREE.MathUtils.lerp(-26.0, 13.5, easeDrive);
-    const carX = THREE.MathUtils.lerp(0.0, 1.85, driveT * driveT);
+    const carX = THREE.MathUtils.lerp(0.0, 2.45, driveT * driveT);
     const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(carX, carZ) : 0;
 
     if (cutsceneCivicCar && cutsceneCivicCar.root) {
@@ -527,21 +527,21 @@ export function updateCutscene(dt) {
   } else {
     // Stage 2 - 4: Car is parked at road shoulder, Rodrick & Kristin have stepped out
     if (cutsceneCivicCar && cutsceneCivicCar.root) {
-      const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.85, 13.5) : 0;
-      cutsceneCivicCar.root.position.set(1.85, gyCar, 13.5);
+      const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(2.45, 13.5) : 0;
+      cutsceneCivicCar.root.position.set(2.45, gyCar, 13.5);
       cutsceneCivicCar.update(dt, 0, false, cutsceneTime);
       cutsceneCivicCar.setPassengersVisible(false); // Stepped out
       if (sfxRef && sfxRef.updateCarEnginePitch) sfxRef.updateCarEnginePitch(0.80);
     }
 
-    const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.45, 14.2) : 0;
-    const gyK = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.45, 14.4) : 0;
-    playerPos.set(-0.45, gyP, 14.2);
+    const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.55, 14.2) : 0;
+    const gyK = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.55, 14.4) : 0;
+    playerPos.set(-0.55, gyP, 14.2);
 
     if (playerMeshRoot) {
       playerMeshRoot.visible = true;
       const breath = Math.sin(cutsceneTime * 2.2) * 0.012;
-      playerMeshRoot.position.set(-0.45, gyP + breath, 14.2);
+      playerMeshRoot.position.set(-0.55, gyP + breath, 14.2);
 
       if (cutsceneTime > 14.5 && cutsceneTime < 21.5) {
         // Turn to face Kristin when she whispers about tainted water
@@ -555,7 +555,7 @@ export function updateCutscene(dt) {
 
     if (kristinModel && kristinModel.root) {
       kristinModel.root.visible = true;
-      kristinModel.root.position.set(0.45, gyK, 14.4);
+      kristinModel.root.position.set(0.55, gyK, 14.4);
       if (cutsceneTime > 14.5 && cutsceneTime < 21.5) {
         kristinModel.root.rotation.y = THREE.MathUtils.lerp(kristinModel.root.rotation.y, -0.65, dt * 2.5);
       } else if (cutsceneTime >= 21.5) {
@@ -637,8 +637,8 @@ export function finishCutscene() {
   // Keep Honda Civic parked at Coldbrook entrance with headlights on as their vehicle
   if (cutsceneCivicCar) {
     cutsceneCivicCar.setPassengersVisible(false);
-    const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.85, 13.5) : 0;
-    cutsceneCivicCar.root.position.set(1.85, gyCar, 13.5);
+    const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(2.45, 13.5) : 0;
+    cutsceneCivicCar.root.position.set(2.45, gyCar, 13.5);
     cutsceneCivicCar.update(0, 0, false, 0);
   }
   if (sfxRef && sfxRef.stopCarEngineAudio) {
@@ -668,18 +668,18 @@ export function finishCutscene() {
   if (state && state.player) state.player.isInvulnerable = false;
 
   // Position Kristin beside player ready for escort mode
-  const gyK = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.2, 13.8) : 0.1;
+  const gyK = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.65, 13.8) : 0.1;
   if (kristinModel && kristinModel.root) {
-    kristinModel.root.position.set(1.2, gyK, 13.8);
+    kristinModel.root.position.set(0.65, gyK, 13.8);
     kristinModel.root.rotation.set(0, -0.35, 0);
     if (kristinModel.setWeapon) kristinModel.setWeapon('unarmed');
   }
 
   // Restore camera to default player eye-level spawn facing into Coldbrook Village (negative Z)
-  const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0, 14.0) : 0.1;
-  playerPos.set(0, gyP, 14.0);
+  const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.45, 14.0) : 0.1;
+  playerPos.set(-0.45, gyP, 14.0);
   if (cameraRef) {
-    cameraRef.position.set(0, gyP + 1.8, 14.0);
+    cameraRef.position.set(-0.45, gyP + 1.8, 14.0);
     setPlayerYawPitch(0, 0);
   }
 
