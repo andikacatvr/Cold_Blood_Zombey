@@ -7,7 +7,8 @@
    ========================================================================= */
 
 import {
-  getTerrainHeight
+  getTerrainHeight,
+  colliders
 } from '../world/environment.js';
 import { kristinModel, animateKristinCutsceneStep } from '../entities/kristin.js';
 import {
@@ -39,6 +40,7 @@ let cutsceneCivicCar = null;
 let cutsceneTruck = null;
 let cutsceneOldThomas = null;
 let cutsceneVillageGate = null;
+let parkedCarCollider = null;
 let activeBossRef = null;
 let activeHelicopter = null;
 
@@ -228,6 +230,11 @@ export function startIntroCutscene(camera, sfx, onComplete) {
   }
 
   // 2. Spawn 1985 Honda Civic Car on open highway
+  if (parkedCarCollider) {
+    const idx = colliders.indexOf(parkedCarCollider);
+    if (idx !== -1) colliders.splice(idx, 1);
+    parkedCarCollider = null;
+  }
   if (cutsceneCivicCar) {
     cutsceneCivicCar.dispose();
     cutsceneCivicCar = null;
@@ -640,6 +647,17 @@ export function finishCutscene() {
     const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(3.2, 5.0) : 0;
     cutsceneCivicCar.root.position.set(3.2, gyCar, 5.0);
     cutsceneCivicCar.update(0, 0, false, 0);
+
+    // Register car physical boundary so player and Kristin cannot clip through it
+    if (!parkedCarCollider) {
+      parkedCarCollider = {
+        minX: 3.2 - 1.25,
+        maxX: 3.2 + 1.25,
+        minZ: 5.0 - 2.6,
+        maxZ: 5.0 + 2.6
+      };
+      colliders.push(parkedCarCollider);
+    }
   }
   if (sfxRef && sfxRef.stopCarEngineAudio) {
     sfxRef.stopCarEngineAudio();

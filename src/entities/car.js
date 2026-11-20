@@ -11,56 +11,75 @@ import { getTerrainHeight } from '../world/environment.js';
 
 let civicTemplate = null;
 let isCivicLoading = false;
+let rodrickPassengerTemplate = null;
+let kristinPassengerTemplate = null;
 
 // 1.58x car scale: Perfectly balances roof height (~2.05m) to character shoulder/chin level
 export const CAR_SCALE = 1.58;
 
 /**
- * Preload the Honda Civic 1985 GLB asset
+ * Preload the Honda Civic 1985 GLB asset and character GLBs for passengers
  */
 export function preloadHondaCivicModel() {
-  if (civicTemplate || isCivicLoading) return;
   if (typeof THREE === 'undefined' || !THREE.GLTFLoader) return;
 
-  isCivicLoading = true;
   const loader = new THREE.GLTFLoader();
-  const url = '/models/honda_civic_1985_ps2.glb';
 
-  loader.load(
-    url,
-    (gltf) => {
-      const model = gltf.scene;
-      model.name = 'Honda_Civic_1985_Template';
-      model.scale.set(1, 1, 1);
+  // 1. Honda Civic 1985 car model
+  if (!civicTemplate && !isCivicLoading) {
+    isCivicLoading = true;
+    loader.load(
+      '/models/honda_civic_1985_ps2.glb',
+      (gltf) => {
+        const model = gltf.scene;
+        model.name = 'Honda_Civic_1985_Template';
+        model.scale.set(1, 1, 1);
 
-      model.traverse((child) => {
-        if (child.isMesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-          if (child.material) {
-            child.material.roughness = 0.65;
-            child.material.metalness = 0.25;
-            if (child.material.name === 'Mat_PS2_Glass' || (child.name && child.name.toLowerCase().includes('glass'))) {
-              child.material.transparent = true;
-              child.material.opacity = 0.28;
-              child.material.roughness = 0.05;
-              child.material.metalness = 0.1;
-              child.material.depthWrite = false;
+        model.traverse((child) => {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+            if (child.material) {
+              child.material.roughness = 0.65;
+              child.material.metalness = 0.25;
+              if (child.material.name === 'Mat_PS2_Glass' || (child.name && child.name.toLowerCase().includes('glass'))) {
+                child.material.transparent = true;
+                child.material.opacity = 0.28;
+                child.material.roughness = 0.05;
+                child.material.metalness = 0.1;
+                child.material.depthWrite = false;
+              }
             }
           }
-        }
-      });
+        });
 
-      civicTemplate = model;
-      isCivicLoading = false;
-      console.log('[CAR] 1985 Honda Civic PS2 model preloaded successfully');
-    },
-    undefined,
-    (err) => {
-      console.warn('[CAR] Could not load Honda Civic GLB, using procedural fallback:', err);
-      isCivicLoading = false;
-    }
-  );
+        civicTemplate = model;
+        isCivicLoading = false;
+        console.log('[CAR] 1985 Honda Civic PS2 model preloaded successfully');
+      },
+      undefined,
+      (err) => {
+        console.warn('[CAR] Could not load Honda Civic GLB, using procedural fallback:', err);
+        isCivicLoading = false;
+      }
+    );
+  }
+
+  // 2. Preload Rodrick GLB for vehicle driver seat
+  if (!rodrickPassengerTemplate) {
+    loader.load('/models/rodrick.glb', (gltf) => {
+      rodrickPassengerTemplate = gltf.scene;
+      console.log('[CAR] Preloaded Rodrick GLB for vehicle driver');
+    });
+  }
+
+  // 3. Preload Kristin GLB for vehicle passenger seat
+  if (!kristinPassengerTemplate) {
+    loader.load('/models/ps2_character_asset.glb', (gltf) => {
+      kristinPassengerTemplate = gltf.scene;
+      console.log('[CAR] Preloaded Kristin GLB for vehicle passenger');
+    });
+  }
 }
 
 /**
@@ -667,6 +686,98 @@ function buildCivicPassengers() {
 
   group.add(passengerGroup);
 
+  // --- Real 3D GLB Character Models Inside Cabin ---
+  let glbRodrickModel = null;
+  let glbRodrickHead = null;
+  let glbKristinModel = null;
+
+  function attachRodrickGLB(source) {
+    if (glbRodrickModel || !source) return;
+    const rScene = source.clone(true);
+    rScene.name = 'Driver_Rodrick_GLB_Scene';
+    rScene.scale.set(0.70, 0.70, 0.70);
+    rScene.position.set(0, -0.64, 0.0);
+    rScene.rotation.set(0, 0, 0);
+
+    // Hide legs completely so they don't clip under car
+    const rLeg = rScene.getObjectByName('Right_Leg_Pivot');
+    const lLeg = rScene.getObjectByName('Left_Leg_Pivot');
+    if (rLeg) rLeg.visible = false;
+    if (lLeg) lLeg.visible = false;
+
+    // Angle arms to reach forward onto the steering wheel
+    const rArmG = rScene.getObjectByName('Right_Arm_Pivot');
+    const lArmG = rScene.getObjectByName('Left_Arm_Pivot');
+    if (rArmG) rArmG.rotation.set(-0.95, -0.22, 0.18);
+    if (lArmG) lArmG.rotation.set(-0.95, 0.22, -0.18);
+
+    glbRodrickHead = rScene.getObjectByName('Head_Pivot');
+    glbRodrickModel = rScene;
+
+    // Hide geometric fallback box meshes
+    rTorso.visible = false;
+    rStripe1.visible = false;
+    rStripe2.visible = false;
+    rNeck.visible = false;
+    rHeadGroup.visible = false;
+    lArm.visible = false;
+    rArm.visible = false;
+    lHand.visible = false;
+    rHand.visible = false;
+
+    driverGroup.add(rScene);
+    console.log('[CAR] Authentic Rodrick GLB successfully placed in driver seat!');
+  }
+
+  function attachKristinGLB(source) {
+    if (glbKristinModel || !source) return;
+    const kScene = source.clone(true);
+    kScene.name = 'Passenger_Kristin_GLB_Scene';
+    kScene.scale.set(0.70, 0.70, 0.70);
+    kScene.position.set(0, -0.58, 0.02);
+    kScene.rotation.set(0, 0, 0);
+
+    kScene.traverse((child) => {
+      if (child.isMesh && child.material) {
+        child.material.roughness = 0.82;
+        child.material.metalness = 0.08;
+      }
+    });
+
+    glbKristinModel = kScene;
+
+    // Hide geometric fallback box meshes
+    kTorso.visible = false;
+    kScarf.visible = false;
+    kHeadGroup.visible = false;
+    kArmL.visible = false;
+    kArmR.visible = false;
+    notebook.visible = false;
+
+    passengerGroup.add(kScene);
+    console.log('[CAR] Authentic Kristin GLB successfully placed in passenger seat!');
+  }
+
+  if (rodrickPassengerTemplate) {
+    attachRodrickGLB(rodrickPassengerTemplate);
+  } else if (typeof THREE !== 'undefined' && THREE.GLTFLoader) {
+    const l = new THREE.GLTFLoader();
+    l.load('/models/rodrick.glb', (gltf) => {
+      rodrickPassengerTemplate = gltf.scene;
+      attachRodrickGLB(gltf.scene);
+    });
+  }
+
+  if (kristinPassengerTemplate) {
+    attachKristinGLB(kristinPassengerTemplate);
+  } else if (typeof THREE !== 'undefined' && THREE.GLTFLoader) {
+    const l = new THREE.GLTFLoader();
+    l.load('/models/ps2_character_asset.glb', (gltf) => {
+      kristinPassengerTemplate = gltf.scene;
+      attachKristinGLB(gltf.scene);
+    });
+  }
+
   // 3. Cabin Interior Ambient & Frontal Face Illumination
   const cabinLight = new THREE.PointLight(0xfff3e2, 1.8, 4.2, 1.2);
   cabinLight.position.set(0, 1.15, 0.12);
@@ -704,18 +815,26 @@ function buildCivicPassengers() {
         // Rodrick looks focused at the road
         rHeadGroup.rotation.y = -steer * 0.3;
         rHeadGroup.rotation.x = 0.04;
+        if (glbRodrickHead) {
+          glbRodrickHead.rotation.y = -steer * 0.3;
+          glbRodrickHead.rotation.x = 0.04;
+        }
 
         // Kristin looks toward Rodrick when talking
         if (cutsceneTime < 6.8) {
           kHeadGroup.rotation.y = THREE.MathUtils.lerp(kHeadGroup.rotation.y, 0.45, dt * 3.0);
+          if (glbKristinModel) glbKristinModel.rotation.y = THREE.MathUtils.lerp(glbKristinModel.rotation.y, 0.32, dt * 3.0);
         } else {
           kHeadGroup.rotation.y = THREE.MathUtils.lerp(kHeadGroup.rotation.y, 0.08, dt * 3.0);
+          if (glbKristinModel) glbKristinModel.rotation.y = THREE.MathUtils.lerp(glbKristinModel.rotation.y, 0.04, dt * 3.0);
         }
       } else {
         // Idle at gate
         wheelGroup.rotation.z = 0;
         rHeadGroup.position.y = 0.50;
         kHeadGroup.position.y = 0.49;
+        if (glbRodrickHead) glbRodrickHead.rotation.set(0, 0, 0);
+        if (glbKristinModel) glbKristinModel.rotation.set(0, 0, 0);
       }
     },
 
