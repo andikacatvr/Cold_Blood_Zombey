@@ -49,6 +49,23 @@ def generate_nona_batavia_complete():
     # U=0.10, V=0.98 -> Smooth skin tone for inner legs
     draw.rectangle([90, 970, 120, 1000], fill=COLOR_SKIN)
 
+    # Dedicated hair texture swatch for Wolf Cut hair:
+    # X from 15 to 145, Y from 855 to 960 (U ≈ 0.015 to 0.142, V ≈ 0.835 to 0.938)
+    HAIR_SWATCH_X0, HAIR_SWATCH_X1 = 15, 145
+    HAIR_SWATCH_Y0, HAIR_SWATCH_Y1 = 855, 960
+    for hy in range(HAIR_SWATCH_Y0, HAIR_SWATCH_Y1):
+        v_ratio = (hy - HAIR_SWATCH_Y0) / (HAIR_SWATCH_Y1 - HAIR_SWATCH_Y0)
+        sheen = math.exp(-((v_ratio - 0.45) ** 2) / 0.03) * 55.0
+        for hx in range(HAIR_SWATCH_X0, HAIR_SWATCH_X1):
+            fiber = (math.sin(hx * 1.8) * 0.5 + 0.5) * 20.0
+            r = int(min(255, 20 + sheen * 0.7 + fiber * 0.5))
+            g = int(min(255, 16 + sheen * 0.6 + fiber * 0.4))
+            b = int(min(255, 24 + sheen * 0.8 + fiber * 0.6))
+            tex.putpixel((hx, hy), (r, g, b, 255))
+
+    HAIR_UV_ROOT = (25 / 1024.0, 860 / 1024.0)
+    HAIR_UV_TIP = (135 / 1024.0, 955 / 1024.0)
+
     # 1B. Fix Armpits: Replace dark backdrop patches under armpits/shoulders with matching white lace kebaya
     KEBAYA_BASE = (205, 195, 185, 255)
     KEBAYA_SHADE = (180, 168, 158, 255)
@@ -435,6 +452,134 @@ def generate_nona_batavia_complete():
         next_s = (s + 1) % cap_segments
         # Winding order facing down (-Y): center, next, current
         new_indices.extend([cap_base_idx, cap_base_idx + 1 + next_s, cap_base_idx + 1 + s])
+
+    # 3. 3D WOLFCUT HAIRSTYLE (Layered Shag Crown, Curtain Bangs, Temple Flicks & Cascading Mullet Tail)
+    crown_base_idx = len(new_positions)
+    # Apex of hair volume
+    new_positions.append((0.0, 1.708, -0.015))
+    new_normals.append((0.0, 1.0, 0.0))
+    new_uvs.append((HAIR_UV_ROOT[0], HAIR_UV_ROOT[1]))
+
+    crown_segs = 14
+    # Ring 1 (Upper Crown dome, Y=1.685)
+    for s in range(crown_segs):
+        ang = 2 * math.pi * s / crown_segs
+        px = 0.055 * math.sin(ang)
+        pz = -0.015 + 0.062 * math.cos(ang)
+        py = 1.685
+        nx, ny, nz = math.sin(ang) * 0.6, 0.8, math.cos(ang) * 0.6
+        nlen = math.hypot(nx, ny, nz) or 1.0
+        new_positions.append((px, py, pz))
+        new_normals.append((nx / nlen, ny / nlen, nz / nlen))
+        new_uvs.append((HAIR_UV_ROOT[0] + (HAIR_UV_TIP[0] - HAIR_UV_ROOT[0]) * (s / crown_segs), HAIR_UV_ROOT[1] + 0.02))
+
+    # Ring 2 (Mid Crown shag layer, Y=1.648)
+    for s in range(crown_segs):
+        ang = 2 * math.pi * s / crown_segs
+        px = 0.082 * math.sin(ang)
+        pz = -0.018 + 0.090 * math.cos(ang)
+        py = 1.648
+        nx, ny, nz = math.sin(ang), 0.4, math.cos(ang)
+        nlen = math.hypot(nx, ny, nz) or 1.0
+        new_positions.append((px, py, pz))
+        new_normals.append((nx / nlen, ny / nlen, nz / nlen))
+        new_uvs.append((HAIR_UV_ROOT[0] + (HAIR_UV_TIP[0] - HAIR_UV_ROOT[0]) * (s / crown_segs), HAIR_UV_ROOT[1] + 0.05))
+
+    # Fan from apex to ring 1
+    for s in range(crown_segs):
+        next_s = (s + 1) % crown_segs
+        new_indices.extend([crown_base_idx, crown_base_idx + 1 + s, crown_base_idx + 1 + next_s])
+
+    # Quads between ring 1 and ring 2
+    r1 = crown_base_idx + 1
+    r2 = r1 + crown_segs
+    for s in range(crown_segs):
+        next_s = (s + 1) % crown_segs
+        new_indices.extend([r1 + s, r2 + s, r1 + next_s, r1 + next_s, r2 + s, r2 + next_s])
+
+    # Helper: Multi-segment Wolf Cut Hair Ribbon
+    def add_hair_ribbon(points_with_widths):
+        ribbon_base = len(new_positions)
+        n_pts = len(points_with_widths)
+        if n_pts < 2:
+            return
+
+        for seg_idx, (x, y, z, w) in enumerate(points_with_widths):
+            if seg_idx == 0:
+                tx = points_with_widths[1][0] - x
+                ty = points_with_widths[1][1] - y
+                tz = points_with_widths[1][2] - z
+            elif seg_idx == n_pts - 1:
+                tx = x - points_with_widths[seg_idx - 1][0]
+                ty = y - points_with_widths[seg_idx - 1][1]
+                tz = z - points_with_widths[seg_idx - 1][2]
+            else:
+                tx = points_with_widths[seg_idx + 1][0] - points_with_widths[seg_idx - 1][0]
+                ty = points_with_widths[seg_idx + 1][1] - points_with_widths[seg_idx - 1][1]
+                tz = points_with_widths[seg_idx + 1][2] - points_with_widths[seg_idx - 1][2]
+
+            tlen = math.hypot(tx, ty, tz) or 1.0
+            tx, ty, tz = tx / tlen, ty / tlen, tz / tlen
+
+            nx = x - 0.0
+            ny = (y - 1.55) * 0.5
+            nz = z - (-0.015)
+            nlen = math.hypot(nx, ny, nz) or 1.0
+            nx, ny, nz = nx / nlen, ny / nlen, nz / nlen
+
+            bx = ty * nz - tz * ny
+            by = tz * nx - tx * nz
+            bz = tx * ny - ty * nx
+            blen = math.hypot(bx, by, bz) or 1.0
+            bx, by, bz = bx / blen, by / blen, bz / blen
+
+            v_prog = seg_idx / (n_pts - 1)
+            uv_v = HAIR_UV_ROOT[1] + v_prog * (HAIR_UV_TIP[1] - HAIR_UV_ROOT[1])
+
+            lx = x - bx * (w * 0.5)
+            ly = y - by * (w * 0.5)
+            lz = z - bz * (w * 0.5)
+            new_positions.append((lx, ly, lz))
+            new_normals.append((nx, ny, nz))
+            new_uvs.append((HAIR_UV_ROOT[0], uv_v))
+
+            rx = x + bx * (w * 0.5)
+            ry = y + by * (w * 0.5)
+            rz = z + bz * (w * 0.5)
+            new_positions.append((rx, ry, rz))
+            new_normals.append((nx, ny, nz))
+            new_uvs.append((HAIR_UV_TIP[0], uv_v))
+
+        for seg_idx in range(n_pts - 1):
+            i0 = ribbon_base + seg_idx * 2
+            i1 = ribbon_base + seg_idx * 2 + 1
+            i2 = ribbon_base + (seg_idx + 1) * 2
+            i3 = ribbon_base + (seg_idx + 1) * 2 + 1
+            new_indices.extend([i0, i1, i2, i1, i3, i2])
+
+    # A. Textured Curtain Bangs & Forehead Fringe
+    add_hair_ribbon([(-0.006, 1.650, 0.050, 0.022), (-0.025, 1.600, 0.058, 0.026), (-0.046, 1.550, 0.057, 0.024), (-0.058, 1.505, 0.048, 0.014)])
+    add_hair_ribbon([(0.006, 1.650, 0.050, 0.022), (0.025, 1.600, 0.058, 0.026), (0.046, 1.550, 0.057, 0.024), (0.058, 1.505, 0.048, 0.014)])
+    add_hair_ribbon([(-0.008, 1.640, 0.052, 0.018), (-0.018, 1.595, 0.058, 0.018), (-0.024, 1.560, 0.057, 0.012)])
+    add_hair_ribbon([(0.008, 1.640, 0.052, 0.018), (0.018, 1.595, 0.058, 0.018), (0.024, 1.560, 0.057, 0.012)])
+    add_hair_ribbon([(0.000, 1.645, 0.053, 0.016), (0.000, 1.605, 0.058, 0.015), (0.002, 1.575, 0.057, 0.010)])
+
+    # B. Cheek & Temple Shag Layers (Choppy flicks framing cheeks and jaw)
+    add_hair_ribbon([(-0.065, 1.635, 0.035, 0.025), (-0.085, 1.580, 0.042, 0.028), (-0.096, 1.530, 0.046, 0.024), (-0.100, 1.485, 0.042, 0.014)])
+    add_hair_ribbon([(0.065, 1.635, 0.035, 0.025), (0.085, 1.580, 0.042, 0.028), (0.096, 1.530, 0.046, 0.024), (0.100, 1.485, 0.042, 0.014)])
+    add_hair_ribbon([(-0.078, 1.590, 0.015, 0.026), (-0.088, 1.520, 0.025, 0.026), (-0.084, 1.455, 0.034, 0.022), (-0.075, 1.405, 0.036, 0.014)])
+    add_hair_ribbon([(0.078, 1.590, 0.015, 0.026), (0.088, 1.520, 0.025, 0.026), (0.084, 1.455, 0.034, 0.022), (0.075, 1.405, 0.036, 0.014)])
+    add_hair_ribbon([(-0.086, 1.605, -0.010, 0.024), (-0.092, 1.535, -0.005, 0.025), (-0.088, 1.465, 0.008, 0.020), (-0.080, 1.405, 0.015, 0.014)])
+    add_hair_ribbon([(0.086, 1.605, -0.010, 0.024), (0.092, 1.535, -0.005, 0.025), (0.088, 1.465, 0.008, 0.020), (0.080, 1.405, 0.015, 0.014)])
+
+    # C. Signature Wolf Cut Mullet Tail & Shoulder Layers (Cascading over collar onto shoulders)
+    add_hair_ribbon([(-0.070, 1.600, -0.055, 0.028), (-0.082, 1.515, -0.062, 0.032), (-0.088, 1.425, -0.055, 0.030), (-0.092, 1.350, -0.040, 0.022), (-0.094, 1.300, -0.025, 0.014)])
+    add_hair_ribbon([(0.070, 1.600, -0.055, 0.028), (0.082, 1.515, -0.062, 0.032), (0.088, 1.425, -0.055, 0.030), (0.092, 1.350, -0.040, 0.022), (0.094, 1.300, -0.025, 0.014)])
+    add_hair_ribbon([(-0.042, 1.610, -0.075, 0.030), (-0.050, 1.520, -0.084, 0.032), (-0.055, 1.430, -0.080, 0.028), (-0.058, 1.350, -0.070, 0.020), (-0.060, 1.295, -0.058, 0.014)])
+    add_hair_ribbon([(0.042, 1.610, -0.075, 0.030), (0.050, 1.520, -0.084, 0.032), (0.055, 1.430, -0.080, 0.028), (0.058, 1.350, -0.070, 0.020), (0.060, 1.295, -0.058, 0.014)])
+    add_hair_ribbon([(0.000, 1.615, -0.082, 0.032), (0.000, 1.525, -0.090, 0.034), (0.000, 1.435, -0.086, 0.030), (0.000, 1.355, -0.078, 0.022), (0.000, 1.290, -0.068, 0.014)])
+    add_hair_ribbon([(-0.022, 1.590, -0.080, 0.026), (-0.028, 1.490, -0.086, 0.028), (-0.032, 1.390, -0.078, 0.022), (-0.034, 1.320, -0.068, 0.014)])
+    add_hair_ribbon([(0.022, 1.590, -0.080, 0.026), (0.028, 1.490, -0.086, 0.028), (0.032, 1.390, -0.078, 0.022), (0.034, 1.320, -0.068, 0.014)])
 
     final_vert_count = len(new_positions)
     final_idx_count = len(new_indices)
