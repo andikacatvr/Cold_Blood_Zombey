@@ -101,6 +101,42 @@ def merge_hair(nona_glb_path, hair_glb_path, output_glb_path, scale=0.485, pos=(
         bin_len, _ = struct.unpack('<II', f.read(8))
         hair_bin = bytearray(f.read(bin_len))
 
+    # Tone down hair texture to match natural deep brunette / charcoal Asian hair (avoid over-bright look)
+    try:
+        from PIL import Image
+        import io
+        img_bv_idx = hair_gltf['images'][0]['bufferView']
+        img_bv = hair_gltf['bufferViews'][img_bv_idx]
+        img_off = img_bv.get('byteOffset', 0)
+        img_len = img_bv['byteLength']
+        orig_img_data = hair_bin[img_off:img_off+img_len]
+
+        h_img = Image.open(io.BytesIO(orig_img_data)).convert('RGB')
+        w_h, h_h = h_img.size
+        h_pix = h_img.load()
+        toned_img = Image.new('RGB', (w_h, h_h))
+        t_pix = toned_img.load()
+
+        for y in range(h_h):
+            for x in range(w_h):
+                r, g, b = h_pix[x, y]
+                # Darken by ~30% and balance tones to match user reference image
+                nr = int(max(0, min(255, r * 0.70)))
+                ng = int(max(0, min(255, g * 0.70)))
+                nb = int(max(0, min(255, b * 0.72)))
+                t_pix[x, y] = (nr, ng, nb)
+
+        out_io = io.BytesIO()
+        toned_img.save(out_io, format='PNG')
+        toned_png_bytes = pad4(out_io.getvalue(), b'\x00')
+
+        # Replace BV 5
+        hair_bin = hair_bin[:img_off] + toned_png_bytes
+        img_bv['byteLength'] = len(toned_png_bytes)
+        print(f"[TEXTURE] Toned hair texture to natural dark Asian hair ({len(toned_png_bytes)} bytes)")
+    except Exception as e:
+        print(f"[WARN] Could not tone hair texture: {e}")
+
     # 3. Transform hair vertices and normals
     # Rotation angles in radians
     rx = math.radians(rot_deg[0])

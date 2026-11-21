@@ -98,6 +98,11 @@
   <div id="loading">Memuat Nona Batavia (.glb)...</div>
 
   <div id="view-controls">
+    <div style="display:flex; align-items:center; gap:8px; background:rgba(28,36,48,0.9); padding:6px 12px; border-radius:6px; border:1px solid #3d4f63; font-size:12px; backdrop-filter:blur(8px);">
+      <span>Kecerahan:</span>
+      <input type="range" id="sl-exp" min="0.5" max="1.5" step="0.05" value="0.95" style="width:75px; height:5px; accent-color:#61afef; cursor:pointer;">
+      <span id="val-exp" style="font-family:monospace; color:#98c379; min-width:28px;">0.95</span>
+    </div>
     <button id="btn-head">Fokus Depan (Wajah)</button>
     <button id="btn-back">Fokus Belakang (Rambut)</button>
     <button id="btn-body">Fokus Seluruh Tubuh</button>
@@ -116,7 +121,7 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.18;
+    renderer.toneMappingExposure = 0.95;
     renderer.shadowMap.enabled = true;
     document.body.appendChild(renderer.domElement);
 
@@ -125,19 +130,19 @@
     controls.dampingFactor = 0.05;
     controls.target.set(0, 1.56, 0);
 
-    const hemiLight = new THREE.HemisphereLight(0xfff6ea, 0x334455, 1.4);
+    const hemiLight = new THREE.HemisphereLight(0xffeedd, 0x223344, 0.9);
     scene.add(hemiLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.6);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.05);
     dirLight.position.set(3, 6, 4);
     dirLight.castShadow = true;
     scene.add(dirLight);
 
-    const backLight = new THREE.DirectionalLight(0xffb870, 0.9);
+    const backLight = new THREE.DirectionalLight(0xffa860, 0.45);
     backLight.position.set(-3, 3, -3);
     scene.add(backLight);
 
-    const fillLight = new THREE.PointLight(0xffffff, 0.6, 5);
+    const fillLight = new THREE.PointLight(0xffffff, 0.35, 6);
     fillLight.position.set(0, 1.6, 1.5);
     scene.add(fillLight);
 
@@ -186,6 +191,15 @@
       controls.target.set(0, 0.95, 0);
       camera.position.set(0, 1.30, 3.4);
     });
+
+    const slExp = document.getElementById('sl-exp');
+    const valExp = document.getElementById('val-exp');
+    if (slExp) {
+      slExp.addEventListener('input', () => {
+        renderer.toneMappingExposure = parseFloat(slExp.value);
+        valExp.innerText = parseFloat(slExp.value).toFixed(2);
+      });
+    }
 
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
