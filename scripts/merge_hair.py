@@ -13,43 +13,8 @@ def generate_back_hair_geometry():
     uvs = []
     indices = []
 
-    # 1. Base Curved Nape Sheet (covering the gap from lower skull to neck)
-    rows = [
-        (1.610, -0.093, 0.065),
-        (1.555, -0.097, 0.060),
-        (1.500, -0.086, 0.052),
-        (1.440, -0.070, 0.042)
-    ]
-    cols = 5
-    base_idx = len(positions)
-
-    for r_idx, (y, cz, half_w) in enumerate(rows):
-        v_norm = r_idx / (len(rows) - 1)
-        for c_idx in range(cols):
-            u_norm = c_idx / (cols - 1)
-            ang = (u_norm - 0.5) * math.pi * 0.7
-            x = half_w * math.sin(ang) * 1.5
-            z = cz - half_w * (1.0 - math.cos(ang)) * 0.6
-
-            nx = math.sin(ang) * 0.7
-            ny = -0.15
-            nz = -math.cos(ang)
-            nlen = math.hypot(nx, ny, nz) or 1.0
-            nx, ny, nz = nx/nlen, ny/nlen, nz/nlen
-
-            positions.append((x, y, z))
-            normals.append((nx, ny, nz))
-            uvs.append((0.2 + 0.6 * u_norm, 0.1 + 0.8 * v_norm))
-
-    for r in range(len(rows) - 1):
-        for c in range(cols - 1):
-            i0 = base_idx + r * cols + c
-            i1 = base_idx + r * cols + c + 1
-            i2 = base_idx + (r + 1) * cols + c
-            i3 = base_idx + (r + 1) * cols + c + 1
-            indices.extend([i0, i2, i1, i1, i2, i3])
-
-    # 2. 3D Overlapping Fluff Locks (giving real textured strands and depth)
+    # Subtle lower nape wisps strictly below the braid (Y < 1.545)
+    # Keeping the original 3D braid (kepangan) completely unobstructed and visible!
     def add_lock(points_w, u_center=0.5):
         ribbon_base = len(positions)
         n_pts = len(points_w)
@@ -63,9 +28,9 @@ def generate_back_hair_geometry():
             tlen = math.hypot(tx, ty, tz) or 1.0
             tx, ty, tz = tx / tlen, ty / tlen, tz / tlen
 
-            nx, ny, nz = x * 2.0, (y - 1.55) * 0.3, -1.0
+            nx, ny, nz = x * 1.5, -0.1, -1.0
             nlen = math.hypot(nx, ny, nz) or 1.0
-            nx, ny, nz = nx / nlen, ny / nlen, nz / nlen
+            nx, ny, nz = nx/nlen, ny/nlen, nz/nlen
 
             bx = ty * nz - tz * ny
             by = tz * nx - tx * nz
@@ -73,17 +38,17 @@ def generate_back_hair_geometry():
             blen = math.hypot(bx, by, bz) or 1.0
             bx, by, bz = bx / blen, by / blen, bz / blen
 
-            v_val = 0.1 + 0.8 * (s_idx / (n_pts - 1))
+            v_val = 0.5 + 0.45 * (s_idx / (n_pts - 1))
 
             lx = x - bx * (w * 0.5); ly = y - by * (w * 0.5); lz = z - bz * (w * 0.5)
             positions.append((lx, ly, lz))
             normals.append((nx, ny, nz))
-            uvs.append((u_center - 0.12, v_val))
+            uvs.append((u_center - 0.08, v_val))
 
             rx = x + bx * (w * 0.5); ry = y + by * (w * 0.5); rz = z + bz * (w * 0.5)
             positions.append((rx, ry, rz))
             normals.append((nx, ny, nz))
-            uvs.append((u_center + 0.12, v_val))
+            uvs.append((u_center + 0.08, v_val))
 
         for s_idx in range(n_pts - 1):
             i0 = ribbon_base + s_idx * 2
@@ -92,16 +57,27 @@ def generate_back_hair_geometry():
             i3 = ribbon_base + (s_idx + 1) * 2 + 1
             indices.extend([i0, i2, i1, i1, i2, i3])
 
-    # A. Center Main Fluff Lock
-    add_lock([(0.000, 1.615, -0.098, 0.030), (0.000, 1.555, -0.108, 0.034), (0.000, 1.490, -0.098, 0.028), (0.000, 1.430, -0.076, 0.012)], u_center=0.50)
-    # B. Left Fluff Lock
-    add_lock([(-0.028, 1.605, -0.095, 0.026), (-0.036, 1.545, -0.103, 0.028), (-0.038, 1.485, -0.092, 0.022), (-0.040, 1.425, -0.072, 0.010)], u_center=0.35)
-    # C. Right Fluff Lock
-    add_lock([(0.028, 1.605, -0.095, 0.026), (0.036, 1.545, -0.103, 0.028), (0.038, 1.485, -0.092, 0.022), (0.040, 1.425, -0.072, 0.010)], u_center=0.65)
-    # D. Outer Left Wing Lock (towards left twintail root)
-    add_lock([(-0.052, 1.590, -0.088, 0.022), (-0.062, 1.530, -0.092, 0.024), (-0.066, 1.470, -0.080, 0.018), (-0.065, 1.415, -0.062, 0.010)], u_center=0.22)
-    # E. Outer Right Wing Lock (towards right twintail root)
-    add_lock([(0.052, 1.590, -0.088, 0.022), (0.062, 1.530, -0.092, 0.024), (0.066, 1.470, -0.080, 0.018), (0.065, 1.415, -0.062, 0.010)], u_center=0.78)
+    # 1. Subtle central nape tail extending right from beneath the braid tip
+    add_lock([
+        (0.000, 1.545, -0.088, 0.018),
+        (0.000, 1.490, -0.078, 0.015),
+        (0.000, 1.435, -0.060, 0.006)
+    ], u_center=0.50)
+
+    # 2. Subtle left & right wisps flanking the lower neck
+    add_lock([
+        (-0.018, 1.535, -0.082, 0.014),
+        (-0.022, 1.480, -0.072, 0.012),
+        (-0.020, 1.430, -0.056, 0.005)
+    ], u_center=0.38)
+
+    add_lock([
+        (0.018, 1.535, -0.082, 0.014),
+        (0.022, 1.480, -0.072, 0.012),
+        (0.020, 1.430, -0.056, 0.005)
+    ], u_center=0.62)
+
+    return positions, normals, uvs, indices
 
     return positions, normals, uvs, indices
 
