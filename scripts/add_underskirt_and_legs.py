@@ -202,6 +202,28 @@ def generate_nona_batavia_complete():
     draw_splatter(345, 255, 6.5, num_droplets=12, drip_len=20)
     draw_splatter(130, 260, 5.0, num_droplets=8, drip_len=14)
     draw_splatter(375, 260, 5.0, num_droplets=8, drip_len=14)
+    # Forearms & lower sleeves
+    draw_splatter(185, 580, 7.0, num_droplets=10, drip_len=16)
+    draw_splatter(320, 580, 7.0, num_droplets=10, drip_len=16)
+    draw_splatter(190, 640, 6.0, num_droplets=8, drip_len=12)
+    draw_splatter(320, 640, 6.0, num_droplets=8, drip_len=12)
+
+    # 3B. Bloody Hands & Fingers (Tangan & Jari-jari Berdarah)
+    # Left Hand (X: 6..54, Y: 712..756)
+    ov_draw.rectangle([6, 712, 54, 756], fill=(210, 178, 168, 255))
+    draw_splatter(18, 722, 10.0, num_droplets=18, drip_len=15)
+    draw_splatter(32, 720, 9.0, num_droplets=16, drip_len=14)
+    draw_splatter(44, 725, 8.0, num_droplets=14, drip_len=12)
+    draw_splatter(24, 736, 12.0, num_droplets=20, drip_len=16)
+    draw_splatter(38, 746, 9.5, num_droplets=16, drip_len=12)
+
+    # Right Hand (X: 456..506, Y: 712..756)
+    ov_draw.rectangle([456, 712, 506, 756], fill=(210, 178, 168, 255))
+    draw_splatter(494, 722, 10.0, num_droplets=18, drip_len=15)
+    draw_splatter(480, 720, 9.0, num_droplets=16, drip_len=14)
+    draw_splatter(468, 725, 8.0, num_droplets=14, drip_len=12)
+    draw_splatter(484, 736, 12.0, num_droplets=20, drip_len=16)
+    draw_splatter(468, 746, 9.5, num_droplets=16, drip_len=12)
 
     # 4. Batik Skirt
     draw_splatter(245, 520, 10.5, num_droplets=18, drip_len=36)
