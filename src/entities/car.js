@@ -821,12 +821,12 @@ function buildCivicPassengers() {
         }
 
         // Kristin looks toward Rodrick when talking
-        if (cutsceneTime < 6.8) {
+        if (cutsceneTime >= 4.2 && cutsceneTime < 8.5) {
           kHeadGroup.rotation.y = THREE.MathUtils.lerp(kHeadGroup.rotation.y, 0.45, dt * 3.0);
           if (glbKristinModel) glbKristinModel.rotation.y = THREE.MathUtils.lerp(glbKristinModel.rotation.y, 0.32, dt * 3.0);
         } else {
-          kHeadGroup.rotation.y = THREE.MathUtils.lerp(kHeadGroup.rotation.y, 0.08, dt * 3.0);
-          if (glbKristinModel) glbKristinModel.rotation.y = THREE.MathUtils.lerp(glbKristinModel.rotation.y, 0.04, dt * 3.0);
+          kHeadGroup.rotation.y = THREE.MathUtils.lerp(kHeadGroup.rotation.y, 0.05, dt * 3.0);
+          if (glbKristinModel) glbKristinModel.rotation.y = THREE.MathUtils.lerp(glbKristinModel.rotation.y, 0.02, dt * 3.0);
         }
       } else {
         // Idle at gate

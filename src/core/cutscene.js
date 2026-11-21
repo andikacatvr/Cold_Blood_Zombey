@@ -109,50 +109,78 @@ const NONA_BATAVIA_STAGES = [
 ];
 
 const CUTSCENE_STAGES = [
+  // 1. RODRICK MENYETIR (Shot langsung ke Rodrick di kursi kemudi)
   {
     start: 0.0,
-    end: 7.5,
-    camStart: new THREE.Vector3(0.7, 1.35, -21.0),
-    camEnd: new THREE.Vector3(2.4, 1.85, 12.0),
-    lookStart: new THREE.Vector3(0.1, 1.0, -25.5),
-    lookEnd: new THREE.Vector3(0.0, 1.8, 17.5),
-    subtitle: `<span style="color:#a8c4da; font-size:15px; letter-spacing:2px; font-family:serif;">COLDBROOK ROADWAY — BLACKWOOD MOORS, ENGLAND</span><br><span style="color:#d8b26e; font-size:21px; font-weight:bold;">RODRICK (Perekam Suara):</span> <i>*deru mesin Honda Civic & suara kaset berderak*</i> "Catatan lapangan hari pertama. Kita baru saja tiba di perbatasan Coldbrook menyusuri jalan Blackwood Moors..."<br><span style="color:#5cf0a5; font-size:20px; font-weight:bold;">KRISTIN:</span> "Dan dua minggu penelitian sampel air sumur! Jangan lupa riset lingkungan gue juga masuk publikasi, Rod."`,
+    end: 4.5,
+    type: 'car_rodrick',
+    subtitle: `<span style="color:#a8c4da; font-size:14px; letter-spacing:2px; font-family:serif;">BLACKWOOD MOORS HIGHWAY — MENUJU COLDBROOK</span><br><span style="color:#d8b26e; font-size:21px; font-weight:bold;">RODRICK (Perekam Suara):</span> <i>*deru mesin Honda Civic & derak kaset pita*</i> "Catatan lapangan hari pertama. Kita baru saja menyusuri jalan Blackwood Moors menuju Coldbrook..."`,
     onEnter: (sfx) => {
       if (sfx && sfx.playChurchBellToll) sfx.playChurchBellToll();
     }
   },
+  // 2. KRISTIN BERBICARA (Shot langsung ke Kristin di kursi penumpang)
   {
-    start: 7.5,
-    end: 14.5,
-    camStart: new THREE.Vector3(0.3, 1.55, 15.8),
-    camEnd: new THREE.Vector3(0.7, 1.62, 16.6),
-    lookStart: new THREE.Vector3(0.8, 1.55, 17.5),
-    lookEnd: new THREE.Vector3(0.8, 1.55, 17.5),
-    subtitle: `<span style="color:#f0ebe0; font-size:21px; font-weight:bold;">OLD THOMAS:</span> <i>*senyum lebar ganjil & tatapan kosong*</i> "Selamat datang di Coldbrook, anak-anak muda... Silakan basuh tenggorokan dengan air suci sumur biara. Pastor Raksha selalu membuka pintu bagi jiwa-jiwa berdosa..."<br><span style="color:#d8b26e; font-size:19px; font-weight:bold;">RODRICK (Rekaman):</span> "Hari kedua... Gue dengar warga lain menyambut dengan kalimat yang persis sama, intonasi yang sama, dan senyum kaku yang sama..."`,
-    onEnter: (sfx) => {
-      if (sfx && sfx.playZombieGroan) sfx.playZombieGroan();
-    }
+    start: 4.5,
+    end: 8.5,
+    type: 'car_kristin',
+    subtitle: `<span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN:</span> "Dan dua minggu penelitian sampel air sumur! Jangan lupa riset lingkungan gue juga wajib masuk publikasi ilmiah, Rod!"`,
+    onEnter: (sfx) => {}
   },
+  // 3. MOBIL TIBA DI DEPAN GERBANG (Shot pelan mobil & gapura Gothic Coldbrook)
   {
-    start: 14.5,
-    end: 21.5,
-    camStart: new THREE.Vector3(1.2, 1.5, 15.2),
-    camEnd: new THREE.Vector3(0.2, 1.5, 15.4),
-    lookStart: new THREE.Vector3(-0.3, 1.5, 14.5),
-    lookEnd: new THREE.Vector3(0.8, 1.55, 17.5),
-    subtitle: `<span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN:</span> "Rod, gawat! Sampel air dari cawan itu... ada zat narkotik dan racun pembusuk jaringan tubuh! Warga di sini bukan ramah, saraf otak mereka dicuci oleh air biara!"<br><span style="color:#f0ebe0; font-size:19px; font-weight:bold;">OLD THOMAS:</span> <i>*senyum membeku, bola mata keruh*</i> "Semua dosa... telah diampuni..."`,
+    start: 8.5,
+    end: 12.0,
+    type: 'car_arrival',
+    subtitle: `<span style="color:#a8c4da; font-size:14px; letter-spacing:2px; font-family:serif;">GERBANG PERBATASAN DESA COLDBROOK</span><br><span style="color:#d8b26e; font-size:19px; font-weight:bold;">RODRICK:</span> "Mesin mati. Kita sudah sampai di depan gerbang perbatasan... lihat orang tua yang berdiri di bawah gerbang itu."`,
     onEnter: (sfx) => {
       if (sfx && sfx.playSnowStep) sfx.playSnowStep();
     }
   },
+  // 4. OLD THOMAS / KEPALA DESA MENYAMBUT (Shot close-up langsung ke Old Thomas & cawannya)
   {
-    start: 21.5,
-    end: 28.5,
-    camStart: new THREE.Vector3(-0.2, 1.6, 13.0),
-    camEnd: new THREE.Vector3(0.0, 1.75, 14.0),
-    lookStart: new THREE.Vector3(0.0, 1.6, 18.0),
-    lookEnd: new THREE.Vector3(0.0, 1.6, 6.0),
-    subtitle: `<span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN:</span> "Sore sudah menjelang senja, Rod. Warga di sini tampak tenang dan ramah, tapi suasana desanya terasa sangat dingin dan aneh..."<br><span style="color:#d8b26e; font-size:21px; font-weight:bold;">RODRICK:</span> "Ayo kita telusuri jalan desa dan ajak ngobrol warga sekitar dulu. Catat semua kejanggalan yang kita temukan."`,
+    start: 12.0,
+    end: 17.0,
+    type: 'old_thomas',
+    subtitle: `<span style="color:#f0ebe0; font-size:21px; font-weight:bold;">OLD THOMAS (Warga Sepuh Gerbang):</span> <i>*senyum lebar ganjil & menyodorkan cawan air*</i> "Selamat datang di Coldbrook, anak-anak muda... Basuhlah tenggorokan kalian dengan air suci sumur biara. Pastor Raksha selalu membuka pintu..."`,
+    onEnter: (sfx) => {
+      if (sfx && sfx.playZombieGroan) sfx.playZombieGroan();
+    }
+  },
+  // 5. RODRICK CURIGA DENGAN GERAK-GERIK WARGA (Shot langsung ke Rodrick di luar mobil)
+  {
+    start: 17.0,
+    end: 21.0,
+    type: 'rodrick_standing',
+    subtitle: `<span style="color:#d8b26e; font-size:21px; font-weight:bold;">RODRICK:</span> "Tatapannya kosong... dan senyumnya kaku seperti topeng. Intonasi bicaranya tidak wajar sama sekali."`,
+    onEnter: (sfx) => {
+      if (sfx && sfx.playSnowStep) sfx.playSnowStep();
+    }
+  },
+  // 6. KRISTIN MEMPERINGATKAN RACUN DI AIR (Shot langsung ke Kristin)
+  {
+    start: 21.0,
+    end: 26.0,
+    type: 'kristin_standing',
+    subtitle: `<span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN:</span> <i>*reagen kimia berubah keruh pekat*</i> "Rod, gawat! Sampel air dari cawan itu... ada zat narkotik dan racun pembusuk saraf! Otak warga di sini dicuci perlahan oleh air sumur biara!"`,
+    onEnter: (sfx) => {
+      if (sfx && sfx.playSnowStep) sfx.playSnowStep();
+    }
+  },
+  // 7. OLD THOMAS BERGUMAM DENGAN SENYUM GANJIL (Shot close-up kembali ke wajah Old Thomas)
+  {
+    start: 26.0,
+    end: 30.0,
+    type: 'old_thomas_creepy',
+    subtitle: `<span style="color:#f0ebe0; font-size:21px; font-weight:bold;">OLD THOMAS:</span> <i>*senyum membeku tanpa kedip*</i> "Semua dosa... telah dibasuh oleh Pastor Raksha... Tidak ada rasa sakit di Coldbrook..."`,
+    onEnter: (sfx) => {}
+  },
+  // 8. SHOT KE RUMAH-RUMAH WARGA & PONDOK DARRELL (Shot kamera ke arah rumah-rumah desa)
+  {
+    start: 30.0,
+    end: 36.0,
+    type: 'village_houses',
+    subtitle: `<span style="color:#5cf0a5; font-size:20px; font-weight:bold;">KRISTIN:</span> "Kita harus lekas menuju rumah Darrell si pemburu di pondok timur itu! Dia warga yang masih sadar!"<br><span style="color:#d8b26e; font-size:20px; font-weight:bold;">RODRICK:</span> "Ayo kita telusuri rumah-rumah warga di depan. Tetap waspada, siapkan senjata!"`,
     onEnter: (sfx) => {
       if (sfx && sfx.playSnowStep) sfx.playSnowStep();
       if (sfx && sfx.playSnowThud) sfx.playSnowThud(1.0);
@@ -511,9 +539,9 @@ export function updateCutscene(dt) {
   }
 
   // 2. Animate Car & Characters (Driving Phase vs Stepped Out Phase)
-  if (cutsceneTime < 7.5) {
-    // Stage 1: Driving on highway toward Coldbrook gate
-    const driveT = Math.min(1.0, cutsceneTime / 7.2);
+  if (cutsceneTime < 12.0) {
+    // Stage 1 - 3: Driving on highway toward Coldbrook gate
+    const driveT = Math.min(1.0, cutsceneTime / 11.5);
     const easeDrive = driveT * (2 - driveT); // Smooth deceleration as car approaches gate
     const carZ = THREE.MathUtils.lerp(-52.0, 5.0, easeDrive);
     const carX = THREE.MathUtils.lerp(0.0, 3.2, driveT * driveT);
@@ -532,7 +560,7 @@ export function updateCutscene(dt) {
     if (kristinModel && kristinModel.root) kristinModel.root.visible = false;
     playerPos.set(carX, gyCar, carZ);
   } else {
-    // Stage 2 - 4: Car is parked at road shoulder, Rodrick & Kristin have stepped out
+    // Stage 4 - 8: Car is parked at road shoulder, Rodrick & Kristin have stepped out
     if (cutsceneCivicCar && cutsceneCivicCar.root) {
       const gyCar = (typeof getTerrainHeight === 'function') ? getTerrainHeight(3.2, 5.0) : 0;
       cutsceneCivicCar.root.position.set(3.2, gyCar, 5.0);
@@ -550,12 +578,15 @@ export function updateCutscene(dt) {
       const breath = Math.sin(cutsceneTime * 2.2) * 0.012;
       playerMeshRoot.position.set(-0.55, gyP + breath, 14.2);
 
-      if (cutsceneTime > 14.5 && cutsceneTime < 21.5) {
-        // Turn to face Kristin when she whispers about tainted water
-        playerMeshRoot.rotation.y = THREE.MathUtils.lerp(playerMeshRoot.rotation.y, Math.PI - 0.55, dt * 2.5);
+      if (cutsceneTime >= 21.0 && cutsceneTime < 26.0) {
+        // Rodrick turns to face Kristin when she whispers about tainted water
+        playerMeshRoot.rotation.y = THREE.MathUtils.lerp(playerMeshRoot.rotation.y, Math.PI - 0.55, dt * 3.0);
+      } else if (cutsceneTime >= 30.0) {
+        // Rodrick turns toward village houses trail
+        playerMeshRoot.rotation.y = THREE.MathUtils.lerp(playerMeshRoot.rotation.y, -0.45, dt * 2.5);
       } else {
         // Face forward toward Old Thomas & Coldbrook gate
-        playerMeshRoot.rotation.y = THREE.MathUtils.lerp(playerMeshRoot.rotation.y, Math.PI - 0.05, dt * 2.5);
+        playerMeshRoot.rotation.y = THREE.MathUtils.lerp(playerMeshRoot.rotation.y, Math.PI - 0.05, dt * 3.0);
       }
       setPlayerCutscenePose('intro');
     }
@@ -563,23 +594,26 @@ export function updateCutscene(dt) {
     if (kristinModel && kristinModel.root) {
       kristinModel.root.visible = true;
       kristinModel.root.position.set(0.55, gyK, 14.4);
-      if (cutsceneTime > 14.5 && cutsceneTime < 21.5) {
-        kristinModel.root.rotation.y = THREE.MathUtils.lerp(kristinModel.root.rotation.y, -0.65, dt * 2.5);
-      } else if (cutsceneTime >= 21.5) {
-        kristinModel.root.rotation.y = THREE.MathUtils.lerp(kristinModel.root.rotation.y, -0.2, dt * 2.5);
+      if (cutsceneTime >= 21.0 && cutsceneTime < 26.0) {
+        // Kristin turns toward Rodrick to explain chemical analysis
+        kristinModel.root.rotation.y = THREE.MathUtils.lerp(kristinModel.root.rotation.y, -0.65, dt * 3.0);
+      } else if (cutsceneTime >= 30.0) {
+        // Kristin turns to look down the village trail toward Darrell's cabin
+        kristinModel.root.rotation.y = THREE.MathUtils.lerp(kristinModel.root.rotation.y, -0.35, dt * 2.5);
       } else {
-        kristinModel.root.rotation.y = THREE.MathUtils.lerp(kristinModel.root.rotation.y, 0.10, dt * 2.5);
+        // Face forward toward Old Thomas
+        kristinModel.root.rotation.y = THREE.MathUtils.lerp(kristinModel.root.rotation.y, 0.10, dt * 3.0);
       }
       animateKristinCutsceneStep(dt, false);
     }
   }
 
-  if (cutsceneTime >= 28.5) {
+  if (cutsceneTime >= 36.0) {
     finishCutscene();
     return;
   }
 
-  // 4. Camera Choreography & Subtitles
+  // 4. Object- & Character-Focused Camera Choreography & Subtitles
   let stage = null;
   let stageIdx = -1;
   for (let i = 0; i < CUTSCENE_STAGES.length; i++) {
@@ -601,38 +635,107 @@ export function updateCutscene(dt) {
       }
     }
 
-    if (stageIdx === 0 && cutsceneCivicCar && cutsceneCivicCar.root) {
-      // Dynamic camera tracking with moving car in Stage 1
-      const carPos = cutsceneCivicCar.root.position;
-      if (cutsceneTime < 4.2) {
-        // Shot 1: Front windshield view looking directly at Rodrick driving & Kristin
-        const sT = cutsceneTime / 4.2;
-        cameraRef.position.set(carPos.x + 0.65 - sT * 0.35, carPos.y + 1.25, carPos.z + 3.8 + sT * 0.6);
-        cameraRef.lookAt(carPos.x + 0.12, carPos.y + 0.95, carPos.z - 0.2);
-      } else {
-        // Shot 2: Revealing Coldbrook gate ahead as car approaches and brakes
-        const sT = (cutsceneTime - 4.2) / 3.3;
-        const ease2 = sT * sT * (3 - 2 * sT);
-        cameraRef.position.set(
-          THREE.MathUtils.lerp(carPos.x + 2.8, 2.3, ease2),
-          THREE.MathUtils.lerp(carPos.y + 1.6, carPos.y + 1.85, ease2),
-          THREE.MathUtils.lerp(carPos.z - 3.5, 12.0, ease2)
-        );
-        const lookTarget = new THREE.Vector3().lerpVectors(
-          new THREE.Vector3(carPos.x, carPos.y + 1.1, carPos.z),
-          new THREE.Vector3(0.0, 1.8, 17.5),
-          ease2
-        );
-        cameraRef.lookAt(lookTarget);
-      }
-    } else {
-      // Stage 2 - 4: Standard smooth cinematic lerp
-      const stageProgress = (cutsceneTime - stage.start) / (stage.end - stage.start);
-      const easeProg = 0.5 - 0.5 * Math.cos(stageProgress * Math.PI);
+    const sT = Math.max(0, Math.min(1.0, (cutsceneTime - stage.start) / (stage.end - stage.start)));
+    const easeProg = sT * sT * (3 - 2 * sT);
 
-      cameraRef.position.lerpVectors(stage.camStart, stage.camEnd, easeProg);
-      const lookTarget = new THREE.Vector3().lerpVectors(stage.lookStart, stage.lookEnd, easeProg);
-      cameraRef.lookAt(lookTarget);
+    const carPos = cutsceneCivicCar && cutsceneCivicCar.root ? cutsceneCivicCar.root.position : new THREE.Vector3(0, 0, 0);
+    const gyThomas = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.8, 17.5) : 0;
+    const gyP = (typeof getTerrainHeight === 'function') ? getTerrainHeight(-0.55, 14.2) : 0;
+    const gyK = (typeof getTerrainHeight === 'function') ? getTerrainHeight(0.55, 14.4) : 0;
+
+    switch (stage.type) {
+      case 'car_rodrick':
+        // 1. Shot langsung ke Rodrick di kursi kemudi
+        cameraRef.position.set(
+          carPos.x + 0.52 - sT * 0.10,
+          carPos.y + 1.25,
+          carPos.z + 2.10 + sT * 0.20
+        );
+        cameraRef.lookAt(carPos.x + 0.46, carPos.y + 1.05, carPos.z - 0.40);
+        break;
+
+      case 'car_kristin':
+        // 2. Cut langsung ke Kristin di kursi penumpang
+        cameraRef.position.set(
+          carPos.x - 0.48 + sT * 0.10,
+          carPos.y + 1.22,
+          carPos.z + 2.05 + sT * 0.20
+        );
+        cameraRef.lookAt(carPos.x - 0.46, carPos.y + 1.02, carPos.z - 0.40);
+        break;
+
+      case 'car_arrival':
+        // 3. Tracking shot mobil tiba & mengerem di depan gerbang Gothic
+        cameraRef.position.set(
+          THREE.MathUtils.lerp(carPos.x + 3.0, 2.2, easeProg),
+          THREE.MathUtils.lerp(carPos.y + 1.6, 2.1, easeProg),
+          THREE.MathUtils.lerp(carPos.z - 3.2, 10.5, easeProg)
+        );
+        const lookArrival = new THREE.Vector3().lerpVectors(
+          new THREE.Vector3(carPos.x, carPos.y + 1.0, carPos.z + 1.5),
+          new THREE.Vector3(0.0, 2.3, 18.0),
+          easeProg
+        );
+        cameraRef.lookAt(lookArrival);
+        break;
+
+      case 'old_thomas':
+        // 4. Shot close-up langsung ke Old Thomas (kepala desa / tetua) menyodorkan cawan
+        cameraRef.position.set(
+          THREE.MathUtils.lerp(1.35, 1.48, easeProg),
+          THREE.MathUtils.lerp(gyThomas + 1.58, gyThomas + 1.55, easeProg),
+          THREE.MathUtils.lerp(15.4, 15.9, easeProg)
+        );
+        cameraRef.lookAt(1.80, gyThomas + 1.52, 17.50);
+        break;
+
+      case 'rodrick_standing':
+        // 5. Shot langsung ke Rodrick mengamati situasi
+        cameraRef.position.set(
+          THREE.MathUtils.lerp(-0.12, -0.22, easeProg),
+          THREE.MathUtils.lerp(gyP + 1.62, gyP + 1.60, easeProg),
+          THREE.MathUtils.lerp(12.6, 12.9, easeProg)
+        );
+        cameraRef.lookAt(-0.55, gyP + 1.56, 14.20);
+        break;
+
+      case 'kristin_standing':
+        // 6. Shot langsung ke Kristin saat memperingatkan Rodrick tentang racun di air
+        cameraRef.position.set(
+          THREE.MathUtils.lerp(0.15, 0.26, easeProg),
+          THREE.MathUtils.lerp(gyK + 1.56, gyK + 1.58, easeProg),
+          THREE.MathUtils.lerp(12.9, 13.2, easeProg)
+        );
+        cameraRef.lookAt(0.55, gyK + 1.52, 14.40);
+        break;
+
+      case 'old_thomas_creepy':
+        // 7. Low-angle shot intens ke senyum kaku Old Thomas
+        cameraRef.position.set(
+          THREE.MathUtils.lerp(1.55, 1.68, easeProg),
+          THREE.MathUtils.lerp(gyThomas + 1.42, gyThomas + 1.48, easeProg),
+          THREE.MathUtils.lerp(16.2, 16.6, easeProg)
+        );
+        cameraRef.lookAt(1.80, gyThomas + 1.60, 17.50);
+        break;
+
+      case 'village_houses':
+        // 8. Shot kamera melayang & panning ke arah pondok Darrell & rumah-rumah desa Coldbrook
+        cameraRef.position.set(
+          THREE.MathUtils.lerp(0.4, 1.6, easeProg),
+          THREE.MathUtils.lerp(2.6, 4.2, easeProg),
+          THREE.MathUtils.lerp(15.5, 5.0, easeProg)
+        );
+        const lookVillage = new THREE.Vector3().lerpVectors(
+          new THREE.Vector3(1.0, 2.0, 10.0),
+          new THREE.Vector3(18.0, 2.8, 6.0),
+          easeProg
+        );
+        cameraRef.lookAt(lookVillage);
+        break;
+
+      default:
+        break;
     }
   }
 }
