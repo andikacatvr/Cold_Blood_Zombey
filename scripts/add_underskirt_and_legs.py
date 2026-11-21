@@ -49,6 +49,130 @@ def generate_nona_batavia_complete():
     # U=0.10, V=0.98 -> Smooth skin tone for inner legs
     draw.rectangle([90, 970, 120, 1000], fill=COLOR_SKIN)
 
+    # 1B. Creepy Horror Veins on Neck ("Urat-urat di Leher") & Red Sauce Splatters ("Bercak Saus Merah")
+    import random
+    random.seed(1337)
+
+    overlay = Image.new('RGBA', tex.size, (0, 0, 0, 0))
+    ov_draw = ImageDraw.Draw(overlay)
+
+    # Palette: Zombie Neck Veins
+    VEIN_HALO = (36, 48, 55, 120)     # Subcutaneous deoxygenated bluish-teal halo
+    VEIN_CORE = (48, 18, 50, 215)     # Deep dark venous purple/black
+    VEIN_THIN = (62, 24, 60, 180)     # Thin branching venule
+
+    def draw_vein_tree(start_x, start_y, angle, length, thickness, depth=0):
+        if depth > 4 or length < 3:
+            return
+        cur_x, cur_y = start_x, start_y
+        steps = max(3, int(length / 2))
+        pts = [(cur_x, cur_y)]
+        for _ in range(steps):
+            angle += random.uniform(-0.35, 0.35)
+            cur_x += math.cos(angle) * (length / steps)
+            cur_y += math.sin(angle) * (length / steps)
+            pts.append((cur_x, cur_y))
+
+        # Soft halo underneath
+        ov_draw.line(pts, fill=(VEIN_HALO[0], VEIN_HALO[1], VEIN_HALO[2], int(120 / (depth + 1))), width=int(thickness + 2))
+        # Crisp vein core
+        ov_draw.line(pts, fill=(VEIN_CORE[0], VEIN_CORE[1], VEIN_CORE[2], int(210 / (depth * 0.35 + 1))), width=max(1, int(thickness)))
+
+        if depth < 3:
+            num_branches = random.choice([1, 2])
+            for _ in range(num_branches):
+                b_idx = random.randint(len(pts) // 3, len(pts) - 1)
+                bx, by = pts[b_idx]
+                b_ang = angle + random.choice([-0.72, 0.72]) + random.uniform(-0.25, 0.25)
+                draw_vein_tree(bx, by, b_ang, length * random.uniform(0.60, 0.78), max(1, thickness - 1), depth + 1)
+
+    # Front Neck Veins (creeping upwards from under kebaya collar toward jawline)
+    # Left jugular/carotid tree
+    draw_vein_tree(246, 208, -math.pi * 0.62, 38, 2.5)
+    draw_vein_tree(238, 204, -math.pi * 0.55, 30, 2.0)
+    draw_vein_tree(248, 192, -math.pi * 0.70, 22, 1.8)
+    # Right jugular/carotid tree
+    draw_vein_tree(264, 208, -math.pi * 0.38, 38, 2.5)
+    draw_vein_tree(272, 204, -math.pi * 0.45, 30, 2.0)
+    draw_vein_tree(262, 192, -math.pi * 0.30, 22, 1.8)
+    # Center throat creeping venules
+    draw_vein_tree(254, 206, -math.pi * 0.50, 32, 1.8)
+    draw_vein_tree(256, 185, -math.pi * 0.48, 20, 1.4)
+
+    # Back Neck Veins (creeping up the nape of neck)
+    draw_vein_tree(756, 208, -math.pi * 0.58, 34, 2.2)
+    draw_vein_tree(770, 208, -math.pi * 0.42, 34, 2.2)
+    draw_vein_tree(763, 190, -math.pi * 0.50, 24, 1.6)
+
+    # Palette: Red Sauce / Visceral Splatters
+    SAUCE_DARK = (85, 8, 12, 245)      # Deep coagulated crimson
+    SAUCE_MID = (155, 18, 22, 235)      # Viscous red sauce
+    SAUCE_BRIGHT = (195, 28, 30, 220)   # Fresh highlight
+    SAUCE_STAIN = (120, 16, 18, 130)    # Dilute splatter rim
+
+    def draw_splatter(cx, cy, r_base, num_droplets=14, drip_len=0):
+        # Organic core with irregular jagged droplet boundaries
+        pts = []
+        n_pts = 16
+        for i in range(n_pts):
+            ang = 2 * math.pi * i / n_pts
+            r = r_base * random.uniform(0.65, 1.35)
+            pts.append((cx + r * math.cos(ang), cy + r * math.sin(ang)))
+
+        # Outer stain rim
+        ov_draw.polygon([(x + random.uniform(-1, 1), y + random.uniform(-1, 1)) for x, y in pts], fill=SAUCE_STAIN)
+        # Core body
+        ov_draw.polygon(pts, fill=SAUCE_MID)
+        # Inner dark coagulated core
+        inner = [(cx + (x - cx) * 0.65, cy + (y - cy) * 0.65) for x, y in pts]
+        ov_draw.polygon(inner, fill=SAUCE_DARK)
+
+        # Gravitational Drip Trail
+        if drip_len > 0:
+            drip_pts = [(cx, cy), (cx + random.uniform(-2, 2), cy + drip_len * 0.5), (cx + random.uniform(-1, 1), cy + drip_len)]
+            ov_draw.line(drip_pts, fill=SAUCE_MID, width=max(2, int(r_base * 0.4)))
+            ov_draw.ellipse([drip_pts[-1][0] - r_base * 0.35, drip_pts[-1][1] - r_base * 0.35,
+                             drip_pts[-1][0] + r_base * 0.35, drip_pts[-1][1] + r_base * 0.35], fill=SAUCE_DARK)
+
+        # Radiating Fine Droplets / Mist
+        for _ in range(num_droplets):
+            ang = random.uniform(0, 2 * math.pi)
+            dist = r_base * random.uniform(1.2, 3.2)
+            drop_r = random.uniform(0.8, max(1.2, r_base * 0.35))
+            dx = cx + dist * math.cos(ang)
+            dy = cy + dist * math.sin(ang)
+            ov_draw.ellipse([dx - drop_r, dy - drop_r, dx + drop_r, dy + drop_r],
+                            fill=random.choice([SAUCE_DARK, SAUCE_MID, SAUCE_BRIGHT]))
+
+    # 1. Mouth Corner & Chin Drips
+    draw_splatter(251, 133, 2.5, num_droplets=5, drip_len=16)  # Drip from lips corner down to chin
+    draw_splatter(250, 148, 3.2, num_droplets=6, drip_len=24)  # Drip from chin down to throat
+
+    # 2. White Kebaya Chest Splatters (vivid red across white lace)
+    draw_splatter(248, 255, 14.0, num_droplets=30, drip_len=54) # Major upper chest splatter
+    draw_splatter(275, 285, 10.0, num_droplets=20, drip_len=38) # Right chest splatter
+    draw_splatter(228, 290, 8.5, num_droplets=18, drip_len=32)  # Left chest splatter
+    draw_splatter(258, 345, 11.5, num_droplets=24, drip_len=46) # Mid-kebaya splatter & drip
+    draw_splatter(238, 390, 8.0, num_droplets=16, drip_len=26)  # Lower torso splatter
+    draw_splatter(270, 420, 9.0, num_droplets=18, drip_len=30)  # Kebaya hem splatter
+    # Back of kebaya
+    draw_splatter(760, 290, 10.0, num_droplets=18, drip_len=35)
+    draw_splatter(740, 360, 8.0, num_droplets=14, drip_len=25)
+
+    # 3. Arms & Lace Sleeves
+    draw_splatter(160, 255, 6.5, num_droplets=12, drip_len=20)
+    draw_splatter(345, 255, 6.5, num_droplets=12, drip_len=20)
+    draw_splatter(130, 260, 5.0, num_droplets=8, drip_len=14)
+    draw_splatter(375, 260, 5.0, num_droplets=8, drip_len=14)
+
+    # 4. Batik Skirt
+    draw_splatter(245, 520, 10.5, num_droplets=18, drip_len=36)
+    draw_splatter(265, 610, 9.0, num_droplets=14, drip_len=30)
+    draw_splatter(230, 680, 7.5, num_droplets=12, drip_len=24)
+
+    # Merge overlay with base texture
+    tex = Image.alpha_composite(tex, overlay)
+
     out_img_io = io.BytesIO()
     tex.save(out_img_io, format='PNG')
     new_img_bytes = out_img_io.getvalue()
