@@ -5,6 +5,7 @@
 
 import { Sfx } from '../audio/sfx.js';
 import { spawnWoodSplinters } from '../entities/effects.js';
+import { setEndlessVillagers } from '../entities/villager.js';
 
 const THREE = window.THREE;
 
@@ -2551,4 +2552,7 @@ export function setEndlessEnvironment(isEndless, scene) {
       scene.fog.far = 42.0;
     }
   }
+
+  // 5. Hide/Show Village NPCs (Old Thomas, Martha, Edward, etc.)
+  setEndlessVillagers(isEndless);
 }

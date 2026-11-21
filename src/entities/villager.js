@@ -814,11 +814,23 @@ export function spawnVillageNPCs(scene, getTerrainHeight) {
     const gy = (typeof getTerrainHeight === 'function') ? getTerrainHeight(npc.x, npc.z) : 0;
     npc.mesh.position.set(npc.x, gy, npc.z);
     npc.mesh.rotation.y = npc.rotY;
+    if (window.__ENDLESS_ACTIVE) {
+      npc.mesh.visible = false;
+    }
     if (scene) scene.add(npc.mesh);
   });
 }
 
+export function setEndlessVillagers(isEndless) {
+  VILLAGE_NPCS.forEach(npc => {
+    if (npc.mesh) {
+      npc.mesh.visible = !isEndless;
+    }
+  });
+}
+
 export function updateVillageNPCs(dt, playerPos) {
+  if (window.__ENDLESS_ACTIVE) return;
   VILLAGE_NPCS.forEach(npc => {
     if (!npc.mesh || !npc.mesh.visible) return;
     // Subtle idle breathing
@@ -844,7 +856,7 @@ export function updateVillageNPCs(dt, playerPos) {
 }
 
 export function getNearestVillager(playerPos, maxDist = 3.2) {
-  if (!playerPos) return null;
+  if (!playerPos || window.__ENDLESS_ACTIVE) return null;
   let nearest = null;
   let minDist = maxDist;
   VILLAGE_NPCS.forEach(npc => {
