@@ -77,7 +77,74 @@ def generate_back_hair_geometry():
         (0.020, 1.430, -0.056, 0.005)
     ], u_center=0.62)
 
-    return positions, normals, uvs, indices
+    # 3. 3D Textured Side Locks (Anak rambut / helai pelipis & samping telinga kiri & kanan)
+    def add_side_lock(points_w, u_center=0.5, outward_dir=(-1, 0, 0)):
+        ribbon_base = len(positions)
+        n_pts = len(points_w)
+        for s_idx, (x, y, z, w) in enumerate(points_w):
+            if s_idx == 0:
+                tx = points_w[1][0] - x; ty = points_w[1][1] - y; tz = points_w[1][2] - z
+            elif s_idx == n_pts - 1:
+                tx = x - points_w[s_idx - 1][0]; ty = y - points_w[s_idx - 1][1]; tz = z - points_w[s_idx - 1][2]
+            else:
+                tx = points_w[s_idx + 1][0] - points_w[s_idx - 1][0]; ty = points_w[s_idx + 1][1] - points_w[s_idx - 1][1]; tz = points_w[s_idx + 1][2] - points_w[s_idx - 1][2]
+            tlen = math.hypot(tx, ty, tz) or 1.0
+            tx, ty, tz = tx / tlen, ty / tlen, tz / tlen
+
+            nx, ny, nz = outward_dir
+            nlen = math.hypot(nx, ny, nz) or 1.0
+            nx, ny, nz = nx/nlen, ny/nlen, nz/nlen
+
+            bx = ty * nz - tz * ny
+            by = tz * nx - tx * nz
+            bz = tx * ny - ty * nx
+            blen = math.hypot(bx, by, bz) or 1.0
+            bx, by, bz = bx / blen, by / blen, bz / blen
+
+            v_val = 0.2 + 0.6 * (s_idx / (n_pts - 1))
+
+            lx = x - bx * (w * 0.5); ly = y - by * (w * 0.5); lz = z - bz * (w * 0.5)
+            positions.append((lx, ly, lz))
+            normals.append((nx, ny, nz))
+            uvs.append((u_center - 0.08, v_val))
+
+            rx = x + bx * (w * 0.5); ry = y + by * (w * 0.5); rz = z + bz * (w * 0.5)
+            positions.append((rx, ry, rz))
+            normals.append((nx, ny, nz))
+            uvs.append((u_center + 0.08, v_val))
+
+        for s_idx in range(n_pts - 1):
+            i0 = ribbon_base + s_idx * 2
+            i1 = ribbon_base + s_idx * 2 + 1
+            i2 = ribbon_base + (s_idx + 1) * 2
+            i3 = ribbon_base + (s_idx + 1) * 2 + 1
+            indices.extend([i0, i2, i1, i1, i2, i3])
+
+    for sign in [-1, 1]:
+        u_base = 0.3 if sign < 0 else 0.7
+        # A. Front Cheekbone Sidelock (membingkai tulang pipi depan)
+        add_side_lock([
+            (sign * 0.068, 1.625, 0.035, 0.016),
+            (sign * 0.078, 1.575, 0.038, 0.018),
+            (sign * 0.080, 1.525, 0.032, 0.014),
+            (sign * 0.076, 1.480, 0.024, 0.008)
+        ], u_center=u_base, outward_dir=(sign * 0.85, 0.1, 0.5))
+
+        # B. Mid Temple Lock (helai samping di atas pelipis / daun telinga)
+        add_side_lock([
+            (sign * 0.075, 1.615, 0.015, 0.016),
+            (sign * 0.085, 1.565, 0.010, 0.018),
+            (sign * 0.086, 1.515, 0.005, 0.014),
+            (sign * 0.082, 1.470, 0.000, 0.008)
+        ], u_center=u_base + sign * 0.05, outward_dir=(sign * 0.95, 0.0, 0.2))
+
+        # C. Post-Ear Connector Lock (helai di belakang telinga menyatu ke pangkal twintail)
+        add_side_lock([
+            (sign * 0.078, 1.605, -0.015, 0.015),
+            (sign * 0.085, 1.555, -0.020, 0.016),
+            (sign * 0.084, 1.505, -0.025, 0.012),
+            (sign * 0.080, 1.460, -0.025, 0.006)
+        ], u_center=u_base - sign * 0.05, outward_dir=(sign * 0.90, -0.1, -0.35))
 
     return positions, normals, uvs, indices
 

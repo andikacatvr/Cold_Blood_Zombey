@@ -104,7 +104,8 @@
       <span id="val-exp" style="font-family:monospace; color:#98c379; min-width:28px;">0.95</span>
     </div>
     <button id="btn-head">Fokus Depan (Wajah)</button>
-    <button id="btn-back">Fokus Belakang (Rambut)</button>
+    <button id="btn-side">Fokus Samping</button>
+    <button id="btn-back">Fokus Belakang (Kepangan)</button>
     <button id="btn-body">Fokus Seluruh Tubuh</button>
   </div>
 
@@ -180,6 +181,11 @@
     document.getElementById('btn-head').addEventListener('click', () => {
       controls.target.set(0, 1.56, 0);
       camera.position.set(0, 1.62, 1.10);
+    });
+
+    document.getElementById('btn-side').addEventListener('click', () => {
+      controls.target.set(0, 1.55, 0.01);
+      camera.position.set(0.95, 1.58, 0.25);
     });
 
     document.getElementById('btn-back').addEventListener('click', () => {
