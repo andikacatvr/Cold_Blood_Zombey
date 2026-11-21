@@ -282,6 +282,41 @@ def generate_nona_batavia_complete():
         o_idx = idx_off + i * 2
         orig_indices.append(struct.unpack('<H', bin_buf[o_idx:o_idx+2])[0])
 
+    # UV Palette Constants (defined upfront to avoid UnboundLocalError)
+    LEG_UV = (105 / 1024.0, 985 / 1024.0)   # Clean white cotton sock
+    BOOT_UV = (55 / 1024.0, 985 / 1024.0)   # Solid black leather boot
+    CAP_UV = (55 / 1024.0, 985 / 1024.0)    # Deep shadow black
+
+    # Identify old shoe vertices (the 242 vertices in disconnected photogrammetry shoe ribbon components)
+    orig_tris = [orig_indices[i:i+3] for i in range(0, idx_count, 3)]
+    def get_connected(start_v, tris):
+        visited = set()
+        queue = [start_v]
+        while queue:
+            curr = queue.pop()
+            if curr in visited: continue
+            visited.add(curr)
+            for t in tris:
+                if curr in t:
+                    for v in t:
+                        if v not in visited:
+                            queue.append(v)
+        return visited
+
+    all_v = set(range(vert_count))
+    unvis = set(all_v)
+    shoe_verts = set()
+    while unvis:
+        start = next(iter(unvis))
+        comp = get_connected(start, orig_tris)
+        unvis -= comp
+        comp_y = [orig_positions[v][1] for v in comp]
+        comp_x = [orig_positions[v][0] for v in comp]
+        if max(comp_y) <= 0.146 and max(abs(x) for x in comp_x) < 0.15:
+            shoe_verts.update(comp)
+
+    print(f'[FILTER] Identified {len(shoe_verts)} old hollow shoe vertices to remove completely.')
+
     # Transform Existing Vertices:
     # A. Arms: lengthen by ~50% down to mid-thigh
     pY = 1.340
@@ -303,7 +338,13 @@ def generate_nona_batavia_complete():
         x, y, z = orig_positions[i]
         nx, ny, nz = orig_normals[i]
 
-        if abs(x) >= 0.145 and 0.85 <= y <= 1.45:
+        if i in shoe_verts:
+            # Collapse unreferenced old shoe vertices to origin
+            x, y, z = 0.0, 0.0, 0.0
+            nx, ny, nz = 0.0, 1.0, 0.0
+            new_uvs[i] = CAP_UV
+
+        elif abs(x) >= 0.145 and 0.85 <= y <= 1.45:
             is_left = x < 0
             sign = -1.0 if is_left else 1.0
             pX = sign * 0.155
@@ -373,20 +414,6 @@ def generate_nona_batavia_complete():
             nlen = math.hypot(nx, ny, nz) or 1.0
             nx, ny, nz = nx / nlen, ny / nlen, nz / nlen
 
-        elif y < 0.144:
-            # Collapse old hollow photogrammetry cage inside the new solid boot soles so zero holes remain
-            is_left = x < 0
-            target_cx = -0.048 if is_left else 0.048
-            x = target_cx
-            y = 0.015
-            z = 0.010
-            nx, ny, nz = 0.0, 1.0, 0.0
-            new_uvs[i] = CAP_UV
-
-        elif 0.144 <= y <= 0.148:
-            # Skirt hem drape
-            y = 0.098
-
         elif y >= 1.405:
             orig_y = orig_positions[i][1]
             orig_z = orig_positions[i][2]
@@ -418,13 +445,14 @@ def generate_nona_batavia_complete():
         new_positions.append((x, y, z))
         new_normals.append((nx, ny, nz))
 
-    # B. ADD INNER LEGS (CALVES) & UNDERSKIRT SHADOW CAP
-    # 1. Left and Right Legs (smooth cylinders rising from shoes up inside the skirt)
-    LEG_UV = (105 / 1024.0, 985 / 1024.0)   # Clean skin tone
-    CAP_UV = (55 / 1024.0, 985 / 1024.0)    # Deep shadow black
+    # Retain all original triangles EXCEPT the 110 hollow shoe triangles
+    new_indices = []
+    for t in orig_tris:
+        if not any(v in shoe_verts for v in t):
+            new_indices.extend(t)
+    print(f'[FILTER] Retained {len(new_indices)//3} original body triangles (omitted {len(orig_tris) - len(new_indices)//3} hollow shoe triangles).')
 
-    new_indices = list(orig_indices)
-
+    # B. ADD INNER LEGS (WHITE SOCKS) & UNDERSKIRT SHADOW CAP
     def add_leg(cx, cz, y_bottom, y_top, r_bottom, r_top, segments=8):
         base_idx = len(new_positions)
         # Bottom ring
@@ -453,41 +481,42 @@ def generate_nona_batavia_complete():
             # Triangle 2
             new_indices.extend([base_idx + next_s, base_idx + segments + s, base_idx + segments + next_s])
 
-    # Left Leg: from ankle y=0.075 up inside skirt y=0.320 (White Socks)
-    add_leg(-0.048, 0.015, 0.075, 0.320, 0.026, 0.038, segments=8)
-    # Right Leg
-    add_leg(0.048, 0.015, 0.075, 0.320, 0.026, 0.038, segments=8)
+    # Left & Right Legs (White socks emerging from boot collar y=0.080 up into skirt y=0.320)
+    add_leg(-0.065, 0.035, 0.080, 0.320, 0.024, 0.036, segments=8)
+    add_leg( 0.065, 0.035, 0.080, 0.320, 0.024, 0.036, segments=8)
 
     # 2. Solid Watertight 3D Black Boots (Zero holes from any angle!)
-    BOOT_UV = (55 / 1024.0, 985 / 1024.0)
-
-    def add_solid_boot(cx, cz=0.015):
-        r0 = [ # Sole bottom (y=0.002)
-            (0.000, -0.058), (-0.022, -0.042), (-0.027, 0.010), (-0.022, 0.072),
-            (0.000, 0.082), ( 0.022, 0.072), ( 0.027, 0.010), ( 0.022, -0.042)
+    def add_solid_boot(cx, cz=0.038):
+        # Ring 0: Sole bottom (y=0.002) - completely closed tread
+        r0 = [
+            ( 0.000, -0.066), (-0.025, -0.044), (-0.028,  0.015), (-0.025,  0.076),
+            ( 0.000,  0.088), ( 0.025,  0.076), ( 0.028,  0.015), ( 0.025, -0.044)
         ]
-        r1 = [ # Sole top (y=0.025)
-            (0.000, -0.056), (-0.022, -0.040), (-0.026, 0.010), (-0.021, 0.070),
-            (0.000, 0.080), ( 0.021, 0.070), ( 0.026, 0.010), ( 0.022, -0.040)
+        # Ring 1: Sole top / welt line (y=0.026) - thick combat sole
+        r1 = [
+            ( 0.000, -0.064), (-0.023, -0.042), (-0.026,  0.015), (-0.023,  0.074),
+            ( 0.000,  0.085), ( 0.023,  0.074), ( 0.026,  0.015), ( 0.023, -0.042)
         ]
-        r2 = [ # Vamp & heel mid (y=0.048)
-            (0.000, -0.050), (-0.020, -0.036), (-0.024, 0.010), (-0.019, 0.065),
-            (0.000, 0.075), ( 0.019, 0.065), ( 0.024, 0.010), ( 0.020, -0.036)
+        # Ring 2: Vamp mid-level (y=0.056) - closed toe box & heel cup
+        r2 = [
+            ( 0.000, -0.058), (-0.021, -0.038), (-0.024,  0.015), (-0.020,  0.068),
+            ( 0.000,  0.078), ( 0.020,  0.068), ( 0.024,  0.015), ( 0.021, -0.038)
         ]
-        r3 = [ # Ankle collar (y=0.078)
-            (0.000, -0.035), (-0.018, -0.025), (-0.022, 0.000), (-0.018, 0.025),
-            (0.000, 0.035), ( 0.018, 0.025), ( 0.022, 0.000), ( 0.018, -0.025)
+        # Ring 3: Boot collar (y=0.088) - ankle rim meeting white sock
+        r3 = [
+            ( 0.000, -0.040), (-0.019, -0.025), (-0.023,  0.005), (-0.018,  0.032),
+            ( 0.000,  0.042), ( 0.018,  0.032), ( 0.023,  0.005), ( 0.019, -0.025)
         ]
 
         base_idx = len(new_positions)
 
-        # Ring 0
+        # Ring 0 vertices
         for dx, dz in r0:
             new_positions.append((cx + dx, 0.002, cz + dz))
             new_normals.append((0.0, -1.0, 0.0))
             new_uvs.append(BOOT_UV)
 
-        # Sole bottom cap fan
+        # Sole bottom cap fan (completely closes sole bottom)
         sole_c = len(new_positions)
         new_positions.append((cx, 0.002, cz + 0.010))
         new_normals.append((0.0, -1.0, 0.0))
@@ -496,56 +525,51 @@ def generate_nona_batavia_complete():
             nxt = (i + 1) % 8
             new_indices.extend([sole_c, base_idx + nxt, base_idx + i])
 
-        # Ring 1
+        # Ring 1 vertices
         r1_base = len(new_positions)
         for dx, dz in r1:
-            new_positions.append((cx + dx, 0.025, cz + dz))
+            new_positions.append((cx + dx, 0.026, cz + dz))
             nx = dx; nz = dz - 0.010; nl = math.hypot(nx, nz) or 1.0
             new_normals.append((nx/nl, 0.0, nz/nl))
             new_uvs.append(BOOT_UV)
 
-        # Quads 0 -> 1 (Sole sides)
+        # Quads 0 -> 1 (Sole vertical side walls)
         for i in range(8):
             nxt = (i + 1) % 8
             new_indices.extend([base_idx + i, base_idx + nxt, r1_base + nxt,
                                 base_idx + i, r1_base + nxt, r1_base + i])
 
-        # Ring 2
+        # Ring 2 vertices
         r2_base = len(new_positions)
         for dx, dz in r2:
-            new_positions.append((cx + dx, 0.048, cz + dz))
+            new_positions.append((cx + dx, 0.056, cz + dz))
             nx = dx; nz = dz - 0.010; nl = math.hypot(nx, nz) or 1.0
-            new_normals.append((nx/nl, 0.15, nz/nl))
+            new_normals.append((nx/nl, 0.20, nz/nl))
             new_uvs.append(BOOT_UV)
 
-        # Quads 1 -> 2 (Lower upper walls)
+        # Quads 1 -> 2 (Lower upper walls, toe bumper, and heel cup)
         for i in range(8):
             nxt = (i + 1) % 8
             new_indices.extend([r1_base + i, r1_base + nxt, r2_base + nxt,
                                 r1_base + i, r2_base + nxt, r2_base + i])
 
-        # Ring 3
+        # Ring 3 vertices
         r3_base = len(new_positions)
         for dx, dz in r3:
-            new_positions.append((cx + dx, 0.078, cz + dz))
-            nx = dx; nz = dz - 0.000; nl = math.hypot(nx, nz) or 1.0
-            new_normals.append((nx/nl, 0.25, nz/nl))
+            new_positions.append((cx + dx, 0.088, cz + dz))
+            nx = dx; nz = dz - 0.005; nl = math.hypot(nx, nz) or 1.0
+            new_normals.append((nx/nl, 0.35, nz/nl))
             new_uvs.append(BOOT_UV)
 
-        # Upper heel counter & ankle sides
-        for i in [0, 1, 6, 7]:
+        # Quads 2 -> 3 (Instep slope, closed toe box roof, ankle side walls, and heel counter)
+        # All 8 quads fully closed with valid outward-facing triangles
+        for i in range(8):
             nxt = (i + 1) % 8
             new_indices.extend([r2_base + i, r2_base + nxt, r3_base + nxt,
-                                r2_base + i, r3_base + nxt, r2_base + i])
+                                r2_base + i, r3_base + nxt, r3_base + i])
 
-        # Front toe box & instep
-        for i in [2, 3, 4, 5]:
-            nxt = i + 1
-            new_indices.extend([r2_base + i, r2_base + nxt, r3_base + nxt,
-                                r2_base + i, r3_base + nxt, r2_base + i])
-
-    add_solid_boot(-0.048, 0.015)
-    add_solid_boot(0.048, 0.015)
+    add_solid_boot(-0.065, 0.038)
+    add_solid_boot( 0.065, 0.038)
 
     # 2. Underskirt Interior Shadow Cap: Seals the interior void so looking up is solid dark lining
     cap_base_idx = len(new_positions)

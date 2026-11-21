@@ -106,7 +106,8 @@
     <button id="btn-head">Fokus Depan (Wajah)</button>
     <button id="btn-side">Fokus Samping</button>
     <button id="btn-hands">Fokus Tangan</button>
-    <button id="btn-feet">Fokus Boots & Kaus Kaki</button>
+    <button id="btn-feet">Fokus Boots Depan</button>
+    <button id="btn-feet-side">Fokus Boots Samping</button>
     <button id="btn-back">Fokus Belakang (Kepangan)</button>
     <button id="btn-body">Fokus Seluruh Tubuh</button>
   </div>
@@ -198,6 +199,11 @@
     document.getElementById('btn-feet').addEventListener('click', () => {
       controls.target.set(0, 0.08, 0.02);
       camera.position.set(0, 0.22, 0.75);
+    });
+
+    document.getElementById('btn-feet-side').addEventListener('click', () => {
+      controls.target.set(0, 0.07, 0.03);
+      camera.position.set(0.60, 0.10, 0.03);
     });
 
     document.getElementById('btn-back').addEventListener('click', () => {
