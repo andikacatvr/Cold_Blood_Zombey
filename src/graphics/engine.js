@@ -82,8 +82,13 @@ export function applyGraphicFidelity(mode = 'hd') {
     overcastDirLight.castShadow = !isMobileDevice;
 
     if (scene.fog) {
-      scene.fog.near = 3.0;
-      scene.fog.far = 42.0;
+      if (window.__ENDLESS_ACTIVE) {
+        scene.fog.near = 1.0;
+        scene.fog.far = 16.0;
+      } else {
+        scene.fog.near = 3.0;
+        scene.fog.far = 42.0;
+      }
     }
     camera.far = 75.0;
   } else {
@@ -99,8 +104,13 @@ export function applyGraphicFidelity(mode = 'hd') {
     overcastDirLight.castShadow = false;
 
     if (scene.fog) {
-      scene.fog.near = 1.5;
-      scene.fog.far = 24.0;
+      if (window.__ENDLESS_ACTIVE) {
+        scene.fog.near = 1.0;
+        scene.fog.far = 14.0;
+      } else {
+        scene.fog.near = 1.5;
+        scene.fog.far = 24.0;
+      }
     }
     camera.far = 48.0;
   }

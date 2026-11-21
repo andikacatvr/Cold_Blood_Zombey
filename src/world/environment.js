@@ -198,6 +198,8 @@ export function getTerrainHeight(x, z) {
 
 export const colliders = [];
 export const lockedDoors = [];
+export const houseObjects = [];
+export let roadObject = null;
 
 export const housePickups = [
   {
@@ -709,26 +711,30 @@ export function initWorld(scene, textures) {
         child.receiveShadow = true;
       }
     });
+    houseObjects.push(house);
     scene.add(house);
 
-    // Colliders
-    colliders.push({ minX: x - 5.3, maxX: x + 5.3, minZ: z - halfD - 0.35, maxZ: z - halfD + 0.35 });
-    colliders.push({ minX: x + halfW - 0.35, maxX: x + halfW + 0.35, minZ: z - halfD, maxZ: z + halfD + 0.35 });
-    colliders.push({ minX: x - halfW - 0.35, maxX: x - halfW + 0.35, minZ: z - halfD, maxZ: z - 2.0 });
-    colliders.push({ minX: x - halfW - 0.35, maxX: x - halfW + 0.35, minZ: z + 2.0, maxZ: z + halfD + 0.35 });
+    // Colliders (tagged with category: 'house')
+    const addHouseCol = (minX, maxX, minZ, maxZ) => {
+      colliders.push({ minX, maxX, minZ, maxZ, category: 'house', disabled: false });
+    };
+    addHouseCol(x - 5.3, x + 5.3, z - halfD - 0.35, z - halfD + 0.35);
+    addHouseCol(x + halfW - 0.35, x + halfW + 0.35, z - halfD, z + halfD + 0.35);
+    addHouseCol(x - halfW - 0.35, x - halfW + 0.35, z - halfD, z - 2.0);
+    addHouseCol(x - halfW - 0.35, x - halfW + 0.35, z + 2.0, z + halfD + 0.35);
 
     const pLeft = x - halfW - porchW + 0.2;
     const pBack = z + 1.5 - porchD / 2;
     const pFront = z + 1.5 + porchD / 2;
-    colliders.push({ minX: pLeft - 0.35, maxX: pLeft + 0.35, minZ: pBack - 0.2, maxZ: pFront + 0.2 });
-    colliders.push({ minX: pLeft, maxX: x - halfW + 0.2, minZ: pBack - 0.35, maxZ: pBack + 0.35 });
-    colliders.push({ minX: pLeft, maxX: x - halfW + 0.2, minZ: pFront - 0.35, maxZ: pFront + 0.35 });
+    addHouseCol(pLeft - 0.35, pLeft + 0.35, pBack - 0.2, pFront + 0.2);
+    addHouseCol(pLeft, x - halfW + 0.2, pBack - 0.35, pBack + 0.35);
+    addHouseCol(pLeft, x - halfW + 0.2, pFront - 0.35, pFront + 0.35);
 
-    colliders.push({ minX: x - 5.3, maxX: x + 1.6, minZ: z + halfD - 0.35, maxZ: z + halfD + 0.35 });
-    colliders.push({ minX: x - 2.5, maxX: x + 1.1, minZ: z + halfD + 0.35, maxZ: z + halfD + 1.6 });
-    colliders.push({ minX: x + 3.4, maxX: x + 5.3, minZ: z + halfD - 0.35, maxZ: z + halfD + 0.35 });
-    colliders.push({ minX: x + 0.7, maxX: x + 2.9, minZ: z - 1.7, maxZ: z - 0.3 });
-    colliders.push({ minX: x - 2.8, maxX: x - 0.2, minZ: z - halfD, maxZ: z - halfD + 0.9 });
+    addHouseCol(x - 5.3, x + 1.6, z + halfD - 0.35, z + halfD + 0.35);
+    addHouseCol(x - 2.5, x + 1.1, z + halfD + 0.35, z + halfD + 1.6);
+    addHouseCol(x + 3.4, x + 5.3, z + halfD - 0.35, z + halfD + 0.35);
+    addHouseCol(x + 0.7, x + 2.9, z - 1.7, z - 0.3);
+    addHouseCol(x - 2.8, x - 0.2, z - halfD, z - halfD + 0.9);
   }
 
   // 2. Build Village Houses with Breachable Doors
@@ -914,6 +920,7 @@ export function initWorld(scene, textures) {
         child.receiveShadow = true;
       }
     });
+    houseObjects.push(hGroup);
     scene.add(hGroup);
 
     const doorLocal = new THREE.Vector3(0, 1.35, d / 2 + 0.15);
@@ -930,7 +937,9 @@ export function initWorld(scene, textures) {
       minX: x - extentX,
       maxX: x + extentX,
       minZ: z - extentZ,
-      maxZ: z + extentZ
+      maxZ: z + extentZ,
+      category: 'house',
+      disabled: false
     });
 
     lockedDoors.push({
@@ -2224,7 +2233,9 @@ export function initWorld(scene, textures) {
         minX: px - archPillarW / 2 - 0.15,
         maxX: px + archPillarW / 2 + 0.15,
         minZ: archZ - 0.7,
-        maxZ: archZ + 0.7
+        maxZ: archZ + 0.7,
+        category: 'road',
+        disabled: false
       });
     });
 
@@ -2380,6 +2391,7 @@ export function initWorld(scene, textures) {
     sidePost.position.set(-archSpan / 2 - 1.1, 1.2, archZ - 0.15);
     root.add(sidePost);
 
+    roadObject = root;
     scene.add(root);
   }
 
@@ -2464,6 +2476,7 @@ export function indexColliders() {
   colliderGrid.clear();
   for (let i = 0; i < colliders.length; i++) {
     const c = colliders[i];
+    if (c.disabled) continue;
     const minCX = Math.floor(c.minX / GRID_CELL_SIZE);
     const maxCX = Math.floor(c.maxX / GRID_CELL_SIZE);
     const minCZ = Math.floor(c.minZ / GRID_CELL_SIZE);
@@ -2493,7 +2506,49 @@ export function checkWallCollision(x, z) {
 
   for (let i = 0; i < nearby.length; i++) {
     const c = nearby[i];
+    if (c.disabled) continue;
     if (x > c.minX && x < c.maxX && z > c.minZ && z < c.maxZ) return true;
   }
   return false;
+}
+
+/**
+ * Configure environment specifically for Endless Survival Mode:
+ * - Removes houses and road structures for pure, unhindered snow wilderness combat.
+ * - Disables collisions for removed structures so player & zombies never hit phantom walls.
+ * - Drastically thickens atmospheric fog for dense, claustrophobic survival horror.
+ */
+export function setEndlessEnvironment(isEndless, scene) {
+  window.__ENDLESS_ACTIVE = !!isEndless;
+
+  // 1. Hide/Show All Village Houses and Sanctuary Farmhouse
+  houseObjects.forEach(h => {
+    if (h) h.visible = !isEndless;
+  });
+
+  // 2. Hide/Show Asphalt Road, Curbs, Highway, Reflectors, and Welcome Arch
+  if (roadObject) {
+    roadObject.visible = !isEndless;
+  }
+
+  // 3. Disable/Enable House and Road Colliders
+  colliders.forEach(c => {
+    if (c.category === 'house' || c.category === 'road') {
+      c.disabled = !!isEndless;
+    }
+  });
+  indexColliders();
+
+  // 4. Dense atmospheric horror fog ("buat lebih berkabut")
+  if (scene && scene.fog) {
+    if (isEndless) {
+      // Dense drifting winter fog: sightline cut off past 16 meters
+      scene.fog.near = 1.0;
+      scene.fog.far = 16.0;
+    } else {
+      // Restore normal atmospheric story mode fog
+      scene.fog.near = 3.0;
+      scene.fog.far = 42.0;
+    }
+  }
 }

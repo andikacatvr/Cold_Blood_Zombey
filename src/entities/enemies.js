@@ -144,7 +144,7 @@ export function preloadZombieGLBModels(scene) {
 
 function createRealisticContouredHead(variant, scale) {
   const head = new THREE.Group();
-  
+
   // Select realistic photo face material
   const isFemale = (variant === 0 || variant === 3);
   let faceMat = (faceFemaleMeghanMat || faceFemaleSleekMat || l4dFaceMat);

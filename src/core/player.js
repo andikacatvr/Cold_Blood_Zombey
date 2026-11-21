@@ -45,7 +45,8 @@ import {
   respawnHousePickups,
   showPickupAlert,
   getTerrainHeight,
-  MAP_LIMIT
+  MAP_LIMIT,
+  setEndlessEnvironment
 } from '../world/environment.js';
 import { updateHUD, showLifeLostAlert, triggerGameOver } from '../ui/hud.js';
 import { openSettings, closeSettings, isSettingsOpen } from '../ui/settingsMenu.js';
@@ -196,9 +197,11 @@ export function triggerInteract() {
 window.__triggerInteract = triggerInteract;
 
 let cameraRef = null;
+let sceneRef = null;
 
 export function initPlayer(camera, scene) {
   cameraRef = camera;
+  sceneRef = scene;
   playerPos.set(0, 0, 14);
   camera.position.set(0, 1.8, 14);
   if (scene) {
@@ -749,6 +752,9 @@ export function returnToMainMenu() {
   state.running = false;
   state.isPaused = false;
   window.__GAME_RUNNING = false;
+  if (sceneRef) {
+    setEndlessEnvironment(false, sceneRef);
+  }
   clearEnemies();
   const go = document.getElementById('screen-gameover');
   if (go) go.style.display = 'none';
@@ -784,9 +790,14 @@ export function returnToMainMenu() {
 }
 
 export function startWinterSurvive(scene, mode = 'story') {
+  sceneRef = scene;
   state.gameMode = mode;
   window.__GAME_MODE = mode;
   window.__GAME_RUNNING = true;
+
+  // Toggle Endless Environment: remove houses & roads, disable collisions, increase fog density
+  setEndlessEnvironment(mode === 'endless', scene);
+
   Sfx.init(state);
   respawnHousePickups();
 
