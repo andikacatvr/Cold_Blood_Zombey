@@ -1081,12 +1081,14 @@ function init() {
     }
   };
 
-  // Expose convenient global helper for testing 100-kills Natalia helicopter drop
+  // Expose convenient global helper for testing 100-kills Natalia helicopter drop and Nona Batavia boss
   window.spawnNataliaNow = () => {
     state.kills = 100;
     state.nataliaSpawned = false;
     startNataliaHelicopterCutscene(camera, Sfx, () => {});
   };
+  window.spawnNonaBatavia = () => spawnNonaBataviaBoss(state);
+  window.spawnBoss = () => spawnNonaBataviaBoss(state);
 
   setupSettingsListeners({
     gameSettings,

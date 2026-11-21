@@ -63,7 +63,7 @@ const NONA_BATAVIA_STAGES = [
     },
     getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 0.6, bz),
     getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 1.2, bz),
-    subtitle: `<span style="color:#ffffff;">Lolongan Lady of Blackwood Moors membelah kesunyian badai salju...</span>`,
+    subtitle: `<span style="color:#ffffff;">Lolongan Nona Batavia membelah kesunyian badai salju...</span>`,
     onEnter: (sfx) => {}
   },
   {
@@ -85,7 +85,7 @@ const NONA_BATAVIA_STAGES = [
     },
     getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 1.2, bz),
     getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 0.9, bz),
-    subtitle: `<span style="color:#ff6b6b; font-size:21px; font-weight:bold; text-shadow:0 0 12px #900;">"Suara kutukan Blackwood bergema... Roh penasaran mencari mangsa segar!"</span>`,
+    subtitle: `<span style="color:#ff6b6b; font-size:21px; font-weight:bold; text-shadow:0 0 12px #900;">"Roh Nona Batavia bangkit menuntut balas... Mencari mangsa segar!"</span>`,
     onEnter: (sfx) => {}
   },
   {
@@ -101,7 +101,7 @@ const NONA_BATAVIA_STAGES = [
     getCamEnd: (bx, by, bz, px, py, pz) => new THREE.Vector3(px, py, pz),
     getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 0.6, bz),
     getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 0.2, bz),
-    subtitle: `<span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN:</span> "Woi awas bro! Dia melayang di atas bawa pasukan! Fokus tembak jatuh roh itu!"`,
+    subtitle: `<span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN:</span> "Woi awas bro! Nona Batavia melayang di atas bawa pasukan! Fokus tembak jatuh roh itu!"`,
     onEnter: (sfx) => {
       if (sfx && sfx.playPumpRack) sfx.playPumpRack();
     }

@@ -34,6 +34,7 @@ import {
   spawnVictorianBride,
   spawnSisterValentinaBoss,
   spawnLadyMithrillBoss,
+  spawnNonaBataviaBoss,
   killZombieWithKinematics,
   clearEnemies
 } from '../entities/enemies.js';
@@ -685,8 +686,16 @@ export function startWinterWave(w) {
   respawnHousePickups();
 
   // Boss Encounters:
-  // - Nona Batavia: Spawns dynamically every 50 kills (50, 100, 150, 200, ...)
-  // (Sister Valentina is disabled for now per user request)
+  // - Nona Batavia: Spawns dynamically every 50 kills (50, 150, 200, ...)
+  // - In Endless Mode: Guaranteed Boss Wave every 3 waves (Wave 3, 6, 9, ...)
+  if (state.gameMode === 'endless' && w % 3 === 0) {
+    if (!currentBoss || currentBoss.isDead) {
+      setTimeout(() => {
+        if (!state.running) return;
+        spawnNonaBataviaBoss(state);
+      }, 3200);
+    }
+  }
 
   // Endless Progressive Horde scaling
   const count = 16 + w * 8;
