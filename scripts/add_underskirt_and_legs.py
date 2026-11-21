@@ -374,15 +374,14 @@ def generate_nona_batavia_complete():
             nx, ny, nz = nx / nlen, ny / nlen, nz / nlen
 
         elif y < 0.144:
-            # Feet grounding and centering
+            # Collapse old hollow photogrammetry cage inside the new solid boot soles so zero holes remain
             is_left = x < 0
-            y_norm = max(0.0, (y - 0.0534) / (0.145 - 0.0534))
-            y = 0.002 + y_norm * 0.096
-
             target_cx = -0.048 if is_left else 0.048
-            orig_cx = -0.098 if is_left else 0.098
-            x = target_cx + (x - orig_cx) * 0.62
-            z = z * 0.95 + 0.005
+            x = target_cx
+            y = 0.015
+            z = 0.010
+            nx, ny, nz = 0.0, 1.0, 0.0
+            new_uvs[i] = CAP_UV
 
         elif 0.144 <= y <= 0.148:
             # Skirt hem drape
@@ -454,10 +453,99 @@ def generate_nona_batavia_complete():
             # Triangle 2
             new_indices.extend([base_idx + next_s, base_idx + segments + s, base_idx + segments + next_s])
 
-    # Left Leg: from ankle y=0.08 up inside skirt y=0.32
+    # Left Leg: from ankle y=0.075 up inside skirt y=0.320 (White Socks)
     add_leg(-0.048, 0.015, 0.075, 0.320, 0.026, 0.038, segments=8)
     # Right Leg
     add_leg(0.048, 0.015, 0.075, 0.320, 0.026, 0.038, segments=8)
+
+    # 2. Solid Watertight 3D Black Boots (Zero holes from any angle!)
+    BOOT_UV = (55 / 1024.0, 985 / 1024.0)
+
+    def add_solid_boot(cx, cz=0.015):
+        r0 = [ # Sole bottom (y=0.002)
+            (0.000, -0.058), (-0.022, -0.042), (-0.027, 0.010), (-0.022, 0.072),
+            (0.000, 0.082), ( 0.022, 0.072), ( 0.027, 0.010), ( 0.022, -0.042)
+        ]
+        r1 = [ # Sole top (y=0.025)
+            (0.000, -0.056), (-0.022, -0.040), (-0.026, 0.010), (-0.021, 0.070),
+            (0.000, 0.080), ( 0.021, 0.070), ( 0.026, 0.010), ( 0.022, -0.040)
+        ]
+        r2 = [ # Vamp & heel mid (y=0.048)
+            (0.000, -0.050), (-0.020, -0.036), (-0.024, 0.010), (-0.019, 0.065),
+            (0.000, 0.075), ( 0.019, 0.065), ( 0.024, 0.010), ( 0.020, -0.036)
+        ]
+        r3 = [ # Ankle collar (y=0.078)
+            (0.000, -0.035), (-0.018, -0.025), (-0.022, 0.000), (-0.018, 0.025),
+            (0.000, 0.035), ( 0.018, 0.025), ( 0.022, 0.000), ( 0.018, -0.025)
+        ]
+
+        base_idx = len(new_positions)
+
+        # Ring 0
+        for dx, dz in r0:
+            new_positions.append((cx + dx, 0.002, cz + dz))
+            new_normals.append((0.0, -1.0, 0.0))
+            new_uvs.append(BOOT_UV)
+
+        # Sole bottom cap fan
+        sole_c = len(new_positions)
+        new_positions.append((cx, 0.002, cz + 0.010))
+        new_normals.append((0.0, -1.0, 0.0))
+        new_uvs.append(BOOT_UV)
+        for i in range(8):
+            nxt = (i + 1) % 8
+            new_indices.extend([sole_c, base_idx + nxt, base_idx + i])
+
+        # Ring 1
+        r1_base = len(new_positions)
+        for dx, dz in r1:
+            new_positions.append((cx + dx, 0.025, cz + dz))
+            nx = dx; nz = dz - 0.010; nl = math.hypot(nx, nz) or 1.0
+            new_normals.append((nx/nl, 0.0, nz/nl))
+            new_uvs.append(BOOT_UV)
+
+        # Quads 0 -> 1 (Sole sides)
+        for i in range(8):
+            nxt = (i + 1) % 8
+            new_indices.extend([base_idx + i, base_idx + nxt, r1_base + nxt,
+                                base_idx + i, r1_base + nxt, r1_base + i])
+
+        # Ring 2
+        r2_base = len(new_positions)
+        for dx, dz in r2:
+            new_positions.append((cx + dx, 0.048, cz + dz))
+            nx = dx; nz = dz - 0.010; nl = math.hypot(nx, nz) or 1.0
+            new_normals.append((nx/nl, 0.15, nz/nl))
+            new_uvs.append(BOOT_UV)
+
+        # Quads 1 -> 2 (Lower upper walls)
+        for i in range(8):
+            nxt = (i + 1) % 8
+            new_indices.extend([r1_base + i, r1_base + nxt, r2_base + nxt,
+                                r1_base + i, r2_base + nxt, r2_base + i])
+
+        # Ring 3
+        r3_base = len(new_positions)
+        for dx, dz in r3:
+            new_positions.append((cx + dx, 0.078, cz + dz))
+            nx = dx; nz = dz - 0.000; nl = math.hypot(nx, nz) or 1.0
+            new_normals.append((nx/nl, 0.25, nz/nl))
+            new_uvs.append(BOOT_UV)
+
+        # Upper heel counter & ankle sides
+        for i in [0, 1, 6, 7]:
+            nxt = (i + 1) % 8
+            new_indices.extend([r2_base + i, r2_base + nxt, r3_base + nxt,
+                                r2_base + i, r3_base + nxt, r2_base + i])
+
+        # Front toe box & instep
+        for i in [2, 3, 4, 5]:
+            nxt = i + 1
+            new_indices.extend([r2_base + i, r2_base + nxt, r3_base + nxt,
+                                r2_base + i, r3_base + nxt, r2_base + i])
+
+    add_solid_boot(-0.048, 0.015)
+    add_solid_boot(0.048, 0.015)
 
     # 2. Underskirt Interior Shadow Cap: Seals the interior void so looking up is solid dark lining
     cap_base_idx = len(new_positions)
