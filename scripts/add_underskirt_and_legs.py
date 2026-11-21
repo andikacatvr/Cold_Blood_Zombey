@@ -338,20 +338,33 @@ def generate_nona_batavia_complete():
             # Skirt hem drape
             y = 0.098
 
-        elif 1.470 <= y <= 1.525 and z > 0.02 and abs(x) < 0.045:
-            # Dagu sedikit mundur ke belakang (subtle chin setback)
-            t_y = 1.0 - abs(y - 1.500) / 0.028
-            t_y = max(0.0, min(1.0, t_y))
-            w_y = t_y * t_y * (3.0 - 2.0 * t_y)
+        elif y >= 1.405:
+            orig_y = orig_positions[i][1]
+            orig_z = orig_positions[i][2]
+            orig_x = orig_positions[i][0]
 
-            t_x = 1.0 - abs(x) / 0.042
-            t_x = max(0.0, min(1.0, t_x))
-            w_x = t_x * t_x * (3.0 - 2.0 * t_x)
+            # 1. Leher dipendekin dikit (~1.3 cm smooth compression)
+            if orig_y < 1.475:
+                t = (orig_y - 1.405) / (1.475 - 1.405)
+                st = t * t * (3.0 - 2.0 * t)
+                y = orig_y - 0.013 * st
+            else:
+                y = orig_y - 0.013
 
-            t_z = max(0.0, min(1.0, (z - 0.02) / 0.04))
+            # 2. Dagu sedikit mundur ke belakang (subtle chin setback)
+            if 1.470 <= orig_y <= 1.525 and orig_z > 0.02 and abs(orig_x) < 0.045:
+                t_y = 1.0 - abs(orig_y - 1.500) / 0.028
+                t_y = max(0.0, min(1.0, t_y))
+                w_y = t_y * t_y * (3.0 - 2.0 * t_y)
 
-            weight = w_y * w_x * t_z
-            z = z - 0.0085 * weight
+                t_x = 1.0 - abs(orig_x) / 0.042
+                t_x = max(0.0, min(1.0, t_x))
+                w_x = t_x * t_x * (3.0 - 2.0 * t_x)
+
+                t_z = max(0.0, min(1.0, (orig_z - 0.02) / 0.04))
+
+                weight = w_y * w_x * t_z
+                z = orig_z - 0.0085 * weight
 
         new_positions.append((x, y, z))
         new_normals.append((nx, ny, nz))
