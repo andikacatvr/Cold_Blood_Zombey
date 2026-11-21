@@ -481,31 +481,32 @@ def generate_nona_batavia_complete():
             # Triangle 2
             new_indices.extend([base_idx + next_s, base_idx + segments + s, base_idx + segments + next_s])
 
-    # Left & Right Legs (White socks emerging from boot collar y=0.080 up into skirt y=0.320)
-    add_leg(-0.065, 0.035, 0.080, 0.320, 0.024, 0.036, segments=8)
-    add_leg( 0.065, 0.035, 0.080, 0.320, 0.024, 0.036, segments=8)
+    # Left & Right Legs (White socks emerging from boot collar y=0.095 up into skirt y=0.320)
+    # Enlarged slightly to match human anatomy and combat boots
+    add_leg(-0.072, 0.038, 0.095, 0.320, 0.030, 0.044, segments=8)
+    add_leg( 0.072, 0.038, 0.095, 0.320, 0.030, 0.044, segments=8)
 
-    # 2. Solid Watertight 3D Black Boots (Zero holes from any angle!)
+    # 2. Solid Watertight 3D Black Boots (Enlarged & Chunkier PS2 Retro Combat Boots)
     def add_solid_boot(cx, cz=0.038):
-        # Ring 0: Sole bottom (y=0.002) - completely closed tread
+        # Ring 0: Sole bottom (y=0.002) - broad stable rubber combat tread (~20.5 cm length, ~7.5 cm width)
         r0 = [
-            ( 0.000, -0.066), (-0.025, -0.044), (-0.028,  0.015), (-0.025,  0.076),
-            ( 0.000,  0.088), ( 0.025,  0.076), ( 0.028,  0.015), ( 0.025, -0.044)
+            ( 0.000, -0.088), (-0.032, -0.060), (-0.037,  0.015), (-0.033,  0.098),
+            ( 0.000,  0.116), ( 0.033,  0.098), ( 0.037,  0.015), ( 0.032, -0.060)
         ]
-        # Ring 1: Sole top / welt line (y=0.026) - thick combat sole
+        # Ring 1: Sole top / welt line (y=0.030) - chunky thick combat boot sole
         r1 = [
-            ( 0.000, -0.064), (-0.023, -0.042), (-0.026,  0.015), (-0.023,  0.074),
-            ( 0.000,  0.085), ( 0.023,  0.074), ( 0.026,  0.015), ( 0.023, -0.042)
+            ( 0.000, -0.085), (-0.030, -0.057), (-0.034,  0.015), (-0.030,  0.095),
+            ( 0.000,  0.112), ( 0.030,  0.095), ( 0.034,  0.015), ( 0.030, -0.057)
         ]
-        # Ring 2: Vamp mid-level (y=0.056) - closed toe box & heel cup
+        # Ring 2: Vamp mid-level (y=0.065) - substantial leather toe box & reinforced heel cup
         r2 = [
-            ( 0.000, -0.058), (-0.021, -0.038), (-0.024,  0.015), (-0.020,  0.068),
-            ( 0.000,  0.078), ( 0.020,  0.068), ( 0.024,  0.015), ( 0.021, -0.038)
+            ( 0.000, -0.076), (-0.027, -0.050), (-0.031,  0.015), (-0.026,  0.086),
+            ( 0.000,  0.102), ( 0.026,  0.086), ( 0.031,  0.015), ( 0.027, -0.050)
         ]
-        # Ring 3: Boot collar (y=0.088) - ankle rim meeting white sock
+        # Ring 3: Boot collar (y=0.102) - ankle rim meeting white socks
         r3 = [
-            ( 0.000, -0.040), (-0.019, -0.025), (-0.023,  0.005), (-0.018,  0.032),
-            ( 0.000,  0.042), ( 0.018,  0.032), ( 0.023,  0.005), ( 0.019, -0.025)
+            ( 0.000, -0.052), (-0.025, -0.032), (-0.029,  0.005), (-0.024,  0.040),
+            ( 0.000,  0.054), ( 0.024,  0.040), ( 0.029,  0.005), ( 0.025, -0.032)
         ]
 
         base_idx = len(new_positions)
@@ -528,7 +529,7 @@ def generate_nona_batavia_complete():
         # Ring 1 vertices
         r1_base = len(new_positions)
         for dx, dz in r1:
-            new_positions.append((cx + dx, 0.026, cz + dz))
+            new_positions.append((cx + dx, 0.030, cz + dz))
             nx = dx; nz = dz - 0.010; nl = math.hypot(nx, nz) or 1.0
             new_normals.append((nx/nl, 0.0, nz/nl))
             new_uvs.append(BOOT_UV)
@@ -542,7 +543,7 @@ def generate_nona_batavia_complete():
         # Ring 2 vertices
         r2_base = len(new_positions)
         for dx, dz in r2:
-            new_positions.append((cx + dx, 0.056, cz + dz))
+            new_positions.append((cx + dx, 0.065, cz + dz))
             nx = dx; nz = dz - 0.010; nl = math.hypot(nx, nz) or 1.0
             new_normals.append((nx/nl, 0.20, nz/nl))
             new_uvs.append(BOOT_UV)
@@ -556,20 +557,19 @@ def generate_nona_batavia_complete():
         # Ring 3 vertices
         r3_base = len(new_positions)
         for dx, dz in r3:
-            new_positions.append((cx + dx, 0.088, cz + dz))
+            new_positions.append((cx + dx, 0.102, cz + dz))
             nx = dx; nz = dz - 0.005; nl = math.hypot(nx, nz) or 1.0
             new_normals.append((nx/nl, 0.35, nz/nl))
             new_uvs.append(BOOT_UV)
 
         # Quads 2 -> 3 (Instep slope, closed toe box roof, ankle side walls, and heel counter)
-        # All 8 quads fully closed with valid outward-facing triangles
         for i in range(8):
             nxt = (i + 1) % 8
             new_indices.extend([r2_base + i, r2_base + nxt, r3_base + nxt,
                                 r2_base + i, r3_base + nxt, r3_base + i])
 
-    add_solid_boot(-0.065, 0.038)
-    add_solid_boot( 0.065, 0.038)
+    add_solid_boot(-0.072, 0.038)
+    add_solid_boot( 0.072, 0.038)
 
     # 2. Underskirt Interior Shadow Cap: Seals the interior void so looking up is solid dark lining
     cap_base_idx = len(new_positions)
