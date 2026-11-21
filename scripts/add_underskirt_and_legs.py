@@ -49,7 +49,22 @@ def generate_nona_batavia_complete():
     # U=0.10, V=0.98 -> Smooth skin tone for inner legs
     draw.rectangle([90, 970, 120, 1000], fill=COLOR_SKIN)
 
-    # 1B. Creepy Horror Veins on Neck ("Urat-urat di Leher") & Red Sauce Splatters ("Bercak Saus Merah")
+    # 1B. Fix Armpits: Replace dark backdrop patches under armpits/shoulders with matching white lace kebaya
+    KEBAYA_BASE = (205, 195, 185, 255)
+    KEBAYA_SHADE = (180, 168, 158, 255)
+    KEBAYA_LACE = (225, 218, 210, 255)
+
+    for y_tex in range(215, 360):
+        for x_tex in range(1024):
+            c = tex.getpixel((x_tex, y_tex))
+            # Dark studio backdrop check (R, G, B all < 70)
+            if c[0] < 70 and c[1] < 70 and c[2] < 70:
+                is_lace = ((x_tex + y_tex) % 6 < 2) or ((x_tex - y_tex) % 6 == 0)
+                is_shade = (x_tex % 4 == 0) or (y_tex % 5 == 0)
+                col = KEBAYA_LACE if is_lace else (KEBAYA_SHADE if is_shade else KEBAYA_BASE)
+                tex.putpixel((x_tex, y_tex), col)
+
+    # 1C. Creepy Horror Veins on Neck ("Urat-urat di Leher") & Red Sauce Splatters ("Bercak Saus Merah")
     import random
     random.seed(1337)
 
