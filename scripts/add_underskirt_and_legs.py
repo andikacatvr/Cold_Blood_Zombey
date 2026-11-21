@@ -26,28 +26,33 @@ def generate_nona_batavia_complete():
     w, h = tex.size
     draw = ImageDraw.Draw(tex)
 
-    COLOR_SOLE = (22, 16, 18, 255)         # Deep black/espresso velvet sole & interior
-    COLOR_UPPER = (30, 22, 24, 255)        # Dark velvet shoe upper
-    COLOR_SKIN = (228, 180, 154, 255)       # Clean fair skin tone for legs & instep
-    COLOR_SKIN_SHADE = (205, 156, 132, 255) # Leg skin shading
-    COLOR_GOLD = (185, 142, 65, 255)        # Gold embroidery trim
-    COLOR_GOLD_LIGHT = (218, 175, 88, 255)  # Gold highlight
+    # 1. Colors & Swatches for Boots & White Socks ("Sepatu Full Item Boots & Kaus Kaki Putih")
+    COLOR_BOOT_BLACK = (20, 18, 22, 255)    # Full black sleek leather boot body
+    COLOR_BOOT_SOLE = (10, 8, 12, 255)       # Solid black thick rubber boot sole
+    COLOR_BOOT_SHADOW = (14, 12, 16, 255)    # Boot welt & deep crease
+    COLOR_BOOT_SHINE = (36, 32, 40, 255)     # Subtle dark leather specular highlight (no gold!)
+    COLOR_SOCK_WHITE = (242, 242, 246, 255)  # Clean bright white cotton sock
+    COLOR_SOCK_SHADE = (208, 208, 215, 255)  # Soft white sock fold & ankle shading
+    COLOR_SOLE = COLOR_BOOT_SOLE
 
-    # Paint clean traditional selop footwear on feet strip
+    # Paint Full Black Boots with White Socks on feet UV strip
     for col_start, col_end in [(160, 350), (510, 870)]:
-        draw.rectangle([col_start, 925, col_end, 990], fill=COLOR_SOLE)
-        draw.rectangle([col_start + 10, 930, col_end - 10, 955], fill=COLOR_SKIN)
-        draw.rectangle([col_start + 15, 948, col_end - 15, 958], fill=COLOR_SKIN_SHADE)
-        draw.rectangle([col_start + 5, 958, col_end - 5, 982], fill=COLOR_UPPER)
-        draw.line([col_start + 5, 958, col_end - 5, 958], fill=COLOR_GOLD_LIGHT, width=2)
-        draw.line([col_start + 5, 970, col_end - 5, 970], fill=COLOR_GOLD, width=1)
-        draw.line([col_start + 5, 982, col_end - 5, 982], fill=COLOR_GOLD, width=2)
+        # White socks extending above the boots
+        draw.rectangle([col_start, 925, col_end, 955], fill=COLOR_SOCK_WHITE)
+        draw.rectangle([col_start + 10, 948, col_end - 10, 955], fill=COLOR_SOCK_SHADE)
+
+        # Full Black Leather Boots (Solid Black, no gold lines!)
+        draw.rectangle([col_start, 955, col_end, 995], fill=COLOR_BOOT_BLACK)
+        draw.rectangle([col_start, 982, col_end, 995], fill=COLOR_BOOT_SOLE)
+        # Subtle dark leather boot seam
+        draw.line([col_start, 955, col_end, 955], fill=COLOR_BOOT_SHINE, width=2)
+        draw.line([col_start, 982, col_end, 982], fill=COLOR_BOOT_SHADOW, width=1)
 
     # Dedicated UV pixel areas for legs and underskirt shadow:
     # U=0.05, V=0.98 -> Solid deep dark shadow for underskirt cap
-    draw.rectangle([40, 970, 70, 1000], fill=COLOR_SOLE)
-    # U=0.10, V=0.98 -> Smooth skin tone for inner legs
-    draw.rectangle([90, 970, 120, 1000], fill=COLOR_SKIN)
+    draw.rectangle([40, 970, 70, 1000], fill=COLOR_BOOT_SOLE)
+    # U=0.10, V=0.98 -> White cotton sock tone for inner legs rising into the skirt
+    draw.rectangle([90, 970, 120, 1000], fill=COLOR_SOCK_WHITE)
 
     # Dedicated hair texture swatch for Wolf Cut hair (matching reference photo):
     # X from 15 to 145, Y from 855 to 960 (U ≈ 0.015 to 0.142, V ≈ 0.835 to 0.938)
