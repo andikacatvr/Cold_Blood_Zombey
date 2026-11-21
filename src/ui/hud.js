@@ -5,31 +5,60 @@
 
 import { updateTouchControlsVisibility } from './touchControls.js';
 
+let lastState = null;
+
 export function updateHUD(state) {
+  if (state) lastState = state;
+  const s = state || lastState;
+  if (!s) return;
+
   const waveEl = document.getElementById('hud-wave');
   if (waveEl) {
-    if (state.gameMode === 'story') {
-      const ch = (state.storyPhase === 'orientation') ? 'ACT I • ORIENTASI'
-               : (state.storyPhase === 'complication') ? 'ACT I • KOMPLIKASI'
-               : (state.storyPhase === 'resolution') ? 'ACT I • RESOLUSI'
+    if (s.gameMode === 'story') {
+      const ch = (s.storyPhase === 'orientation') ? 'ACT I • ORIENTASI'
+               : (s.storyPhase === 'complication') ? 'ACT I • KOMPLIKASI'
+               : (s.storyPhase === 'resolution') ? 'ACT I • RESOLUSI'
                : 'ACT I • KODA';
       waveEl.innerText = `${ch}`;
     } else {
-      waveEl.innerText = `ENDLESS HORDE: WAVE ${state.wave}`;
+      waveEl.innerText = `ENDLESS HORDE: WAVE ${s.wave}`;
+    }
+  }
+
+  const killsEl = document.getElementById('hud-kills');
+  const killsValEl = document.getElementById('hud-kills-value');
+  if (killsEl) {
+    if (s.gameMode === 'endless') {
+      killsEl.style.display = 'inline-block';
+      const curKills = s.kills || 0;
+      if (killsValEl) {
+        if (killsValEl.dataset.prevKills !== undefined && Number(killsValEl.dataset.prevKills) !== curKills) {
+          killsEl.classList.remove('kill-pulse');
+          void killsEl.offsetWidth; // trigger reflow
+          killsEl.classList.add('kill-pulse');
+        }
+        killsValEl.dataset.prevKills = curKills;
+        killsValEl.innerText = curKills;
+      } else {
+        killsEl.innerHTML = `☠ KILLS: <span id="hud-kills-value" style="color: #ffffff;">${curKills}</span>`;
+      }
+    } else {
+      killsEl.style.display = 'none';
     }
   }
 
   const scoreEl = document.getElementById('hud-score');
   if (scoreEl) {
-    if (state.gameMode === 'endless') {
+    if (s.gameMode === 'endless') {
       scoreEl.style.display = 'block';
-      scoreEl.innerText = `CRIMSON PURGED: ${String(state.kills).padStart(3, '0')}`;
+      scoreEl.innerText = `CRIMSON PURGED: ${String(s.kills || 0).padStart(3, '0')}`;
     } else {
       scoreEl.style.display = 'none';
     }
   }
 
-  const p = state.player;
+  const p = s.player;
+  if (!p) return;
 
   // 1. TACTICAL SLANTED HEALTH BAR (PS2 007 NIGHTFIRE / BLACK STYLE - 20 SEGMENTS)
   const healthSegmentsEl = document.getElementById('tactical-health-segments');
