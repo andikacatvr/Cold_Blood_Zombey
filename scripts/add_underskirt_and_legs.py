@@ -49,26 +49,6 @@ def generate_nona_batavia_complete():
     # U=0.10, V=0.98 -> Smooth skin tone for inner legs
     draw.rectangle([90, 970, 120, 1000], fill=COLOR_SKIN)
 
-    # 1B. Jawline & Neck Symmetry: Clean up dark hair intrusion on right jaw & neck
-    # Center of face in texture is at x=255.5
-    center_face_x = 255.5
-    for y_tex in range(136, 192):
-        for dx in range(5, 24):
-            lx = int(center_face_x - dx)
-            rx = int(center_face_x + dx)
-            if 0 <= lx < w and 0 <= rx < w:
-                lp = tex.getpixel((lx, y_tex))
-                rp = tex.getpixel((rx, y_tex))
-                # If left side has skin tone:
-                if lp[0] > 115 and lp[0] > lp[2] + 15:
-                    # If right side is dark hair/shadow encroaching into jaw/neck:
-                    if rp[0] < 125 or rp[0] < rp[2] + 20:
-                        # Softly blend/mirror skin with natural sub-chin tone
-                        blend_r = int(lp[0] * 0.96)
-                        blend_g = int(lp[1] * 0.96)
-                        blend_b = int(lp[2] * 0.96)
-                        tex.putpixel((rx, y_tex), (blend_r, blend_g, blend_b, 255))
-
     out_img_io = io.BytesIO()
     tex.save(out_img_io, format='PNG')
     new_img_bytes = out_img_io.getvalue()
@@ -219,54 +199,20 @@ def generate_nona_batavia_complete():
             # Skirt hem drape
             y = 0.098
 
-        elif y >= 1.405:
-            # Jawline, chin, and neck refinement:
-            orig_y = orig_positions[i][1]
+        elif 1.470 <= y <= 1.525 and z > 0.02 and abs(x) < 0.045:
+            # Dagu sedikit mundur ke belakang (subtle chin setback)
+            t_y = 1.0 - abs(y - 1.500) / 0.028
+            t_y = max(0.0, min(1.0, t_y))
+            w_y = t_y * t_y * (3.0 - 2.0 * t_y)
 
-            # 1. Height compression (eliminates elongated giraffe neck)
-            if 1.405 <= orig_y < 1.485:
-                t = (orig_y - 1.405) / (1.485 - 1.405)
-                st = t * t * (3.0 - 2.0 * t)
-                y = y - 0.018 * st
-            else:
-                y = y - 0.018
+            t_x = 1.0 - abs(x) / 0.042
+            t_x = max(0.0, min(1.0, t_x))
+            w_x = t_x * t_x * (3.0 - 2.0 * t_x)
 
-            # 2. Jaw & Neck Width / Contour Definition
-            scale_x = 1.0
-            scale_z = 1.0
+            t_z = max(0.0, min(1.0, (z - 0.02) / 0.04))
 
-            # Neck zone (1.405 <= orig_y < 1.460)
-            if 1.405 <= orig_y < 1.460:
-                t_neck = 1.0 - abs(orig_y - 1.435) / 0.030
-                t_neck = max(0.0, min(1.0, t_neck))
-                scale_x = 1.0 + 0.22 * t_neck
-                scale_z = 1.0 + 0.14 * t_neck
-
-            # Under-chin / upper neck transition (Ring 12: y ~ 1.466)
-            elif abs(orig_y - 1.4663) < 0.006:
-                scale_x = 1.22
-                scale_z = 1.10
-
-            # Lower jawline / mandibular angle (Ring 13: y ~ 1.484)
-            elif abs(orig_y - 1.4836) < 0.006:
-                side_factor = 1.0 + 0.16 * (1.0 - abs(z) / 0.052)
-                scale_x = max(1.06, side_factor)
-                scale_z = 1.04
-
-            # Mid jaw & chin prominence (Ring 14: y ~ 1.508)
-            elif abs(orig_y - 1.5078) < 0.006:
-                side_factor = 1.0 + 0.06 * (1.0 - abs(z) / 0.065)
-                scale_x = max(1.0, side_factor)
-                scale_z = 1.02
-
-            x = x * scale_x
-            z = z * scale_z
-
-            # Adjust normals for smooth shading
-            nx = nx / scale_x
-            nz = nz / scale_z
-            nlen = math.hypot(nx, ny, nz) or 1.0
-            nx, ny, nz = nx / nlen, ny / nlen, nz / nlen
+            weight = w_y * w_x * t_z
+            z = z - 0.0085 * weight
 
         new_positions.append((x, y, z))
         new_normals.append((nx, ny, nz))
