@@ -202,13 +202,17 @@ def merge_hair(nona_glb_path, hair_glb_path, output_glb_path, scale=0.485, pos=(
     print(f"[SUCCESS] Wrote merged GLB ({len(out_bytes)} bytes) to {output_glb_path}")
 
 if __name__ == '__main__':
-    # Merge with default fitting parameters
+    # Regenerate base nona_batavia first to ensure clean state
+    from add_underskirt_and_legs import generate_nona_batavia_complete
+    generate_nona_batavia_complete()
+
+    # Merge hair with snug fit: scale reduced from 0.485 to 0.380
     merge_hair(
         'public/models/nona_batavia.glb',
         'ps2_twintail_hair.glb',
         'public/models/nona_batavia.glb',
-        scale=0.485,
-        pos=(0.0, 1.506, -0.016),
+        scale=0.380,
+        pos=(0.0, 1.536, -0.022),
         rot_deg=(0.0, 0.0, 0.0)
     )
     # Also update nonabatavia_glommy.glb and dist/
