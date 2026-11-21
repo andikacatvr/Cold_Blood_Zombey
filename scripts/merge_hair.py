@@ -206,13 +206,13 @@ if __name__ == '__main__':
     from add_underskirt_and_legs import generate_nona_batavia_complete
     generate_nona_batavia_complete()
 
-    # Merge hair with snug fit: scale reduced from 0.485 to 0.380
+    # Merge hair with snug fit: scale reduced to 0.345 (kecilin dikit lagi)
     merge_hair(
         'public/models/nona_batavia.glb',
         'ps2_twintail_hair.glb',
         'public/models/nona_batavia.glb',
-        scale=0.380,
-        pos=(0.0, 1.536, -0.022),
+        scale=0.345,
+        pos=(0.0, 1.550, -0.024),
         rot_deg=(0.0, 0.0, 0.0)
     )
     # Also update nonabatavia_glommy.glb and dist/
