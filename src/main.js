@@ -529,11 +529,16 @@ function updateSimulation(dt) {
         z.y = THREE.MathUtils.lerp(z.y !== undefined ? z.y : targetHoverY, targetHoverY, dt * 5.5);
         z.model.root.position.set(z.x, z.y, z.z);
 
-        // Turn towards player + graceful aerial banking tilt
-        z.model.root.rotation.y = ang;
+        // Face player smoothly and steadily (ZERO spinning / wild tilting)
+        let diff = ang - z.model.root.rotation.y;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        z.model.root.rotation.y += diff * Math.min(1.0, dt * 3.5);
+
+        // Keep body upright and dignified (no spinning / rocking)
         if (z.model.modelHolder) {
-          z.model.modelHolder.rotation.z = Math.sin(z.floatTime * 1.6) * 0.08;
-          z.model.modelHolder.rotation.x = Math.cos(z.floatTime * 1.2) * 0.05;
+          z.model.modelHolder.rotation.z = 0;
+          z.model.modelHolder.rotation.x = 0;
         }
 
         // Periodic Horde Summoning ("bawa banyak zombie"): Lady Mithrill summons reinforcements

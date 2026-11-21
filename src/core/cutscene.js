@@ -45,63 +45,52 @@ let activeBossRef = null;
 let activeHelicopter = null;
 
 const NONA_BATAVIA_STAGES = [
+  // 1. GRAND REVELATION: Camera pushes in directly facing Nona Batavia towering in mist
   {
     start: 0.0,
-    end: 4.5,
+    end: 4.2,
     getCamStart: (bx, by, bz, px, py, pz) => {
       const dx = bx - px, dz = bz - pz;
       const d = Math.sqrt(dx * dx + dz * dz) || 1;
       const nx = dx / d, nz = dz / d;
-      const perpX = -nz, perpZ = nx;
-      return new THREE.Vector3(bx - nx * 12.0 + perpX * 3.5, by - 0.4, bz - nz * 12.0 + perpZ * 3.5);
+      return new THREE.Vector3(bx - nx * 7.8, by - 0.8, bz - nz * 7.8);
     },
     getCamEnd: (bx, by, bz, px, py, pz) => {
       const dx = bx - px, dz = bz - pz;
       const d = Math.sqrt(dx * dx + dz * dz) || 1;
       const nx = dx / d, nz = dz / d;
-      return new THREE.Vector3(bx - nx * 6.5, by + 0.2, bz - nz * 6.5);
-    },
-    getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 0.6, bz),
-    getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 1.2, bz),
-    subtitle: `<span style="color:#ffffff;">Lolongan Nona Batavia membelah kesunyian badai salju...</span>`,
-    onEnter: (sfx) => {}
-  },
-  {
-    start: 4.5,
-    end: 8.8,
-    getCamStart: (bx, by, bz, px, py, pz) => {
-      const dx = bx - px, dz = bz - pz;
-      const d = Math.sqrt(dx * dx + dz * dz) || 1;
-      const nx = dx / d, nz = dz / d;
-      const perpX = -nz, perpZ = nx;
-      return new THREE.Vector3(bx - nx * 4.2 + perpX * 2.8, by + 0.8, bz - nz * 4.2 + perpZ * 2.8);
-    },
-    getCamEnd: (bx, by, bz, px, py, pz) => {
-      const dx = bx - px, dz = bz - pz;
-      const d = Math.sqrt(dx * dx + dz * dz) || 1;
-      const nx = dx / d, nz = dz / d;
-      const perpX = -nz, perpZ = nx;
-      return new THREE.Vector3(bx - nx * 3.2 - perpX * 2.8, by + 1.2, bz - nz * 3.2 - perpZ * 2.8);
+      return new THREE.Vector3(bx - nx * 3.6, by + 0.3, bz - nz * 3.6);
     },
     getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 1.2, bz),
-    getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 0.9, bz),
-    subtitle: `<span style="color:#ff6b6b; font-size:21px; font-weight:bold; text-shadow:0 0 12px #900;">"Roh Nona Batavia bangkit menuntut balas... Mencari mangsa segar!"</span>`,
-    onEnter: (sfx) => {}
+    getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 1.35, bz),
+    subtitle: `<div style="text-align:center;">
+      <div style="color:#ff3344; font-size:15px; letter-spacing:5px; font-weight:bold; text-shadow:0 0 10px #f00;">✦ SPECTRAL ENTITY MANIFESTED ✦</div>
+      <div style="color:#ffffff; font-size:36px; font-weight:900; letter-spacing:3px; text-shadow:0 0 25px rgba(255,20,50,0.95), 2px 2px 0 #000; font-family:'Times New Roman', serif;">NONA BATAVIA</div>
+      <div style="color:#ffd15c; font-size:18px; font-style:italic; letter-spacing:2px; text-shadow:0 0 8px rgba(255,200,50,0.8);">"Arwah Penasaran Berkebaya Merah"</div>
+    </div>`,
+    onEnter: (sfx) => {
+      if (sfx) {
+        if (sfx.playNonaBataviaScream) sfx.playNonaBataviaScream();
+        else if (sfx.playLadyMithrillScream) sfx.playLadyMithrillScream();
+        if (sfx.playChurchBellToll) sfx.playChurchBellToll();
+      }
+    }
   },
+  // 2. TACTICAL REACTION: Shotgun rack & urgent warning from companion
   {
-    start: 8.8,
-    end: 13.4,
+    start: 4.2,
+    end: 7.8,
     getCamStart: (bx, by, bz, px, py, pz) => {
       const dx = bx - px, dz = bz - pz;
       const d = Math.sqrt(dx * dx + dz * dz) || 1;
       const nx = dx / d, nz = dz / d;
       const perpX = -nz, perpZ = nx;
-      return new THREE.Vector3(px - nx * 2.8 + perpX * 1.4, py + 1.2, pz - nz * 2.8 + perpZ * 1.4);
+      return new THREE.Vector3(px - nx * 2.2 + perpX * 1.2, py + 1.2, pz - nz * 2.2 + perpZ * 1.2);
     },
     getCamEnd: (bx, by, bz, px, py, pz) => new THREE.Vector3(px, py, pz),
-    getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 0.6, bz),
-    getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 0.2, bz),
-    subtitle: `<span style="color:#5cf0a5; font-size:21px; font-weight:bold;">KRISTIN:</span> "Woi awas bro! Nona Batavia melayang di atas bawa pasukan! Fokus tembak jatuh roh itu!"`,
+    getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 0.8, bz),
+    getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 0.3, bz),
+    subtitle: `<span style="color:#5cf0a5; font-size:22px; font-weight:bold;">KRISTIN:</span> "YA TUHAN, ROD...! Nona Batavia bangkit melayang di atas! SIAPKAN SHOTGUN, TEMBAK DIA JATUH!"`,
     onEnter: (sfx) => {
       if (sfx && sfx.playPumpRack) sfx.playPumpRack();
     }
@@ -360,6 +349,19 @@ export function startNonaBataviaCutscene(bossZombie, camera, sfx, onComplete) {
     overlay.style.opacity = '1';
   }
 
+  // Dramatic "WAH" Blood-Red Flash vignette on canvas
+  const canvas = document.getElementById('ps1-canvas') || document.querySelector('canvas');
+  if (canvas) {
+    canvas.style.transition = 'filter 0.15s ease-out';
+    canvas.style.filter = 'contrast(170%) saturate(220%) drop-shadow(0 0 24px #ff0022)';
+    setTimeout(() => {
+      if (canvas) {
+        canvas.style.transition = 'filter 1.2s ease-in-out';
+        canvas.style.filter = '';
+      }
+    }, 500);
+  }
+
   // Hide HUD & reticle
   const hud = document.getElementById('hud');
   if (hud) hud.style.display = 'none';
@@ -405,22 +407,25 @@ function updateNonaBataviaCutscene(dt) {
     return;
   }
 
-  // Sinister levitation sway
-  const root = activeBossRef.model.root;
-  root.position.y = activeBossRef.y + Math.sin(cutsceneTime * 2.2) * 0.42;
-  root.rotation.y += dt * 0.4;
-
-  if (cutsceneTime >= 13.4) {
-    finishNonaBataviaCutscene();
-    return;
-  }
-
   const bx = activeBossRef.x;
   const by = activeBossRef.y;
   const bz = activeBossRef.z;
   const px = (typeof playerPos !== 'undefined' && playerPos) ? playerPos.x : (cameraRef ? cameraRef.position.x : 0);
   const pz = (typeof playerPos !== 'undefined' && playerPos) ? playerPos.z : (cameraRef ? cameraRef.position.z : 0);
   const py = (typeof getTerrainHeight === 'function' ? getTerrainHeight(px, pz) : 0) + 1.8;
+
+  // Imposing phantom levitation (strictly faces player, ZERO spinning!)
+  const root = activeBossRef.model.root;
+  root.position.y = activeBossRef.y + Math.sin(cutsceneTime * 1.8) * 0.22;
+  const bdx = px - bx;
+  const bdz = pz - bz;
+  const facePlayerYaw = Math.atan2(bdx, bdz);
+  root.rotation.set(0, facePlayerYaw, 0);
+
+  if (cutsceneTime >= 7.8) {
+    finishNonaBataviaCutscene();
+    return;
+  }
 
   let stage = null;
   let stageIdx = -1;
@@ -868,6 +873,19 @@ export function startNataliaHelicopterCutscene(camera, sfx, onComplete) {
   if (overlay) {
     overlay.style.display = 'block';
     overlay.style.opacity = '1';
+  }
+
+  // Dramatic "WAH" Blood-Red Flash vignette on canvas
+  const canvas = document.getElementById('ps1-canvas') || document.querySelector('canvas');
+  if (canvas) {
+    canvas.style.transition = 'filter 0.15s ease-out';
+    canvas.style.filter = 'contrast(170%) saturate(220%) drop-shadow(0 0 24px #ff0022)';
+    setTimeout(() => {
+      if (canvas) {
+        canvas.style.transition = 'filter 1.2s ease-in-out';
+        canvas.style.filter = '';
+      }
+    }, 500);
   }
 
   // Hide HUD & reticle

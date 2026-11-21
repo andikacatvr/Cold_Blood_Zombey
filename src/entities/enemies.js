@@ -803,6 +803,12 @@ export function buildNonaBatavia() {
   root.add(modelHolder);
   parts.modelHolder = modelHolder;
 
+  // Occult Spectral Red Glow (makes her appearance luminous, grand & terrifying in fog)
+  const spectralAura = new THREE.PointLight(0xff1828, 2.8, 14.0 * scale);
+  spectralAura.position.set(0, 1.2 * scale, 0.2);
+  root.add(spectralAura);
+  parts.spectralAura = spectralAura;
+
   // Head proxy for raycast shooting headshots
   const headProxy = new THREE.Group();
   headProxy.position.set(0, 1.54 * scale, 0);
@@ -877,6 +883,12 @@ export function buildVictorianBride() {
   modelHolder.scale.set(scale, scale, scale);
   root.add(modelHolder);
   parts.modelHolder = modelHolder;
+
+  // Occult Spectral Red Glow (makes her appearance luminous, grand & terrifying in fog)
+  const spectralAura = new THREE.PointLight(0xff1828, 2.8, 14.0 * scale);
+  spectralAura.position.set(0, 1.2 * scale, 0.2);
+  root.add(spectralAura);
+  parts.spectralAura = spectralAura;
 
   // Head proxy for raycast shooting headshots
   const headProxy = new THREE.Group();
