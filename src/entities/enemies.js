@@ -26,6 +26,7 @@ export let currentBoss = null;
 
 let ladyMithrillTemplate = null;
 let victorianBrideTemplate = null;
+let sisterValentinaTemplate = null;
 
 let sceneRef = null;
 let cameraRef = null;
@@ -118,6 +119,9 @@ export function initEnemies(scene, camera) {
 }
 
 export function preloadZombieGLBModels(scene) {
+  preloadSisterValentinaModel(scene);
+  preloadNonaBataviaModel(scene);
+  preloadVictorianBrideModel(scene);
   if (typeof THREE === 'undefined' || !THREE.GLTFLoader) return;
   const loader = new THREE.GLTFLoader();
 
@@ -653,111 +657,77 @@ export function buildLeft4DeadInfected(variant = 0) {
   return parts;
 }
 
+export function preloadSisterValentinaModel(scene) {
+  if (typeof THREE === 'undefined' || !THREE.GLTFLoader) return;
+  const loader = new THREE.GLTFLoader();
+  loader.load(
+    '/models/sister_valentina.glb',
+    (gltf) => {
+      sisterValentinaTemplate = gltf.scene;
+      sisterValentinaTemplate.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          if (child.material) {
+            child.material.roughness = 0.82;
+            child.material.metalness = 0.04;
+          }
+        }
+      });
+      console.log('Sister Valentina 3D Model preloaded successfully!');
+    },
+    undefined,
+    (err) => {
+      console.warn('Failed preloading /models/sister_valentina.glb:', err);
+    }
+  );
+}
+
 export function buildSisterValentina() {
   const root = new THREE.Group();
-  const parts = { root, isBoss: true };
+  root.name = 'Sister_Valentina_Root';
   const scale = 1.35;
+  const parts = { root, isBoss: true, bossType: 'sister_valentina', scale };
 
-  const hips = new THREE.Group();
-  hips.position.y = 1.1 * scale;
-  root.add(hips);
-  parts.hips = hips;
+  const modelHolder = new THREE.Group();
+  modelHolder.scale.set(scale, scale, scale);
+  root.add(modelHolder);
+  parts.modelHolder = modelHolder;
 
-  const habitDress = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.38 * scale, 0.72 * scale, 1.45 * scale, 7),
-    nunHabitMat
-  );
-  habitDress.position.y = -0.45 * scale;
-  hips.add(habitDress);
+  // Occult Demonic Aura
+  const demonicAura = new THREE.PointLight(0x7a001a, 2.4, 10.0 * scale);
+  demonicAura.position.set(0, 1.2 * scale, 0.2);
+  root.add(demonicAura);
+  parts.demonicAura = demonicAura;
 
-  const spine = new THREE.Group();
-  spine.position.y = 0.22 * scale;
-  hips.add(spine);
-  parts.spine = spine;
+  // Head proxy for raycast shooting headshots
+  const headProxy = new THREE.Group();
+  headProxy.position.set(0, 1.62 * scale, 0);
+  root.add(headProxy);
+  parts.head = headProxy;
 
-  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.72 * scale, 0.65 * scale, 0.48 * scale), nunHabitMat);
-  torso.position.y = 0.42 * scale;
-  spine.add(torso);
-
-  const mantle = new THREE.Mesh(new THREE.CylinderGeometry(0.55 * scale, 0.85 * scale, 0.68 * scale, 7), nunMantleMat);
-  mantle.position.y = 0.46 * scale;
-  spine.add(mantle);
-
-  const crossGroup = new THREE.Group();
-  crossGroup.position.set(0, 0.35 * scale, 0.38 * scale);
-  const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.04 * scale, 0.32 * scale, 0.02 * scale), silverCrossMat);
-  const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.2 * scale, 0.04 * scale, 0.02 * scale), silverCrossMat);
-  crossH.position.y = 0.06 * scale;
-  crossGroup.add(crossV);
-  crossGroup.add(crossH);
-  spine.add(crossGroup);
-
-  const neck = new THREE.Group();
-  neck.position.set(0, 0.82 * scale, 0.02 * scale);
-  spine.add(neck);
-  parts.neck = neck;
-
-  const head = new THREE.Mesh(new THREE.BoxGeometry(0.42 * scale, 0.48 * scale, 0.42 * scale), nunFaceMat);
-  neck.add(head);
-  parts.head = head;
-
-  const veilCap = new THREE.Mesh(new THREE.BoxGeometry(0.48 * scale, 0.52 * scale, 0.46 * scale), nunVeilMat);
-  veilCap.position.set(0, 0.03 * scale, -0.04 * scale);
-  neck.add(veilCap);
-
-  const veilHang = new THREE.Mesh(new THREE.BoxGeometry(0.52 * scale, 1.2 * scale, 0.12 * scale), nunVeilMat);
-  veilHang.position.set(0, -0.45 * scale, -0.28 * scale);
-  veilHang.rotation.x = -0.12;
-  neck.add(veilHang);
-
-  const makeNunCurvedArm = (isRight) => {
-    const sideSign = isRight ? 1 : -1;
-    const shoulder = new THREE.Group();
-    shoulder.position.set(sideSign * 0.52 * scale, 0.65 * scale, 0);
-
-    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.12 * scale, 0.14 * scale, 0.62 * scale, 5), nunMantleMat);
-    upper.position.set(sideSign * 0.22 * scale, 0.05 * scale, 0);
-    upper.rotation.z = sideSign * (-0.75);
-    shoulder.add(upper);
-
-    const foreArmGroup = new THREE.Group();
-    foreArmGroup.position.set(sideSign * 0.42 * scale, 0.22 * scale, 0);
-
-    const foreArm = new THREE.Mesh(new THREE.CylinderGeometry(0.1 * scale, 0.12 * scale, 0.58 * scale, 5), paleFleshMat);
-    foreArm.position.y = 0.26 * scale;
-    foreArm.rotation.z = sideSign * 0.45;
-    foreArm.rotation.x = 0.25;
-    foreArmGroup.add(foreArm);
-
-    const hand = new THREE.Mesh(new THREE.BoxGeometry(0.18 * scale, 0.24 * scale, 0.12 * scale), bloodyHandsMat);
-    hand.position.set(0, 0.55 * scale, 0);
-    foreArmGroup.add(hand);
-
-    [-0.06, 0, 0.06].forEach((fX, idx) => {
-      const claw = new THREE.Mesh(new THREE.BoxGeometry(0.04 * scale, 0.22 * scale, 0.04 * scale), bloodyHandsMat);
-      claw.position.set(fX * scale, 0.72 * scale, (idx === 1 ? 0.04 : -0.02) * scale);
-      claw.rotation.z = sideSign * (0.15 + idx * 0.08);
-      claw.rotation.x = 0.2;
-      foreArmGroup.add(claw);
+  if (sisterValentinaTemplate) {
+    const clone = sisterValentinaTemplate.clone(true);
+    modelHolder.add(clone);
+  } else {
+    const loader = new THREE.GLTFLoader();
+    loader.load('/models/sister_valentina.glb', (gltf) => {
+      gltf.scene.traverse(c => {
+        if (c.isMesh) {
+          c.castShadow = true;
+          c.receiveShadow = true;
+          if (c.material) {
+            c.material.roughness = 0.82;
+            c.material.metalness = 0.04;
+          }
+        }
+      });
+      modelHolder.add(gltf.scene);
+    }, undefined, (err) => {
+      console.warn('Fallback loading sister_valentina:', err);
     });
+  }
 
-    shoulder.add(foreArmGroup);
-    return { shoulder, foreArmGroup };
-  };
-
-  const lArmData = makeNunCurvedArm(false);
-  const rArmData = makeNunCurvedArm(true);
-  spine.add(lArmData.shoulder);
-  spine.add(rArmData.shoulder);
-
-  parts.lArm = lArmData.shoulder;
-  parts.rArm = rArmData.shoulder;
-  parts.lFore = lArmData.foreArmGroup;
-  parts.rFore = rArmData.foreArmGroup;
-  parts.scale = scale;
-
-  if (habitDress) habitDress.castShadow = true;
-  if (torso) torso.castShadow = true;
   return parts;
 }
 
