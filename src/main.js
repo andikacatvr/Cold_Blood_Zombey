@@ -118,6 +118,7 @@ import {
   isMapOpen
 } from './ui/mapMenu.js';
 import { initQuestSystem, getActiveObjective } from './core/quest.js';
+import { initBestiaryUI } from './core/bestiary.js';
 import {
   spawnVillageNPCs,
   updateVillageNPCs,
@@ -1053,6 +1054,7 @@ function init() {
   spawnVillageNPCs(scene, getTerrainHeight);
   setupPlayerControls();
   initTouchControls();
+  initBestiaryUI(state);
 
   window.__gameDebug = {
     playerPos,

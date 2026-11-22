@@ -172,6 +172,7 @@
             </div>
           </div>
 
+          <button class="hud-box hud-btn" id="hud-bestiary-btn" title="Buku Koleksi Zombie [B]">[B] BESTIARY</button>
           <button class="hud-box hud-btn" id="hud-map-btn" title="Peta Taktis Lengkap [M]">[M] PETA</button>
           <button class="hud-box hud-btn" id="hud-settings-btn" title="Menu Opsi [ESC]">[ESC] OPTION</button>
         </div>
@@ -238,6 +239,9 @@
         <div class="menu-btn-column">
           <button class="btn-play menu-action-btn" id="btn-menu-play">
             <span class="btn-arrow">▶</span> Start Game
+          </button>
+          <button class="btn-play btn-sec menu-action-btn" id="btn-menu-bestiary">
+            <span class="btn-arrow">▶</span> Zombie Bestiary
           </button>
           <button class="btn-play btn-sec menu-action-btn" id="btn-menu-settings">
             <span class="btn-arrow">▶</span> Game Settings
@@ -445,6 +449,62 @@
         <div class="settings-footer">
           <button class="btn-play" id="btn-close-settings">Save &amp; Return</button>
           <button class="btn-play btn-sec" id="btn-reset-settings">Reset Defaults</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BESTIARY UNLOCK NOTIFICATION TOAST -->
+    <div id="bestiary-unlock-toast" class="bestiary-toast">
+      <div class="bestiary-toast-icon">📖</div>
+      <div class="bestiary-toast-body">
+        <div class="bestiary-toast-badge">BESTIARY UNLOCKED!</div>
+        <div class="bestiary-toast-name" id="bestiary-toast-name">Nona Batavia</div>
+        <div class="bestiary-toast-hint">Tekan [ B ] untuk melihat profil &amp; kemampuan</div>
+      </div>
+    </div>
+
+    <!-- FULLSCREEN MONSTER BESTIARY / SURVIVAL DOSSIER MODAL -->
+    <div id="screen-bestiary" class="settings-modal-backdrop" style="display: none;">
+      <div class="bestiary-book-dialog">
+        <!-- MODAL HEADER -->
+        <div class="bestiary-header">
+          <div class="bestiary-header-title-box">
+            <div class="bestiary-title">📖 SURVIVAL FIELD BESTIARY &bull; BUKU KOLEKSI ZOMBIE</div>
+            <div class="bestiary-subtitle">Catatan Anatomi &amp; Analisis Spesimen Terinfeksi Coldbrook</div>
+          </div>
+          <div class="bestiary-header-progress-box">
+            <span class="bestiary-progress-label" id="bestiary-progress-text">0 / 6 DISCOVERED (0%)</span>
+            <div class="bestiary-progress-track">
+              <div class="bestiary-progress-fill" id="bestiary-progress-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+          <button class="settings-close-x" id="btn-close-bestiary-x" title="Tutup Bestiary (B / ESC)">✕</button>
+        </div>
+
+        <!-- MAIN 2-COLUMN BOOK BODY -->
+        <div class="bestiary-book-body">
+          <!-- LEFT DIRECTORY COLUMN -->
+          <div class="bestiary-sidebar">
+            <div class="bestiary-filter-tabs">
+              <button class="bestiary-tab-btn active" data-category="all">SEMUA (6)</button>
+              <button class="bestiary-tab-btn" data-category="infected">INFECTED</button>
+              <button class="bestiary-tab-btn" data-category="boss">BOSSES</button>
+            </div>
+            <div class="bestiary-list" id="bestiary-list-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- RIGHT DOSSIER COLUMN -->
+          <div class="bestiary-dossier" id="bestiary-dossier-container">
+            <!-- Dynamically populated with active specimen dossier -->
+          </div>
+        </div>
+
+        <!-- FOOTER BAR -->
+        <div class="bestiary-footer">
+          <div class="bestiary-footer-hint">[ B ] / [ ESC ] Tutup Buku Koleksi &bull; Klik kartu untuk membaca analisis</div>
+          <button class="btn-play btn-sec" id="btn-close-bestiary" style="font-size: 15px; padding: 4px 16px;">Tutup Bestiary</button>
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ import { showDialogSubtitle } from './kristin.js';
 import { getTerrainHeight } from '../world/environment.js';
 import { startNonaBataviaCutscene, startNataliaHelicopterCutscene } from '../core/cutscene.js';
 import { isMobileDevice } from '../graphics/engine.js';
+import { registerZombieKill } from '../core/bestiary.js';
 import {
   spawnBloodPoolOnSnow,
   spawnWalkingBloodDrip,
@@ -1202,6 +1203,9 @@ export function killZombieWithKinematics(z, shotDir, hitDistance, isHeadshot, st
   z.isDead = true;
   state.kills++;
   state.score += (z.isBoss ? 2500 : (isHeadshot ? 200 : 100));
+
+  // Record to Field Bestiary Compendium
+  registerZombieKill(z, state);
 
   // Horde ammo scavenger bonus (killed infected drop shotgun shells)
   if (state.player) {

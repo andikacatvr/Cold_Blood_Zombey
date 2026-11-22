@@ -51,6 +51,7 @@ import {
 import { updateHUD, showLifeLostAlert, triggerGameOver } from '../ui/hud.js';
 import { openSettings, closeSettings, isSettingsOpen } from '../ui/settingsMenu.js';
 import { toggleMap, closeMap, isMapOpen } from '../ui/mapMenu.js';
+import { isBestiaryOpen, toggleBestiary, closeBestiary } from './bestiary.js';
 import { triggerKristinGesture, toggleCompanionFollow, kristinModel, giveKristinHint, showDialogSubtitle } from '../entities/kristin.js';
 import { triggerNataliaGesture, toggleNataliaFollow, nataliaModel } from '../entities/natalia.js';
 import { startIntroCutscene, isCinematicActive } from './cutscene.js';
@@ -967,6 +968,10 @@ export function setupPlayerControls() {
     }
 
     if (c === 'Escape') {
+      if (isBestiaryOpen) {
+        closeBestiary(state);
+        return;
+      }
       if (isMapOpen) {
         closeMap(state);
         return;
@@ -978,13 +983,19 @@ export function setupPlayerControls() {
       }
       return;
     }
+    if (c === 'KeyB' || k === 'b') {
+      if (!isSettingsOpen && !isMapOpen) {
+        toggleBestiary(state);
+      }
+      return;
+    }
     if (c === 'KeyM' || k === 'm') {
-      if (!isSettingsOpen) {
+      if (!isSettingsOpen && !isBestiaryOpen) {
         toggleMap(state);
       }
       return;
     }
-    if (state.isPaused || isMapOpen) return;
+    if (state.isPaused || isMapOpen || isBestiaryOpen) return;
 
     if (c === 'KeyW' || k === 'w') keys.w = true;
     if (c === 'KeyA' || k === 'a') keys.a = true;
@@ -1022,7 +1033,7 @@ export function setupPlayerControls() {
   });
 
   document.addEventListener('mousemove', (e) => {
-    if (document.pointerLockElement !== document.body || !state.running || state.isPaused || !cameraRef || isMapOpen) return;
+    if (document.pointerLockElement !== document.body || !state.running || state.isPaused || !cameraRef || isMapOpen || isBestiaryOpen) return;
     const sens = 0.0024 * (gameSettings.sensitivity || 1.0);
     yaw -= e.movementX * sens;
     pitch -= e.movementY * sens;
@@ -1032,7 +1043,7 @@ export function setupPlayerControls() {
   });
 
   document.addEventListener('mousedown', (e) => {
-    if (!state.running || state.isPaused || isSettingsOpen || isMapOpen) return;
+    if (!state.running || state.isPaused || isSettingsOpen || isMapOpen || isBestiaryOpen) return;
 
     // Clicking while reading story dialogue advances dialogue
     if (isStoryDialogueOpen()) {
