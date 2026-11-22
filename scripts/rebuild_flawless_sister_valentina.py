@@ -4,7 +4,7 @@ from PIL import Image
 import trimesh
 import os
 
-print("=== BUILDING 100% PERFECT DEFINITIVE SISTER VALENTINA ===")
+print("=== REBUILDING FLAWLESS SISTER VALENTINA (WATERTIGHT & SOLID BACK) ===")
 
 art_dir = r'C:\Users\tryfi\.gemini\antigravity\brain\d008bfb7-cdf3-42aa-93f6-a569a857cc5e'
 src_bleed_path = os.path.join(art_dir, 'nun_bleed_zero_fringe.png')
@@ -101,19 +101,21 @@ def add_smooth_column(rings_f, rings_b, cap_top=True, cap_bottom=True, top_dome=
         rf0, rf1 = rings_f[i], rings_f[i + 1]
         rb0, rb1 = rings_b[i], rings_b[i + 1]
 
-        # Front quads
+        # Front quads (Normal points towards +Z / outward)
         for k in range(K):
             all_faces.append([rf0[k], rf1[k], rf1[k + 1]])
             all_faces.append([rf0[k], rf1[k + 1], rf0[k + 1]])
 
-        # Back quads
+        # Back quads (CORRECTED: Normal points towards -Z / outward, never culled!)
         for k in range(K):
-            all_faces.append([rb0[k], rb1[k + 1], rb1[k]])
-            all_faces.append([rb0[k], rb0[k + 1], rb1[k + 1]])
+            all_faces.append([rb0[k], rb1[k], rb1[k + 1]])
+            all_faces.append([rb0[k], rb1[k + 1], rb0[k + 1]])
 
         # Side seams
+        # Right seam (+X outward)
         all_faces.append([rf0[K], rf1[K], rb1[0]])
         all_faces.append([rf0[K], rb1[0], rb0[0]])
+        # Left seam (-X outward)
         all_faces.append([rb0[K], rb1[K], rf1[0]])
         all_faces.append([rb0[K], rf1[0], rf0[0]])
 
@@ -132,10 +134,10 @@ def add_smooth_column(rings_f, rings_b, cap_top=True, cap_bottom=True, top_dome=
         all_normals.append([0.0, 1.0, 0.0])
 
         for k in range(K):
-            all_faces.append([apex_idx, rf_top[k + 1], rf_top[k]])
+            all_faces.append([apex_idx, rf_top[k], rf_top[k + 1]])
             all_faces.append([apex_idx, rb_top[k], rb_top[k + 1]])
-        all_faces.append([apex_idx, rb_top[0], rf_top[K]])
-        all_faces.append([apex_idx, rf_top[0], rb_top[K]])
+        all_faces.append([apex_idx, rf_top[K], rb_top[0]])
+        all_faces.append([apex_idx, rb_top[K], rf_top[0]])
 
     if cap_bottom:
         rf_bot = rings_f[-1]
@@ -152,10 +154,10 @@ def add_smooth_column(rings_f, rings_b, cap_top=True, cap_bottom=True, top_dome=
         all_normals.append([0.0, -1.0, 0.0])
 
         for k in range(K):
-            all_faces.append([apex_idx, rf_bot[k], rf_bot[k + 1]])
+            all_faces.append([apex_idx, rf_bot[k + 1], rf_bot[k]])
             all_faces.append([apex_idx, rb_bot[k + 1], rb_bot[k]])
-        all_faces.append([apex_idx, rf_bot[K], rb_bot[0]])
-        all_faces.append([apex_idx, rb_bot[K], rf_bot[0]])
+        all_faces.append([apex_idx, rb_bot[0], rf_bot[K]])
+        all_faces.append([apex_idx, rf_bot[0], rb_bot[K]])
 
 # 3. HEAD & WIMPLE (Y: 20 to 290)
 K_head = 10
@@ -268,16 +270,19 @@ for y_px, x_min_px, x_max_px, rz_f, rz_b in body_steps_cfg:
     body_rf.append(rf)
     body_rb.append(rb)
 
-add_smooth_column(body_rf, body_rb, cap_top=False, cap_bottom=False)
+# Close bottom hem of skirt with solid cap so underside is NEVER hollow!
+add_smooth_column(body_rf, body_rb, cap_top=False, cap_bottom=True, bottom_apex=True)
 
 # 5. BELL SLEEVES & OCCULT CLAW ARMS
 K_arm = 8
 extra_scene_meshes = []
 
+# doubleSided=True guarantees NO faces are ever culled by any engine!
 mat_atlas = trimesh.visual.material.PBRMaterial(
     baseColorTexture=atlas_pil,
     roughnessFactor=0.82,
-    metallicFactor=0.04
+    metallicFactor=0.04,
+    doubleSided=True
 )
 
 def build_nun_arm_and_claws(is_right=False):
@@ -411,7 +416,8 @@ def build_nun_arm_and_claws(is_right=False):
 mat_dark = trimesh.visual.material.PBRMaterial(
     baseColorFactor=[0.12, 0.12, 0.14, 1.0],
     roughnessFactor=0.92,
-    metallicFactor=0.02
+    metallicFactor=0.02,
+    doubleSided=True
 )
 shoe_l = trimesh.creation.box(extents=[0.075, 0.045, 0.15])
 shoe_l.apply_translation([-0.09, 0.022, 0.02])
