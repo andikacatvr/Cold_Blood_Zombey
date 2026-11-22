@@ -2226,35 +2226,6 @@ export function initWorld(scene, textures) {
       });
     });
 
-    // H. Coastal Sea Boulders & Rock Outcrops
-    const rockMat = new THREE.MeshStandardMaterial({
-      color: 0x333b42,
-      roughness: 0.75,
-      metalness: 0.25,
-      flatShading: true
-    });
-    const boulderCoords = [
-      { x: -32.0, z: 124.0, s: 2.2 },
-      { x: -68.0, z: 127.0, s: 3.4 },
-      { x: 74.0, z: 123.0, s: 2.8 },
-      { x: 98.0, z: 126.0, s: 3.6 },
-      { x: -95.0, z: 118.0, s: 4.2 }
-    ];
-    boulderCoords.forEach(b => {
-      const rGeo = new THREE.DodecahedronGeometry(b.s, 1);
-      const rMesh = new THREE.Mesh(rGeo, rockMat);
-      const gy = getTerrainHeight(b.x, b.z);
-      rMesh.position.set(b.x, gy + b.s * 0.45, b.z);
-      rMesh.scale.set(1.1, 0.75, 1.25);
-      scene.add(rMesh);
-
-      colliders.push({
-        minX: b.x - b.s * 0.9,
-        maxX: b.x + b.s * 0.9,
-        minZ: b.z - b.s * 0.9,
-        maxZ: b.z + b.s * 0.9
-      });
-    });
 
     // I. Coastal Dune Grass & Reeds along the snow-sand transition
     const grassMat = new THREE.MeshStandardMaterial({
