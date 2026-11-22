@@ -11,7 +11,8 @@
   <title>COLD BLOOD ZOMBEY (PS1 1997 RETRO)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Redaction+70:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Redaction+70:ital,wght@0,400;0,700;1,400&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="/src/styles/game.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="/libs/GLTFLoader.js"></script>
@@ -197,7 +198,8 @@
         </div>
         <div class="tac-quest-row tac-quest-nav">
           <span id="kristin-compass-text" class="tac-quest-compass">▶ Pondok Darrell (14m)</span>
-          <span class="hud-key-cap tac-quest-hint" id="quest-hint-key-btn" title="Minta Petunjuk Kristin [H]">[ H ]</span>
+          <span class="hud-key-cap tac-quest-hint" id="quest-hint-key-btn" title="Minta Petunjuk Kristin [H]">[ H
+            ]</span>
         </div>
         <!-- Hidden fallbacks for legacy references -->
         <span id="quest-chapter-tag" style="display: none;"></span>
@@ -222,6 +224,9 @@
         <div class="hud-box" id="hud-kills"
           style="display: none; font-size: 14px; padding: 2px 8px; background: rgba(18,8,10,0.88); border: 1px solid #5a1e24; color: #ff5260; font-weight: bold; letter-spacing: 1px;">
           ☠ KILLS: <span id="hud-kills-value" style="color: #ffffff;">0</span></div>
+        <div class="hud-box" id="hud-swim-badge"
+          style="display: none; font-size: 14px; padding: 2px 8px; background: rgba(8,20,28,0.88); border: 1px solid #168ca8; color: #5ce1e6; font-weight: bold; letter-spacing: 1px;">
+          🏊 BERENANG (SWIMMING)</div>
         <div id="hud-ammo" style="display: none;"></div>
       </div>
     </div>
@@ -301,17 +306,25 @@
           </div>
 
           <div class="controls-guide-grid">
-            <div class="ctrl-row"><span class="ctrl-key">W A S D</span> <span class="ctrl-desc">Move Forward / Left / Backward / Right</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">W A S D</span> <span class="ctrl-desc">Move Forward / Left /
+                Backward / Right</span></div>
             <div class="ctrl-row"><span class="ctrl-key">SHIFT</span> <span class="ctrl-desc">Sprint</span></div>
             <div class="ctrl-row"><span class="ctrl-key">SPACE</span> <span class="ctrl-desc">Jump</span></div>
-            <div class="ctrl-row"><span class="ctrl-key">LEFT CLICK</span> <span class="ctrl-desc">Fire Shotgun / Melee Attack</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">LEFT CLICK</span> <span class="ctrl-desc">Fire Shotgun / Melee
+                Attack</span></div>
             <div class="ctrl-row"><span class="ctrl-key">R</span> <span class="ctrl-desc">Reload Shells</span></div>
-            <div class="ctrl-row"><span class="ctrl-key">E</span> <span class="ctrl-desc">Talk to Villagers / Interact with Kristin / Advance Dialogue</span></div>
-            <div class="ctrl-row"><span class="ctrl-key">C</span> <span class="ctrl-desc">Toggle Camera View (First-Person FPS / Third-Person TPS)</span></div>
-            <div class="ctrl-row"><span class="ctrl-key">T</span> <span class="ctrl-desc">Command Kristin: Follow Player / Hold Position</span></div>
-            <div class="ctrl-row"><span class="ctrl-key">H</span> <span class="ctrl-desc">Ask Kristin for Directions</span></div>
-            <div class="ctrl-row"><span class="ctrl-key">M</span> <span class="ctrl-desc">Open / Close Tactical Map</span></div>
-            <div class="ctrl-row"><span class="ctrl-key">ESC</span> <span class="ctrl-desc">Pause Game &amp; Settings Menu</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">E</span> <span class="ctrl-desc">Talk to Villagers / Interact
+                with Kristin / Advance Dialogue</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">C</span> <span class="ctrl-desc">Toggle Camera View
+                (First-Person FPS / Third-Person TPS)</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">T</span> <span class="ctrl-desc">Command Kristin: Follow Player
+                / Hold Position</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">H</span> <span class="ctrl-desc">Ask Kristin for
+                Directions</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">M</span> <span class="ctrl-desc">Open / Close Tactical
+                Map</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">ESC</span> <span class="ctrl-desc">Pause Game &amp; Settings
+                Menu</span></div>
           </div>
 
           <div style="margin-top: 18px;">
@@ -330,7 +343,8 @@
       <div class="sub-banner" style="color: #a4454b;" id="go-wave-text">LOST IN THE SNOW</div>
       <div class="scroll-box" style="text-align: center;">
         <div style="font-size: 30px; color: #d6e2eb;" id="go-kills">CRIMSON PURGED: 0</div>
-        <p style="margin-top: 10px; font-size: 17px; color: #7f909e;">All survivor lives have perished. Your soul has been claimed by the winter darkness.</p>
+        <p style="margin-top: 10px; font-size: 17px; color: #7f909e;">All survivor lives have perished. Your soul has
+          been claimed by the winter darkness.</p>
       </div>
       <div style="display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap;">
         <button class="btn-play" id="btn-restart">TRY ONCE MORE</button>
@@ -435,7 +449,8 @@
             <div class="ctrl-item"><span class="ctrl-key">W A S D</span><span class="ctrl-act">Move</span></div>
             <div class="ctrl-item"><span class="ctrl-key">Shift</span><span class="ctrl-act">Sprint</span></div>
             <div class="ctrl-item"><span class="ctrl-key">Space</span><span class="ctrl-act">Jump</span></div>
-            <div class="ctrl-item"><span class="ctrl-key">Left Click</span><span class="ctrl-act">Shoot / Attack</span></div>
+            <div class="ctrl-item"><span class="ctrl-key">Left Click</span><span class="ctrl-act">Shoot / Attack</span>
+            </div>
             <div class="ctrl-item"><span class="ctrl-key">R</span><span class="ctrl-act">Reload</span></div>
             <div class="ctrl-item"><span class="ctrl-key">C</span><span class="ctrl-act">FPS / TPS View</span></div>
             <div class="ctrl-item"><span class="ctrl-key">E</span><span class="ctrl-act">Interact / Talk</span></div>

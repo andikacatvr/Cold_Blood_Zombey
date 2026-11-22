@@ -398,13 +398,34 @@ export function buildSurvivorPlayerModel() {
   return root;
 }
 
-export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeapon) {
+export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeapon, isSwimming = false) {
   // Capture 3D face portrait once WebGL is active and model is loaded
   if (isRodrickGLBLoaded && !hasCapturedPortrait && renderer) {
     captureRodrickPortrait(renderer);
   }
 
   if (!playerMeshRoot || !playerMeshRoot.visible) return;
+
+  // Swimming Posture (body tilts forward into swimming water displacement)
+  if (isSwimming) {
+    playerMeshRoot.rotation.x = THREE.MathUtils.lerp(playerMeshRoot.rotation.x, isMoving ? 0.72 : 0.32, dt * 6.0);
+    const swimFreq = isSprinting ? 11.0 : 7.0;
+    walkTime += dt * swimFreq;
+    const kick = Math.sin(walkTime) * (isMoving ? 0.52 : 0.22);
+    if (playerLeftLeg) playerLeftLeg.rotation.set(kick, 0, 0.08);
+    if (playerRightLeg) playerRightLeg.rotation.set(-kick, 0, -0.08);
+
+    if (activeWeapon === 'unarmed') {
+      if (playerLeftArm) playerLeftArm.rotation.set(-kick * 0.9, 0.25, -0.35);
+      if (playerRightArm) playerRightArm.rotation.set(kick * 0.9, -0.25, 0.35);
+    } else {
+      if (playerRightArm) playerRightArm.rotation.set(-0.35 + kick * 0.1, 0.08, -0.06);
+      if (playerLeftArm) playerLeftArm.rotation.set(-0.55 - kick * 0.1, 0.32, -0.20);
+    }
+    return;
+  } else {
+    playerMeshRoot.rotation.x = THREE.MathUtils.lerp(playerMeshRoot.rotation.x, 0, dt * 10.0);
+  }
 
   // Weapon visibility sync (Unarmed means player holds NOTHING in hand)
   if (playerMiniShotgun && playerMiniGolok) {

@@ -12,10 +12,15 @@ import {
   getTerrainHeight,
   getRiverCenterX,
   getRiverWaterY,
+  getWaterSurfaceY,
   waterfallVeilMesh,
   topRiverMesh,
   topRiverCrestFoam,
+  oceanWaterMesh,
+  oceanBasePositions,
   oceanShorelineFoam,
+  oceanSecondaryFoam,
+  beachPalmTrees,
   lockedDoors,
   showLockedDoorPrompt,
   checkHousePickups,
@@ -243,43 +248,62 @@ function updateSimulation(dt) {
     targetGroundY = Math.max(targetGroundY, -1.44);
   }
 
-  // Jumping & Gravity Physics
-  const isInAir = (pVel.y > 0) || (playerPos.y > targetGroundY + 0.02);
-  if (isInAir) {
-    pVel.y -= 19.5 * dt; // Realistic snappy gravity
-    playerPos.y += pVel.y * dt;
-    if (playerPos.y <= targetGroundY) {
-      playerPos.y = targetGroundY;
-      pVel.y = 0;
-      setIsGrounded(true);
-      if (Sfx && Sfx.playSnowThud) Sfx.playSnowThud(0.65);
-    } else {
-      setIsGrounded(false);
-    }
-  } else {
-    // Player is firmly grounded: smooth step-up climbing undulating hills & knolls
-    playerPos.y = THREE.MathUtils.lerp(playerPos.y, targetGroundY, Math.min(1.0, dt * 20));
+  // Water Immersion & Real Swimming Mechanics
+  const waterSurfaceY = getWaterSurfaceY(playerPos.x, playerPos.z);
+  const isOnPier = (playerPos.z >= 112.0 && playerPos.z <= 138.0 && Math.abs(playerPos.x - 14.0) < 1.8);
+  const isOnBridge = (Math.abs(playerPos.z - 4.0) < 1.7 && Math.abs(playerPos.x - bridgeCenterX) < 6.6);
+  const inDeepWater = (!isOnPier && !isOnBridge && waterSurfaceY !== null && ((waterSurfaceY - targetGroundY > 1.15) || (playerPos.z > 125.8 && playerPos.y <= -2.4)));
+  const isSwimming = inDeepWater;
+  window.__PLAYER_SWIMMING = isSwimming;
+
+  if (isSwimming) {
+    // REAL SWIMMING BUOYANCY & SURFACE LOCOMOTION
+    // Player floats gently at water surface: head and upper chest stay above water line
+    const waterBob = Math.sin(performance.now() * 0.0035) * 0.055;
+    const targetSwimY = waterSurfaceY - 1.25 + waterBob;
+
+    // Smooth buoyancy floating on water surface
+    playerPos.y = THREE.MathUtils.lerp(playerPos.y, targetSwimY, Math.min(1.0, dt * 8.0));
     pVel.y = 0;
     setIsGrounded(true);
-  }
 
-  // Water immersion check (wading through the icy mountain river or ocean surf)
-  const rX = getRiverCenterX(playerPos.z);
-  const waterY = getRiverWaterY(playerPos.z);
-  const inRiver = (playerPos.z > -59.5 && playerPos.z <= 126.0 && Math.abs(playerPos.x - rX) < 4.8 && playerPos.y <= waterY + 0.08);
-  const inOcean = (playerPos.z > 126.0 && playerPos.y <= -2.48);
-  const inWater = inRiver || inOcean;
-
-  if (isMoving && Math.abs(playerPos.y - targetGroundY) < 0.15) {
-    if (inWater) {
-      Sfx.playWaterSplash();
+    // Swimming water strokes audio
+    if (isMoving && Math.random() < 0.08) {
+      if (Sfx && Sfx.playWaterSplash) Sfx.playWaterSplash();
+    }
+  } else {
+    // Normal Ground & Jumping Physics
+    const isInAir = (pVel.y > 0) || (playerPos.y > targetGroundY + 0.02);
+    if (isInAir) {
+      pVel.y -= 19.5 * dt; // Realistic snappy gravity
+      playerPos.y += pVel.y * dt;
+      if (playerPos.y <= targetGroundY) {
+        playerPos.y = targetGroundY;
+        pVel.y = 0;
+        setIsGrounded(true);
+        if (Sfx && Sfx.playSnowThud) Sfx.playSnowThud(0.65);
+      } else {
+        setIsGrounded(false);
+      }
     } else {
-      Sfx.playSnowStep();
+      // Player is firmly grounded: smooth step-up climbing undulating hills & knolls
+      playerPos.y = THREE.MathUtils.lerp(playerPos.y, targetGroundY, Math.min(1.0, dt * 20));
+      pVel.y = 0;
+      setIsGrounded(true);
+    }
+
+    if (isMoving && Math.abs(playerPos.y - targetGroundY) < 0.15) {
+      const inShallowWater = (waterSurfaceY !== null && (waterSurfaceY - targetGroundY > 0.04));
+      if (inShallowWater) {
+        Sfx.playWaterSplash();
+      } else {
+        Sfx.playSnowStep();
+      }
     }
   }
 
-  // Update Survivor Player 3D Model & Silent Hill Horror Camera (TPS/FPS)
-  updatePlayerModelAnimation(isMoving, keys.shift, dt, state.player.weapon);
+  // Update Survivor Player 3D Model (with swimming posture support) & Silent Hill Horror Camera (TPS/FPS)
+  updatePlayerModelAnimation(isMoving, keys.shift, dt, state.player.weapon, isSwimming);
   updateHorrorCamera(camera, playerPos, yaw, pitch, dt);
 
   if (weaponHolder) {
@@ -1014,11 +1038,47 @@ function frameLoop(t) {
     textures.oceanWaterTex.offset.y -= dt * 0.14;
     textures.oceanWaterTex.offset.x += dt * 0.035;
   }
+
+  // Dynamic 3D Small Rolling Ocean Waves (Ombak Kecil)
+  if (oceanWaterMesh && oceanBasePositions) {
+    const pos = oceanWaterMesh.geometry.attributes.position;
+    const time = performance.now() * 0.001;
+    const count = pos.count;
+    for (let i = 0; i < count; i++) {
+      const i3 = i * 3;
+      const bx = oceanBasePositions[i3];
+      const bz = oceanBasePositions[i3 + 2];
+      // Rolling surf math: waves roll in from sea towards the beach (towards z: 126)
+      const w1 = Math.sin(bz * 0.18 - time * 2.2 + bx * 0.04) * 0.15;
+      const w2 = Math.sin(bz * 0.32 - time * 3.1 + Math.cos(bx * 0.08) * 1.5) * 0.08;
+      const w3 = Math.cos(bx * 0.14 + time * 1.4) * 0.05;
+      const shoreProximity = Math.max(0, 1.0 - (bz - 125.0) / 45.0);
+      const waveH = (w1 + w2 + w3) * (1.0 + shoreProximity * 0.65);
+      pos.setY(i, oceanBasePositions[i3 + 1] + waveH);
+    }
+    pos.needsUpdate = true;
+  }
+
+  // Shoreline dynamic rolling foam breakers (ombak bibir pantai)
   if (oceanShorelineFoam) {
-    const surfPulse = 1.0 + Math.sin(performance.now() * 0.0028) * 0.16;
-    oceanShorelineFoam.scale.set(1.0, 1.0, surfPulse);
+    const t = performance.now() * 0.001;
+    const tidalCadence = Math.sin(t * 1.6);
+    const waveAdvance = tidalCadence * 1.35; // Rolls up and down the sand
+    oceanShorelineFoam.position.z = 126.8 - waveAdvance;
+    oceanShorelineFoam.position.y = -2.46 + Math.max(0, tidalCadence * 0.07);
     if (oceanShorelineFoam.material) {
-      oceanShorelineFoam.material.opacity = 0.58 + Math.sin(performance.now() * 0.0028) * 0.22;
+      oceanShorelineFoam.material.opacity = 0.62 + tidalCadence * 0.26;
+    }
+  }
+
+  if (oceanSecondaryFoam) {
+    const t = performance.now() * 0.001;
+    const tidalCadence2 = Math.sin(t * 1.6 - 0.7);
+    const waveAdvance2 = tidalCadence2 * 1.7;
+    oceanSecondaryFoam.position.z = 125.4 - waveAdvance2;
+    oceanSecondaryFoam.position.y = -2.43 + Math.max(0, tidalCadence2 * 0.06);
+    if (oceanSecondaryFoam.material) {
+      oceanSecondaryFoam.material.opacity = 0.42 + tidalCadence2 * 0.28;
     }
   }
 

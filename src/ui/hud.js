@@ -47,6 +47,11 @@ export function updateHUD(state) {
     }
   }
 
+  const swimBadge = document.getElementById('hud-swim-badge');
+  if (swimBadge) {
+    swimBadge.style.display = window.__PLAYER_SWIMMING ? 'inline-block' : 'none';
+  }
+
   const scoreEl = document.getElementById('hud-score');
   if (scoreEl) {
     if (s.gameMode === 'endless') {

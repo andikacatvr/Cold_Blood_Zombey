@@ -514,16 +514,37 @@ const THREE = window.THREE;
           ctx.stroke();
         }
       } else if (type === 'river_water') {
-        c.width = 128; c.height = 128;
-        ctx.fillStyle = '#22556b';
-        ctx.fillRect(0, 0, 128, 128);
-        for (let y = 0; y < 128; y += 8) {
-          ctx.fillStyle = (y % 16 === 0) ? '#2e6f8a' : '#3781a0';
-          ctx.fillRect(0, y, 128, 4);
+        c.width = 256; c.height = 256;
+        // Deep crystal turquoise mountain stream
+        const grad = ctx.createLinearGradient(0, 0, 0, 256);
+        grad.addColorStop(0, '#105268');
+        grad.addColorStop(0.5, '#166983');
+        grad.addColorStop(1, '#0c4456');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 256, 256);
+
+        // Flowing harmonic caustic wave currents
+        for (let i = 0; i < 48; i++) {
+          ctx.beginPath();
+          const startX = Math.random() * 256;
+          const startY = Math.random() * 256;
+          ctx.moveTo(startX, startY);
+          const cp1x = startX + (Math.random() - 0.5) * 60;
+          const cp1y = startY + 25 + Math.random() * 40;
+          const endX = startX + (Math.random() - 0.5) * 40;
+          const endY = startY + 50 + Math.random() * 60;
+          ctx.quadraticCurveTo(cp1x, cp1y, endX, endY);
+          ctx.strokeStyle = Math.random() > 0.4 ? 'rgba(125, 225, 250, 0.45)' : 'rgba(195, 245, 255, 0.65)';
+          ctx.lineWidth = 1.5 + Math.random() * 2.5;
+          ctx.stroke();
         }
-        for (let i = 0; i < 90; i++) {
-          ctx.fillStyle = Math.random() > 0.5 ? '#6dc0dd' : '#aee3f5';
-          ctx.fillRect(Math.random() * 128, Math.random() * 128, 6, 2);
+
+        // Sunlight sparkles on ripples
+        for (let i = 0; i < 120; i++) {
+          ctx.fillStyle = 'rgba(255, 255, 255, ' + (0.4 + Math.random() * 0.55).toFixed(2) + ')';
+          ctx.beginPath();
+          ctx.arc(Math.random() * 256, Math.random() * 256, 1 + Math.random() * 2.0, 0, Math.PI * 2);
+          ctx.fill();
         }
       } else if (type === 'waterfall_stream') {
         c.width = 256; c.height = 256;
@@ -732,34 +753,89 @@ const THREE = window.THREE;
           ctx.fillRect(Math.random() * 128, Math.random() * 128, 1.5, 1.5);
         }
       } else if (type === 'ocean_water') {
-        c.width = 256; c.height = 256;
-        // Deep cold oceanic water with tidal swell undulations
-        ctx.fillStyle = '#16313f';
-        ctx.fillRect(0, 0, 256, 256);
+        c.width = 512; c.height = 512;
+        // Vibrant tropical ocean: turquoise shore to deep azure sapphire
+        const grad = ctx.createLinearGradient(0, 0, 0, 512);
+        grad.addColorStop(0, '#0a637d');
+        grad.addColorStop(0.3, '#0e7894');
+        grad.addColorStop(0.7, '#084b63');
+        grad.addColorStop(1, '#053648');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 512, 512);
 
-        for (let y = 0; y < 256; y++) {
-          const swell = Math.sin(y * 0.12) * 0.5 + Math.cos(y * 0.05) * 0.3;
-          ctx.fillStyle = (swell > 0.15) ? 'rgba(38, 72, 92, 0.65)' : 'rgba(16, 36, 48, 0.65)';
-          ctx.fillRect(0, y, 256, 1);
+        // Organic caustic web (interlocking cell refractions)
+        ctx.lineCap = 'round';
+        for (let i = 0; i < 110; i++) {
+          const x1 = Math.random() * 512;
+          const y1 = Math.random() * 512;
+          const x2 = x1 + (Math.random() - 0.5) * 70;
+          const y2 = y1 + (Math.random() - 0.5) * 70;
+          const cx = (x1 + x2) / 2 + (Math.random() - 0.5) * 35;
+          const cy = (y1 + y2) / 2 + (Math.random() - 0.5) * 35;
+
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.quadraticCurveTo(cx, cy, x2, y2);
+          ctx.strokeStyle = Math.random() > 0.35 ? 'rgba(140, 235, 255, 0.40)' : 'rgba(215, 250, 255, 0.65)';
+          ctx.lineWidth = 1.8 + Math.random() * 3.2;
+          ctx.stroke();
         }
-        // Drifting foam crest ribbons
-        for (let i = 0; i < 40; i++) {
-          ctx.fillStyle = 'rgba(195, 226, 240, 0.55)';
-          const fx = Math.random() * 240;
-          const fy = Math.random() * 252;
-          ctx.fillRect(fx, fy, 8 + Math.random() * 18, 2);
+
+        // Swell crest ribbons (undulating sea waves)
+        for (let y = 0; y < 512; y += 12) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          for (let x = 0; x <= 512; x += 32) {
+            const waveY = y + Math.sin(x * 0.05 + y * 0.08) * 4.5 + Math.cos(x * 0.02) * 2.5;
+            ctx.lineTo(x, waveY);
+          }
+          ctx.strokeStyle = 'rgba(165, 238, 255, 0.28)';
+          ctx.lineWidth = 3.5;
+          ctx.stroke();
+        }
+
+        // Specular sun reflection sparkles
+        for (let i = 0; i < 240; i++) {
+          const sx = Math.random() * 512;
+          const sy = Math.random() * 512;
+          ctx.fillStyle = Math.random() > 0.4 ? 'rgba(255, 255, 255, 0.85)' : 'rgba(190, 245, 255, 0.55)';
+          ctx.beginPath();
+          ctx.arc(sx, sy, 1 + Math.random() * 2.2, 0, Math.PI * 2);
+          ctx.fill();
         }
       } else if (type === 'shoreline_foam') {
-        c.width = 256; c.height = 64;
-        ctx.clearRect(0, 0, 256, 64);
-        ctx.fillStyle = 'rgba(235, 248, 255, 0.85)';
-        ctx.fillRect(0, 16, 256, 32);
+        c.width = 512; c.height = 128;
+        ctx.clearRect(0, 0, 512, 128);
 
-        for (let i = 0; i < 450; i++) {
-          ctx.fillStyle = Math.random() > 0.35 ? 'rgba(255, 255, 255, 0.95)' : 'rgba(185, 224, 242, 0.75)';
+        // Soft fading froth gradient
+        const foamGrad = ctx.createLinearGradient(0, 0, 0, 128);
+        foamGrad.addColorStop(0, 'rgba(255, 255, 255, 0.0)');
+        foamGrad.addColorStop(0.35, 'rgba(235, 252, 255, 0.88)');
+        foamGrad.addColorStop(0.70, 'rgba(220, 248, 255, 0.95)');
+        foamGrad.addColorStop(1, 'rgba(200, 240, 255, 0.15)');
+        ctx.fillStyle = foamGrad;
+        ctx.fillRect(0, 10, 512, 108);
+
+        // Dense effervescent seafoam bubble clusters
+        for (let i = 0; i < 1100; i++) {
+          const bx = Math.random() * 512;
+          const by = 16 + Math.random() * 96;
+          const r = 1.0 + Math.random() * 4.5;
+          ctx.fillStyle = Math.random() > 0.3 ? 'rgba(255, 255, 255, 0.92)' : 'rgba(185, 235, 255, 0.75)';
           ctx.beginPath();
-          ctx.arc(Math.random() * 256, 12 + Math.random() * 40, 1 + Math.random() * 3.0, 0, Math.PI * 2);
+          ctx.arc(bx, by, r, 0, Math.PI * 2);
           ctx.fill();
+        }
+
+        // Delicate foam lacework filaments
+        for (let i = 0; i < 70; i++) {
+          ctx.beginPath();
+          const lx = Math.random() * 512;
+          const ly = 24 + Math.random() * 80;
+          ctx.arc(lx, ly, 6 + Math.random() * 16, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
         }
       }
 

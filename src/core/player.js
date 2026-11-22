@@ -125,11 +125,20 @@ export function setIsGrounded(val) {
 }
 
 export function triggerPlayerJump() {
-  if (isGrounded && state.running && !state.isPaused) {
-    pVel.y = 7.0;
-    playerPos.y += 0.04;
-    isGrounded = false;
-    if (Sfx && Sfx.playSnowStep) Sfx.playSnowStep();
+  if (state.running && !state.isPaused) {
+    if (window.__PLAYER_SWIMMING) {
+      // Swimming upward water stroke kick
+      pVel.y = 4.2;
+      playerPos.y += 0.08;
+      if (Sfx && Sfx.playWaterSplash) Sfx.playWaterSplash();
+      return;
+    }
+    if (isGrounded) {
+      pVel.y = 7.0;
+      playerPos.y += 0.04;
+      isGrounded = false;
+      if (Sfx && Sfx.playSnowStep) Sfx.playSnowStep();
+    }
   }
 }
 

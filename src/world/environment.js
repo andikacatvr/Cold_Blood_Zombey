@@ -24,7 +24,29 @@ export let topRiverCrestFoam = null;
 export let beachSandMesh = null;
 export let wetBeachSandMesh = null;
 export let oceanWaterMesh = null;
+export let oceanBasePositions = null;
 export let oceanShorelineFoam = null;
+export let oceanSecondaryFoam = null;
+export let beachPalmTrees = [];
+
+/**
+ * Returns the exact water surface elevation (Y) at given (x, z), or null if on dry land.
+ */
+export function getWaterSurfaceY(x, z) {
+  if (z > 125.0) {
+    const time = performance.now() * 0.001;
+    const wave = Math.sin(z * 0.18 - time * 2.2 + x * 0.04) * 0.16 + Math.sin(z * 0.32 - time * 3.1) * 0.08;
+    return -2.52 + wave;
+  }
+  if (z <= -58.6 && Math.abs(x - getUpperRiverCenterX(z)) < 5.2) {
+    return getUpperRiverWaterY(z);
+  }
+  const riverX = getRiverCenterX(z);
+  if (z > -58.6 && z <= 126.0 && Math.abs(x - riverX) < 6.8) {
+    return getRiverWaterY(z);
+  }
+  return null;
+}
 
 /**
  * Returns the X position of the winding lower river centerline at any given Z coordinate.
@@ -1540,13 +1562,13 @@ export function initWorld(scene, textures) {
     riverGeo.setAttribute('uv', new THREE.Float32BufferAttribute(riverUVs, 2));
     riverGeo.setIndex(riverIndices);
 
-    const riverMat = new THREE.MeshPhongMaterial({
+    const riverMat = new THREE.MeshStandardMaterial({
       map: riverWaterTex,
-      color: 0x3d82a4,
-      specular: 0x99ddff,
-      shininess: 95,
+      color: 0x168ca8,
+      roughness: 0.08,
+      metalness: 0.16,
       transparent: true,
-      opacity: 0.88,
+      opacity: 0.85,
       depthWrite: false,
       side: THREE.DoubleSide
     });
@@ -1785,6 +1807,100 @@ export function initWorld(scene, textures) {
     scene.add(bridgeGroup);
   }
 
+  /**
+   * Builds an authentic tropical Coconut Palm Tree (Pohon Kelapa)
+   * Curved ringed trunk, radial crown of drooping feathery fronds, and hanging coconuts.
+   */
+  function buildCoconutPalmTree() {
+    const root = new THREE.Group();
+    root.name = 'Coconut_Palm_Tree';
+
+    // Materials
+    const barkMat = new THREE.MeshLambertMaterial({ color: 0x7c5d3d, flatShading: false });
+    const ringMat = new THREE.MeshLambertMaterial({ color: 0x4a3622, flatShading: false });
+    const frondMat = new THREE.MeshLambertMaterial({ color: 0x247835, side: THREE.DoubleSide, flatShading: false });
+    const frondLightMat = new THREE.MeshLambertMaterial({ color: 0x3aa44e, side: THREE.DoubleSide, flatShading: false });
+    const coconutMat = new THREE.MeshLambertMaterial({ color: 0x544026, flatShading: false });
+
+    // 1. Curved Trunk (7 stacked cylinders leaning toward the ocean)
+    const segments = 7;
+    const totalH = 7.4;
+    const segH = totalH / segments;
+    const curveDir = (Math.random() - 0.5) * 0.7;
+    const leanZ = 0.38 + Math.random() * 0.32; // Leaning seaward
+
+    let curY = 0;
+    let curX = 0;
+    let curZ = 0;
+    let curRotX = 0;
+    let curRotZ = 0;
+
+    for (let s = 0; s < segments; s++) {
+      const progress = s / segments;
+      const botR = 0.35 * (1.0 - progress * 0.44);
+      const topR = 0.35 * (1.0 - (progress + 1 / segments) * 0.44);
+      const geo = new THREE.CylinderGeometry(topR, botR, segH, 8);
+      const mesh = new THREE.Mesh(geo, (s % 2 === 0) ? barkMat : ringMat);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+
+      mesh.position.set(curX, curY + segH / 2, curZ);
+      mesh.rotation.x = curRotX;
+      mesh.rotation.z = curRotZ;
+      root.add(mesh);
+
+      curRotX += leanZ * 0.052;
+      curRotZ += curveDir * 0.042;
+      curY += Math.cos(curRotX) * segH;
+      curZ += Math.sin(curRotX) * segH;
+      curX += Math.sin(curRotZ) * segH;
+    }
+
+    // 2. Crown of Arching Palm Fronds (Daun Kelapa)
+    const crownGroup = new THREE.Group();
+    crownGroup.position.set(curX, curY, curZ);
+
+    const numFronds = 10;
+    for (let f = 0; f < numFronds; f++) {
+      const angle = (f / numFronds) * Math.PI * 2 + Math.random() * 0.15;
+      const frondGroup = new THREE.Group();
+      frondGroup.rotation.y = angle;
+
+      const frondLen = 3.8 + Math.random() * 0.7;
+      const leafGeo = new THREE.PlaneGeometry(0.85, frondLen, 3, 6);
+      leafGeo.rotateX(Math.PI / 2);
+      leafGeo.translate(0, 0, frondLen / 2);
+
+      const pos = leafGeo.attributes.position;
+      for (let p = 0; p < pos.count; p++) {
+        const pz = pos.getZ(p);
+        const droop = Math.pow(pz / frondLen, 2.2) * 1.55;
+        pos.setY(p, pos.getY(p) - droop);
+      }
+      leafGeo.computeVertexNormals();
+
+      const leafMesh = new THREE.Mesh(leafGeo, (f % 2 === 0) ? frondMat : frondLightMat);
+      leafMesh.rotation.x = -0.38 - Math.random() * 0.18;
+      leafMesh.castShadow = true;
+      frondGroup.add(leafMesh);
+
+      crownGroup.add(frondGroup);
+    }
+
+    // 3. Cluster of Coconuts (Buah Kelapa)
+    const cocoGeo = new THREE.SphereGeometry(0.18, 6, 5);
+    for (let c = 0; c < 5; c++) {
+      const cAng = (c / 5) * Math.PI * 2;
+      const coco = new THREE.Mesh(cocoGeo, coconutMat);
+      coco.position.set(Math.cos(cAng) * 0.32, -0.24, Math.sin(cAng) * 0.32);
+      coco.castShadow = true;
+      crownGroup.add(coco);
+    }
+
+    root.add(crownGroup);
+    return root;
+  }
+
   // 9. Coastal Beach, Sand Dunes, Ocean Bay & Fishing Pier Generator
   function buildBeachAndCoastline(scene, textures) {
     const { beachSandTex, wetBeachSandTex, oceanWaterTex, shorelineFoamTex, woodPlanksTex } = textures;
@@ -1837,38 +1953,92 @@ export function initWorld(scene, textures) {
     wetBeachSandMesh.receiveShadow = true;
     scene.add(wetBeachSandMesh);
 
-    // C. Expansive Ocean Water Surface (z: 125.0 to 255.0, sea level -2.52m)
-    const oceanW = 480;
-    const oceanD = 140;
-    const oceanGeo = new THREE.PlaneGeometry(oceanW, oceanD, 32, 16);
+    // C. Expansive Ocean Water Surface with Dynamic Small Waves (z: 125.0 to 255.0, sea level -2.52m)
+    const oceanW = 460;
+    const oceanD = 145;
+    const oceanGeo = new THREE.PlaneGeometry(oceanW, oceanD, 140, 70);
     oceanGeo.rotateX(-Math.PI / 2);
     oceanGeo.translate(0, -2.52, 195.0);
 
-    const oceanMat = new THREE.MeshPhongMaterial({
+    oceanBasePositions = new Float32Array(oceanGeo.attributes.position.array);
+
+    const oceanMat = new THREE.MeshStandardMaterial({
       map: oceanWaterTex,
-      color: 0x163d4f,
+      color: 0x168ca8, // Vibrant Caribbean/tropical ocean aqua-blue
+      roughness: 0.06,
+      metalness: 0.15,
       transparent: true,
-      opacity: 0.90,
-      shininess: 90,
-      specular: 0x66ccee
+      opacity: 0.86
     });
     oceanWaterMesh = new THREE.Mesh(oceanGeo, oceanMat);
+    oceanWaterMesh.receiveShadow = true;
     scene.add(oceanWaterMesh);
 
-    // D. Undulating Ocean Shoreline Surf Foam Line
-    const foamGeo = new THREE.PlaneGeometry(265, 4.2, 48, 2);
+    // D. Primary Shoreline Wave Breaker Foam Line (z ~ 126.8)
+    const foamGeo = new THREE.PlaneGeometry(265, 4.6, 64, 4);
     foamGeo.rotateX(-Math.PI / 2);
-    foamGeo.translate(0, -2.48, 126.8);
+    foamGeo.translate(0, -2.46, 126.8);
 
     const foamMat = new THREE.MeshBasicMaterial({
       map: shorelineFoamTex,
       transparent: true,
-      opacity: 0.72,
+      opacity: 0.82,
       blending: THREE.AdditiveBlending,
       depthWrite: false
     });
     oceanShorelineFoam = new THREE.Mesh(foamGeo, foamMat);
     scene.add(oceanShorelineFoam);
+
+    // D2. Secondary Rolling Surf Wave Ribbon (advances onto the wet sand)
+    const foamGeo2 = new THREE.PlaneGeometry(265, 3.8, 64, 2);
+    foamGeo2.rotateX(-Math.PI / 2);
+    foamGeo2.translate(0, -2.43, 125.4);
+
+    const foamMat2 = new THREE.MeshBasicMaterial({
+      map: shorelineFoamTex,
+      transparent: true,
+      opacity: 0.55,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    oceanSecondaryFoam = new THREE.Mesh(foamGeo2, foamMat2);
+    scene.add(oceanSecondaryFoam);
+
+    // Plant Tropical Coconut Palm Trees (Pohon Kelapa) along the beach sand dunes
+    const palmPositions = [
+      { x: -88, z: 86 }, { x: -75, z: 98 }, { x: -62, z: 110 }, { x: -50, z: 82 },
+      { x: -42, z: 104 }, { x: -35, z: 118 }, { x: -28, z: 92 }, { x: -22, z: 112 },
+      { x: -14, z: 85 }, { x: -8, z: 102 }, { x: -2, z: 116 }, { x: 5, z: 90 },
+      { x: 24, z: 88 }, { x: 30, z: 106 }, { x: 36, z: 118 }, { x: 48, z: 84 },
+      { x: 54, z: 98 }, { x: 60, z: 114 }, { x: 68, z: 88 }, { x: 74, z: 105 },
+      { x: 82, z: 116 }, { x: 92, z: 92 }, { x: 98, z: 108 }, { x: 105, z: 85 },
+      { x: -68, z: 92 }, { x: -55, z: 115 }, { x: -18, z: 98 }, { x: 26, z: 115 },
+      { x: 40, z: 92 }, { x: 62, z: 86 }, { x: 78, z: 98 }, { x: 88, z: 112 }
+    ];
+
+    palmPositions.forEach(p => {
+      // Avoid lower river delta mouth around x: 42
+      if (Math.abs(p.x - getRiverCenterX(p.z)) < 8.0) return;
+      // Avoid wooden fishing pier at x: 14, z: 112..138
+      if (Math.abs(p.x - 14.0) < 5.0 && p.z >= 110.0) return;
+
+      const palm = buildCoconutPalmTree();
+      const gy = getTerrainHeight(p.x, p.z);
+      palm.position.set(p.x, gy - 0.05, p.z);
+      palm.rotation.y = Math.random() * Math.PI * 2;
+      const s = 0.88 + Math.random() * 0.28;
+      palm.scale.set(s, s, s);
+      scene.add(palm);
+      beachPalmTrees.push(palm);
+
+      // Add trunk collider
+      colliders.push({
+        minX: p.x - 0.45,
+        maxX: p.x + 0.45,
+        minZ: p.z - 0.45,
+        maxZ: p.z + 0.45
+      });
+    });
 
     // E. Rustic Wooden Coastal Fishing Pier
     const pierGroup = new THREE.Group();
