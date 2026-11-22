@@ -28,7 +28,8 @@ import {
   SNOW_COUNT,
   snowGeo,
   snowVel,
-  busHazardLights
+  busHazardLights,
+  updateCemeteryAtmosphere
 } from './world/environment.js';
 import { isCinematicActive, updateCutscene } from './core/cutscene.js';
 import {
@@ -151,6 +152,9 @@ let ambientHordeTimer = 0;
 
 function updateSimulation(dt) {
   if (!state.running) return;
+
+  // Cemetery Lantern & Candle Flickering Atmosphere
+  updateCemeteryAtmosphere(performance.now() * 0.001);
 
   // Village NPC Breathing & Head Tracking
   updateVillageNPCs(dt, playerPos);

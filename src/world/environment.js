@@ -28,6 +28,21 @@ export let oceanBasePositions = null;
 export let oceanShorelineFoam = null;
 export let oceanSecondaryFoam = null;
 export let beachPalmTrees = [];
+export const cemeteryCandles = [];
+
+/**
+ * Updates subtle atmospheric flickering of cemetery memorial candles & lanterns.
+ */
+export function updateCemeteryAtmosphere(time) {
+  for (let i = 0; i < cemeteryCandles.length; i++) {
+    const c = cemeteryCandles[i];
+    const flicker = Math.sin(time * 7.5 + c.seed) * 0.18 + Math.cos(time * 12.3 + c.seed * 1.7) * 0.12;
+    c.light.intensity = Math.max(0.2, c.baseIntensity + flicker);
+    if (c.flame) {
+      c.flame.scale.setScalar(1.0 + flicker * 0.35);
+    }
+  }
+}
 
 /**
  * Returns the exact water surface elevation (Y) at given (x, z), or null if on dry land.
@@ -1158,6 +1173,9 @@ export function initWorld(scene, textures) {
       // Farmhouse clearing at (-13, -6)
       if (Math.hypot(x - (-13), z - (-6)) < 9.5) continue;
 
+      // Keep trees out of Christian Cemetery clearing [-46, -14], [-46, -14]
+      if (x >= -46.0 && x <= -14.0 && z >= -46.0 && z <= -14.0) continue;
+
       // Cabins and shacks clearings
       if (Math.hypot(x - 18, z - 6) < 7.5) continue;
       if (Math.hypot(x - 22, z - (-20)) < 8.0) continue;
@@ -2263,6 +2281,551 @@ export function initWorld(scene, textures) {
     }
   }
 
+  // 10. Ancient Misty Christian Cemetery (Kuburan Kristen Berlumut, Salib-Salib Kuno, Makam Peti Batu & Gapura Besi)
+  function buildChristianCemetery(scene, textures) {
+    const root = new THREE.Group();
+    root.name = 'Ancient_Christian_Cemetery';
+
+    // Weathered Gothic Materials
+    const stoneMat = new THREE.MeshLambertMaterial({ color: 0x3d4745, flatShading: false });
+    const stoneDarkMat = new THREE.MeshLambertMaterial({ color: 0x2b3433, flatShading: false });
+    const mossStoneMat = new THREE.MeshLambertMaterial({ color: 0x30423c, flatShading: false });
+    const woodCrossMat = new THREE.MeshLambertMaterial({ color: 0x261f1a, flatShading: false });
+    const earthMoundMat = new THREE.MeshLambertMaterial({ color: 0x1b2c2a, flatShading: false });
+    const ironMat = new THREE.MeshStandardMaterial({ color: 0x182022, roughness: 0.85, metalness: 0.65 });
+    const candleGlowMat = new THREE.MeshBasicMaterial({ color: 0xffb347 });
+    const brassMat = new THREE.MeshLambertMaterial({ color: 0x483a22, flatShading: false });
+    const deadWoodMat = new THREE.MeshLambertMaterial({ color: 0x231e1a, flatShading: false });
+
+    // A. Central Monumental Crucifix (Salib Kristen Batu Utama / High Cross)
+    const centerX = -31.0;
+    const centerZ = -31.0;
+    const centerBaseY = getTerrainHeight(centerX, centerZ);
+
+    const monument = new THREE.Group();
+    monument.position.set(centerX, centerBaseY, centerZ);
+
+    // 3-tier stepped square plinth
+    const t1 = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.4, 3.6), stoneMat);
+    t1.position.y = 0.2;
+    t1.castShadow = true; t1.receiveShadow = true;
+    monument.add(t1);
+
+    const t2 = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.35, 2.6), stoneDarkMat);
+    t2.position.y = 0.575;
+    t2.castShadow = true; t2.receiveShadow = true;
+    monument.add(t2);
+
+    const t3 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.4, 1.8), stoneMat);
+    t3.position.y = 0.95;
+    t3.castShadow = true; t3.receiveShadow = true;
+    monument.add(t3);
+
+    // Tall vertical cross shaft
+    const shaftH = 4.4;
+    const shaft = new THREE.Mesh(new THREE.BoxGeometry(0.38, shaftH, 0.38), stoneMat);
+    shaft.position.y = 1.15 + shaftH / 2;
+    shaft.castShadow = true; shaft.receiveShadow = true;
+    monument.add(shaft);
+
+    // Horizontal crossbeam
+    const beamW = 2.4;
+    const beamY = 1.15 + shaftH * 0.72;
+    const crossbeam = new THREE.Mesh(new THREE.BoxGeometry(beamW, 0.38, 0.36), stoneMat);
+    crossbeam.position.y = beamY;
+    crossbeam.castShadow = true; crossbeam.receiveShadow = true;
+    monument.add(crossbeam);
+
+    // Celtic stone halo ring connecting the arms
+    const haloGeo = new THREE.TorusGeometry(0.68, 0.08, 6, 16);
+    const halo = new THREE.Mesh(haloGeo, stoneDarkMat);
+    halo.position.set(0, beamY, 0);
+    halo.castShadow = true;
+    monument.add(halo);
+
+    // Raised relief inner Latin cross on front & back faces
+    for (let fz of [0.20, -0.20]) {
+      const innerReliefV = new THREE.Mesh(new THREE.BoxGeometry(0.18, 3.8, 0.06), mossStoneMat);
+      innerReliefV.position.set(0, 1.15 + shaftH / 2, fz);
+      monument.add(innerReliefV);
+
+      const innerReliefH = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.18, 0.06), mossStoneMat);
+      innerReliefH.position.set(0, beamY, fz);
+      monument.add(innerReliefH);
+    }
+
+    // 4 Brass Lanterns at the corners of Tier 1 with flickering amber glow
+    const lanternOffsets = [
+      [-1.4, -1.4], [1.4, -1.4], [-1.4, 1.4], [1.4, 1.4]
+    ];
+    lanternOffsets.forEach(([lx, lz], idx) => {
+      const lantGroup = new THREE.Group();
+      lantGroup.position.set(lx, 0.4, lz);
+
+      const lantBase = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.35, 0.24), brassMat);
+      lantBase.position.y = 0.175;
+      lantGroup.add(lantBase);
+
+      const flame = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 4), candleGlowMat);
+      flame.position.y = 0.26;
+      lantGroup.add(flame);
+
+      const lantLight = new THREE.PointLight(0xffa834, 1.1, 9.0, 1.5);
+      lantLight.position.y = 0.30;
+      lantGroup.add(lantLight);
+
+      cemeteryCandles.push({ light: lantLight, flame, baseIntensity: 1.1, seed: idx * 2.3 });
+      monument.add(lantGroup);
+    });
+
+    colliders.push({
+      minX: centerX - 1.9, maxX: centerX + 1.9,
+      minZ: centerZ - 1.9, maxZ: centerZ + 1.9,
+      category: 'cemetery'
+    });
+    root.add(monument);
+
+    // Helper: Create Standing Stone Latin Cross (Salib Nisan Batu)
+    function addStoneCross(x, z, scale = 1.0, rotY = 0, tiltX = 0, tiltZ = 0) {
+      const cy = getTerrainHeight(x, z);
+      const crossGroup = new THREE.Group();
+      crossGroup.position.set(x, cy, z);
+      crossGroup.rotation.y = rotY;
+      crossGroup.rotation.x = tiltX;
+      crossGroup.rotation.z = tiltZ;
+
+      // Base plinth
+      const plinth = new THREE.Mesh(new THREE.BoxGeometry(0.7 * scale, 0.25 * scale, 0.7 * scale), stoneDarkMat);
+      plinth.position.y = 0.125 * scale;
+      plinth.castShadow = true; plinth.receiveShadow = true;
+      crossGroup.add(plinth);
+
+      // Shaft
+      const hShaft = 2.0 * scale;
+      const cShaft = new THREE.Mesh(new THREE.BoxGeometry(0.24 * scale, hShaft, 0.22 * scale), stoneMat);
+      cShaft.position.y = 0.25 * scale + hShaft / 2;
+      cShaft.castShadow = true; cShaft.receiveShadow = true;
+      crossGroup.add(cShaft);
+
+      // Crossbeam
+      const wBeam = 1.25 * scale;
+      const yBeam = 0.25 * scale + hShaft * 0.72;
+      const cBeam = new THREE.Mesh(new THREE.BoxGeometry(wBeam, 0.24 * scale, 0.20 * scale), stoneMat);
+      cBeam.position.y = yBeam;
+      cBeam.castShadow = true; cBeam.receiveShadow = true;
+      crossGroup.add(cBeam);
+
+      // Relief cross carving
+      const relV = new THREE.Mesh(new THREE.BoxGeometry(0.10 * scale, hShaft * 0.75, 0.04 * scale), mossStoneMat);
+      relV.position.set(0, yBeam - 0.1 * scale, 0.12 * scale);
+      crossGroup.add(relV);
+
+      // Earth burial mound
+      const mound = new THREE.Mesh(new THREE.BoxGeometry(0.85 * scale, 0.26 * scale, 1.8 * scale), earthMoundMat);
+      mound.position.set(0, 0.13 * scale, 0.9 * scale);
+      crossGroup.add(mound);
+
+      const r = 0.45 * scale;
+      colliders.push({ minX: x - r, maxX: x + r, minZ: z - r, maxZ: z + r, category: 'cemetery' });
+      root.add(crossGroup);
+    }
+
+    // Helper: Create Weathered Wooden Cross (Salib Kayu Kuno)
+    function addWoodCross(x, z, scale = 1.0, rotY = 0, tiltX = 0, tiltZ = 0) {
+      const cy = getTerrainHeight(x, z);
+      const crossGroup = new THREE.Group();
+      crossGroup.position.set(x, cy, z);
+      crossGroup.rotation.y = rotY;
+      crossGroup.rotation.x = tiltX;
+      crossGroup.rotation.z = tiltZ;
+
+      // Vertical post
+      const hPost = 1.75 * scale;
+      const vPost = new THREE.Mesh(new THREE.BoxGeometry(0.14 * scale, hPost, 0.12 * scale), woodCrossMat);
+      vPost.position.y = hPost / 2;
+      vPost.castShadow = true; vPost.receiveShadow = true;
+      crossGroup.add(vPost);
+
+      // Horizontal beam
+      const wBeam = 1.0 * scale;
+      const yBeam = hPost * 0.72;
+      const hBeam = new THREE.Mesh(new THREE.BoxGeometry(wBeam, 0.12 * scale, 0.10 * scale), woodCrossMat);
+      hBeam.position.set(0, yBeam, 0.05 * scale);
+      hBeam.castShadow = true;
+      crossGroup.add(hBeam);
+
+      // Center iron nail stud
+      const stud = new THREE.Mesh(new THREE.CylinderGeometry(0.03 * scale, 0.03 * scale, 0.14 * scale, 6), ironMat);
+      stud.rotation.x = Math.PI / 2;
+      stud.position.set(0, yBeam, 0.05 * scale);
+      crossGroup.add(stud);
+
+      // Earth mound
+      const mound = new THREE.Mesh(new THREE.BoxGeometry(0.75 * scale, 0.24 * scale, 1.7 * scale), earthMoundMat);
+      mound.position.set(0, 0.12 * scale, 0.85 * scale);
+      crossGroup.add(mound);
+
+      const r = 0.35 * scale;
+      colliders.push({ minX: x - r, maxX: x + r, minZ: z - r, maxZ: z + r, category: 'cemetery' });
+      root.add(crossGroup);
+    }
+
+    // Helper: Create Gothic Headstone with Carved Latin Cross (Batu Nisan Lengkung Gotik)
+    function addGothicHeadstone(x, z, scale = 1.0, rotY = 0, tiltZ = 0, hasCandle = false) {
+      const cy = getTerrainHeight(x, z);
+      const stoneGroup = new THREE.Group();
+      stoneGroup.position.set(x, cy, z);
+      stoneGroup.rotation.y = rotY;
+      stoneGroup.rotation.z = tiltZ;
+
+      // Base
+      const base = new THREE.Mesh(new THREE.BoxGeometry(0.85 * scale, 0.18 * scale, 0.42 * scale), stoneDarkMat);
+      base.position.y = 0.09 * scale;
+      base.castShadow = true; base.receiveShadow = true;
+      stoneGroup.add(base);
+
+      // Slab body
+      const slabH = 0.95 * scale;
+      const slab = new THREE.Mesh(new THREE.BoxGeometry(0.68 * scale, slabH, 0.20 * scale), stoneMat);
+      slab.position.y = 0.18 * scale + slabH / 2;
+      slab.castShadow = true; slab.receiveShadow = true;
+      stoneGroup.add(slab);
+
+      // Gothic arched top
+      const archTop = new THREE.Mesh(new THREE.CylinderGeometry(0.34 * scale, 0.34 * scale, 0.20 * scale, 12), stoneMat);
+      archTop.rotation.z = Math.PI / 2;
+      archTop.position.y = 0.18 * scale + slabH;
+      archTop.castShadow = true;
+      stoneGroup.add(archTop);
+
+      // Carved Latin Cross in high relief
+      const crV = new THREE.Mesh(new THREE.BoxGeometry(0.08 * scale, 0.50 * scale, 0.04 * scale), mossStoneMat);
+      crV.position.set(0, 0.18 * scale + slabH * 0.65, 0.11 * scale);
+      stoneGroup.add(crV);
+
+      const crH = new THREE.Mesh(new THREE.BoxGeometry(0.32 * scale, 0.08 * scale, 0.04 * scale), mossStoneMat);
+      crH.position.set(0, 0.18 * scale + slabH * 0.75, 0.11 * scale);
+      stoneGroup.add(crH);
+
+      // Earth mound
+      const mound = new THREE.Mesh(new THREE.BoxGeometry(0.85 * scale, 0.25 * scale, 1.9 * scale), earthMoundMat);
+      mound.position.set(0, 0.125 * scale, 0.95 * scale);
+      stoneGroup.add(mound);
+
+      // Memorial candle
+      if (hasCandle) {
+        const cGroup = new THREE.Group();
+        cGroup.position.set(0.24 * scale, 0.18 * scale, 0.16 * scale);
+
+        const wax = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.04, 0.14, 6), new THREE.MeshLambertMaterial({ color: 0xdedede }));
+        wax.position.y = 0.07;
+        cGroup.add(wax);
+
+        const flame = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 4), candleGlowMat);
+        flame.position.y = 0.16;
+        cGroup.add(flame);
+
+        const cLight = new THREE.PointLight(0xffb040, 0.75, 5.0, 1.8);
+        cLight.position.y = 0.18;
+        cGroup.add(cLight);
+
+        cemeteryCandles.push({ light: cLight, flame, baseIntensity: 0.75, seed: Math.random() * 10 });
+        stoneGroup.add(cGroup);
+      }
+
+      const r = 0.42 * scale;
+      colliders.push({ minX: x - r, maxX: x + r, minZ: z - r, maxZ: z + r, category: 'cemetery' });
+      root.add(stoneGroup);
+    }
+
+    // Helper: Create Elevated Stone Sarcophagus (Makam Peti Batu Megah)
+    function addStoneSarcophagus(x, z, rotY = 0) {
+      const cy = getTerrainHeight(x, z);
+      const sarc = new THREE.Group();
+      sarc.position.set(x, cy, z);
+      sarc.rotation.y = rotY;
+
+      // Base plinth
+      const bPlinth = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.25, 2.6), stoneDarkMat);
+      bPlinth.position.y = 0.125;
+      bPlinth.castShadow = true; bPlinth.receiveShadow = true;
+      sarc.add(bPlinth);
+
+      // Chest
+      const chest = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.65, 2.4), stoneMat);
+      chest.position.y = 0.25 + 0.325;
+      chest.castShadow = true; chest.receiveShadow = true;
+      sarc.add(chest);
+
+      // Beveled Lid
+      const lid = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.20, 2.5), stoneDarkMat);
+      lid.position.y = 0.90 + 0.10;
+      lid.castShadow = true; lid.receiveShadow = true;
+      sarc.add(lid);
+
+      // Carved Stone Cross running the length of the lid
+      const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.06, 1.9), mossStoneMat);
+      crossV.position.set(0, 1.13, 0);
+      sarc.add(crossV);
+
+      const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.06, 0.14), mossStoneMat);
+      crossH.position.set(0, 1.13, -0.35);
+      sarc.add(crossH);
+
+      // 4 Corner Pillars
+      for (let cx of [-0.6, 0.6]) {
+        for (let cz of [-1.2, 1.2]) {
+          const col = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.95, 0.18), stoneDarkMat);
+          col.position.set(cx, 0.475, cz);
+          sarc.add(col);
+        }
+      }
+
+      colliders.push({ minX: x - 0.75, maxX: x + 0.75, minZ: z - 1.35, maxZ: z + 1.35, category: 'cemetery' });
+      root.add(sarc);
+    }
+
+    // 1. Spawn Sarcophagi
+    addStoneSarcophagus(-37.5, -26.0, 0.18);
+    addStoneSarcophagus(-25.0, -37.0, -0.12);
+    addStoneSarcophagus(-23.0, -25.0, 0.28);
+
+    // 2. Spawn Standing Stone Crosses (Salib Batu)
+    const stoneCrossData = [
+      [-38.0, -36.0, 1.10, 0.12, 0.08, -0.10],
+      [-38.0, -20.0, 0.95, -0.22, -0.05, 0.12],
+      [-26.0, -20.0, 1.05, 0.05, 0.04, -0.06],
+      [-33.0, -39.0, 1.00, -0.15, -0.12, 0.05],
+      [-35.0, -22.0, 1.10, 0.20, 0.06, -0.08],
+      [-20.0, -35.0, 0.90, -0.08, 0.10, 0.09],
+      [-20.0, -28.0, 1.00, 0.15, -0.04, -0.10],
+      [-20.0, -21.0, 1.05, -0.18, 0.07, 0.06],
+      [-30.0, -22.0, 0.95, 0.04, -0.05, 0.08],
+      [-25.0, -31.0, 1.00, -0.12, 0.08, -0.07],
+      [-34.0, -28.0, 1.05, 0.10, -0.06, 0.04],
+      [-28.0, -36.0, 0.92, -0.20, 0.09, -0.11]
+    ];
+    stoneCrossData.forEach(([x, z, s, ry, tx, tz]) => addStoneCross(x, z, s, ry, tx, tz));
+
+    // 3. Spawn Weathered Wooden Crosses (Salib Kayu Tua)
+    const woodCrossData = [
+      [-41.0, -32.0, 1.05, 0.18, 0.12, -0.15],
+      [-41.0, -22.0, 0.95, -0.25, -0.10, 0.08],
+      [-35.0, -33.0, 1.00, 0.08, 0.06, 0.14],
+      [-28.0, -41.0, 1.10, -0.14, -0.15, -0.08],
+      [-23.0, -31.0, 0.90, 0.22, 0.09, -0.12],
+      [-33.0, -18.0, 1.00, -0.18, -0.08, 0.10],
+      [-27.0, -17.0, 0.95, 0.06, 0.11, -0.06],
+      [-39.0, -40.0, 1.00, -0.20, -0.09, -0.12]
+    ];
+    woodCrossData.forEach(([x, z, s, ry, tx, tz]) => addWoodCross(x, z, s, ry, tx, tz));
+
+    // 4. Spawn Gothic Headstones with Carved Crosses (Batu Nisan Lengkung)
+    const headstoneData = [
+      [-37.0, -32.0, 1.05, 0.08, -0.06, true],
+      [-37.0, -22.0, 0.95, -0.14, 0.08, false],
+      [-32.0, -35.0, 1.00, 0.05, -0.05, true],
+      [-32.0, -25.0, 1.10, -0.09, 0.07, false],
+      [-27.0, -35.0, 0.92, 0.12, -0.08, false],
+      [-27.0, -25.0, 1.05, -0.06, 0.05, true],
+      [-22.0, -38.0, 0.95, 0.15, -0.07, false],
+      [-22.0, -18.0, 1.00, -0.11, 0.09, true],
+      [-35.0, -37.0, 0.98, 0.04, -0.04, false],
+      [-30.0, -19.0, 1.02, -0.08, 0.06, false],
+      [-39.0, -28.0, 0.90, 0.18, -0.10, false],
+      [-24.0, -21.0, 1.00, -0.15, 0.08, false]
+    ];
+    headstoneData.forEach(([x, z, s, ry, tz, candle]) => addGothicHeadstone(x, z, s, ry, tz, candle));
+
+    // 5. Wrought Iron Fence & Stone Entrance Gate
+    const pMinX = -44.0, pMaxX = -16.0;
+    const pMinZ = -44.0, pMaxZ = -16.0;
+
+    // Helper: Add stone pillar with decorative iron cross topper
+    function addCemeteryPillar(px, pz) {
+      const py = getTerrainHeight(px, pz);
+      const pil = new THREE.Group();
+      pil.position.set(px, py, pz);
+
+      const pBody = new THREE.Mesh(new THREE.BoxGeometry(0.85, 2.6, 0.85), stoneDarkMat);
+      pBody.position.y = 1.3;
+      pBody.castShadow = true; pBody.receiveShadow = true;
+      pil.add(pBody);
+
+      const pCap = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.25, 1.05), stoneMat);
+      pCap.position.y = 2.6 + 0.125;
+      pCap.castShadow = true;
+      pil.add(pCap);
+
+      // Mini iron cross topper
+      const topV = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.55, 0.04), ironMat);
+      topV.position.y = 2.725 + 0.275;
+      pil.add(topV);
+      const topH = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.06, 0.04), ironMat);
+      topH.position.y = 2.725 + 0.38;
+      pil.add(topH);
+
+      colliders.push({ minX: px - 0.5, maxX: px + 0.5, minZ: pz - 0.5, maxZ: pz + 0.5, category: 'cemetery' });
+      root.add(pil);
+    }
+
+    // 4 Corner Pillars
+    addCemeteryPillar(pMinX, pMinZ);
+    addCemeteryPillar(pMaxX, pMinZ);
+    addCemeteryPillar(pMinX, pMaxZ);
+    addCemeteryPillar(pMaxX, pMaxZ);
+
+    // 2 Entrance Gate Pillars (Leaves a 5.0m wide open gateway from X = -33.5 to X = -28.5 at Z = -16.0)
+    const gateX1 = -33.5;
+    const gateX2 = -28.5;
+    addCemeteryPillar(gateX1, pMaxZ);
+    addCemeteryPillar(gateX2, pMaxZ);
+
+    // Helper: Add Wrought Iron Fence Segment
+    function addFenceLine(x1, z1, x2, z2) {
+      const dist = Math.hypot(x2 - x1, z2 - z1);
+      const ang = Math.atan2(x2 - x1, z2 - z1);
+      const steps = Math.floor(dist / 0.40);
+
+      for (let s = 0; s <= steps; s++) {
+        const t = s / steps;
+        const fx = x1 + (x2 - x1) * t;
+        const fz = z1 + (z2 - z1) * t;
+        const fy = getTerrainHeight(fx, fz);
+
+        const picketGroup = new THREE.Group();
+        picketGroup.position.set(fx, fy, fz);
+        picketGroup.rotation.y = ang;
+
+        // Vertical spear-tipped picket
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.85, 0.05), ironMat);
+        bar.position.y = 0.925;
+        picketGroup.add(bar);
+
+        // Spearhead tip
+        const spear = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.22, 4), ironMat);
+        spear.position.y = 1.85 + 0.11;
+        picketGroup.add(spear);
+
+        root.add(picketGroup);
+      }
+
+      // Horizontal top & bottom rails
+      const midX = (x1 + x2) / 2;
+      const midZ = (z1 + z2) / 2;
+      const midY = getTerrainHeight(midX, midZ);
+      const railH = new THREE.Group();
+      railH.position.set(midX, midY, midZ);
+      railH.rotation.y = ang;
+
+      const rTop = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, dist), ironMat);
+      rTop.position.y = 1.55;
+      railH.add(rTop);
+
+      const rBot = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, dist), ironMat);
+      rBot.position.y = 0.35;
+      railH.add(rBot);
+
+      root.add(railH);
+
+      // Collider
+      const pad = 0.4;
+      colliders.push({
+        minX: Math.min(x1, x2) - pad, maxX: Math.max(x1, x2) + pad,
+        minZ: Math.min(z1, z2) - pad, maxZ: Math.max(z1, z2) + pad,
+        category: 'cemetery'
+      });
+    }
+
+    // North Fence
+    addFenceLine(pMinX + 0.5, pMinZ, pMaxX - 0.5, pMinZ);
+    // West Fence
+    addFenceLine(pMinX, pMinZ + 0.5, pMinX, pMaxZ - 0.5);
+    // East Fence
+    addFenceLine(pMaxX, pMinZ + 0.5, pMaxX, pMaxZ - 0.5);
+    // South Fence: Left of gate
+    addFenceLine(pMinX + 0.5, pMaxZ, gateX1 - 0.5, pMaxZ);
+    // South Fence: Right of gate
+    addFenceLine(gateX2 + 0.5, pMaxZ, pMaxX - 0.5, pMaxZ);
+
+    // Open Wrought Iron Gate Wings standing ajar into the cemetery
+    for (let [gx, gRot] of [[gateX1 + 0.3, 0.65], [gateX2 - 0.3, -0.65]]) {
+      const gy = getTerrainHeight(gx, pMaxZ);
+      const gateWing = new THREE.Group();
+      gateWing.position.set(gx, gy, pMaxZ);
+      gateWing.rotation.y = gRot;
+
+      const gFrame = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.9, 0.06), ironMat);
+      gFrame.position.set(1.05, 0.95, 0);
+      gateWing.add(gFrame);
+
+      // Cross on each gate wing
+      const gCrossV = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.2, 0.08), ironMat);
+      gCrossV.position.set(1.05, 1.05, 0);
+      gateWing.add(gCrossV);
+
+      const gCrossH = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.06, 0.08), ironMat);
+      gCrossH.position.set(1.05, 1.25, 0);
+      gateWing.add(gCrossH);
+
+      root.add(gateWing);
+    }
+
+    // 6. Gnarled Dead Cemetery Trees
+    function addDeadCemeteryTree(tx, tz) {
+      const ty = getTerrainHeight(tx, tz);
+      const tree = new THREE.Group();
+      tree.position.set(tx, ty, tz);
+
+      // Crooked trunk
+      const trunkH = 5.2 + Math.random() * 1.5;
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.45, trunkH, 6), deadWoodMat);
+      trunk.position.y = trunkH / 2;
+      trunk.rotation.z = (Math.random() - 0.5) * 0.25;
+      trunk.rotation.x = (Math.random() - 0.5) * 0.25;
+      trunk.castShadow = true;
+      tree.add(trunk);
+
+      // Weeping bare branches
+      for (let b = 0; b < 6; b++) {
+        const bLen = 2.4 + Math.random() * 1.2;
+        const bMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.16, bLen, 5), deadWoodMat);
+        bMesh.position.set(0, trunkH * (0.6 + b * 0.06), 0);
+        bMesh.rotation.set((Math.random() - 0.5) * 0.8, (b / 6) * Math.PI * 2, 0.8 + Math.random() * 0.4);
+        tree.add(bMesh);
+      }
+
+      colliders.push({ minX: tx - 0.5, maxX: tx + 0.5, minZ: tz - 0.5, maxZ: tz + 0.5, category: 'cemetery' });
+      root.add(tree);
+    }
+
+    addDeadCemeteryTree(-42.0, -42.0);
+    addDeadCemeteryTree(-18.0, -42.0);
+    addDeadCemeteryTree(-42.0, -18.0);
+    addDeadCemeteryTree(-18.0, -18.0);
+
+    // 7. Ground Mist Layer in Cemetery (Volumetric foggy ground veil)
+    const mistGeo = new THREE.PlaneGeometry(30.0, 30.0);
+    mistGeo.rotateX(-Math.PI / 2);
+    const mistMat = new THREE.MeshBasicMaterial({
+      color: 0x5a827c,
+      transparent: true,
+      opacity: 0.22,
+      depthWrite: false
+    });
+    const mistMesh = new THREE.Mesh(mistGeo, mistMat);
+    mistMesh.position.set(centerX, centerBaseY + 0.25, centerZ);
+    root.add(mistMesh);
+
+    // 8. Solitary Wilderness Christian Crosses (Scattered across misty trails)
+    addWoodCross(14.0, 18.0, 1.10, 0.25, 0.12, -0.08);
+    addStoneCross(-8.0, 32.0, 1.05, -0.15, -0.06, 0.10);
+    addWoodCross(30.0, -12.0, 0.95, 0.35, 0.08, 0.12);
+    addStoneCross(-2.0, -38.0, 1.15, -0.10, 0.10, -0.07);
+
+    scene.add(root);
+  }
+
   // Construct Mountain Highway, Blackwood Moors Stone Tunnel & "WELCOME TO COLDBROOK" Archway
   function buildMountainRoadTunnelAndWelcomeArch(scene, textures) {
     const { asphaltRoadTex } = textures;
@@ -2581,6 +3144,9 @@ export function initWorld(scene, textures) {
   // Construct Coastal Beach, Sand Dunes, Ocean Bay & Fishing Pier
   buildBeachAndCoastline(scene, textures);
 
+  // Construct Ancient Misty Christian Cemetery (Kuburan Kristen Berlumut & Salib Kuno)
+  buildChristianCemetery(scene, textures);
+
   // Construct Sanctuary White Farmhouse
   buildWhiteFarmhouse(-13, -6);
 
@@ -2712,14 +3278,15 @@ export function setEndlessEnvironment(isEndless, scene) {
 
   // 4. Dense atmospheric horror fog ("buat lebih berkabut")
   if (scene && scene.fog) {
+    scene.fog.color.setHex(0x4e726d);
     if (isEndless) {
-      // Dense drifting winter fog: sightline cut off past 16 meters
+      // Dense drifting teal mist: sightline cut off past 16 meters
       scene.fog.near = 1.0;
       scene.fog.far = 16.0;
     } else {
       // Restore normal atmospheric story mode fog
-      scene.fog.near = 3.0;
-      scene.fog.far = 42.0;
+      scene.fog.near = 2.0;
+      scene.fog.far = 32.0;
     }
   }
 

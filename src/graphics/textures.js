@@ -10,15 +10,20 @@ const THREE = window.THREE;
       const ctx = c.getContext('2d');
 
       if (type === 'snow') {
-        ctx.fillStyle = '#dde5eb';
+        // Cold desaturated moorland tundra turf with frosted heath grass (matches cinematic teal-gray reference)
+        ctx.fillStyle = '#223837';
         ctx.fillRect(0, 0, 64, 64);
-        for (let i = 0; i < 400; i++) {
-          ctx.fillStyle = Math.random() > 0.5 ? '#e9f1f5' : '#cad4dc';
+        for (let i = 0; i < 360; i++) {
+          ctx.fillStyle = Math.random() > 0.5 ? '#2f4947' : '#192b2a';
           ctx.fillRect(Math.random() * 64, Math.random() * 64, 2, 2);
         }
+        for (let i = 0; i < 140; i++) {
+          ctx.fillStyle = Math.random() > 0.4 ? '#476965' : '#5a7f7a';
+          ctx.fillRect(Math.random() * 64, Math.random() * 64, 1.5, 3);
+        }
         for (let i = 0; i < 30; i++) {
-          ctx.fillStyle = '#b1bec8';
-          ctx.fillRect(Math.random() * 64, Math.random() * 64, 3, 2);
+          ctx.fillStyle = '#7a9f99';
+          ctx.fillRect(Math.random() * 64, Math.random() * 64, 1, 2);
         }
       } else if (type === 'blood_on_snow') {
         ctx.clearRect(0, 0, 64, 64);

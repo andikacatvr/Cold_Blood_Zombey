@@ -52,6 +52,7 @@ html {
   height: 100%;
   object-fit: fill;
   display: block;
+  filter: contrast(1.06) brightness(0.96) saturate(0.85);
 }
 
 #ps1-canvas.ps1-pixelated {
@@ -65,7 +66,7 @@ html {
   image-rendering: auto;
 }
 
-/* GLOOMY CRT SCANLINES & PHOSPHOR RASTER OVERLAY (COVERS ENTIRE GAME SCREEN & UI) */
+/* GLOOMY CRT SCANLINES & CINEMATIC TEAL MIST COLOR GRADING OVERLAY (COVERS ENTIRE GAME SCREEN & UI) */
 #crt-fx {
   position: absolute;
   top: 0;
@@ -75,8 +76,8 @@ html {
   pointer-events: none;
   z-index: 999999;
   background:
-    linear-gradient(rgba(18, 24, 30, 0) 50%, rgba(0, 0, 0, 0.42) 50%),
-    radial-gradient(ellipse at center, transparent 42%, rgba(6, 10, 14, 0.88) 100%);
+    linear-gradient(rgba(14, 28, 28, 0) 50%, rgba(4, 12, 12, 0.40) 50%),
+    radial-gradient(ellipse at center, transparent 38%, rgba(12, 26, 26, 0.48) 72%, rgba(4, 14, 14, 0.88) 100%);
   background-size: 100% 3px, 100% 100%;
   mix-blend-mode: multiply;
 }

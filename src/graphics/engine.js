@@ -22,21 +22,21 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1.0, 2.0));
 renderer.shadowMap.enabled = !isMobileDevice;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Clean soft shadow filtering
 
-export const FOG_COLOR = 0x828a93; // Silent Hill 2 iconic dense ash-gray mist
+export const FOG_COLOR = 0x4e726d; // Atmospheric cold teal mist matching Nordic folk horror reference
 renderer.setClearColor(FOG_COLOR);
 
 export const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(FOG_COLOR, 3.0, 42.0); // Balanced atmospheric fog: crisp nearby details + deep eerie horizon
+scene.fog = new THREE.Fog(FOG_COLOR, 2.0, 32.0); // Thick eerie folk horror mist: nearby shapes visible, silhouettes looming in mist
 
 export const camera = new THREE.PerspectiveCamera(62, window.innerWidth / Math.max(1, window.innerHeight), 0.1, 75.0);
 camera.rotation.order = 'YXZ';
 
-// Ambient Lighting (Diffused cold daylight penetrating through dense fog)
-export const ambientLight = new THREE.AmbientLight(0x9aa4af, 0.88);
+// Ambient Lighting (Diffused cold teal daylight penetrating through dense fog)
+export const ambientLight = new THREE.AmbientLight(0x466562, 0.95);
 scene.add(ambientLight);
 
 // Pale Overcast Sky Directional Light (creates soft atmospheric shadows in mist)
-export const overcastDirLight = new THREE.DirectionalLight(0xdbe3ec, 0.72);
+export const overcastDirLight = new THREE.DirectionalLight(0x82a59f, 0.70);
 overcastDirLight.position.set(18, 45, 22);
 overcastDirLight.castShadow = !isMobileDevice;
 const shadowRes = 1024;
@@ -84,10 +84,10 @@ export function applyGraphicFidelity(mode = 'hd') {
     if (scene.fog) {
       if (window.__ENDLESS_ACTIVE) {
         scene.fog.near = 1.0;
-        scene.fog.far = 16.0;
+        scene.fog.far = 18.0;
       } else {
-        scene.fog.near = 3.0;
-        scene.fog.far = 42.0;
+        scene.fog.near = 2.0;
+        scene.fog.far = 32.0;
       }
     }
     camera.far = 75.0;
@@ -106,10 +106,10 @@ export function applyGraphicFidelity(mode = 'hd') {
     if (scene.fog) {
       if (window.__ENDLESS_ACTIVE) {
         scene.fog.near = 1.0;
-        scene.fog.far = 14.0;
+        scene.fog.far = 16.0;
       } else {
         scene.fog.near = 1.5;
-        scene.fog.far = 24.0;
+        scene.fog.far = 28.0;
       }
     }
     camera.far = 48.0;
