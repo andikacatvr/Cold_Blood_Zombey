@@ -2570,6 +2570,21 @@ input[type=range]::-webkit-slider-thumb {
   justify-content: center;
 }
 
+.bestiary-thumb-specimen {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, #18261e 0%, #0c120e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bestiary-thumb-specimen .bio-icon {
+  font-size: 26px;
+  color: #5cf0a5;
+  text-shadow: 0 0 10px rgba(92, 240, 165, 0.4);
+}
+
 .lock-icon {
   font-size: 32px;
   color: #445563;
@@ -2725,6 +2740,52 @@ input[type=range]::-webkit-slider-thumb {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.dossier-art-classified {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, #131c16 0%, #080c09 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.dossier-classified-badge {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #ffd15c;
+  background: rgba(255, 209, 92, 0.1);
+  border: 1px solid #ffd15c;
+  padding: 4px 8px;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+.dossier-classified-icon {
+  font-size: 54px;
+  color: #5cf0a5;
+  opacity: 0.8;
+  text-shadow: 0 0 16px rgba(92, 240, 165, 0.45);
+  margin-bottom: 12px;
+}
+
+.dossier-classified-label {
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  color: #c8ded1;
+  margin-bottom: 4px;
+}
+
+.dossier-classified-sub {
+  font-size: 11px;
+  color: #5b7966;
+  letter-spacing: 1px;
 }
 
 .dossier-art-overlay-line {

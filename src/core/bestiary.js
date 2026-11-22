@@ -17,7 +17,7 @@ export const BESTIARY_DATA = [
     category: 'infected',
     categoryLabel: 'Common Infected',
     dangerLevel: 2,
-    image: '/textures/bestiary/winter_walker.jpg',
+    image: null,
     hpRange: '65 - 120 HP',
     speedLabel: 'Sedang (3.2 m/s)',
     damageLabel: '15 DMG',
@@ -46,7 +46,7 @@ export const BESTIARY_DATA = [
     category: 'infected',
     categoryLabel: 'Common Infected',
     dangerLevel: 3,
-    image: '/textures/bestiary/winter_sprinter.jpg',
+    image: null,
     hpRange: '55 - 95 HP',
     speedLabel: 'Cepat (4.2 m/s)',
     damageLabel: '15 DMG',
@@ -71,7 +71,7 @@ export const BESTIARY_DATA = [
     category: 'infected',
     categoryLabel: 'Special Infected',
     dangerLevel: 3,
-    image: '/textures/bestiary/winter_bruiser.jpg',
+    image: null,
     hpRange: '90 - 160 HP',
     speedLabel: 'Lambat (2.6 m/s)',
     damageLabel: '20 DMG',
@@ -96,7 +96,7 @@ export const BESTIARY_DATA = [
     category: 'boss',
     categoryLabel: 'Elite Special Infected',
     dangerLevel: 4,
-    image: '/textures/bestiary/victorian_bride.jpg',
+    image: null,
     hpRange: '85 - 160 HP',
     speedLabel: 'Sangat Cepat (6.8 m/s)',
     damageLabel: '24 DMG',
@@ -125,7 +125,7 @@ export const BESTIARY_DATA = [
     category: 'boss',
     categoryLabel: 'Supreme Boss',
     dangerLevel: 5,
-    image: '/textures/bestiary/nona_batavia.jpg',
+    image: null,
     hpRange: '450 - 900+ HP',
     speedLabel: 'Melayang Udara (4.0 m/s)',
     damageLabel: '24 - 35 DMG',
@@ -158,7 +158,7 @@ export const BESTIARY_DATA = [
     category: 'boss',
     categoryLabel: 'Arch-Nemesis Boss',
     dangerLevel: 5,
-    image: '/textures/bestiary/sister_valentina.jpg',
+    image: null,
     hpRange: '700 - 1300+ HP',
     speedLabel: 'Cepat & Teleport (4.8 m/s)',
     damageLabel: '28 DMG',
@@ -405,7 +405,9 @@ export function renderBestiaryUI() {
 
       const cardClass = `bestiary-list-card ${isSelected ? 'selected' : ''} ${isUnlocked ? 'unlocked' : 'locked'}`;
       const thumbHtml = isUnlocked
-        ? `<img class="bestiary-thumb" src="${entry.image}" alt="${entry.name}" />`
+        ? (entry.image
+            ? `<img class="bestiary-thumb" src="${entry.image}" alt="${entry.name}" />`
+            : `<div class="bestiary-thumb-specimen"><span class="bio-icon">☣</span></div>`)
         : `<div class="bestiary-thumb-locked"><span class="lock-icon">?</span></div>`;
 
       const titleHtml = isUnlocked
@@ -491,7 +493,15 @@ export function renderBestiaryUI() {
           <!-- DOSSIER BODY: SPLIT ARTWORK & COMBAT STATS -->
           <div class="dossier-row-top">
             <div class="dossier-art-frame">
-              <img class="dossier-art-img" src="${selectedEntry.image}" alt="${selectedEntry.name}" />
+              ${selectedEntry.image
+                ? `<img class="dossier-art-img" src="${selectedEntry.image}" alt="${selectedEntry.name}" />`
+                : `<div class="dossier-art-classified">
+                    <div class="dossier-classified-badge">PENDING SPECIMEN</div>
+                    <div class="dossier-classified-icon">☣</div>
+                    <div class="dossier-classified-label">VISUAL RECORDING ARCHIVED</div>
+                    <div class="dossier-classified-sub">[ DOKUMEN FOTO DITANGGUHKAN ]</div>
+                  </div>`
+              }
               <div class="dossier-art-overlay-line">FIELD VISUAL SPECIMEN</div>
             </div>
 
