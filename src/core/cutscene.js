@@ -45,7 +45,7 @@ let activeBossRef = null;
 let activeHelicopter = null;
 
 const NONA_BATAVIA_STAGES = [
-  // 1. GRAND REVELATION: Camera pushes in directly facing Nona Batavia towering in mist
+  // 1. DRAMATIC FACE CLOSE-UP: Camera pushes directly into Nona Batavia's terrifying weeping face
   {
     start: 0.0,
     end: 4.2,
@@ -53,20 +53,25 @@ const NONA_BATAVIA_STAGES = [
       const dx = bx - px, dz = bz - pz;
       const d = Math.sqrt(dx * dx + dz * dz) || 1;
       const nx = dx / d, nz = dz / d;
-      return new THREE.Vector3(bx - nx * 7.8, by - 0.8, bz - nz * 7.8);
+      const faceY = by + 4.30;
+      return new THREE.Vector3(bx - nx * 3.8, faceY + 0.15, bz - nz * 3.8);
     },
     getCamEnd: (bx, by, bz, px, py, pz) => {
       const dx = bx - px, dz = bz - pz;
       const d = Math.sqrt(dx * dx + dz * dz) || 1;
       const nx = dx / d, nz = dz / d;
-      return new THREE.Vector3(bx - nx * 3.6, by + 0.3, bz - nz * 3.6);
+      const faceY = by + 4.30;
+      return new THREE.Vector3(bx - nx * 1.75, faceY, bz - nz * 1.75);
     },
-    getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 1.2, bz),
-    getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 1.35, bz),
+    getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 4.35, bz),
+    getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 4.30, bz),
     subtitle: `<div style="text-align:center;">
-      <div style="color:#ff3344; font-size:15px; letter-spacing:5px; font-weight:bold; text-shadow:0 0 10px #f00;">✦ SPECTRAL ENTITY MANIFESTED ✦</div>
+      <div style="color:#ff3344; font-size:14px; letter-spacing:5px; font-weight:bold; text-shadow:0 0 10px #f00;">✦ SPECTRAL REVELATION ✦</div>
       <div style="color:#ffffff; font-size:36px; font-weight:900; letter-spacing:3px; text-shadow:0 0 25px rgba(255,20,50,0.95), 2px 2px 0 #000; font-family:'Times New Roman', serif;">NONA BATAVIA</div>
-      <div style="color:#ffd15c; font-size:18px; font-style:italic; letter-spacing:2px; text-shadow:0 0 8px rgba(255,200,50,0.8);">"Arwah Penasaran Berkebaya Merah"</div>
+      <div style="color:#ffd15c; font-size:17px; font-style:italic; letter-spacing:2px; text-shadow:0 0 8px rgba(255,200,50,0.8);">"The Weeping Spectre"</div>
+      <div style="margin-top:10px; font-size:23px; font-weight:bold; text-shadow:0 0 12px rgba(0,0,0,0.95);">
+        <span style="color:#ffd700;">RODRICK:</span> <span style="color:#ffffff;">"WHO ARE YOU...?! SIAPA KAU SEBENARNYA?!"</span>
+      </div>
     </div>`,
     onEnter: (sfx) => {
       if (sfx) {
@@ -76,7 +81,7 @@ const NONA_BATAVIA_STAGES = [
       }
     }
   },
-  // 2. TACTICAL REACTION: Shotgun rack & urgent warning from companion
+  // 2. SPECTRAL RETALIATION: Nona Batavia's chilling threat & ghostly presence
   {
     start: 4.2,
     end: 7.8,
@@ -85,12 +90,48 @@ const NONA_BATAVIA_STAGES = [
       const d = Math.sqrt(dx * dx + dz * dz) || 1;
       const nx = dx / d, nz = dz / d;
       const perpX = -nz, perpZ = nx;
+      const faceY = by + 4.30;
+      return new THREE.Vector3(bx - nx * 2.8 + perpX * 0.9, faceY + 0.1, bz - nz * 2.8 + perpZ * 0.9);
+    },
+    getCamEnd: (bx, by, bz, px, py, pz) => {
+      const dx = bx - px, dz = bz - pz;
+      const d = Math.sqrt(dx * dx + dz * dz) || 1;
+      const nx = dx / d, nz = dz / d;
+      const perpX = -nz, perpZ = nx;
+      const faceY = by + 4.30;
+      return new THREE.Vector3(bx - nx * 4.2 + perpX * 1.5, faceY - 0.4, bz - nz * 4.2 + perpZ * 1.5);
+    },
+    getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 4.30, bz),
+    getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 4.10, bz),
+    subtitle: `<div style="text-align:center;">
+      <div style="color:#ff3344; font-size:22px; font-weight:bold; text-shadow:0 0 18px rgba(255,0,30,0.95); font-family:'Times New Roman', serif; font-style:italic;">
+        <span style="color:#ff8899; font-style:normal; font-weight:900;">NONA BATAVIA:</span> <i>"Kalian mengusik tidur panjangku... Jiwa dan darah kalian akan menjadi santapan kabut ini selamanya!"</i>
+      </div>
+    </div>`,
+    onEnter: (sfx) => {
+      if (sfx) {
+        if (sfx.playSpectralSummonChime) sfx.playSpectralSummonChime();
+        else if (sfx.playNonaBataviaScream) sfx.playNonaBataviaScream();
+      }
+    }
+  },
+  // 3. TACTICAL REACTION: Shotgun rack & urgent warning from companion
+  {
+    start: 7.8,
+    end: 11.2,
+    getCamStart: (bx, by, bz, px, py, pz) => {
+      const dx = bx - px, dz = bz - pz;
+      const d = Math.sqrt(dx * dx + dz * dz) || 1;
+      const nx = dx / d, nz = dz / d;
+      const perpX = -nz, perpZ = nx;
       return new THREE.Vector3(px - nx * 2.2 + perpX * 1.2, py + 1.2, pz - nz * 2.2 + perpZ * 1.2);
     },
     getCamEnd: (bx, by, bz, px, py, pz) => new THREE.Vector3(px, py, pz),
-    getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 0.8, bz),
-    getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 0.3, bz),
-    subtitle: `<span style="color:#5cf0a5; font-size:22px; font-weight:bold;">KRISTIN:</span> "YA TUHAN, ROD...! Nona Batavia bangkit melayang di atas! SIAPKAN SHOTGUN, TEMBAK DIA JATUH!"`,
+    getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 4.20, bz),
+    getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 4.00, bz),
+    subtitle: `<div style="text-align:center;">
+      <span style="color:#5cf0a5; font-size:22px; font-weight:bold;">KRISTIN:</span> <span style="color:#ffffff;">"ROD! JANGAN TATAP MATANYA! DIA BUKAN MANUSIA LAGI! KOKANG SHOTGUN-MU, TEMBAK DIA JATUH SEKARANG!"</span>
+    </div>`,
     onEnter: (sfx) => {
       if (sfx && sfx.playPumpRack) sfx.playPumpRack();
     }
@@ -422,7 +463,7 @@ function updateNonaBataviaCutscene(dt) {
   const facePlayerYaw = Math.atan2(bdx, bdz);
   root.rotation.set(0, facePlayerYaw, 0);
 
-  if (cutsceneTime >= 7.8) {
+  if (cutsceneTime >= 11.2) {
     finishNonaBataviaCutscene();
     return;
   }
