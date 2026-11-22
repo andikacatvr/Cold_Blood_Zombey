@@ -382,12 +382,9 @@ window.__triggerCodaPhase = () => {
   if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(1400, 0.6);
 
   setTimeout(() => {
-    showDialogSubtitle('RODRICK (Perekam Suara): *suara pita kaset berputar* "Catatan lapangan hari pertama... Selesai. Coldbrook telah jatuh ke tangan kultus. Ini bukan wabah biasa, melainkan konspirasi keji kultus biara Father Raksha. Kami terjebak di Blackwood Moors... tapi kami tidak akan mati di sini. Kita harus mencari Mrs. Eleanor dan menemukan lorong rahasia di bawah biara..."', 8000);
-    setTimeout(() => {
-      showDialogSubtitle('KRISTIN: "Gue ada di samping lo, Rod. Darrell sudah beritahu petunjuknya: ayo ikuti gue ke bukit barat menuju Ancient Spring!"', 6000);
-      triggerKristinGesture('point');
-      setObjective('1.2');
-    }, 8200);
+    showDialogSubtitle('Coldbrook dikuasai kultus biara. Ayo ikuti gue ke bukit barat, Rod!', 5500);
+    triggerKristinGesture('point');
+    setObjective('1.2');
   }, 1200);
 };
 
