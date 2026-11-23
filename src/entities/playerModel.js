@@ -10,12 +10,17 @@ import { getTerrainHeight } from '../world/environment.js';
 import { renderer } from '../graphics/engine.js';
 
 export let cameraMode = 'fps'; // Default: Pure FPS (First-Person Shooter)
+export let activeCharacter = 'rodrick'; // 'rodrick' | 'nona_batavia'
 export let playerMeshRoot = null;
 export let isRodrickGLBLoaded = false;
+export let isNonaBataviaLoaded = false;
 export let hasCapturedPortrait = false;
 export const RODRICK_SCALE = 1.34; // Perfectly matches Kristin's heroic height (~2.34m)
+export const NONA_BATAVIA_SCALE = 1.30;
 let placeholderGroup = null;
 let rodrickGLBScene = null;
+let nonaBataviaPlayerScene = null;
+let nonaBataviaWeaponSocket = null;
 let rodrickTorsoBaseY = 0.893;
 
 let playerLeftLeg = null;
@@ -124,6 +129,182 @@ function loadRodrickGLBModel(root) {
       );
     }
   );
+}
+
+function loadNonaBataviaPlayerModel(root) {
+  if (typeof THREE === 'undefined' || !THREE.GLTFLoader) return;
+
+  const loader = new THREE.GLTFLoader();
+  const url = '/models/nona_batavia.glb';
+
+  loader.load(
+    url,
+    (gltf) => {
+      const charScene = gltf.scene;
+      charScene.name = 'Nona_Batavia_Player_Mesh';
+      charScene.scale.set(NONA_BATAVIA_SCALE, NONA_BATAVIA_SCALE, NONA_BATAVIA_SCALE);
+      charScene.rotation.y = Math.PI;
+
+      charScene.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          if (child.material) {
+            child.material.roughness = 0.82;
+            child.material.metalness = 0.08;
+            child.material.needsUpdate = true;
+          }
+        }
+      });
+
+      // Weapon socket at right side / hand level
+      nonaBataviaWeaponSocket = new THREE.Group();
+      nonaBataviaWeaponSocket.name = 'NonaBatavia_WeaponSocket';
+      nonaBataviaWeaponSocket.position.set(-0.24, 0.88, 0.12);
+      nonaBataviaWeaponSocket.rotation.set(0.25, -0.05, 0.0);
+      charScene.add(nonaBataviaWeaponSocket);
+
+      nonaBataviaPlayerScene = charScene;
+      nonaBataviaPlayerScene.visible = (activeCharacter === 'nona_batavia');
+      root.add(charScene);
+      isNonaBataviaLoaded = true;
+      console.log('[PLAYER] nona_batavia.glb loaded successfully as playable character!');
+
+      if (activeCharacter === 'nona_batavia' && renderer) {
+        setTimeout(() => captureNonaBataviaPortrait(renderer), 150);
+      }
+    },
+    undefined,
+    (err) => console.warn('[PLAYER] Failed loading nona_batavia.glb for player:', err)
+  );
+}
+
+export function captureNonaBataviaPortrait(rndr = renderer) {
+  const targetCanvas = document.getElementById('hud-portrait-canvas');
+  if (!targetCanvas || !rndr || !nonaBataviaPlayerScene) return;
+
+  const w = 96;
+  const h = 96;
+
+  try {
+    const renderTarget = new THREE.WebGLRenderTarget(w, h, {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.NearestFilter,
+      format: THREE.RGBAFormat
+    });
+
+    const portraitScene = new THREE.Scene();
+    portraitScene.background = new THREE.Color(0x120c18);
+
+    const amb = new THREE.AmbientLight(0xffeedd, 1.5);
+    portraitScene.add(amb);
+    const key = new THREE.DirectionalLight(0xffdfba, 2.2);
+    key.position.set(1.2, 2.2, 2.2);
+    portraitScene.add(key);
+    const rim = new THREE.DirectionalLight(0xff5577, 1.6);
+    rim.position.set(-1.6, 1.2, 1.6);
+    portraitScene.add(rim);
+
+    const rigClone = nonaBataviaPlayerScene.clone(true);
+    rigClone.scale.set(1.0, 1.0, 1.0);
+    rigClone.rotation.set(0, 0, 0); // Face points +Z straight at portrait camera
+    rigClone.position.set(0, 0, 0);
+    portraitScene.add(rigClone);
+
+    const cam = new THREE.PerspectiveCamera(28, 1.0, 0.1, 10);
+    cam.position.set(0, 1.50, 0.65);
+    cam.lookAt(0, 1.48, 0);
+
+    const oldTarget = rndr.getRenderTarget();
+    rndr.setRenderTarget(renderTarget);
+    rndr.render(portraitScene, cam);
+
+    const pixels = new Uint8Array(w * h * 4);
+    rndr.readRenderTargetPixels(renderTarget, 0, 0, w, h, pixels);
+    rndr.setRenderTarget(oldTarget);
+    renderTarget.dispose();
+
+    const ctx = targetCanvas.getContext('2d');
+    const imgData = ctx.createImageData(w, h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const srcIdx = ((h - 1 - y) * w + x) * 4;
+        const dstIdx = (y * w + x) * 4;
+        imgData.data[dstIdx] = pixels[srcIdx];
+        imgData.data[dstIdx + 1] = pixels[srcIdx + 1];
+        imgData.data[dstIdx + 2] = pixels[srcIdx + 2];
+        imgData.data[dstIdx + 3] = 255;
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+    console.log('[PORTRAIT] Nona Batavia portrait captured successfully to HUD canvas!');
+  } catch (err) {
+    console.warn('[PORTRAIT] Could not capture Nona Batavia portrait:', err);
+  }
+}
+
+export function setPlayerCharacter(charId, rndr = renderer) {
+  if (charId !== 'rodrick' && charId !== 'nona_batavia') return activeCharacter;
+  activeCharacter = charId;
+  window.__ACTIVE_CHARACTER = charId;
+
+  if (rodrickGLBScene) {
+    rodrickGLBScene.visible = (activeCharacter === 'rodrick');
+  }
+  if (nonaBataviaPlayerScene) {
+    nonaBataviaPlayerScene.visible = (activeCharacter === 'nona_batavia');
+  }
+
+  // Reparent weapon socket
+  if (playerWeaponSocket) {
+    if (activeCharacter === 'nona_batavia' && nonaBataviaWeaponSocket) {
+      nonaBataviaWeaponSocket.add(playerWeaponSocket);
+      playerWeaponSocket.position.set(0, 0, 0);
+      playerWeaponSocket.rotation.set(0, 0, 0);
+    } else if (activeCharacter === 'rodrick' && playerRightArm) {
+      playerRightArm.add(playerWeaponSocket);
+      playerWeaponSocket.position.set(-0.02, -0.48, 0.08);
+      playerWeaponSocket.rotation.set(0.35, -0.06, 0.02);
+    }
+  }
+
+  // Update HUD Tactical Tag
+  const tagEl = document.getElementById('hud-character-tag');
+  if (tagEl) {
+    if (activeCharacter === 'nona_batavia') {
+      tagEl.innerText = 'NONA BATAVIA';
+      tagEl.style.color = '#ffd15c';
+      tagEl.style.textShadow = '0 0 10px rgba(255, 209, 92, 0.85)';
+    } else {
+      tagEl.innerText = 'RODRICK';
+      tagEl.style.color = '#9e6d76';
+      tagEl.style.textShadow = 'none';
+    }
+  }
+
+  // Capture portrait
+  if (rndr) {
+    if (activeCharacter === 'nona_batavia') {
+      captureNonaBataviaPortrait(rndr);
+    } else {
+      captureRodrickPortrait(rndr);
+    }
+  }
+
+  // Sync menu choice buttons if visible
+  const btnR = document.getElementById('btn-char-rodrick');
+  const btnB = document.getElementById('btn-char-batavia');
+  if (btnR && btnB) {
+    btnR.classList.toggle('active', activeCharacter === 'rodrick');
+    btnB.classList.toggle('active', activeCharacter === 'nona_batavia');
+  }
+
+  return activeCharacter;
+}
+
+export function togglePlayerCharacter(rndr = renderer) {
+  const nextChar = (activeCharacter === 'rodrick') ? 'nona_batavia' : 'rodrick';
+  return setPlayerCharacter(nextChar, rndr);
 }
 
 export function drawInitialPortraitPlaceholder() {
@@ -390,6 +571,8 @@ export function buildSurvivorPlayerModel() {
 
   // Load official Rodrick GLB asset
   loadRodrickGLBModel(root);
+  // Load official Nona Batavia GLB asset for character switching
+  loadNonaBataviaPlayerModel(root);
 
   drawInitialPortraitPlaceholder();
 
@@ -401,7 +584,11 @@ export function buildSurvivorPlayerModel() {
 export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeapon) {
   // Capture 3D face portrait once WebGL is active and model is loaded
   if (isRodrickGLBLoaded && !hasCapturedPortrait && renderer) {
-    captureRodrickPortrait(renderer);
+    if (activeCharacter === 'nona_batavia') {
+      captureNonaBataviaPortrait(renderer);
+    } else {
+      captureRodrickPortrait(renderer);
+    }
   }
 
   if (!playerMeshRoot || !playerMeshRoot.visible) return;
@@ -421,6 +608,27 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
       playerMiniGolok.visible = false;
       playerMiniShotgun.visible = true;
     }
+  }
+
+  // Handle Nona Batavia distinct motion dynamics
+  if (activeCharacter === 'nona_batavia') {
+    if (nonaBataviaPlayerScene) {
+      if (isMoving) {
+        const freq = isSprinting ? 12.0 : 8.0;
+        walkTime += dt * freq;
+        const stride = Math.sin(walkTime);
+        nonaBataviaPlayerScene.position.y = Math.sin(walkTime * 2.0) * 0.04;
+        nonaBataviaPlayerScene.rotation.z = stride * 0.035;
+        nonaBataviaPlayerScene.rotation.x = isSprinting ? 0.07 : 0.03;
+      } else {
+        walkTime += dt * 2.0;
+        const breath = Math.sin(walkTime);
+        nonaBataviaPlayerScene.position.y = breath * 0.015;
+        nonaBataviaPlayerScene.rotation.z = THREE.MathUtils.lerp(nonaBataviaPlayerScene.rotation.z, 0, 0.1);
+        nonaBataviaPlayerScene.rotation.x = THREE.MathUtils.lerp(nonaBataviaPlayerScene.rotation.x, 0, 0.1);
+      }
+    }
+    return;
   }
 
   // Locomotion Stride Kinematics

@@ -65,7 +65,10 @@ import {
   updateHorrorCamera,
   cameraMode,
   toggleCameraMode,
-  playerMeshRoot
+  playerMeshRoot,
+  activeCharacter,
+  setPlayerCharacter,
+  togglePlayerCharacter
 } from '../entities/playerModel.js';
 
 const THREE = window.THREE;
@@ -912,6 +915,14 @@ export function startWinterSurvive(scene, mode = 'story') {
     const reticle = document.getElementById('reticle');
     if (reticle) reticle.style.display = 'block';
 
+    // If character was selected for survival mode
+    if (window.__SELECTED_SURVIVAL_CHAR) {
+      setPlayerCharacter(window.__SELECTED_SURVIVAL_CHAR);
+      if (window.__SELECTED_SURVIVAL_CHAR === 'nona_batavia' && cameraMode === 'fps') {
+        toggleCameraMode(); // Auto-switch to TPS so player can see Nona Batavia immediately!
+      }
+    }
+
     if (playerFlashlight) playerFlashlight.visible = true;
     if (playerMeshRoot) playerMeshRoot.visible = (cameraMode === 'tps');
     if (weaponHolder) weaponHolder.visible = (cameraMode === 'fps');
@@ -1015,6 +1026,19 @@ export function setupPlayerControls() {
     if (c === 'KeyC' || k === 'c') {
       const mode = toggleCameraMode();
       if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(mode === 'tps' ? 2800 : 1800, 0.4);
+    }
+    if (c === 'KeyV' || k === 'v') {
+      const nextChar = togglePlayerCharacter();
+      showPickupAlert(nextChar === 'nona_batavia' ? 'KARAKTER: NONA BATAVIA' : 'KARAKTER: RODRICK');
+      if (nextChar === 'nona_batavia') {
+        try {
+          const snd = new Audio('/audio/nonabatavianoice.ogg');
+          snd.volume = 0.4;
+          snd.play().catch(() => {});
+        } catch (_) {}
+      } else {
+        if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(2400, 0.35);
+      }
     }
     if (c === 'KeyE' || k === 'e') {
       triggerInteract();

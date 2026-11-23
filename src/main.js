@@ -107,7 +107,10 @@ import {
 import {
   updatePlayerModelAnimation,
   updateHorrorCamera,
-  cameraMode
+  cameraMode,
+  activeCharacter,
+  setPlayerCharacter,
+  togglePlayerCharacter
 } from './entities/playerModel.js';
 import { updateHUD } from './ui/hud.js';
 import {
@@ -1177,11 +1180,54 @@ function init() {
     if (e.target !== btnStartStory) startWinterSurvive(scene, 'story');
   });
 
+  // Character Selection (Survival / Endless Mode)
+  window.__SELECTED_SURVIVAL_CHAR = 'rodrick';
+  const btnCharRodrick = document.getElementById('btn-char-rodrick');
+  const btnCharBatavia = document.getElementById('btn-char-batavia');
+
+  if (btnCharRodrick) {
+    btnCharRodrick.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.__SELECTED_SURVIVAL_CHAR = 'rodrick';
+      setPlayerCharacter('rodrick');
+      btnCharRodrick.classList.add('active');
+      if (btnCharBatavia) btnCharBatavia.classList.remove('active');
+    });
+  }
+  if (btnCharBatavia) {
+    btnCharBatavia.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.__SELECTED_SURVIVAL_CHAR = 'nona_batavia';
+      setPlayerCharacter('nona_batavia');
+      btnCharBatavia.classList.add('active');
+      if (btnCharRodrick) btnCharRodrick.classList.remove('active');
+    });
+  }
+
+  // HUD Character Tag click to toggle
+  const hudCharTag = document.getElementById('hud-character-tag');
+  if (hudCharTag) {
+    hudCharTag.addEventListener('click', (e) => {
+      e.stopPropagation();
+      togglePlayerCharacter();
+    });
+  }
+
+  // Mobile touch character toggle button
+  const btnTouchChar = document.getElementById('btn-touch-char');
+  if (btnTouchChar) {
+    btnTouchChar.addEventListener('click', (e) => {
+      e.stopPropagation();
+      togglePlayerCharacter();
+    });
+  }
+
   const btnStartEndless = document.getElementById('btn-start-endless');
   if (btnStartEndless) btnStartEndless.addEventListener('click', () => startWinterSurvive(scene, 'endless'));
 
   const cardModeEndless = document.getElementById('card-mode-endless');
   if (cardModeEndless) cardModeEndless.addEventListener('click', (e) => {
+    if (e.target.closest('.char-select-wrap') || e.target.closest('.char-choice-btn')) return;
     if (e.target !== btnStartEndless) startWinterSurvive(scene, 'endless');
   });
 

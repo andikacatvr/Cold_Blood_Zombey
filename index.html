@@ -153,7 +153,7 @@
               <span class="tac-cross full">+</span>
               <span class="tac-cross full">+</span>
             </div>
-            <span class="tac-tag">RODRICK</span>
+            <span class="tac-tag" id="hud-character-tag" title="Klik atau tekan [V] untuk Ganti Karakter (Rodrick / Nona Batavia)" style="cursor: pointer; pointer-events: auto;">RODRICK</span>
           </div>
         </div>
 
@@ -283,6 +283,17 @@
                 <div class="mode-card-title">Survival Mode</div>
                 <div class="mode-card-desc">Action shooter &amp; survive against endless hordes of zombies.</div>
               </div>
+              <div class="char-select-wrap">
+                <div class="char-select-title">PILIH KARAKTER UTAMA:</div>
+                <div class="char-choice-row">
+                  <button type="button" class="char-choice-btn active" id="btn-char-rodrick" data-char="rodrick">
+                    <span class="char-ico">🧔</span> RODRICK
+                  </button>
+                  <button type="button" class="char-choice-btn" id="btn-char-batavia" data-char="nona_batavia">
+                    <span class="char-ico">💃</span> NONA BATAVIA
+                  </button>
+                </div>
+              </div>
               <button class="btn-play mode-launch-btn btn-endless" id="btn-start-endless">
                 ☠ Start Survival
               </button>
@@ -317,6 +328,8 @@
                 with Kristin / Advance Dialogue</span></div>
             <div class="ctrl-row"><span class="ctrl-key">C</span> <span class="ctrl-desc">Toggle Camera View
                 (First-Person FPS / Third-Person TPS)</span></div>
+            <div class="ctrl-row"><span class="ctrl-key">V</span> <span class="ctrl-desc">Switch Hero Character
+                (Rodrick / Nona Batavia)</span></div>
             <div class="ctrl-row"><span class="ctrl-key">T</span> <span class="ctrl-desc">Command Kristin: Follow Player
                 / Hold Position</span></div>
             <div class="ctrl-row"><span class="ctrl-key">H</span> <span class="ctrl-desc">Ask Kristin for
@@ -680,11 +693,15 @@
       <!-- RIGHT LOOK / AIM TOUCH ZONE (FULL RIGHT SCREEN AREA) -->
       <div id="touch-look-zone"></div>
 
-      <!-- TOP RIGHT UTILITY BUTTONS (CAMERA, KRISTIN & MAP) -->
+      <!-- TOP RIGHT UTILITY BUTTONS (CAMERA, CHARACTER, KRISTIN & MAP) -->
       <div id="touch-top-cluster">
         <button id="btn-touch-map" class="touch-btn touch-util-btn" title="Peta Taktis [M]">
           <span class="touch-btn-icon">🗺️</span>
           <span class="touch-btn-label">PETA</span>
+        </button>
+        <button id="btn-touch-char" class="touch-btn touch-util-btn" title="Ganti Karakter (Rodrick / Nona Batavia) [V]">
+          <span class="touch-btn-icon">👤</span>
+          <span class="touch-btn-label">HERO</span>
         </button>
         <button id="btn-touch-camera" class="touch-btn touch-util-btn" title="Ganti Sudut Kamera (FPS/TPS)">
           <span class="touch-btn-icon">🎥</span>
