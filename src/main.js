@@ -252,62 +252,39 @@ function updateSimulation(dt) {
     targetGroundY = Math.max(targetGroundY, -1.44);
   }
 
-  // Water Immersion & Real Swimming Mechanics
-  const waterSurfaceY = getWaterSurfaceY(playerPos.x, playerPos.z);
-  const isOnPier = (playerPos.z >= 112.0 && playerPos.z <= 138.0 && Math.abs(playerPos.x - 14.0) < 1.8);
-  const isOnBridge = (Math.abs(playerPos.z - 4.0) < 1.7 && Math.abs(playerPos.x - bridgeCenterX) < 6.6);
-  const inDeepWater = (!isOnPier && !isOnBridge && waterSurfaceY !== null && ((waterSurfaceY - targetGroundY > 1.15) || (playerPos.z > 125.8 && playerPos.y <= -2.4)));
-  const isSwimming = inDeepWater;
-  window.__PLAYER_SWIMMING = isSwimming;
-
-  if (isSwimming) {
-    // REAL SWIMMING BUOYANCY & SURFACE LOCOMOTION
-    // Player floats gently at water surface: head and upper chest stay above water line
-    const waterBob = Math.sin(performance.now() * 0.0035) * 0.055;
-    const targetSwimY = waterSurfaceY - 1.25 + waterBob;
-
-    // Smooth buoyancy floating on water surface
-    playerPos.y = THREE.MathUtils.lerp(playerPos.y, targetSwimY, Math.min(1.0, dt * 8.0));
-    pVel.y = 0;
-    setIsGrounded(true);
-
-    // Swimming water strokes audio
-    if (isMoving && Math.random() < 0.08) {
-      if (Sfx && Sfx.playWaterSplash) Sfx.playWaterSplash();
-    }
-  } else {
-    // Normal Ground & Jumping Physics
-    const isInAir = (pVel.y > 0) || (playerPos.y > targetGroundY + 0.02);
-    if (isInAir) {
-      pVel.y -= 19.5 * dt; // Realistic snappy gravity
-      playerPos.y += pVel.y * dt;
-      if (playerPos.y <= targetGroundY) {
-        playerPos.y = targetGroundY;
-        pVel.y = 0;
-        setIsGrounded(true);
-        if (Sfx && Sfx.playSnowThud) Sfx.playSnowThud(0.65);
-      } else {
-        setIsGrounded(false);
-      }
-    } else {
-      // Player is firmly grounded: smooth step-up climbing undulating hills & knolls
-      playerPos.y = THREE.MathUtils.lerp(playerPos.y, targetGroundY, Math.min(1.0, dt * 20));
+  // Normal Ground & Jumping Physics (Strictly Grounded, No Swimming)
+  window.__PLAYER_SWIMMING = false;
+  const isInAir = (pVel.y > 0) || (playerPos.y > targetGroundY + 0.02);
+  if (isInAir) {
+    pVel.y -= 19.5 * dt; // Realistic snappy gravity
+    playerPos.y += pVel.y * dt;
+    if (playerPos.y <= targetGroundY) {
+      playerPos.y = targetGroundY;
       pVel.y = 0;
       setIsGrounded(true);
+      if (Sfx && Sfx.playSnowThud) Sfx.playSnowThud(0.65);
+    } else {
+      setIsGrounded(false);
     }
+  } else {
+    // Player is firmly grounded: smooth step-up climbing undulating hills & knolls
+    playerPos.y = THREE.MathUtils.lerp(playerPos.y, targetGroundY, Math.min(1.0, dt * 20));
+    pVel.y = 0;
+    setIsGrounded(true);
+  }
 
-    if (isMoving && Math.abs(playerPos.y - targetGroundY) < 0.15) {
-      const inShallowWater = (waterSurfaceY !== null && (waterSurfaceY - targetGroundY > 0.04));
-      if (inShallowWater) {
-        Sfx.playWaterSplash();
-      } else {
-        Sfx.playSnowStep();
-      }
+  if (isMoving && Math.abs(playerPos.y - targetGroundY) < 0.15) {
+    const waterSurfaceY = getWaterSurfaceY(playerPos.x, playerPos.z);
+    const inShallowWater = (waterSurfaceY !== null && (waterSurfaceY - targetGroundY > 0.04));
+    if (inShallowWater) {
+      Sfx.playWaterSplash();
+    } else {
+      Sfx.playSnowStep();
     }
   }
 
-  // Update Survivor Player 3D Model (with swimming posture support) & Silent Hill Horror Camera (TPS/FPS)
-  updatePlayerModelAnimation(isMoving, keys.shift, dt, state.player.weapon, isSwimming);
+  // Update Survivor Player 3D Model & Silent Hill Horror Camera (TPS/FPS)
+  updatePlayerModelAnimation(isMoving, keys.shift, dt, state.player.weapon);
   updateHorrorCamera(camera, playerPos, yaw, pitch, dt);
 
   if (weaponHolder) {

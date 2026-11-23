@@ -3206,6 +3206,24 @@ export function indexColliders() {
 
 export function checkWallCollision(x, z) {
   if (Math.abs(x) > MAP_LIMIT - 0.5 || Math.abs(z) > MAP_LIMIT - 0.5) return true;
+
+  // Natural Water Boundary: Player cannot swim into deep ocean or deep river
+  const isOnPier = (z >= 112.0 && z <= 138.0 && Math.abs(x - 14.0) < 1.8);
+  const bridgeCenterX = getRiverCenterX(4.0);
+  const isOnBridge = (Math.abs(z - 4.0) < 1.7 && Math.abs(x - bridgeCenterX) < 6.6);
+
+  if (!isOnPier && !isOnBridge) {
+    // Ocean Shoreline Barrier: Player cannot walk out into open sea
+    if (z > 124.5) return true;
+
+    // Deep River Barrier: Player cannot drown or enter deep river channels
+    const wsY = getWaterSurfaceY(x, z);
+    if (wsY !== null) {
+      const gY = getTerrainHeight(x, z);
+      if (wsY - gY > 0.65) return true;
+    }
+  }
+
   const cx = Math.floor(x / GRID_CELL_SIZE);
   const cz = Math.floor(z / GRID_CELL_SIZE);
   const key = getGridKey(cx, cz);
