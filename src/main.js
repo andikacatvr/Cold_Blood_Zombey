@@ -548,14 +548,14 @@ function updateSimulation(dt) {
     if (dist < 6.8) nearZombiesCount++;
 
     if (z.isBoss) {
-      if (z.isFloatingBoss) {
-        // LADY MITHRILL: Floating Spectre Boss (flies in mid-air, ga napak dipermukaan)
+      if (z.bossType === 'nona_batavia' || z.isFloatingBoss) {
+        // NONA BATAVIA / LADY MITHRILL: Grounded Gothic Spectre Boss (menapak di atas tanah)
         z.floatTime += dt * 2.2;
         const bGroundY = getTerrainHeight(z.x, z.z);
 
-        // Hovering flight altitude (3.2m above undulating terrain)
-        const targetHoverY = bGroundY + (z.flyAltitude || 3.2) + Math.sin(z.floatTime * 2.0) * 0.45;
-        z.y = THREE.MathUtils.lerp(z.y !== undefined ? z.y : targetHoverY, targetHoverY, dt * 5.5);
+        // Grounded directly on terrain
+        const targetGroundY = bGroundY;
+        z.y = THREE.MathUtils.lerp(z.y !== undefined ? z.y : targetGroundY, targetGroundY, dt * 5.5);
         z.model.root.position.set(z.x, z.y, z.z);
 
         // Face player smoothly and steadily (ZERO spinning / wild tilting)
@@ -570,14 +570,14 @@ function updateSimulation(dt) {
           z.model.modelHolder.rotation.x = 0;
         }
 
-        // Periodic Horde Summoning ("bawa banyak zombie"): Lady Mithrill summons reinforcements
+        // Periodic Horde Summoning: Nona Batavia summons reinforcements from snow
         z.screamSummonCooldown -= dt;
         if (z.screamSummonCooldown <= 0) {
           z.screamSummonCooldown = 9.5 + Math.random() * 2.5;
           if (Sfx.playSpectralSummonChime) Sfx.playSpectralSummonChime();
           if (Sfx.playLadyMithrillScream) Sfx.playLadyMithrillScream();
 
-          // Spawns 4 zombies rushing from snow beneath her
+          // Spawns 4 zombies rushing from snow
           for (let k = 0; k < 4; k++) {
             const sa = Math.random() * Math.PI * 2;
             const sr = 2.5 + Math.random() * 5.0;
@@ -585,21 +585,21 @@ function updateSimulation(dt) {
           }
         }
 
-        // Aerial spectral projectile: Casts floating curse orbs down at player
+        // Spectral projectile: Casts curse blood orbs towards player
         z.curseCooldown -= dt;
-        if (z.curseCooldown <= 0 && dist > 4.5) {
+        if (z.curseCooldown <= 0 && dist > 4.0) {
           z.curseCooldown = 3.2 + Math.random() * 0.8;
-          const handPos = new THREE.Vector3(z.x, z.y - 0.4, z.z);
+          const handPos = new THREE.Vector3(z.x, z.y + 1.2, z.z);
           castCurseBloodOrb(handPos, new THREE.Vector3(playerPos.x, playerPos.y + 1.2, playerPos.z));
         }
 
-        // Glides gracefully in mid-air towards the player
-        if (dist > 3.2) {
+        // Strides firmly across the ground towards the player
+        if (dist > 2.2) {
           const step = z.speed * dt;
           z.x += Math.sin(ang) * step;
           z.z += Math.cos(ang) * step;
         } else {
-          // Aerial dive proximity damage
+          // Melee strike
           z.attackCooldown -= dt;
           if (z.attackCooldown <= 0) {
             hitPlayer(z.dmg);
@@ -891,16 +891,13 @@ function updateSimulation(dt) {
     r.position.y = cGroundY - (c.age > 8.0 ? (c.age - 8.0) * 0.25 : 0);
 
     if (!c.settled) {
-      if (c.isFloatingBoss) {
-        // Ethereal descent: Lady Mithrill spirals slowly down into the snow
-        r.rotation.y += dt * 2.8;
-        r.rotation.x = THREE.MathUtils.lerp(r.rotation.x, 0.40, dt * 2.0);
-        if (r.position.y > cGroundY + 0.3) {
-          r.position.y -= dt * 2.2;
-        } else {
-          r.position.y = cGroundY + 0.2;
+      if (c.bossType === 'nona_batavia' || c.isFloatingBoss) {
+        // Nona Batavia collapses onto the snow
+        r.rotation.x = THREE.MathUtils.lerp(r.rotation.x, -Math.PI / 2, dt * 6.0);
+        r.position.y = cGroundY + 0.15;
+        if (c.age > 0.4 && !c.settled) {
           c.settled = true;
-          Sfx.playSnowThud(1.2);
+          Sfx.playSnowThud(1.0);
         }
         continue;
       }

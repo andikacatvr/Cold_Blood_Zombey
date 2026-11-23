@@ -766,8 +766,8 @@ export const preloadLadyMithrillModel = preloadNonaBataviaModel;
 export function buildNonaBatavia() {
   const root = new THREE.Group();
   root.name = 'Nona_Batavia_Boss_Root';
-  const scale = 2.85; // Colossal, giant floating spectre boss
-  const parts = { root, isBoss: true, isFloatingBoss: true, bossType: 'nona_batavia', scale };
+  const scale = 1.45; // Imposing grounded Gothic horror boss (not flying)
+  const parts = { root, isBoss: true, isFloatingBoss: false, bossType: 'nona_batavia', scale };
 
   const modelHolder = new THREE.Group();
   modelHolder.scale.set(scale, scale, scale);
@@ -1098,9 +1098,7 @@ export function spawnNonaBataviaBoss(state) {
   const groundY = getTerrainHeight(bx, bz);
 
   const model = buildNonaBatavia();
-  const flyAlt = 4.4; // Giant floating height above terrain
-  const initFlyY = groundY + flyAlt; // FLYING - DOES NOT TOUCH GROUND!
-  model.root.position.set(bx, initFlyY, bz);
+  model.root.position.set(bx, groundY, bz);
   sceneRef.add(model.root);
 
   const maxHp = 450 + (milestoneCount - 1) * 150;
@@ -1108,15 +1106,15 @@ export function spawnNonaBataviaBoss(state) {
   currentBoss = {
     model,
     isBoss: true,
-    isFloatingBoss: true,
+    isFloatingBoss: false,
     bossType: 'nona_batavia',
     x: bx,
     z: bz,
-    y: initFlyY,
-    flyAltitude: flyAlt,
+    y: groundY,
+    flyAltitude: 0,
     hp: maxHp,
     maxHp: maxHp,
-    speed: 4.0,
+    speed: 3.8,
     dmg: 24,
     isDead: false,
     floatTime: 0,
@@ -1131,7 +1129,7 @@ export function spawnNonaBataviaBoss(state) {
 
   // Trigger Nona Batavia Cinematic Cutscene with sound
   startNonaBataviaCutscene(currentBoss, cameraRef, Sfx, () => {
-    showDialogSubtitle(`Waspada bro! Nona Batavia gentayangan terbang di atas bawa pasukan! Tembak jatuh!`);
+    showDialogSubtitle(`Waspada bro! Nona Batavia muncul membawa pasukan dari kabut! Tembak!`);
 
     // Escort pack of running zombies spawns when cutscene ends
     const escortCount = Math.min(12, 7 + milestoneCount);

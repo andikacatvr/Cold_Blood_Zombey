@@ -53,18 +53,18 @@ const NONA_BATAVIA_STAGES = [
       const dx = bx - px, dz = bz - pz;
       const d = Math.sqrt(dx * dx + dz * dz) || 1;
       const nx = dx / d, nz = dz / d;
-      const faceY = by + 4.30;
+      const faceY = by + 2.20;
       return new THREE.Vector3(bx - nx * 3.8, faceY + 0.15, bz - nz * 3.8);
     },
     getCamEnd: (bx, by, bz, px, py, pz) => {
       const dx = bx - px, dz = bz - pz;
       const d = Math.sqrt(dx * dx + dz * dz) || 1;
       const nx = dx / d, nz = dz / d;
-      const faceY = by + 4.30;
+      const faceY = by + 2.20;
       return new THREE.Vector3(bx - nx * 1.75, faceY, bz - nz * 1.75);
     },
-    getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 4.35, bz),
-    getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 4.30, bz),
+    getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 2.25, bz),
+    getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 2.20, bz),
     subtitle: `<div style="text-align:center;">
       <div style="color:#ff3344; font-size:14px; letter-spacing:5px; font-weight:bold; text-shadow:0 0 10px #f00;">✦ SPECTRAL REVELATION ✦</div>
       <div style="color:#ffffff; font-size:36px; font-weight:900; letter-spacing:3px; text-shadow:0 0 25px rgba(255,20,50,0.95), 2px 2px 0 #000; font-family:'Times New Roman', serif;">NONA BATAVIA</div>
@@ -90,7 +90,7 @@ const NONA_BATAVIA_STAGES = [
       const d = Math.sqrt(dx * dx + dz * dz) || 1;
       const nx = dx / d, nz = dz / d;
       const perpX = -nz, perpZ = nx;
-      const faceY = by + 4.30;
+      const faceY = by + 2.20;
       return new THREE.Vector3(bx - nx * 2.8 + perpX * 0.9, faceY + 0.1, bz - nz * 2.8 + perpZ * 0.9);
     },
     getCamEnd: (bx, by, bz, px, py, pz) => {
@@ -98,11 +98,11 @@ const NONA_BATAVIA_STAGES = [
       const d = Math.sqrt(dx * dx + dz * dz) || 1;
       const nx = dx / d, nz = dz / d;
       const perpX = -nz, perpZ = nx;
-      const faceY = by + 4.30;
-      return new THREE.Vector3(bx - nx * 4.2 + perpX * 1.5, faceY - 0.4, bz - nz * 4.2 + perpZ * 1.5);
+      const faceY = by + 2.20;
+      return new THREE.Vector3(bx - nx * 4.2 + perpX * 1.5, faceY - 0.3, bz - nz * 4.2 + perpZ * 1.5);
     },
-    getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 4.30, bz),
-    getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 4.10, bz),
+    getLookStart: (bx, by, bz) => new THREE.Vector3(bx, by + 2.20, bz),
+    getLookEnd: (bx, by, bz) => new THREE.Vector3(bx, by + 2.05, bz),
     subtitle: `<div style="text-align:center;">
       <div style="color:#ff3344; font-size:22px; font-weight:bold; text-shadow:0 0 18px rgba(255,0,30,0.95); font-family:'Times New Roman', serif; font-style:italic;">
         <span style="color:#ff8899; font-style:normal; font-weight:900;">NONA BATAVIA:</span> <i>"Kalian mengusik tidur panjangku... Jiwa dan darah kalian akan menjadi santapan kabut ini selamanya!"</i>

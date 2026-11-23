@@ -127,13 +127,13 @@ export const BESTIARY_DATA = [
     dangerLevel: 5,
     image: null,
     hpRange: '450 - 900+ HP',
-    speedLabel: 'Melayang Udara (4.0 m/s)',
+    speedLabel: 'Cepat & Melangkah Anggun (3.8 m/s)',
     damageLabel: '24 - 35 DMG',
-    description: 'Entitas gaib agung berparas ningrat dari era kolonial Hindia Belanda. Mengenakan kebaya putih bermotif darah kental dan jarik batik kuno. Melayang tinggi mengangkangi badai salju Coldbrook sebagai ratu kegelapan mistis.',
+    description: 'Entitas gaib agung berparas ningrat dari era kolonial Hindia Belanda. Mengenakan kebaya putih bermotif darah kental dan jarik batik kuno. Melangkah anggun menembus badai salju Coldbrook sebagai ratu kegelapan mistis.',
     abilities: [
       {
-        name: 'Aerial Levitation (Penerbangan Gaib)',
-        desc: 'Melayang di udara pada ketinggian 4.4 meter, bebas dari rintangan darat dan perangkap medan.'
+        name: 'Spectral Stride (Langkah Gaib)',
+        desc: 'Melangkah cepat menembus hamparan salju tebal tanpa terhambat rintangan medan.'
       },
       {
         name: 'Crimson Blood Orbs (Peluru Darah Kutukan)',
