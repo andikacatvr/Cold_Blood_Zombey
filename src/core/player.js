@@ -963,12 +963,28 @@ export function startWinterSurvive(scene, mode = 'story') {
 }
 
 export function setupPlayerControls() {
+  // Prevent browser context menu globally so right click is clean and never interrupted
+  window.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    return false;
+  }, { passive: false });
+
+  let rightMouseDownTime = 0;
+  let isRightMouseDown = false;
+  let rightMouseDragged = false;
+  let inspectToggledFromActive = false;
+
   window.addEventListener('keydown', (e) => {
     if (isCinematicActive) return;
     if (e.repeat) return; // Prevent key repeat from rapid-fire advancing or skipping dialogue
 
     const c = e.code;
     const k = (e.key || '').toLowerCase();
+
+    // If hero inspect is active, pressing movement keys immediately returns to game
+    if (isHeroInspectActive && (c === 'KeyW' || k === 'w' || c === 'KeyA' || k === 'a' || c === 'KeyS' || k === 's' || c === 'KeyD' || k === 'd' || c === 'Space')) {
+      setHeroInspect(false);
+    }
 
     // If story dialogue is open, KeyE / 'e' / Space / Enter advances dialogue, Escape closes it
     if (isStoryDialogueOpen()) {
@@ -1084,6 +1100,9 @@ export function setupPlayerControls() {
   document.addEventListener('mousemove', (e) => {
     if (document.pointerLockElement !== document.body || !state.running || state.isPaused || !cameraRef || isMapOpen || isBestiaryOpen) return;
     if (isHeroInspectActive) {
+      if (Math.abs(e.movementX) > 1 || Math.abs(e.movementY) > 1) {
+        rightMouseDragged = true;
+      }
       const sens = 0.0034 * (gameSettings.sensitivity || 1.0);
       updateHeroInspectDelta(e.movementX, e.movementY, sens);
       return;
@@ -1099,10 +1118,23 @@ export function setupPlayerControls() {
   document.addEventListener('mousedown', (e) => {
     if (!state.running || state.isPaused || isSettingsOpen || isMapOpen || isBestiaryOpen) return;
 
-    // Right Click: 360° Hero Orbit Inspection Mode
+    // Right Click: 360° Hero Orbit Inspection Mode (Hybrid Hold & Toggle)
     if (e.button === 2) {
       e.preventDefault();
-      setHeroInspect(true, yaw);
+      if (document.pointerLockElement !== document.body) {
+        try {
+          document.body.requestPointerLock();
+        } catch (err) {}
+      }
+
+      rightMouseDownTime = performance.now();
+      isRightMouseDown = true;
+      rightMouseDragged = false;
+      inspectToggledFromActive = isHeroInspectActive;
+
+      if (!isHeroInspectActive) {
+        setHeroInspect(true, yaw);
+      }
       return;
     }
 
@@ -1119,6 +1151,12 @@ export function setupPlayerControls() {
     }
 
     if (e.button === 0) {
+      // Left click cancels inspect mode if active
+      if (isHeroInspectActive) {
+        setHeroInspect(false);
+        return;
+      }
+
       // If player is looking at / standing near interactive villager in Orientation phase, clicking talks to them!
       const nearestVillager = getNearestVillager(playerPos, 3.8);
       if (nearestVillager && state.storyPhase === 'orientation') {
@@ -1132,8 +1170,38 @@ export function setupPlayerControls() {
   document.addEventListener('mouseup', (e) => {
     if (e.button === 2) {
       e.preventDefault();
+      const pressDuration = performance.now() - rightMouseDownTime;
+      const wasHolding = pressDuration > 220 || rightMouseDragged;
+      isRightMouseDown = false;
+
+      if (wasHolding) {
+        // Player held right click to inspect: releasing exits
+        setHeroInspect(false);
+      } else {
+        // Player tapped right click quickly: toggle behavior
+        if (inspectToggledFromActive) {
+          // If it was already active when tapped, toggle it off now
+          setHeroInspect(false);
+        }
+        // otherwise it stays active in toggle mode until clicked again or moved!
+      }
+    }
+  });
+
+  document.addEventListener('pointerlockchange', () => {
+    if (document.pointerLockElement !== document.body) {
+      if (isHeroInspectActive) {
+        setHeroInspect(false);
+      }
+      isRightMouseDown = false;
+    }
+  });
+
+  window.addEventListener('blur', () => {
+    if (isHeroInspectActive) {
       setHeroInspect(false);
     }
+    isRightMouseDown = false;
   });
 
   // HUD badge clicks - triggers shotgun putar cocking spin

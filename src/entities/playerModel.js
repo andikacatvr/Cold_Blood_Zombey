@@ -23,7 +23,7 @@ export const NONA_BATAVIA_SCALE = 1.30;
 export const VALENTINA_SCALE = 1.28;
 export const KRISTIN_PLAYER_SCALE = 1.34;
 
-// 360° Hero Inspection Orbit Camera (Hold Right Click)
+// 360° Hero Inspection Orbit Camera (Right Click Hold / Toggle)
 export let isHeroInspectActive = false;
 export let inspectOrbitYaw = 0;
 export let inspectOrbitPitch = 0.12;
@@ -37,16 +37,25 @@ export function setHeroInspect(active, currentYaw = 0) {
     inspectOrbitPitch = 0.12;
     const ret = document.getElementById('reticle');
     if (ret) ret.style.display = 'none';
+    const pill = document.getElementById('hud-inspect-pill');
+    if (pill) pill.style.display = 'block';
   } else if (!active && isHeroInspectActive) {
     isHeroInspectActive = false;
     const ret = document.getElementById('reticle');
     if (ret) ret.style.display = 'block';
+    const pill = document.getElementById('hud-inspect-pill');
+    if (pill) pill.style.display = 'none';
+    if (cameraMode === 'fps') {
+      if (playerMeshRoot) playerMeshRoot.visible = false;
+      if (weaponHolder) weaponHolder.visible = true;
+    }
   }
 }
 
 export function updateHeroInspectDelta(dx, dy, sens = 0.0034) {
   if (!isHeroInspectActive) return;
-  inspectOrbitYaw -= dx * sens;
+  // Moving mouse right orbits the camera around to the right side / front of the character
+  inspectOrbitYaw += dx * sens;
   inspectOrbitPitch = Math.max(-0.65, Math.min(0.85, inspectOrbitPitch - dy * sens));
 }
 let placeholderGroup = null;
@@ -1064,11 +1073,17 @@ export function updateHorrorCamera(camera, playerPos, yaw, pitch, dt) {
     const sinP = Math.sin(inspectOrbitPitch);
 
     const camX = playerPos.x + Math.sin(totalYaw) * cosP * camDist;
-    const camY = playerPos.y + 1.45 + sinP * camDist;
+    let camY = playerPos.y + 1.45 + sinP * camDist;
     const camZ = playerPos.z + Math.cos(totalYaw) * cosP * camDist;
 
+    // Prevent camera from clipping through terrain or snowbanks
+    if (typeof getTerrainHeight === 'function') {
+      const terrainGroundY = getTerrainHeight(camX, camZ);
+      camY = Math.max(camY, terrainGroundY + 0.35);
+    }
+
     camera.position.set(camX, camY, camZ);
-    camera.lookAt(playerPos.x, playerPos.y + 1.35, playerPos.z);
+    camera.lookAt(playerPos.x, playerPos.y + 1.25, playerPos.z);
     return;
   }
 
