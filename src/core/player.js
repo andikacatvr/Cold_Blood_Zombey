@@ -905,9 +905,16 @@ export function startWinterSurvive(scene, mode = 'story') {
 
     const gyK = (typeof getTerrainHeight === 'function') ? getTerrainHeight(1.4, 14.0) : 0.1;
     if (kristinModel && kristinModel.root) {
-      kristinModel.root.position.set(1.4, gyK, 14.0);
-      kristinModel.root.rotation.set(0, -0.25, 0);
-      if (kristinModel.setWeapon) kristinModel.setWeapon('unarmed');
+      const isOtherChar = (activeCharacter !== 'rodrick');
+      if (isOtherChar) {
+        kristinModel.root.visible = false;
+        kristinModel.root.position.set(0, -999, 0);
+      } else {
+        kristinModel.root.position.set(1.4, gyK, 14.0);
+        kristinModel.root.rotation.set(0, -0.25, 0);
+        kristinModel.root.visible = true;
+        if (kristinModel.setWeapon) kristinModel.setWeapon('unarmed');
+      }
     }
 
     // Hide cinematic overlay & show HUD
@@ -928,7 +935,11 @@ export function startWinterSurvive(scene, mode = 'story') {
     }
 
     if (kristinModel && kristinModel.root) {
-      kristinModel.root.visible = (activeCharacter !== 'kristin');
+      const isOtherChar = (activeCharacter !== 'rodrick');
+      kristinModel.root.visible = !isOtherChar;
+      if (isOtherChar) {
+        kristinModel.root.position.set(0, -999, 0);
+      }
     }
 
     if (playerFlashlight) playerFlashlight.visible = true;
@@ -1065,9 +1076,16 @@ export function setupPlayerControls() {
       };
       showPickupAlert(charLabels[nextChar] || `KARAKTER: ${nextChar.toUpperCase()}`);
 
-      // If playing as Kristin, hide companion Kristin so there aren't two Kristins
+      // In Endless Mode, Kristin companion only appears for Rodrick; never for other characters
       if (kristinModel && kristinModel.root) {
-        kristinModel.root.visible = (nextChar !== 'kristin');
+        const isOtherChar = (nextChar !== 'rodrick');
+        kristinModel.root.visible = !isOtherChar;
+        if (isOtherChar) {
+          kristinModel.root.position.set(0, -999, 0);
+        } else {
+          const gyK = (typeof getTerrainHeight === 'function') ? getTerrainHeight(playerPos.x + 1.2, playerPos.z + 1.2) : playerPos.y;
+          kristinModel.root.position.set(playerPos.x + 1.2, gyK, playerPos.z + 1.2);
+        }
       }
 
       if (nextChar === 'nona_batavia') {

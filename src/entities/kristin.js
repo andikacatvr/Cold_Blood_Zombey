@@ -11,6 +11,7 @@ import { Sfx } from '../audio/sfx.js';
 import { checkWallCollision, getTerrainHeight } from '../world/environment.js';
 import { zombies } from './enemies.js';
 import { playerPos, yaw } from '../core/player.js';
+import { activeCharacter } from './playerModel.js';
 
 const THREE = window.THREE;
 
@@ -544,9 +545,19 @@ export function updateKristinCompanion(camera, Sfx, dt = 0.016) {
 
   // Check story phase & game mode:
   // In Story Mode: Orientation & Complication use Guide/Leader AI (Player follows Kristin!)
-  // In Endless Mode: Always Combat Bodyguard AI (Follows, covers, and shoots zombies alongside Rodrick)
+  // In Endless Mode: Kristin only accompanies Rodrick. Never follows other playable characters (Nona Batavia, Sister Valentina, Kristin)
   const gameMode = window.__GAME_MODE || 'story';
   const storyPhase = window.__STORY_PHASE || 'orientation';
+  const currentChar = (typeof activeCharacter !== 'undefined') ? activeCharacter : (window.__ACTIVE_CHARACTER || 'rodrick');
+
+  if (gameMode === 'endless' && currentChar !== 'rodrick') {
+    if (kristinModel.root.visible) {
+      kristinModel.root.visible = false;
+      kristinModel.root.position.set(0, -999, 0);
+    }
+    return;
+  }
+
   const isGuideMode = (gameMode === 'story') && (storyPhase === 'orientation' || storyPhase === 'complication');
 
   // Use actual survivor player position

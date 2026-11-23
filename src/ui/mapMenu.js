@@ -464,7 +464,7 @@ function drawFullTacticalMap() {
 
   // 11. Companions Markers
   // Kristin (Cyan Marker)
-  if (kristinModel && kristinModel.root) {
+  if (kristinModel && kristinModel.root && kristinModel.root.visible) {
     const kx = toCanvasX(kristinModel.root.position.x);
     const kz = toCanvasY(kristinModel.root.position.z);
     ctx.fillStyle = '#2de8a0';
@@ -682,7 +682,7 @@ export function updateMinimapRadar() {
   }
 
   // Kristin (Cyan dot)
-  if (kristinModel && kristinModel.root) {
+  if (kristinModel && kristinModel.root && kristinModel.root.visible) {
     const kp = toRadar(kristinModel.root.position.x, kristinModel.root.position.z);
     ctx.fillStyle = '#2de8a0';
     ctx.beginPath();
