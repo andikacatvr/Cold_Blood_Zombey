@@ -33,8 +33,9 @@ export function setHeroInspect(active, currentYaw = 0) {
   if (active && !isHeroInspectActive) {
     isHeroInspectActive = true;
     inspectBaseYaw = currentYaw;
-    inspectOrbitYaw = 0;
-    inspectOrbitPitch = 0.12;
+    // Starts directly in FRONT of the hero facing their face, body, and weapon
+    inspectOrbitYaw = Math.PI;
+    inspectOrbitPitch = 0.08;
     const ret = document.getElementById('reticle');
     if (ret) ret.style.display = 'none';
     const pill = document.getElementById('hud-inspect-pill');

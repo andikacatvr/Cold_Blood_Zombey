@@ -980,22 +980,12 @@ export function setupPlayerControls() {
     return false;
   }, { passive: false });
 
-  let rightMouseDownTime = 0;
-  let isRightMouseDown = false;
-  let rightMouseDragged = false;
-  let inspectToggledFromActive = false;
-
   window.addEventListener('keydown', (e) => {
     if (isCinematicActive) return;
     if (e.repeat) return; // Prevent key repeat from rapid-fire advancing or skipping dialogue
 
     const c = e.code;
     const k = (e.key || '').toLowerCase();
-
-    // If hero inspect is active, pressing movement keys immediately returns to game
-    if (isHeroInspectActive && (c === 'KeyW' || k === 'w' || c === 'KeyA' || k === 'a' || c === 'KeyS' || k === 's' || c === 'KeyD' || k === 'd' || c === 'Space')) {
-      setHeroInspect(false);
-    }
 
     // If story dialogue is open, KeyE / 'e' / Space / Enter advances dialogue, Escape closes it
     if (isStoryDialogueOpen()) {
@@ -1013,6 +1003,10 @@ export function setupPlayerControls() {
     }
 
     if (c === 'Escape') {
+      if (isHeroInspectActive) {
+        setHeroInspect(false);
+        return;
+      }
       if (isBestiaryOpen) {
         closeBestiary(state);
         return;
@@ -1118,9 +1112,6 @@ export function setupPlayerControls() {
   document.addEventListener('mousemove', (e) => {
     if (document.pointerLockElement !== document.body || !state.running || state.isPaused || !cameraRef || isMapOpen || isBestiaryOpen) return;
     if (isHeroInspectActive) {
-      if (Math.abs(e.movementX) > 1 || Math.abs(e.movementY) > 1) {
-        rightMouseDragged = true;
-      }
       const sens = 0.0034 * (gameSettings.sensitivity || 1.0);
       updateHeroInspectDelta(e.movementX, e.movementY, sens);
       return;
@@ -1136,7 +1127,7 @@ export function setupPlayerControls() {
   document.addEventListener('mousedown', (e) => {
     if (!state.running || state.isPaused || isSettingsOpen || isMapOpen || isBestiaryOpen) return;
 
-    // Right Click: 360° Hero Orbit Inspection Mode (Hybrid Hold & Toggle)
+    // Right Click: 360° Hero Orbit Inspection Mode (Persistent Toggle ON / OFF)
     if (e.button === 2) {
       e.preventDefault();
       if (document.pointerLockElement !== document.body) {
@@ -1145,14 +1136,7 @@ export function setupPlayerControls() {
         } catch (err) {}
       }
 
-      rightMouseDownTime = performance.now();
-      isRightMouseDown = true;
-      rightMouseDragged = false;
-      inspectToggledFromActive = isHeroInspectActive;
-
-      if (!isHeroInspectActive) {
-        setHeroInspect(true, yaw);
-      }
+      setHeroInspect(!isHeroInspectActive, yaw);
       return;
     }
 
@@ -1169,7 +1153,7 @@ export function setupPlayerControls() {
     }
 
     if (e.button === 0) {
-      // Left click cancels inspect mode if active
+      // Left click cancels inspect mode if active and returns smoothly to combat
       if (isHeroInspectActive) {
         setHeroInspect(false);
         return;
@@ -1188,21 +1172,7 @@ export function setupPlayerControls() {
   document.addEventListener('mouseup', (e) => {
     if (e.button === 2) {
       e.preventDefault();
-      const pressDuration = performance.now() - rightMouseDownTime;
-      const wasHolding = pressDuration > 220 || rightMouseDragged;
-      isRightMouseDown = false;
-
-      if (wasHolding) {
-        // Player held right click to inspect: releasing exits
-        setHeroInspect(false);
-      } else {
-        // Player tapped right click quickly: toggle behavior
-        if (inspectToggledFromActive) {
-          // If it was already active when tapped, toggle it off now
-          setHeroInspect(false);
-        }
-        // otherwise it stays active in toggle mode until clicked again or moved!
-      }
+      // Releasing right click NEVER snaps back; hero inspect persists until clicked again
     }
   });
 
