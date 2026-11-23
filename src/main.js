@@ -1246,6 +1246,48 @@ function init() {
     });
   }
 
+  const btnLaunchValentina = document.getElementById('btn-launch-valentina');
+  if (btnLaunchValentina) {
+    btnLaunchValentina.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.__SELECTED_SURVIVAL_CHAR = 'sister_valentina';
+      setPlayerCharacter('sister_valentina');
+      startWinterSurvive(scene, 'endless');
+    });
+  }
+
+  const cardRosterValentina = document.getElementById('card-roster-valentina');
+  if (cardRosterValentina) {
+    cardRosterValentina.addEventListener('click', (e) => {
+      if (e.target !== btnLaunchValentina) {
+        window.__SELECTED_SURVIVAL_CHAR = 'sister_valentina';
+        setPlayerCharacter('sister_valentina');
+        startWinterSurvive(scene, 'endless');
+      }
+    });
+  }
+
+  const btnLaunchKristin = document.getElementById('btn-launch-kristin');
+  if (btnLaunchKristin) {
+    btnLaunchKristin.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.__SELECTED_SURVIVAL_CHAR = 'kristin';
+      setPlayerCharacter('kristin');
+      startWinterSurvive(scene, 'endless');
+    });
+  }
+
+  const cardRosterKristin = document.getElementById('card-roster-kristin');
+  if (cardRosterKristin) {
+    cardRosterKristin.addEventListener('click', (e) => {
+      if (e.target !== btnLaunchKristin) {
+        window.__SELECTED_SURVIVAL_CHAR = 'kristin';
+        setPlayerCharacter('kristin');
+        startWinterSurvive(scene, 'endless');
+      }
+    });
+  }
+
   // HUD Character Tag click to toggle (Active exclusively in Endless mode)
   const hudCharTag = document.getElementById('hud-character-tag');
   if (hudCharTag) {

@@ -919,9 +919,13 @@ export function startWinterSurvive(scene, mode = 'story') {
     // If character was selected for survival mode
     if (window.__SELECTED_SURVIVAL_CHAR) {
       setPlayerCharacter(window.__SELECTED_SURVIVAL_CHAR);
-      if (window.__SELECTED_SURVIVAL_CHAR === 'nona_batavia' && cameraMode === 'fps') {
-        toggleCameraMode(); // Auto-switch to TPS so player can see Nona Batavia immediately!
+      if (window.__SELECTED_SURVIVAL_CHAR !== 'rodrick' && cameraMode === 'fps') {
+        toggleCameraMode(); // Auto-switch to TPS so player can see their selected character immediately!
       }
+    }
+
+    if (kristinModel && kristinModel.root) {
+      kristinModel.root.visible = (activeCharacter !== 'kristin');
     }
 
     if (playerFlashlight) playerFlashlight.visible = true;
@@ -1034,13 +1038,27 @@ export function setupPlayerControls() {
         return;
       }
       const nextChar = togglePlayerCharacter();
-      showPickupAlert(nextChar === 'nona_batavia' ? 'KARAKTER: NONA BATAVIA' : 'KARAKTER: RODRICK');
+      const charLabels = {
+        'rodrick': 'KARAKTER: RODRICK',
+        'nona_batavia': 'KARAKTER: NONA BATAVIA',
+        'sister_valentina': 'KARAKTER: SISTER VALENTINA',
+        'kristin': 'KARAKTER: KRISTIN'
+      };
+      showPickupAlert(charLabels[nextChar] || `KARAKTER: ${nextChar.toUpperCase()}`);
+
+      // If playing as Kristin, hide companion Kristin so there aren't two Kristins
+      if (kristinModel && kristinModel.root) {
+        kristinModel.root.visible = (nextChar !== 'kristin');
+      }
+
       if (nextChar === 'nona_batavia') {
         try {
           const snd = new Audio('/audio/nonabatavianoice.ogg');
           snd.volume = 0.4;
           snd.play().catch(() => {});
         } catch (_) {}
+      } else if (nextChar === 'sister_valentina') {
+        if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(850, 0.45);
       } else {
         if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(2400, 0.35);
       }

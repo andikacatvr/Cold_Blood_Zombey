@@ -664,13 +664,13 @@ html {
 
 /* SURVIVAL CHARACTER SELECTION MODAL */
 .char-select-modal-frame {
-  max-width: 740px !important;
+  max-width: 880px !important;
 }
 
 .char-roster-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
   margin: 18px 0 8px 0;
 }
 
@@ -805,6 +805,84 @@ html {
   border-color: #e88ab0 !important;
   color: #ffffff !important;
   box-shadow: 0 0 15px rgba(232, 138, 176, 0.5) !important;
+}
+
+/* Sister Valentina Theme */
+.char-roster-card.nun-card {
+  background: radial-gradient(circle at top, rgba(46, 12, 18, 0.94) 0%, rgba(16, 8, 10, 0.96) 100%);
+  border-color: rgba(200, 45, 65, 0.45);
+}
+
+.char-roster-card.nun-card:hover {
+  border-color: #ff4a68;
+  box-shadow: 0 6px 24px rgba(255, 74, 104, 0.35), 0 0 12px rgba(0, 0, 0, 0.9);
+}
+
+.roster-class-badge.nun-badge {
+  background: rgba(90, 20, 30, 0.65);
+  border-color: rgba(230, 60, 80, 0.5);
+  color: #ff99aa;
+}
+
+.char-roster-name.nun-name {
+  color: #ff758c;
+  text-shadow: 0 0 12px rgba(255, 117, 140, 0.6);
+}
+
+.char-roster-card.nun-card .char-roster-role {
+  color: #e09ba7;
+}
+
+.roster-launch-btn.nun-btn {
+  background: #44121a !important;
+  border-color: #a82b3d !important;
+  color: #ffccd5 !important;
+}
+
+.roster-launch-btn.nun-btn:hover {
+  background: #601824 !important;
+  border-color: #ff4a68 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 15px rgba(255, 74, 104, 0.5) !important;
+}
+
+/* Kristin Theme */
+.char-roster-card.kristin-card {
+  background: radial-gradient(circle at top, rgba(16, 38, 28, 0.94) 0%, rgba(8, 16, 12, 0.96) 100%);
+  border-color: rgba(60, 160, 100, 0.45);
+}
+
+.char-roster-card.kristin-card:hover {
+  border-color: #5cf0a5;
+  box-shadow: 0 6px 24px rgba(92, 240, 165, 0.35), 0 0 12px rgba(0, 0, 0, 0.9);
+}
+
+.roster-class-badge.kristin-badge {
+  background: rgba(20, 60, 38, 0.65);
+  border-color: rgba(60, 180, 110, 0.5);
+  color: #9df0bf;
+}
+
+.char-roster-name.kristin-name {
+  color: #7ef5b8;
+  text-shadow: 0 0 12px rgba(126, 245, 184, 0.6);
+}
+
+.char-roster-card.kristin-card .char-roster-role {
+  color: #98d1b1;
+}
+
+.roster-launch-btn.kristin-btn {
+  background: #143622 !important;
+  border-color: #3b8a58 !important;
+  color: #d5fae4 !important;
+}
+
+.roster-launch-btn.kristin-btn:hover {
+  background: #1b4e31 !important;
+  border-color: #5cf0a5 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 15px rgba(92, 240, 165, 0.5) !important;
 }
 
 .mode-launch-btn {

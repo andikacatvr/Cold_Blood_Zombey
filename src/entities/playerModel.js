@@ -10,17 +10,25 @@ import { getTerrainHeight } from '../world/environment.js';
 import { renderer } from '../graphics/engine.js';
 
 export let cameraMode = 'fps'; // Default: Pure FPS (First-Person Shooter)
-export let activeCharacter = 'rodrick'; // 'rodrick' | 'nona_batavia'
+export let activeCharacter = 'rodrick'; // 'rodrick' | 'nona_batavia' | 'sister_valentina' | 'kristin'
 export let playerMeshRoot = null;
 export let isRodrickGLBLoaded = false;
 export let isNonaBataviaLoaded = false;
+export let isValentinaLoaded = false;
+export let isKristinPlayerLoaded = false;
 export let hasCapturedPortrait = false;
-export const RODRICK_SCALE = 1.34; // Perfectly matches Kristin's heroic height (~2.34m)
+export const RODRICK_SCALE = 1.34; // Matches standard heroic stature (~2.34m)
 export const NONA_BATAVIA_SCALE = 1.30;
+export const VALENTINA_SCALE = 1.28;
+export const KRISTIN_PLAYER_SCALE = 1.34;
 let placeholderGroup = null;
 let rodrickGLBScene = null;
 let nonaBataviaPlayerScene = null;
 let nonaBataviaWeaponSocket = null;
+let sisterValentinaPlayerScene = null;
+let sisterValentinaWeaponSocket = null;
+let kristinPlayerScene = null;
+let kristinPlayerWeaponSocket = null;
 let rodrickTorsoBaseY = 0.893;
 
 let playerLeftLeg = null;
@@ -179,6 +187,177 @@ function loadNonaBataviaPlayerModel(root) {
   );
 }
 
+function loadSisterValentinaPlayerModel(root) {
+  if (typeof THREE === 'undefined' || !THREE.GLTFLoader) return;
+
+  const loader = new THREE.GLTFLoader();
+  const url = '/models/sister_valentina.glb';
+
+  loader.load(
+    url,
+    (gltf) => {
+      const charScene = gltf.scene;
+      charScene.name = 'Sister_Valentina_Player_Mesh';
+      charScene.scale.set(VALENTINA_SCALE, VALENTINA_SCALE, VALENTINA_SCALE);
+      charScene.rotation.y = Math.PI;
+
+      charScene.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          if (child.material) {
+            child.material.roughness = 0.82;
+            child.material.metalness = 0.04;
+            child.material.needsUpdate = true;
+          }
+        }
+      });
+
+      // Weapon socket at right side / demonic claw
+      sisterValentinaWeaponSocket = new THREE.Group();
+      sisterValentinaWeaponSocket.name = 'SisterValentina_WeaponSocket';
+      sisterValentinaWeaponSocket.position.set(-0.28, 0.95, 0.16);
+      sisterValentinaWeaponSocket.rotation.set(0.3, -0.05, 0.0);
+      charScene.add(sisterValentinaWeaponSocket);
+
+      sisterValentinaPlayerScene = charScene;
+      sisterValentinaPlayerScene.visible = (activeCharacter === 'sister_valentina');
+      root.add(charScene);
+      isValentinaLoaded = true;
+      console.log('[PLAYER] sister_valentina.glb loaded successfully as playable character!');
+
+      if (activeCharacter === 'sister_valentina' && renderer) {
+        setTimeout(() => captureSisterValentinaPortrait(renderer), 150);
+      }
+    },
+    undefined,
+    (err) => console.warn('[PLAYER] Failed loading sister_valentina.glb for player:', err)
+  );
+}
+
+function loadKristinPlayerModel(root) {
+  if (typeof THREE === 'undefined' || !THREE.GLTFLoader) return;
+
+  const loader = new THREE.GLTFLoader();
+  const url = '/models/ps2_character_asset.glb';
+
+  loader.load(
+    url,
+    (gltf) => {
+      const charScene = gltf.scene;
+      charScene.name = 'Kristin_Player_Mesh';
+      charScene.scale.set(KRISTIN_PLAYER_SCALE, KRISTIN_PLAYER_SCALE, KRISTIN_PLAYER_SCALE);
+      charScene.rotation.y = Math.PI;
+
+      charScene.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          if (child.material) {
+            child.material.roughness = 0.82;
+            child.material.metalness = 0.08;
+            child.material.needsUpdate = true;
+          }
+        }
+      });
+
+      // Weapon socket at right hand
+      kristinPlayerWeaponSocket = new THREE.Group();
+      kristinPlayerWeaponSocket.name = 'Kristin_WeaponSocket';
+      kristinPlayerWeaponSocket.position.set(-0.20, 0.88, 0.12);
+      kristinPlayerWeaponSocket.rotation.set(0.25, -0.05, 0.0);
+      charScene.add(kristinPlayerWeaponSocket);
+
+      kristinPlayerScene = charScene;
+      kristinPlayerScene.visible = (activeCharacter === 'kristin');
+      root.add(charScene);
+      isKristinPlayerLoaded = true;
+      console.log('[PLAYER] ps2_character_asset.glb loaded successfully as playable character Kristin!');
+
+      if (activeCharacter === 'kristin' && renderer) {
+        setTimeout(() => captureKristinPortrait(), 150);
+      }
+    },
+    undefined,
+    (err) => console.warn('[PLAYER] Failed loading ps2_character_asset.glb for player Kristin:', err)
+  );
+}
+
+export function captureSisterValentinaPortrait(rndr = renderer) {
+  const targetCanvas = document.getElementById('hud-portrait-canvas');
+  if (!targetCanvas || !rndr || !sisterValentinaPlayerScene) return;
+
+  const w = 96;
+  const h = 96;
+
+  try {
+    const renderTarget = new THREE.WebGLRenderTarget(w, h, {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.NearestFilter,
+      format: THREE.RGBAFormat
+    });
+
+    const portraitScene = new THREE.Scene();
+    portraitScene.background = new THREE.Color(0x1a0508);
+
+    const amb = new THREE.AmbientLight(0xffeedd, 1.4);
+    portraitScene.add(amb);
+    const key = new THREE.DirectionalLight(0xffcccc, 2.0);
+    key.position.set(1.2, 2.2, 2.2);
+    portraitScene.add(key);
+    const rim = new THREE.DirectionalLight(0xff2244, 2.0);
+    rim.position.set(-1.6, 1.2, 1.6);
+    portraitScene.add(rim);
+
+    const rigClone = sisterValentinaPlayerScene.clone(true);
+    rigClone.scale.set(1.0, 1.0, 1.0);
+    rigClone.rotation.set(0, 0, 0); // Face points +Z straight at camera
+    rigClone.position.set(0, 0, 0);
+    portraitScene.add(rigClone);
+
+    const cam = new THREE.PerspectiveCamera(28, 1.0, 0.1, 10);
+    cam.position.set(0, 1.58, 0.70);
+    cam.lookAt(0, 1.54, 0);
+
+    const oldTarget = rndr.getRenderTarget();
+    rndr.setRenderTarget(renderTarget);
+    rndr.render(portraitScene, cam);
+
+    const pixels = new Uint8Array(w * h * 4);
+    rndr.readRenderTargetPixels(renderTarget, 0, 0, w, h, pixels);
+    rndr.setRenderTarget(oldTarget);
+    renderTarget.dispose();
+
+    const ctx = targetCanvas.getContext('2d');
+    const imgData = ctx.createImageData(w, h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const srcIdx = ((h - 1 - y) * w + x) * 4;
+        const dstIdx = (y * w + x) * 4;
+        imgData.data[dstIdx] = pixels[srcIdx];
+        imgData.data[dstIdx + 1] = pixels[srcIdx + 1];
+        imgData.data[dstIdx + 2] = pixels[srcIdx + 2];
+        imgData.data[dstIdx + 3] = 255;
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+    console.log('[PORTRAIT] Sister Valentina portrait captured successfully to HUD canvas!');
+  } catch (err) {
+    console.warn('[PORTRAIT] Could not capture Sister Valentina portrait:', err);
+  }
+}
+
+export function captureKristinPortrait() {
+  const targetCanvas = document.getElementById('hud-portrait-canvas');
+  if (!targetCanvas) return;
+  const img = new Image();
+  img.onload = () => {
+    const ctx = targetCanvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, targetCanvas.width, targetCanvas.height);
+  };
+  img.src = '/textures/kristin_face_hd.png';
+}
+
 export function captureNonaBataviaPortrait(rndr = renderer) {
   const targetCanvas = document.getElementById('hud-portrait-canvas');
   if (!targetCanvas || !rndr || !nonaBataviaPlayerScene) return;
@@ -244,7 +423,8 @@ export function captureNonaBataviaPortrait(rndr = renderer) {
 }
 
 export function setPlayerCharacter(charId, rndr = renderer) {
-  if (charId !== 'rodrick' && charId !== 'nona_batavia') return activeCharacter;
+  const validChars = ['rodrick', 'nona_batavia', 'sister_valentina', 'kristin'];
+  if (!validChars.includes(charId)) return activeCharacter;
   activeCharacter = charId;
   window.__ACTIVE_CHARACTER = charId;
 
@@ -254,17 +434,31 @@ export function setPlayerCharacter(charId, rndr = renderer) {
   if (nonaBataviaPlayerScene) {
     nonaBataviaPlayerScene.visible = (activeCharacter === 'nona_batavia');
   }
+  if (sisterValentinaPlayerScene) {
+    sisterValentinaPlayerScene.visible = (activeCharacter === 'sister_valentina');
+  }
+  if (kristinPlayerScene) {
+    kristinPlayerScene.visible = (activeCharacter === 'kristin');
+  }
 
   // Reparent weapon socket
   if (playerWeaponSocket) {
-    if (activeCharacter === 'nona_batavia' && nonaBataviaWeaponSocket) {
-      nonaBataviaWeaponSocket.add(playerWeaponSocket);
-      playerWeaponSocket.position.set(0, 0, 0);
-      playerWeaponSocket.rotation.set(0, 0, 0);
-    } else if (activeCharacter === 'rodrick' && playerRightArm) {
+    if (activeCharacter === 'rodrick' && playerRightArm) {
       playerRightArm.add(playerWeaponSocket);
       playerWeaponSocket.position.set(-0.02, -0.48, 0.08);
       playerWeaponSocket.rotation.set(0.35, -0.06, 0.02);
+    } else if (activeCharacter === 'nona_batavia' && nonaBataviaWeaponSocket) {
+      nonaBataviaWeaponSocket.add(playerWeaponSocket);
+      playerWeaponSocket.position.set(0, 0, 0);
+      playerWeaponSocket.rotation.set(0, 0, 0);
+    } else if (activeCharacter === 'sister_valentina' && sisterValentinaWeaponSocket) {
+      sisterValentinaWeaponSocket.add(playerWeaponSocket);
+      playerWeaponSocket.position.set(0, 0, 0);
+      playerWeaponSocket.rotation.set(0, 0, 0);
+    } else if (activeCharacter === 'kristin' && kristinPlayerWeaponSocket) {
+      kristinPlayerWeaponSocket.add(playerWeaponSocket);
+      playerWeaponSocket.position.set(0, 0, 0);
+      playerWeaponSocket.rotation.set(0, 0, 0);
     }
   }
 
@@ -275,6 +469,14 @@ export function setPlayerCharacter(charId, rndr = renderer) {
       tagEl.innerText = 'NONA BATAVIA';
       tagEl.style.color = '#ffd15c';
       tagEl.style.textShadow = '0 0 10px rgba(255, 209, 92, 0.85)';
+    } else if (activeCharacter === 'sister_valentina') {
+      tagEl.innerText = 'SISTER VALENTINA';
+      tagEl.style.color = '#ff4a68';
+      tagEl.style.textShadow = '0 0 10px rgba(255, 74, 104, 0.85)';
+    } else if (activeCharacter === 'kristin') {
+      tagEl.innerText = 'KRISTIN';
+      tagEl.style.color = '#5cf0a5';
+      tagEl.style.textShadow = '0 0 10px rgba(92, 240, 165, 0.85)';
     } else {
       tagEl.innerText = 'RODRICK';
       tagEl.style.color = '#9e6d76';
@@ -286,25 +488,23 @@ export function setPlayerCharacter(charId, rndr = renderer) {
   if (rndr) {
     if (activeCharacter === 'nona_batavia') {
       captureNonaBataviaPortrait(rndr);
+    } else if (activeCharacter === 'sister_valentina') {
+      captureSisterValentinaPortrait(rndr);
+    } else if (activeCharacter === 'kristin') {
+      captureKristinPortrait();
     } else {
       captureRodrickPortrait(rndr);
     }
-  }
-
-  // Sync menu choice buttons if visible
-  const btnR = document.getElementById('btn-char-rodrick');
-  const btnB = document.getElementById('btn-char-batavia');
-  if (btnR && btnB) {
-    btnR.classList.toggle('active', activeCharacter === 'rodrick');
-    btnB.classList.toggle('active', activeCharacter === 'nona_batavia');
   }
 
   return activeCharacter;
 }
 
 export function togglePlayerCharacter(rndr = renderer) {
-  const nextChar = (activeCharacter === 'rodrick') ? 'nona_batavia' : 'rodrick';
-  return setPlayerCharacter(nextChar, rndr);
+  const list = ['rodrick', 'nona_batavia', 'sister_valentina', 'kristin'];
+  const idx = list.indexOf(activeCharacter);
+  const nextIdx = (idx + 1) % list.length;
+  return setPlayerCharacter(list[nextIdx], rndr);
 }
 
 export function drawInitialPortraitPlaceholder() {
@@ -573,6 +773,10 @@ export function buildSurvivorPlayerModel() {
   loadRodrickGLBModel(root);
   // Load official Nona Batavia GLB asset for character switching
   loadNonaBataviaPlayerModel(root);
+  // Load official Sister Valentina GLB asset for character switching
+  loadSisterValentinaPlayerModel(root);
+  // Load official Kristin GLB asset for character switching
+  loadKristinPlayerModel(root);
 
   drawInitialPortraitPlaceholder();
 
@@ -586,6 +790,10 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
   if (isRodrickGLBLoaded && !hasCapturedPortrait && renderer) {
     if (activeCharacter === 'nona_batavia') {
       captureNonaBataviaPortrait(renderer);
+    } else if (activeCharacter === 'sister_valentina') {
+      captureSisterValentinaPortrait(renderer);
+    } else if (activeCharacter === 'kristin') {
+      captureKristinPortrait();
     } else {
       captureRodrickPortrait(renderer);
     }
@@ -626,6 +834,48 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
         nonaBataviaPlayerScene.position.y = breath * 0.015;
         nonaBataviaPlayerScene.rotation.z = THREE.MathUtils.lerp(nonaBataviaPlayerScene.rotation.z, 0, 0.1);
         nonaBataviaPlayerScene.rotation.x = THREE.MathUtils.lerp(nonaBataviaPlayerScene.rotation.x, 0, 0.1);
+      }
+    }
+    return;
+  }
+
+  // Handle Sister Valentina distinct demonic glide motion
+  if (activeCharacter === 'sister_valentina') {
+    if (sisterValentinaPlayerScene) {
+      if (isMoving) {
+        const freq = isSprinting ? 12.0 : 8.0;
+        walkTime += dt * freq;
+        const stride = Math.sin(walkTime);
+        sisterValentinaPlayerScene.position.y = Math.sin(walkTime * 2.0) * 0.05;
+        sisterValentinaPlayerScene.rotation.z = stride * 0.04;
+        sisterValentinaPlayerScene.rotation.x = isSprinting ? 0.09 : 0.04;
+      } else {
+        walkTime += dt * 2.0;
+        const breath = Math.sin(walkTime);
+        sisterValentinaPlayerScene.position.y = breath * 0.015;
+        sisterValentinaPlayerScene.rotation.z = THREE.MathUtils.lerp(sisterValentinaPlayerScene.rotation.z, 0, 0.1);
+        sisterValentinaPlayerScene.rotation.x = THREE.MathUtils.lerp(sisterValentinaPlayerScene.rotation.x, 0, 0.1);
+      }
+    }
+    return;
+  }
+
+  // Handle Kristin distinct athletic stride motion
+  if (activeCharacter === 'kristin') {
+    if (kristinPlayerScene) {
+      if (isMoving) {
+        const freq = isSprinting ? 12.5 : 8.5;
+        walkTime += dt * freq;
+        const stride = Math.sin(walkTime);
+        kristinPlayerScene.position.y = Math.abs(stride) * 0.04;
+        kristinPlayerScene.rotation.z = stride * 0.03;
+        kristinPlayerScene.rotation.x = isSprinting ? 0.08 : 0.04;
+      } else {
+        walkTime += dt * 2.0;
+        const breath = Math.sin(walkTime);
+        kristinPlayerScene.position.y = breath * 0.012;
+        kristinPlayerScene.rotation.z = THREE.MathUtils.lerp(kristinPlayerScene.rotation.z, 0, 0.1);
+        kristinPlayerScene.rotation.x = THREE.MathUtils.lerp(kristinPlayerScene.rotation.x, 0, 0.1);
       }
     }
     return;
