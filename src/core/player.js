@@ -71,7 +71,8 @@ import {
   togglePlayerCharacter,
   isHeroInspectActive,
   setHeroInspect,
-  updateHeroInspectDelta
+  updateHeroInspectDelta,
+  zoomHeroInspect
 } from '../entities/playerModel.js';
 
 const THREE = window.THREE;
@@ -792,7 +793,7 @@ export function returnToMainMenu() {
   if (screenStart) screenStart.style.display = 'flex';
   try {
     if (document.exitPointerLock) document.exitPointerLock();
-  } catch (e) {}
+  } catch (e) { }
 }
 
 export function startWinterSurvive(scene, mode = 'story') {
@@ -987,6 +988,20 @@ export function setupPlayerControls() {
     const c = e.code;
     const k = (e.key || '').toLowerCase();
 
+    // Zoom in / out hotkeys during 360 Hero Inspection
+    if (isHeroInspectActive) {
+      if (c === 'KeyZ' || c === 'Equal' || c === 'NumpadAdd' || c === 'PageUp') {
+        e.preventDefault();
+        zoomHeroInspect(-1);
+        return;
+      }
+      if (c === 'KeyX' || c === 'Minus' || c === 'NumpadSubtract' || c === 'PageDown') {
+        e.preventDefault();
+        zoomHeroInspect(1);
+        return;
+      }
+    }
+
     // If story dialogue is open, KeyE / 'e' / Space / Enter advances dialogue, Escape closes it
     if (isStoryDialogueOpen()) {
       if (c === 'KeyE' || k === 'e' || c === 'Space' || c === 'Enter') {
@@ -1086,8 +1101,8 @@ export function setupPlayerControls() {
         try {
           const snd = new Audio('/audio/nonabatavianoice.ogg');
           snd.volume = 0.4;
-          snd.play().catch(() => {});
-        } catch (_) {}
+          snd.play().catch(() => { });
+        } catch (_) { }
       } else if (nextChar === 'sister_valentina') {
         if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(850, 0.45);
       } else {
@@ -1133,7 +1148,7 @@ export function setupPlayerControls() {
       if (document.pointerLockElement !== document.body) {
         try {
           document.body.requestPointerLock();
-        } catch (err) {}
+        } catch (err) { }
       }
 
       setHeroInspect(!isHeroInspectActive, yaw);
@@ -1149,7 +1164,7 @@ export function setupPlayerControls() {
     if (document.pointerLockElement !== document.body) {
       try {
         document.body.requestPointerLock();
-      } catch (err) {}
+      } catch (err) { }
     }
 
     if (e.button === 0) {
@@ -1175,6 +1190,15 @@ export function setupPlayerControls() {
       // Releasing right click NEVER snaps back; hero inspect persists until clicked again
     }
   });
+
+  // Mouse Wheel: Zoom In & Zoom Out to inspect high-resolution character details
+  window.addEventListener('wheel', (e) => {
+    if (!state.running || state.isPaused || isSettingsOpen || isMapOpen || isBestiaryOpen) return;
+    if (isHeroInspectActive) {
+      e.preventDefault();
+      zoomHeroInspect(e.deltaY);
+    }
+  }, { passive: false });
 
   document.addEventListener('pointerlockchange', () => {
     if (document.pointerLockElement !== document.body) {

@@ -25,9 +25,11 @@ export const KRISTIN_PLAYER_SCALE = 1.34;
 
 // 360° Hero Inspection Orbit Camera (Right Click Hold / Toggle)
 export let isHeroInspectActive = false;
-export let inspectOrbitYaw = 0;
-export let inspectOrbitPitch = 0.12;
+export let inspectOrbitYaw = Math.PI;
+export let inspectOrbitPitch = 0.08;
 export let inspectBaseYaw = 0;
+export let inspectOrbitDist = 2.4;
+export let targetInspectDist = 2.4;
 
 export function setHeroInspect(active, currentYaw = 0) {
   if (active && !isHeroInspectActive) {
@@ -36,6 +38,8 @@ export function setHeroInspect(active, currentYaw = 0) {
     // Starts directly in FRONT of the hero facing their face, body, and weapon
     inspectOrbitYaw = Math.PI;
     inspectOrbitPitch = 0.08;
+    inspectOrbitDist = 2.4;
+    targetInspectDist = 2.4;
     const ret = document.getElementById('reticle');
     if (ret) ret.style.display = 'none';
     const pill = document.getElementById('hud-inspect-pill');
@@ -58,6 +62,17 @@ export function updateHeroInspectDelta(dx, dy, sens = 0.0034) {
   // Moving mouse right orbits the camera around to the right side / front of the character
   inspectOrbitYaw += dx * sens;
   inspectOrbitPitch = Math.max(-0.65, Math.min(0.85, inspectOrbitPitch - dy * sens));
+}
+
+export function zoomHeroInspect(delta) {
+  if (!isHeroInspectActive) return;
+  // delta < 0 is Zoom In (scroll up), delta > 0 is Zoom Out (scroll down)
+  const zoomStep = 0.32;
+  if (delta < 0) {
+    targetInspectDist = Math.max(0.68, targetInspectDist - zoomStep);
+  } else {
+    targetInspectDist = Math.min(6.2, targetInspectDist + zoomStep);
+  }
 }
 let placeholderGroup = null;
 let rodrickGLBScene = null;
@@ -1068,23 +1083,32 @@ export function updateHorrorCamera(camera, playerPos, yaw, pitch, dt) {
     playerMeshRoot.position.set(playerPos.x, playerPos.y, playerPos.z);
     playerMeshRoot.rotation.y = inspectBaseYaw;
 
-    const camDist = 3.2;
+    // Smoothly interpolate current camera orbit distance
+    inspectOrbitDist = THREE.MathUtils.lerp(inspectOrbitDist, targetInspectDist, Math.min(1.0, dt * 12.0));
+    const camDist = inspectOrbitDist;
+
     const totalYaw = inspectBaseYaw + inspectOrbitYaw;
     const cosP = Math.cos(inspectOrbitPitch);
     const sinP = Math.sin(inspectOrbitPitch);
 
     const camX = playerPos.x + Math.sin(totalYaw) * cosP * camDist;
-    let camY = playerPos.y + 1.45 + sinP * camDist;
+    let camY = playerPos.y + 1.35 + sinP * camDist;
     const camZ = playerPos.z + Math.cos(totalYaw) * cosP * camDist;
 
     // Prevent camera from clipping through terrain or snowbanks
     if (typeof getTerrainHeight === 'function') {
       const terrainGroundY = getTerrainHeight(camX, camZ);
-      camY = Math.max(camY, terrainGroundY + 0.35);
+      camY = Math.max(camY, terrainGroundY + 0.30);
     }
 
     camera.position.set(camX, camY, camZ);
-    camera.lookAt(playerPos.x, playerPos.y + 1.25, playerPos.z);
+
+    // Dynamic focus height: when zoomed in close (< 1.6m), target head/face level (~1.58m)
+    // When zoomed out, look at chest/body center (~1.25m)
+    const zoomRatio = Math.max(0, Math.min(1, (camDist - 0.68) / 2.2));
+    const lookTargetY = THREE.MathUtils.lerp(playerPos.y + 1.58, playerPos.y + 1.25, zoomRatio);
+
+    camera.lookAt(playerPos.x, lookTargetY, playerPos.z);
     return;
   }
 
