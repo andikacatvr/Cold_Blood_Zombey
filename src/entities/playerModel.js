@@ -8,6 +8,7 @@
 const THREE = window.THREE;
 import { getTerrainHeight } from '../world/environment.js';
 import { renderer } from '../graphics/engine.js';
+import { weaponHolder } from './weapons.js';
 
 export let cameraMode = 'fps'; // Default: Pure FPS (First-Person Shooter)
 export let activeCharacter = 'rodrick'; // 'rodrick' | 'nona_batavia' | 'sister_valentina' | 'kristin'
@@ -21,6 +22,33 @@ export const RODRICK_SCALE = 1.34; // Matches standard heroic stature (~2.34m)
 export const NONA_BATAVIA_SCALE = 1.30;
 export const VALENTINA_SCALE = 1.28;
 export const KRISTIN_PLAYER_SCALE = 1.34;
+
+// 360° Hero Inspection Orbit Camera (Hold Right Click)
+export let isHeroInspectActive = false;
+export let inspectOrbitYaw = 0;
+export let inspectOrbitPitch = 0.12;
+export let inspectBaseYaw = 0;
+
+export function setHeroInspect(active, currentYaw = 0) {
+  if (active && !isHeroInspectActive) {
+    isHeroInspectActive = true;
+    inspectBaseYaw = currentYaw;
+    inspectOrbitYaw = 0;
+    inspectOrbitPitch = 0.12;
+    const ret = document.getElementById('reticle');
+    if (ret) ret.style.display = 'none';
+  } else if (!active && isHeroInspectActive) {
+    isHeroInspectActive = false;
+    const ret = document.getElementById('reticle');
+    if (ret) ret.style.display = 'block';
+  }
+}
+
+export function updateHeroInspectDelta(dx, dy, sens = 0.0034) {
+  if (!isHeroInspectActive) return;
+  inspectOrbitYaw -= dx * sens;
+  inspectOrbitPitch = Math.max(-0.65, Math.min(0.85, inspectOrbitPitch - dy * sens));
+}
 let placeholderGroup = null;
 let rodrickGLBScene = null;
 let nonaBataviaPlayerScene = null;
@@ -997,8 +1025,30 @@ export function triggerScreenShake(intensity = 0.45, duration = 1.2) {
 export function updateHorrorCamera(camera, playerPos, yaw, pitch, dt) {
   if (!playerMeshRoot) return;
 
+  // 1. Right Click 360° Hero Orbit Inspection Mode
+  if (isHeroInspectActive) {
+    playerMeshRoot.visible = true;
+    if (weaponHolder) weaponHolder.visible = false;
+    playerMeshRoot.position.set(playerPos.x, playerPos.y, playerPos.z);
+    playerMeshRoot.rotation.y = inspectBaseYaw;
+
+    const camDist = 3.2;
+    const totalYaw = inspectBaseYaw + inspectOrbitYaw;
+    const cosP = Math.cos(inspectOrbitPitch);
+    const sinP = Math.sin(inspectOrbitPitch);
+
+    const camX = playerPos.x + Math.sin(totalYaw) * cosP * camDist;
+    const camY = playerPos.y + 1.45 + sinP * camDist;
+    const camZ = playerPos.z + Math.cos(totalYaw) * cosP * camDist;
+
+    camera.position.set(camX, camY, camZ);
+    camera.lookAt(playerPos.x, playerPos.y + 1.35, playerPos.z);
+    return;
+  }
+
   if (cameraMode === 'tps') {
     playerMeshRoot.visible = true;
+    if (weaponHolder) weaponHolder.visible = false;
     playerMeshRoot.position.set(playerPos.x, playerPos.y, playerPos.z);
     playerMeshRoot.rotation.y = yaw;
 

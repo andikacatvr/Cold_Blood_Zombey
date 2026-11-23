@@ -68,7 +68,10 @@ import {
   playerMeshRoot,
   activeCharacter,
   setPlayerCharacter,
-  togglePlayerCharacter
+  togglePlayerCharacter,
+  isHeroInspectActive,
+  setHeroInspect,
+  updateHeroInspectDelta
 } from '../entities/playerModel.js';
 
 const THREE = window.THREE;
@@ -1080,6 +1083,11 @@ export function setupPlayerControls() {
 
   document.addEventListener('mousemove', (e) => {
     if (document.pointerLockElement !== document.body || !state.running || state.isPaused || !cameraRef || isMapOpen || isBestiaryOpen) return;
+    if (isHeroInspectActive) {
+      const sens = 0.0034 * (gameSettings.sensitivity || 1.0);
+      updateHeroInspectDelta(e.movementX, e.movementY, sens);
+      return;
+    }
     const sens = 0.0024 * (gameSettings.sensitivity || 1.0);
     yaw -= e.movementX * sens;
     pitch -= e.movementY * sens;
@@ -1090,6 +1098,13 @@ export function setupPlayerControls() {
 
   document.addEventListener('mousedown', (e) => {
     if (!state.running || state.isPaused || isSettingsOpen || isMapOpen || isBestiaryOpen) return;
+
+    // Right Click: 360° Hero Orbit Inspection Mode
+    if (e.button === 2) {
+      e.preventDefault();
+      setHeroInspect(true, yaw);
+      return;
+    }
 
     // Clicking while reading story dialogue advances dialogue
     if (isStoryDialogueOpen()) {
@@ -1111,6 +1126,13 @@ export function setupPlayerControls() {
         return;
       }
       fireCombatShotgun();
+    }
+  });
+
+  document.addEventListener('mouseup', (e) => {
+    if (e.button === 2) {
+      e.preventDefault();
+      setHeroInspect(false);
     }
   });
 
