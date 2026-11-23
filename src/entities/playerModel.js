@@ -70,6 +70,14 @@ let playerMiniShotgun = null;
 let playerMiniGolok = null;
 
 let walkTime = 0;
+// Smooth Locomotion & Jump Kinematics State
+let locoWeight = 0;
+let sprintWeight = 0;
+let airWeight = 0;
+let landingCompression = 0;
+let wasGroundedLastFrame = true;
+let walkPhase = 0;
+let idlePhase = 0;
 
 export function toggleCameraMode() {
   cameraMode = (cameraMode === 'fps' ? 'tps' : 'fps');
@@ -813,7 +821,7 @@ export function buildSurvivorPlayerModel() {
   return root;
 }
 
-export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeapon) {
+export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeapon, grounded = true, vertVel = 0, aimPitch = 0) {
   // Capture 3D face portrait once WebGL is active and model is loaded
   if (isRodrickGLBLoaded && !hasCapturedPortrait && renderer) {
     if (activeCharacter === 'nona_batavia') {
@@ -829,7 +837,7 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
 
   if (!playerMeshRoot || !playerMeshRoot.visible) return;
 
-  // Keep player mesh standing upright
+  // Keep player mesh standing upright without unwanted tilt
   playerMeshRoot.rotation.x = THREE.MathUtils.lerp(playerMeshRoot.rotation.x, 0, dt * 10.0);
 
   // Weapon visibility sync (Unarmed means player holds NOTHING in hand)
@@ -846,22 +854,41 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
     }
   }
 
+  // --- Smooth Kinematic Blend Weights & Landing Compression ---
+  const safeDt = Math.min(dt, 0.05);
+  locoWeight = THREE.MathUtils.lerp(locoWeight, isMoving ? 1.0 : 0.0, Math.min(1.0, safeDt * 10.0));
+  sprintWeight = THREE.MathUtils.lerp(sprintWeight, (isMoving && isSprinting) ? 1.0 : 0.0, Math.min(1.0, safeDt * 8.0));
+  airWeight = THREE.MathUtils.lerp(airWeight, grounded ? 0.0 : 1.0, Math.min(1.0, safeDt * 12.0));
+
+  // Detect physical landing impact spring
+  if (grounded && !wasGroundedLastFrame) {
+    landingCompression = Math.min(0.12, Math.max(0.04, Math.abs(vertVel) * 0.016));
+  }
+  wasGroundedLastFrame = grounded;
+  landingCompression = THREE.MathUtils.lerp(landingCompression, 0.0, Math.min(1.0, safeDt * 9.0));
+
+  // Continuous phases for stride and breathing
+  const walkFreq = THREE.MathUtils.lerp(8.0, 12.8, sprintWeight);
+  walkPhase += safeDt * walkFreq * Math.max(0.12, locoWeight);
+  idlePhase += safeDt * 2.2;
+
+  const rawStride = Math.sin(walkPhase);
+  const clampedPitch = Math.max(-0.85, Math.min(0.85, aimPitch));
+
   // Handle Nona Batavia distinct motion dynamics
   if (activeCharacter === 'nona_batavia') {
     if (nonaBataviaPlayerScene) {
-      if (isMoving) {
-        const freq = isSprinting ? 12.0 : 8.0;
-        walkTime += dt * freq;
-        const stride = Math.sin(walkTime);
-        nonaBataviaPlayerScene.position.y = Math.sin(walkTime * 2.0) * 0.04;
-        nonaBataviaPlayerScene.rotation.z = stride * 0.035;
-        nonaBataviaPlayerScene.rotation.x = isSprinting ? 0.07 : 0.03;
-      } else {
-        walkTime += dt * 2.0;
-        const breath = Math.sin(walkTime);
-        nonaBataviaPlayerScene.position.y = breath * 0.015;
-        nonaBataviaPlayerScene.rotation.z = THREE.MathUtils.lerp(nonaBataviaPlayerScene.rotation.z, 0, 0.1);
-        nonaBataviaPlayerScene.rotation.x = THREE.MathUtils.lerp(nonaBataviaPlayerScene.rotation.x, 0, 0.1);
+      const bob = (Math.sin(walkPhase * 2.0) * 0.038 * locoWeight) + (Math.sin(idlePhase) * 0.014 * (1.0 - locoWeight));
+      nonaBataviaPlayerScene.position.y = bob - landingCompression + (airWeight * 0.10);
+      nonaBataviaPlayerScene.rotation.z = Math.sin(walkPhase) * 0.035 * locoWeight;
+      nonaBataviaPlayerScene.rotation.x = THREE.MathUtils.lerp(0.02, 0.075, sprintWeight) * locoWeight - clampedPitch * 0.15;
+
+      if (nonaBataviaWeaponSocket) {
+        nonaBataviaWeaponSocket.rotation.x = THREE.MathUtils.lerp(
+          nonaBataviaWeaponSocket.rotation.x,
+          0.25 - clampedPitch * 0.70,
+          safeDt * 15.0
+        );
       }
     }
     return;
@@ -870,19 +897,17 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
   // Handle Sister Valentina distinct demonic glide motion
   if (activeCharacter === 'sister_valentina') {
     if (sisterValentinaPlayerScene) {
-      if (isMoving) {
-        const freq = isSprinting ? 12.0 : 8.0;
-        walkTime += dt * freq;
-        const stride = Math.sin(walkTime);
-        sisterValentinaPlayerScene.position.y = Math.sin(walkTime * 2.0) * 0.05;
-        sisterValentinaPlayerScene.rotation.z = stride * 0.04;
-        sisterValentinaPlayerScene.rotation.x = isSprinting ? 0.09 : 0.04;
-      } else {
-        walkTime += dt * 2.0;
-        const breath = Math.sin(walkTime);
-        sisterValentinaPlayerScene.position.y = breath * 0.015;
-        sisterValentinaPlayerScene.rotation.z = THREE.MathUtils.lerp(sisterValentinaPlayerScene.rotation.z, 0, 0.1);
-        sisterValentinaPlayerScene.rotation.x = THREE.MathUtils.lerp(sisterValentinaPlayerScene.rotation.x, 0, 0.1);
+      const bob = (Math.sin(walkPhase * 2.0) * 0.045 * locoWeight) + (Math.sin(idlePhase) * 0.018 * (1.0 - locoWeight));
+      sisterValentinaPlayerScene.position.y = bob - landingCompression + (airWeight * 0.14);
+      sisterValentinaPlayerScene.rotation.z = Math.sin(walkPhase) * 0.04 * locoWeight;
+      sisterValentinaPlayerScene.rotation.x = THREE.MathUtils.lerp(0.035, 0.095, sprintWeight) * locoWeight - clampedPitch * 0.15;
+
+      if (sisterValentinaWeaponSocket) {
+        sisterValentinaWeaponSocket.rotation.x = THREE.MathUtils.lerp(
+          sisterValentinaWeaponSocket.rotation.x,
+          0.30 - clampedPitch * 0.70,
+          safeDt * 15.0
+        );
       }
     }
     return;
@@ -891,123 +916,124 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
   // Handle Kristin distinct athletic stride motion
   if (activeCharacter === 'kristin') {
     if (kristinPlayerScene) {
-      if (isMoving) {
-        const freq = isSprinting ? 12.5 : 8.5;
-        walkTime += dt * freq;
-        const stride = Math.sin(walkTime);
-        kristinPlayerScene.position.y = Math.abs(stride) * 0.04;
-        kristinPlayerScene.rotation.z = stride * 0.03;
-        kristinPlayerScene.rotation.x = isSprinting ? 0.08 : 0.04;
-      } else {
-        walkTime += dt * 2.0;
-        const breath = Math.sin(walkTime);
-        kristinPlayerScene.position.y = breath * 0.012;
-        kristinPlayerScene.rotation.z = THREE.MathUtils.lerp(kristinPlayerScene.rotation.z, 0, 0.1);
-        kristinPlayerScene.rotation.x = THREE.MathUtils.lerp(kristinPlayerScene.rotation.x, 0, 0.1);
+      const bob = (Math.abs(rawStride) * 0.038 * locoWeight) + (Math.sin(idlePhase) * 0.012 * (1.0 - locoWeight));
+      kristinPlayerScene.position.y = bob - landingCompression;
+      kristinPlayerScene.rotation.z = Math.sin(walkPhase) * 0.032 * locoWeight;
+      kristinPlayerScene.rotation.x = THREE.MathUtils.lerp(0.03, 0.085, sprintWeight) * locoWeight - clampedPitch * 0.18;
+
+      if (kristinPlayerWeaponSocket) {
+        kristinPlayerWeaponSocket.rotation.x = THREE.MathUtils.lerp(
+          kristinPlayerWeaponSocket.rotation.x,
+          0.25 - clampedPitch * 0.70,
+          safeDt * 15.0
+        );
       }
     }
     return;
   }
 
-  // Locomotion Stride Kinematics
+  // --- Rodrick Primary Locomotion & Bone Kinematics ---
   const baseY = isRodrickGLBLoaded ? rodrickTorsoBaseY : 0.95;
 
-  if (isMoving) {
-    const freq = isSprinting ? 12.5 : 8.5;
-    const amp = isSprinting ? 0.75 : 0.55;
-    walkTime += dt * freq;
+  // Stride amplitude smoothly scales down when airborne
+  const maxStride = THREE.MathUtils.lerp(0.50, 0.78, sprintWeight) * locoWeight * (1.0 - airWeight);
+  const currentStride = rawStride * maxStride;
 
-    const stride = Math.sin(walkTime);
-    if (playerLeftLeg) playerLeftLeg.rotation.x = stride * amp;
-    if (playerRightLeg) playerRightLeg.rotation.x = -stride * amp;
-
-    // Counter arm swinging & weapon posture
-    if (activeWeapon !== 'unarmed') {
-      if (activeWeapon === 'golok') {
-        // One-handed melee ready posture
-        if (playerRightArm) {
-          playerRightArm.rotation.x = -0.42 + stride * 0.08;
-          playerRightArm.rotation.y = 0.08;
-          playerRightArm.rotation.z = 0.05;
-        }
-        if (playerLeftArm) {
-          playerLeftArm.rotation.x = -0.22 - stride * 0.06;
-          playerLeftArm.rotation.y = 0.12;
-          playerLeftArm.rotation.z = -0.08;
-        }
-      } else {
-        // Authentic Two-Handed Survival Horror Shotgun Ready Stance (Leon S. Kennedy / James Sunderland)
-        // Right hand holds trigger/grip forward at hip level pointing downrange
-        if (playerRightArm) {
-          playerRightArm.rotation.x = -0.38 + stride * 0.05;
-          playerRightArm.rotation.y = 0.08;
-          playerRightArm.rotation.z = -0.06;
-        }
-        // Left hand reaches forward across the chest to support the forend
-        if (playerLeftArm) {
-          playerLeftArm.rotation.x = -0.62 - stride * 0.05;
-          playerLeftArm.rotation.y = 0.36;
-          playerLeftArm.rotation.z = -0.22;
-        }
-      }
+  // Legs Kinematics: Walk stride + in-air leg tuck/extension
+  if (playerLeftLeg && playerRightLeg) {
+    if (airWeight > 0.1) {
+      // In air: tuck up during ascent (vertVel > 0), extend down during fall (vertVel < 0)
+      const airPoseLeft = (vertVel > 0 ? -0.32 : 0.14) * airWeight;
+      const airPoseRight = (vertVel > 0 ? -0.22 : 0.08) * airWeight;
+      playerLeftLeg.rotation.x = THREE.MathUtils.lerp(playerLeftLeg.rotation.x, currentStride + airPoseLeft, safeDt * 12.0);
+      playerRightLeg.rotation.x = THREE.MathUtils.lerp(playerRightLeg.rotation.x, -currentStride + airPoseRight, safeDt * 12.0);
     } else {
-      if (playerLeftArm) playerLeftArm.rotation.set(-stride * 0.45, 0, 0);
-      if (playerRightArm) playerRightArm.rotation.set(stride * 0.45, 0, 0);
+      playerLeftLeg.rotation.x = THREE.MathUtils.lerp(playerLeftLeg.rotation.x, currentStride, safeDt * 18.0);
+      playerRightLeg.rotation.x = THREE.MathUtils.lerp(playerRightLeg.rotation.x, -currentStride, safeDt * 18.0);
     }
+  }
 
-    // Hip bobbing & subtle sway
-    if (playerTorso) {
-      playerTorso.position.y = baseY + Math.abs(stride) * 0.035;
-      playerTorso.rotation.y = Math.sin(walkTime) * 0.05;
+  // Arms Kinematics & Weapon Ready Aiming with Pitch Tracking
+  const pitchArms = clampedPitch * 0.70;
+  const blendSpeed = safeDt * 14.0;
+
+  let targetRRotX = 0;
+  let targetRRotY = 0;
+  let targetRRotZ = 0;
+  let targetLRotX = 0;
+  let targetLRotY = 0;
+  let targetLRotZ = 0;
+
+  if (activeWeapon !== 'unarmed') {
+    if (activeWeapon === 'golok') {
+      // One-handed melee ready stance: blade held forward ready to parry/slash
+      targetRRotX = -0.42 - pitchArms * 0.6 + currentStride * 0.08;
+      targetRRotY = 0.10;
+      targetRRotZ = 0.06;
+
+      targetLRotX = -0.22 - pitchArms * 0.25 - currentStride * 0.06;
+      targetLRotY = 0.14;
+      targetLRotZ = -0.08;
+    } else {
+      // Authentic Two-Handed Survival Horror Shotgun Ready Stance (Leon S. Kennedy / James Sunderland)
+      // Right hand holds grip & trigger pointing downrange; left hand holds forend across chest
+      targetRRotX = -0.42 - pitchArms + currentStride * 0.04;
+      targetRRotY = 0.08;
+      targetRRotZ = -0.06;
+
+      targetLRotX = -0.66 - pitchArms - currentStride * 0.04;
+      targetLRotY = 0.38;
+      targetLRotZ = -0.22;
     }
   } else {
-    // Idle breathing
-    walkTime += dt * 2.0;
-    const breath = Math.sin(walkTime);
-    if (playerLeftLeg) playerLeftLeg.rotation.x = THREE.MathUtils.lerp(playerLeftLeg.rotation.x, 0, 0.15);
-    if (playerRightLeg) playerRightLeg.rotation.x = THREE.MathUtils.lerp(playerRightLeg.rotation.x, 0, 0.15);
+    // Unarmed natural walking arm swings with idle breathing blend
+    const unarmedSwing = rawStride * 0.45 * locoWeight * (1.0 - airWeight);
+    const idleLRotX = 0.05 + Math.sin(idlePhase) * 0.02;
+    const idleRRotX = -0.05 - Math.sin(idlePhase) * 0.02;
 
-    if (activeWeapon !== 'unarmed') {
-      if (activeWeapon === 'golok') {
-        if (playerRightArm) {
-          playerRightArm.rotation.x = THREE.MathUtils.lerp(playerRightArm.rotation.x, -0.42, 0.15);
-          playerRightArm.rotation.y = THREE.MathUtils.lerp(playerRightArm.rotation.y, 0.08, 0.15);
-          playerRightArm.rotation.z = THREE.MathUtils.lerp(playerRightArm.rotation.z, 0.05, 0.15);
-        }
-        if (playerLeftArm) {
-          playerLeftArm.rotation.x = THREE.MathUtils.lerp(playerLeftArm.rotation.x, -0.22, 0.15);
-          playerLeftArm.rotation.y = THREE.MathUtils.lerp(playerLeftArm.rotation.y, 0.12, 0.15);
-          playerLeftArm.rotation.z = THREE.MathUtils.lerp(playerLeftArm.rotation.z, -0.08, 0.15);
-        }
-      } else {
-        if (playerRightArm) {
-          playerRightArm.rotation.x = THREE.MathUtils.lerp(playerRightArm.rotation.x, -0.38, 0.15);
-          playerRightArm.rotation.y = THREE.MathUtils.lerp(playerRightArm.rotation.y, 0.08, 0.15);
-          playerRightArm.rotation.z = THREE.MathUtils.lerp(playerRightArm.rotation.z, -0.06, 0.15);
-        }
-        if (playerLeftArm) {
-          playerLeftArm.rotation.x = THREE.MathUtils.lerp(playerLeftArm.rotation.x, -0.62, 0.15);
-          playerLeftArm.rotation.y = THREE.MathUtils.lerp(playerLeftArm.rotation.y, 0.36, 0.15);
-          playerLeftArm.rotation.z = THREE.MathUtils.lerp(playerLeftArm.rotation.z, -0.22, 0.15);
-        }
-      }
-    } else {
-      if (playerLeftArm) {
-        playerLeftArm.rotation.x = THREE.MathUtils.lerp(playerLeftArm.rotation.x, 0.05, 0.15);
-        playerLeftArm.rotation.y = THREE.MathUtils.lerp(playerLeftArm.rotation.y, 0, 0.15);
-        playerLeftArm.rotation.z = THREE.MathUtils.lerp(playerLeftArm.rotation.z, 0, 0.15);
-      }
-      if (playerRightArm) {
-        playerRightArm.rotation.x = THREE.MathUtils.lerp(playerRightArm.rotation.x, -0.05, 0.15);
-        playerRightArm.rotation.y = THREE.MathUtils.lerp(playerRightArm.rotation.y, 0, 0.15);
-        playerRightArm.rotation.z = THREE.MathUtils.lerp(playerRightArm.rotation.z, 0, 0.15);
-      }
-    }
+    targetLRotX = -unarmedSwing + (idleLRotX * (1.0 - locoWeight));
+    targetRRotX = unarmedSwing + (idleRRotX * (1.0 - locoWeight));
 
-    if (playerTorso) {
-      playerTorso.position.y = baseY + breath * 0.008;
-      playerTorso.rotation.y = THREE.MathUtils.lerp(playerTorso.rotation.y, 0, 0.1);
+    // Slight outward arm flare when falling in air for balance
+    if (airWeight > 0.1) {
+      targetLRotZ = -0.18 * airWeight;
+      targetRRotZ = 0.18 * airWeight;
     }
+  }
+
+  if (playerRightArm) {
+    playerRightArm.rotation.x = THREE.MathUtils.lerp(playerRightArm.rotation.x, targetRRotX, blendSpeed);
+    playerRightArm.rotation.y = THREE.MathUtils.lerp(playerRightArm.rotation.y, targetRRotY, blendSpeed);
+    playerRightArm.rotation.z = THREE.MathUtils.lerp(playerRightArm.rotation.z, targetRRotZ, blendSpeed);
+  }
+
+  if (playerLeftArm) {
+    playerLeftArm.rotation.x = THREE.MathUtils.lerp(playerLeftArm.rotation.x, targetLRotX, blendSpeed);
+    playerLeftArm.rotation.y = THREE.MathUtils.lerp(playerLeftArm.rotation.y, targetLRotY, blendSpeed);
+    playerLeftArm.rotation.z = THREE.MathUtils.lerp(playerLeftArm.rotation.z, targetLRotZ, blendSpeed);
+  }
+
+  // Torso & Pelvis Kinematics: Pelvic bobbing, lateral hip weight transfer, forward sprint lean & pitch tilt
+  if (playerTorso) {
+    const pelvicBob = Math.abs(rawStride) * 0.034 * locoWeight;
+    const breathingBob = Math.sin(idlePhase) * 0.010 * (1.0 - locoWeight);
+    const targetTorsoY = baseY + pelvicBob + breathingBob - landingCompression;
+
+    playerTorso.position.y = THREE.MathUtils.lerp(playerTorso.position.y, targetTorsoY, safeDt * 16.0);
+
+    // Lateral hip weight shift from foot to foot
+    const targetRollZ = Math.sin(walkPhase) * 0.032 * locoWeight;
+    playerTorso.rotation.z = THREE.MathUtils.lerp(playerTorso.rotation.z, targetRollZ, safeDt * 14.0);
+
+    // Torso yaw counter-rotation during stride
+    const targetYawY = Math.cos(walkPhase) * 0.042 * locoWeight;
+    playerTorso.rotation.y = THREE.MathUtils.lerp(playerTorso.rotation.y, targetYawY, safeDt * 14.0);
+
+    // Torso pitch tilt: leans forward into sprint, tilts spine with crosshair aim
+    const sprintLean = THREE.MathUtils.lerp(0.02, 0.075, sprintWeight) * locoWeight;
+    const spinePitchTilt = -clampedPitch * 0.28;
+    const targetPitchX = sprintLean + spinePitchTilt;
+    playerTorso.rotation.x = THREE.MathUtils.lerp(playerTorso.rotation.x, targetPitchX, safeDt * 14.0);
   }
 }
 

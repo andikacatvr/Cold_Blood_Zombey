@@ -95,6 +95,7 @@ import {
   playerPos,
   yaw,
   pitch,
+  isGrounded,
   setIsGrounded,
   initPlayer,
   switchWeapon,
@@ -287,7 +288,7 @@ function updateSimulation(dt) {
   }
 
   // Update Survivor Player 3D Model & Silent Hill Horror Camera (TPS/FPS)
-  updatePlayerModelAnimation(isMoving, keys.shift, dt, state.player.weapon);
+  updatePlayerModelAnimation(isMoving, keys.shift, dt, state.player.weapon, isGrounded, pVel.y, pitch);
   updateHorrorCamera(camera, playerPos, yaw, pitch, dt);
 
   if (weaponHolder) {
