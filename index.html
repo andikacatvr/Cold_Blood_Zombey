@@ -283,19 +283,8 @@
                 <div class="mode-card-title">Survival Mode</div>
                 <div class="mode-card-desc">Action shooter &amp; survive against endless hordes of zombies.</div>
               </div>
-              <div class="char-select-wrap">
-                <div class="char-select-title">PILIH KARAKTER UTAMA:</div>
-                <div class="char-choice-row">
-                  <button type="button" class="char-choice-btn active" id="btn-char-rodrick" data-char="rodrick">
-                    <span class="char-ico">🧔</span> RODRICK
-                  </button>
-                  <button type="button" class="char-choice-btn" id="btn-char-batavia" data-char="nona_batavia">
-                    <span class="char-ico">💃</span> NONA BATAVIA
-                  </button>
-                </div>
-              </div>
               <button class="btn-play mode-launch-btn btn-endless" id="btn-start-endless">
-                ☠ Start Survival
+                ☠ Pilih Karakter &amp; Main ▶
               </button>
             </div>
           </div>
@@ -303,6 +292,56 @@
           <div style="margin-top: 14px;">
             <button class="btn-play btn-sec menu-back-btn" id="btn-modes-back">
               ◀ Back
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBVIEW 4: SURVIVAL CHARACTER SELECTION MODAL -->
+      <div id="menu-view-char-select" class="menu-modal-backdrop" style="display: none;">
+        <div class="start-card main-menu-frame char-select-modal-frame">
+          <div class="mode-select-header">
+            <span class="mode-select-title">PILIH KARAKTER SURVIVAL</span>
+            <span class="mode-select-subtitle">Pilih karakter yang akan kamu gunakan di Endless Horde:</span>
+          </div>
+
+          <div class="char-roster-grid">
+            <!-- ROSTER 1: RODRICK -->
+            <div class="char-roster-card" id="card-roster-rodrick">
+              <div class="char-roster-avatar-box">
+                <span class="roster-avatar-emoji">🧔</span>
+                <span class="roster-class-badge">INVESTIGATOR</span>
+              </div>
+              <div class="char-roster-info">
+                <div class="char-roster-name">RODRICK</div>
+                <div class="char-roster-role">Peneliti Lapangan Coldbrook</div>
+                <div class="char-roster-desc">Survivor tangguh dengan gaya klasik survival horror. Menggunakan Shotgun Putar M1887 dan refleks pertempuran militer.</div>
+              </div>
+              <button class="btn-play roster-launch-btn btn-roster-rodrick" id="btn-launch-rodrick">
+                ▶ MAIN SEBAGAI RODRICK
+              </button>
+            </div>
+
+            <!-- ROSTER 2: NONA BATAVIA -->
+            <div class="char-roster-card nona-card" id="card-roster-batavia">
+              <div class="char-roster-avatar-box nona-avatar-box">
+                <span class="roster-avatar-emoji">💃</span>
+                <span class="roster-class-badge occult-badge">MYSTIC SPIRIT</span>
+              </div>
+              <div class="char-roster-info">
+                <div class="char-roster-name nona-name">NONA BATAVIA</div>
+                <div class="char-roster-role">Arwah Gaun Kebaya Tradisional</div>
+                <div class="char-roster-desc">Sosok arwah anggun dalam balutan gaun kebaya klasik. Melangkah melayang tenang di atas salju dengan aura mistis.</div>
+              </div>
+              <button class="btn-play roster-launch-btn nona-btn" id="btn-launch-batavia">
+                ▶ MAIN SEBAGAI NONA BATAVIA
+              </button>
+            </div>
+          </div>
+
+          <div style="margin-top: 16px;">
+            <button class="btn-play btn-sec menu-back-btn" id="btn-char-select-back">
+              ◀ Kembali ke Pilihan Mode
             </button>
           </div>
         </div>

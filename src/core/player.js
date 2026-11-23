@@ -848,6 +848,7 @@ export function startWinterSurvive(scene, mode = 'story') {
     state.running = false;
     state.storyPhase = 'orientation';
     window.__STORY_PHASE = 'orientation';
+    setPlayerCharacter('rodrick'); // Story Mode canon hero is always Rodrick
     state.talkedVillagers = new Set();
     state.resolutionKills = 0;
     state.player.weapon = 'unarmed';
@@ -1028,6 +1029,10 @@ export function setupPlayerControls() {
       if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(mode === 'tps' ? 2800 : 1800, 0.4);
     }
     if (c === 'KeyV' || k === 'v') {
+      if (state.gameMode !== 'endless') {
+        showPickupAlert('GANTI KARAKTER HANYA TERSEDIA DI SURVIVAL MODE');
+        return;
+      }
       const nextChar = togglePlayerCharacter();
       showPickupAlert(nextChar === 'nona_batavia' ? 'KARAKTER: NONA BATAVIA' : 'KARAKTER: RODRICK');
       if (nextChar === 'nona_batavia') {

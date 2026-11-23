@@ -96,6 +96,20 @@ export function updateHUD(state) {
     crossesWrap.innerHTML = crossHtml;
   }
 
+  // Character Tag interactivity (Active only in Endless Mode)
+  const charTag = document.getElementById('hud-character-tag');
+  if (charTag) {
+    if (s.gameMode === 'endless') {
+      charTag.style.cursor = 'pointer';
+      charTag.title = 'Tekan [V] atau Klik untuk Ganti Karakter';
+      charTag.classList.add('endless-active');
+    } else {
+      charTag.style.cursor = 'default';
+      charTag.title = 'Karakter: Rodrick';
+      charTag.classList.remove('endless-active');
+    }
+  }
+
   // 3. TACTICAL WEAPON & AMMO METER (TOP-RIGHT DISPLAY: 07 \ 40)
   const ammoDigitsEl = document.getElementById('tactical-ammo-display');
   const weaponNameEl = document.getElementById('tactical-weapon-name');

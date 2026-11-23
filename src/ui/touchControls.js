@@ -62,6 +62,11 @@ export function updateTouchControlsVisibility() {
     isTouchControlsEnabled();
 
   touchControlsContainer.style.display = shouldShow ? 'block' : 'none';
+
+  const btnTouchChar = document.getElementById('btn-touch-char');
+  if (btnTouchChar) {
+    btnTouchChar.style.display = (shouldShow && state.gameMode === 'endless') ? 'flex' : 'none';
+  }
 }
 
 function vibrate(ms = 22) {

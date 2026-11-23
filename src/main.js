@@ -1152,11 +1152,13 @@ function init() {
   const menuViewRoot = document.getElementById('menu-view-root');
   const menuViewModes = document.getElementById('menu-view-modes');
   const menuViewControls = document.getElementById('menu-view-controls');
+  const menuViewCharSelect = document.getElementById('menu-view-char-select');
 
   function showMenuView(view) {
     if (menuViewRoot) menuViewRoot.style.display = (view === 'root') ? 'flex' : 'none';
     if (menuViewModes) menuViewModes.style.display = (view === 'modes') ? 'flex' : 'none';
     if (menuViewControls) menuViewControls.style.display = (view === 'controls') ? 'flex' : 'none';
+    if (menuViewCharSelect) menuViewCharSelect.style.display = (view === 'char_select') ? 'flex' : 'none';
     if (Sfx && Sfx.playSmallBell) Sfx.playSmallBell(2400, 0.4);
   }
 
@@ -1172,6 +1174,9 @@ function init() {
   const btnControlsBack = document.getElementById('btn-controls-back');
   if (btnControlsBack) btnControlsBack.addEventListener('click', () => showMenuView('root'));
 
+  const btnCharSelectBack = document.getElementById('btn-char-select-back');
+  if (btnCharSelectBack) btnCharSelectBack.addEventListener('click', () => showMenuView('modes'));
+
   const btnStartStory = document.getElementById('btn-start-story');
   if (btnStartStory) btnStartStory.addEventListener('click', () => startWinterSurvive(scene, 'story'));
 
@@ -1180,56 +1185,86 @@ function init() {
     if (e.target !== btnStartStory) startWinterSurvive(scene, 'story');
   });
 
-  // Character Selection (Survival / Endless Mode)
-  window.__SELECTED_SURVIVAL_CHAR = 'rodrick';
-  const btnCharRodrick = document.getElementById('btn-char-rodrick');
-  const btnCharBatavia = document.getElementById('btn-char-batavia');
+  // Endless Mode opens Survival Character Selection
+  const btnStartEndless = document.getElementById('btn-start-endless');
+  if (btnStartEndless) {
+    btnStartEndless.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showMenuView('char_select');
+    });
+  }
 
-  if (btnCharRodrick) {
-    btnCharRodrick.addEventListener('click', (e) => {
+  const cardModeEndless = document.getElementById('card-mode-endless');
+  if (cardModeEndless) {
+    cardModeEndless.addEventListener('click', () => {
+      showMenuView('char_select');
+    });
+  }
+
+  // Character Selection Launchers for Endless Mode
+  window.__SELECTED_SURVIVAL_CHAR = 'rodrick';
+
+  const btnLaunchRodrick = document.getElementById('btn-launch-rodrick');
+  if (btnLaunchRodrick) {
+    btnLaunchRodrick.addEventListener('click', (e) => {
       e.stopPropagation();
       window.__SELECTED_SURVIVAL_CHAR = 'rodrick';
       setPlayerCharacter('rodrick');
-      btnCharRodrick.classList.add('active');
-      if (btnCharBatavia) btnCharBatavia.classList.remove('active');
-    });
-  }
-  if (btnCharBatavia) {
-    btnCharBatavia.addEventListener('click', (e) => {
-      e.stopPropagation();
-      window.__SELECTED_SURVIVAL_CHAR = 'nona_batavia';
-      setPlayerCharacter('nona_batavia');
-      btnCharBatavia.classList.add('active');
-      if (btnCharRodrick) btnCharRodrick.classList.remove('active');
+      startWinterSurvive(scene, 'endless');
     });
   }
 
-  // HUD Character Tag click to toggle
+  const cardRosterRodrick = document.getElementById('card-roster-rodrick');
+  if (cardRosterRodrick) {
+    cardRosterRodrick.addEventListener('click', (e) => {
+      if (e.target !== btnLaunchRodrick) {
+        window.__SELECTED_SURVIVAL_CHAR = 'rodrick';
+        setPlayerCharacter('rodrick');
+        startWinterSurvive(scene, 'endless');
+      }
+    });
+  }
+
+  const btnLaunchBatavia = document.getElementById('btn-launch-batavia');
+  if (btnLaunchBatavia) {
+    btnLaunchBatavia.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.__SELECTED_SURVIVAL_CHAR = 'nona_batavia';
+      setPlayerCharacter('nona_batavia');
+      startWinterSurvive(scene, 'endless');
+    });
+  }
+
+  const cardRosterBatavia = document.getElementById('card-roster-batavia');
+  if (cardRosterBatavia) {
+    cardRosterBatavia.addEventListener('click', (e) => {
+      if (e.target !== btnLaunchBatavia) {
+        window.__SELECTED_SURVIVAL_CHAR = 'nona_batavia';
+        setPlayerCharacter('nona_batavia');
+        startWinterSurvive(scene, 'endless');
+      }
+    });
+  }
+
+  // HUD Character Tag click to toggle (Active exclusively in Endless mode)
   const hudCharTag = document.getElementById('hud-character-tag');
   if (hudCharTag) {
     hudCharTag.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (state.gameMode !== 'endless') return;
       togglePlayerCharacter();
     });
   }
 
-  // Mobile touch character toggle button
+  // Mobile touch character toggle button (Active exclusively in Endless mode)
   const btnTouchChar = document.getElementById('btn-touch-char');
   if (btnTouchChar) {
     btnTouchChar.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (state.gameMode !== 'endless') return;
       togglePlayerCharacter();
     });
   }
-
-  const btnStartEndless = document.getElementById('btn-start-endless');
-  if (btnStartEndless) btnStartEndless.addEventListener('click', () => startWinterSurvive(scene, 'endless'));
-
-  const cardModeEndless = document.getElementById('card-mode-endless');
-  if (cardModeEndless) cardModeEndless.addEventListener('click', (e) => {
-    if (e.target.closest('.char-select-wrap') || e.target.closest('.char-choice-btn')) return;
-    if (e.target !== btnStartEndless) startWinterSurvive(scene, 'endless');
-  });
 
   const btnEnter = document.getElementById('btn-enter');
   if (btnEnter) btnEnter.addEventListener('click', () => startWinterSurvive(scene, 'story'));
