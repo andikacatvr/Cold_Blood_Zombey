@@ -2779,7 +2779,7 @@ export function initWorld(scene, textures) {
     const mistGeo = new THREE.PlaneGeometry(30.0, 30.0);
     mistGeo.rotateX(-Math.PI / 2);
     const mistMat = new THREE.MeshBasicMaterial({
-      color: 0x5a827c,
+      color: 0x42668c,
       transparent: true,
       opacity: 0.22,
       depthWrite: false
@@ -3267,7 +3267,7 @@ export function setEndlessEnvironment(isEndless, scene) {
 
   // 4. Dense atmospheric horror fog ("buat lebih berkabut")
   if (scene && scene.fog) {
-    scene.fog.color.setHex(0x4e726d);
+    scene.fog.color.setHex(0x325274);
     if (isEndless) {
       // Dense drifting teal mist: sightline cut off past 16 meters
       scene.fog.near = 1.0;
