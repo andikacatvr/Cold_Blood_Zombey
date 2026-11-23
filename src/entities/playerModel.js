@@ -83,6 +83,137 @@ let sisterValentinaWeaponSocket = null;
 let kristinPlayerScene = null;
 let kristinPlayerWeaponSocket = null;
 let rodrickTorsoBaseY = 0.893;
+let rodrickLeftLegBaseY = 0.90;
+let rodrickRightLegBaseY = 0.90;
+
+// Dynamic kinematic deformation controllers for seamless leg/arm walking across all character meshes
+const kristinDeformers = [];
+const nonaDeformers = [];
+const valentinaDeformers = [];
+
+function makeRotator(rx, ry, rz, px, py, pz) {
+  const cx = Math.cos(rx), sx = Math.sin(rx);
+  const cy = Math.cos(ry), sy = Math.sin(ry);
+  const cz = Math.cos(rz), sz = Math.sin(rz);
+  return (x, y, z) => {
+    let dx = x - px, dy = y - py, dz = z - pz;
+    let y1 = cy * dy - sy * dz;
+    let z1 = sy * dy + cy * dz;
+    let x2 = cx * dx + sx * z1;
+    let z2 = -sx * dx + cx * z1;
+    let x3 = cz * x2 - sz * y1;
+    let y3 = sz * x2 + cz * y1;
+    return [x3 + px, y3 + py, z2 + pz];
+  };
+}
+
+function initMeshDeformer(mesh) {
+  if (!mesh || !mesh.geometry || !mesh.geometry.attributes.position) return null;
+  const geom = mesh.geometry;
+  const posAttr = geom.attributes.position;
+  const count = posAttr.count;
+  const orig = new Float32Array(count * 3);
+  for (let i = 0; i < count * 3; i++) orig[i] = posAttr.array[i];
+
+  // Weights: [wTorso, wLArm, wRArm, wLLeg, wRLeg]
+  const weights = new Float32Array(count * 5);
+  for (let i = 0; i < count; i++) {
+    const x = orig[i * 3];
+    const y = orig[i * 3 + 1];
+
+    let wTorso = 0, wLArm = 0, wRArm = 0, wLLeg = 0, wRLeg = 0;
+    // Arms
+    if (x < -0.22 && y > 0.78) {
+      wLArm = Math.min(1.0, Math.max(0.0, (-x - 0.22) / 0.08));
+    }
+    if (x > 0.22 && y > 0.78) {
+      wRArm = Math.min(1.0, Math.max(0.0, (x - 0.22) / 0.08));
+    }
+    // Torso / Chest
+    if (y > 0.82 && Math.abs(x) <= 0.24) {
+      wTorso = Math.min(1.0, Math.max(0.0, (y - 0.82) / 0.15));
+    }
+    // Legs (split below hip at 0.84)
+    if (y <= 0.84) {
+      const legFactor = Math.min(1.0, Math.max(0.0, (0.84 - y) / 0.08));
+      if (x <= 0.01) {
+        wLLeg = legFactor * (x < -0.02 ? 1.0 : Math.max(0.0, -x / 0.02));
+      }
+      if (x >= -0.01) {
+        wRLeg = legFactor * (x > 0.02 ? 1.0 : Math.max(0.0, x / 0.02));
+      }
+    }
+
+    weights[i * 5 + 0] = wTorso;
+    weights[i * 5 + 1] = wLArm;
+    weights[i * 5 + 2] = wRArm;
+    weights[i * 5 + 3] = wLLeg;
+    weights[i * 5 + 4] = wRLeg;
+  }
+
+  return { mesh, orig, weights, count };
+}
+
+function applyDeformation(deformer, ll_rx, rl_rx, la_rx, ra_rx, t_rx, t_ry, t_rz) {
+  if (!deformer) return;
+  const { mesh, orig, weights, count } = deformer;
+  const posArr = mesh.geometry.attributes.position.array;
+
+  const rotLArm = makeRotator(la_rx, 0, 0.35, -0.30, 1.25, 0);
+  const rotRArm = makeRotator(ra_rx, 0, -0.35, 0.30, 1.25, 0);
+  const rotTorso = makeRotator(t_rx, t_ry, t_rz, 0, 0.85, 0);
+  const rotLLeg = makeRotator(ll_rx, 0, 0, -0.12, 0.82, 0);
+  const rotRLeg = makeRotator(rl_rx, 0, 0, 0.12, 0.82, 0);
+
+  for (let i = 0; i < count; i++) {
+    const i3 = i * 3;
+    const i5 = i * 5;
+    const x0 = orig[i3], y0 = orig[i3 + 1], z0 = orig[i3 + 2];
+    const wTorso = weights[i5 + 0];
+    const wLArm = weights[i5 + 1];
+    const wRArm = weights[i5 + 2];
+    const wLLeg = weights[i5 + 3];
+    const wRLeg = weights[i5 + 4];
+
+    let fx = x0, fy = y0, fz = z0;
+    if (wLArm > 0.01) {
+      const [rx, ry, rz] = rotLArm(x0, y0, z0);
+      fx += (rx - x0) * wLArm;
+      fy += (ry - y0) * wLArm;
+      fz += (rz - z0) * wLArm;
+    }
+    if (wRArm > 0.01) {
+      const [rx, ry, rz] = rotRArm(x0, y0, z0);
+      fx += (rx - x0) * wRArm;
+      fy += (ry - y0) * wRArm;
+      fz += (rz - z0) * wRArm;
+    }
+    if (wTorso > 0.01) {
+      const [rx, ry, rz] = rotTorso(x0, y0, z0);
+      fx += (rx - x0) * wTorso;
+      fy += (ry - y0) * wTorso;
+      fz += (rz - z0) * wTorso;
+    }
+    if (wLLeg > 0.01) {
+      const [rx, ry, rz] = rotLLeg(x0, y0, z0);
+      fx += (rx - x0) * wLLeg;
+      fy += (ry - y0) * wLLeg;
+      fz += (rz - z0) * wLLeg;
+    }
+    if (wRLeg > 0.01) {
+      const [rx, ry, rz] = rotRLeg(x0, y0, z0);
+      fx += (rx - x0) * wRLeg;
+      fy += (ry - y0) * wRLeg;
+      fz += (rz - z0) * wRLeg;
+    }
+
+    posArr[i3] = fx;
+    posArr[i3 + 1] = fy;
+    posArr[i3 + 2] = fz;
+  }
+
+  mesh.geometry.attributes.position.needsUpdate = true;
+}
 
 let playerLeftLeg = null;
 let playerRightLeg = null;
@@ -167,8 +298,14 @@ function loadRodrickGLBModel(root) {
         playerRightArm.add(playerWeaponSocket);
       }
     }
-    if (glbLeftLeg) playerLeftLeg = glbLeftLeg;
-    if (glbRightLeg) playerRightLeg = glbRightLeg;
+    if (glbLeftLeg) {
+      playerLeftLeg = glbLeftLeg;
+      rodrickLeftLegBaseY = glbLeftLeg.position.y || 0.90;
+    }
+    if (glbRightLeg) {
+      playerRightLeg = glbRightLeg;
+      rodrickRightLegBaseY = glbRightLeg.position.y || 0.90;
+    }
     if (glbTorsoMesh) {
       playerTorso = glbTorsoMesh;
       rodrickTorsoBaseY = glbTorsoMesh.position.y || 0.893;
@@ -223,6 +360,8 @@ function loadNonaBataviaPlayerModel(root) {
             child.material.metalness = 0.08;
             child.material.needsUpdate = true;
           }
+          const def = initMeshDeformer(child);
+          if (def) nonaDeformers.push(def);
         }
       });
 
@@ -271,6 +410,8 @@ function loadSisterValentinaPlayerModel(root) {
             child.material.metalness = 0.04;
             child.material.needsUpdate = true;
           }
+          const def = initMeshDeformer(child);
+          if (def) valentinaDeformers.push(def);
         }
       });
 
@@ -319,6 +460,8 @@ function loadKristinPlayerModel(root) {
             child.material.metalness = 0.08;
             child.material.needsUpdate = true;
           }
+          const def = initMeshDeformer(child);
+          if (def) kristinDeformers.push(def);
         }
       });
 
@@ -900,7 +1043,36 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
   const rawStride = Math.sin(walkPhase);
   const clampedPitch = Math.max(-0.85, Math.min(0.85, aimPitch));
 
-  // Handle Nona Batavia distinct motion dynamics
+  // Stride amplitude smoothly scales down when airborne (natural human range: 0.55 - 0.85 rad)
+  const maxStride = THREE.MathUtils.lerp(0.55, 0.85, sprintWeight) * locoWeight * (1.0 - airWeight);
+  const currentStride = rawStride * maxStride;
+
+  // Real-time kinematic limb angles for deformed models (Nona, Valentina, Kristin)
+  const defLLeg = currentStride;
+  const defRLeg = -currentStride;
+  let defLArm = 0;
+  let defRArm = 0;
+
+  if (activeWeapon !== 'unarmed') {
+    if (activeWeapon === 'golok') {
+      defRArm = -0.42 - clampedPitch * 0.50 + Math.sin(walkPhase) * 0.16 * locoWeight;
+      defLArm = -0.22 - clampedPitch * 0.25 - Math.sin(walkPhase) * 0.12 * locoWeight;
+    } else {
+      // Shotgun ready posture with walking pump motion
+      defRArm = -0.42 - clampedPitch * 0.70 + Math.sin(walkPhase) * 0.18 * locoWeight;
+      defLArm = -0.66 - clampedPitch * 0.68 - Math.sin(walkPhase) * 0.14 * locoWeight;
+    }
+  } else {
+    // Natural unarmed walking arm swings (full human swing)
+    defLArm = -rawStride * 0.75 * locoWeight * (1.0 - airWeight);
+    defRArm = rawStride * 0.75 * locoWeight * (1.0 - airWeight);
+  }
+
+  const defTorsoX = THREE.MathUtils.lerp(0.02, 0.08, sprintWeight) * locoWeight - clampedPitch * 0.20;
+  const defTorsoY = Math.sin(walkPhase) * 0.07 * locoWeight;
+  const defTorsoZ = -Math.sin(walkPhase) * 0.04 * locoWeight;
+
+  // Handle Nona Batavia distinct motion dynamics + walking legs & arms
   if (activeCharacter === 'nona_batavia') {
     if (nonaBataviaPlayerScene) {
       const bob = (Math.sin(walkPhase * 2.0) * 0.038 * locoWeight) + (Math.sin(idlePhase) * 0.014 * (1.0 - locoWeight));
@@ -911,15 +1083,19 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
       if (nonaBataviaWeaponSocket) {
         nonaBataviaWeaponSocket.rotation.x = THREE.MathUtils.lerp(
           nonaBataviaWeaponSocket.rotation.x,
-          0.25 - clampedPitch * 0.70,
+          0.25 - clampedPitch * 0.70 + Math.sin(walkPhase) * 0.12 * locoWeight,
           safeDt * 15.0
         );
+      }
+
+      for (let i = 0; i < nonaDeformers.length; i++) {
+        applyDeformation(nonaDeformers[i], defLLeg, defRLeg, defLArm, defRArm, defTorsoX, defTorsoY, defTorsoZ);
       }
     }
     return;
   }
 
-  // Handle Sister Valentina distinct demonic glide motion
+  // Handle Sister Valentina distinct demonic glide motion + walking legs & claws
   if (activeCharacter === 'sister_valentina') {
     if (sisterValentinaPlayerScene) {
       const bob = (Math.sin(walkPhase * 2.0) * 0.045 * locoWeight) + (Math.sin(idlePhase) * 0.018 * (1.0 - locoWeight));
@@ -930,15 +1106,19 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
       if (sisterValentinaWeaponSocket) {
         sisterValentinaWeaponSocket.rotation.x = THREE.MathUtils.lerp(
           sisterValentinaWeaponSocket.rotation.x,
-          0.30 - clampedPitch * 0.70,
+          0.30 - clampedPitch * 0.70 + Math.sin(walkPhase) * 0.12 * locoWeight,
           safeDt * 15.0
         );
+      }
+
+      for (let i = 0; i < valentinaDeformers.length; i++) {
+        applyDeformation(valentinaDeformers[i], defLLeg, defRLeg, defLArm, defRArm, defTorsoX, defTorsoY, defTorsoZ);
       }
     }
     return;
   }
 
-  // Handle Kristin distinct athletic stride motion
+  // Handle Kristin distinct athletic stride motion + walking legs & arms
   if (activeCharacter === 'kristin') {
     if (kristinPlayerScene) {
       const bob = (Math.abs(rawStride) * 0.038 * locoWeight) + (Math.sin(idlePhase) * 0.012 * (1.0 - locoWeight));
@@ -949,9 +1129,13 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
       if (kristinPlayerWeaponSocket) {
         kristinPlayerWeaponSocket.rotation.x = THREE.MathUtils.lerp(
           kristinPlayerWeaponSocket.rotation.x,
-          0.25 - clampedPitch * 0.70,
+          0.25 - clampedPitch * 0.70 + Math.sin(walkPhase) * 0.12 * locoWeight,
           safeDt * 15.0
         );
+      }
+
+      for (let i = 0; i < kristinDeformers.length; i++) {
+        applyDeformation(kristinDeformers[i], defLLeg, defRLeg, defLArm, defRArm, defTorsoX, defTorsoY, defTorsoZ);
       }
     }
     return;
@@ -960,11 +1144,7 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
   // --- Rodrick Primary Locomotion & Bone Kinematics ---
   const baseY = isRodrickGLBLoaded ? rodrickTorsoBaseY : 0.95;
 
-  // Stride amplitude smoothly scales down when airborne
-  const maxStride = THREE.MathUtils.lerp(0.50, 0.78, sprintWeight) * locoWeight * (1.0 - airWeight);
-  const currentStride = rawStride * maxStride;
-
-  // Legs Kinematics: Walk stride + in-air leg tuck/extension
+  // Legs Kinematics: Walk stride + knee lift and in-air leg tuck/extension
   if (playerLeftLeg && playerRightLeg) {
     if (airWeight > 0.1) {
       // In air: tuck up during ascent (vertVel > 0), extend down during fall (vertVel < 0)
@@ -975,10 +1155,20 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
     } else {
       playerLeftLeg.rotation.x = THREE.MathUtils.lerp(playerLeftLeg.rotation.x, currentStride, safeDt * 18.0);
       playerRightLeg.rotation.x = THREE.MathUtils.lerp(playerRightLeg.rotation.x, -currentStride, safeDt * 18.0);
+
+      // Organic knee clearance lift while walking through snow
+      const liftL = Math.max(0, -rawStride) * 0.055 * locoWeight;
+      const liftR = Math.max(0, rawStride) * 0.055 * locoWeight;
+      playerLeftLeg.position.y = THREE.MathUtils.lerp(playerLeftLeg.position.y, (rodrickLeftLegBaseY || 0.90) + liftL, safeDt * 16.0);
+      playerRightLeg.position.y = THREE.MathUtils.lerp(playerRightLeg.position.y, (rodrickRightLegBaseY || 0.90) + liftR, safeDt * 16.0);
+
+      // Natural outward hip roll during stride
+      playerLeftLeg.rotation.z = Math.sin(walkPhase) * 0.035 * locoWeight;
+      playerRightLeg.rotation.z = -Math.sin(walkPhase) * 0.035 * locoWeight;
     }
   }
 
-  // Arms Kinematics & Weapon Ready Aiming with Pitch Tracking
+  // Arms Kinematics & Weapon Ready Aiming with Dynamic Walk Motion
   const pitchArms = clampedPitch * 0.70;
   const blendSpeed = safeDt * 14.0;
 
@@ -991,28 +1181,27 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
 
   if (activeWeapon !== 'unarmed') {
     if (activeWeapon === 'golok') {
-      // One-handed melee ready stance: blade held forward ready to parry/slash
-      targetRRotX = -0.42 - pitchArms * 0.6 + currentStride * 0.08;
-      targetRRotY = 0.10;
+      // One-handed melee ready stance: blade held forward with natural arm pumping
+      targetRRotX = -0.42 - pitchArms * 0.6 + Math.sin(walkPhase) * 0.16 * locoWeight;
+      targetRRotY = 0.10 + Math.cos(walkPhase) * 0.05 * locoWeight;
       targetRRotZ = 0.06;
 
-      targetLRotX = -0.22 - pitchArms * 0.25 - currentStride * 0.06;
+      targetLRotX = -0.22 - pitchArms * 0.25 - Math.sin(walkPhase) * 0.14 * locoWeight;
       targetLRotY = 0.14;
       targetLRotZ = -0.08;
     } else {
-      // Authentic Two-Handed Survival Horror Shotgun Ready Stance (Leon S. Kennedy / James Sunderland)
-      // Right hand holds grip & trigger pointing downrange; left hand holds forend across chest
-      targetRRotX = -0.42 - pitchArms + currentStride * 0.04;
-      targetRRotY = 0.08;
+      // Authentic Two-Handed Survival Horror Shotgun Ready Stance with dynamic weapon pumping
+      targetRRotX = -0.42 - pitchArms + Math.sin(walkPhase) * 0.16 * locoWeight;
+      targetRRotY = 0.08 + Math.cos(walkPhase) * 0.04 * locoWeight;
       targetRRotZ = -0.06;
 
-      targetLRotX = -0.66 - pitchArms - currentStride * 0.04;
-      targetLRotY = 0.38;
+      targetLRotX = -0.66 - pitchArms - Math.sin(walkPhase) * 0.14 * locoWeight;
+      targetLRotY = 0.38 + Math.cos(walkPhase) * 0.04 * locoWeight;
       targetLRotZ = -0.22;
     }
   } else {
-    // Unarmed natural walking arm swings with idle breathing blend
-    const unarmedSwing = rawStride * 0.45 * locoWeight * (1.0 - airWeight);
+    // Unarmed natural walking arm swings (full 45° human swing)
+    const unarmedSwing = rawStride * 0.72 * locoWeight * (1.0 - airWeight);
     const idleLRotX = 0.05 + Math.sin(idlePhase) * 0.02;
     const idleRRotX = -0.05 - Math.sin(idlePhase) * 0.02;
 
@@ -1036,6 +1225,12 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
     playerLeftArm.rotation.x = THREE.MathUtils.lerp(playerLeftArm.rotation.x, targetLRotX, blendSpeed);
     playerLeftArm.rotation.y = THREE.MathUtils.lerp(playerLeftArm.rotation.y, targetLRotY, blendSpeed);
     playerLeftArm.rotation.z = THREE.MathUtils.lerp(playerLeftArm.rotation.z, targetLRotZ, blendSpeed);
+  }
+
+  // Subtle weapon socket bounce & sway while walking
+  if (playerWeaponSocket && isMoving) {
+    playerWeaponSocket.position.y = -0.48 + Math.sin(walkPhase * 2.0) * 0.02 * locoWeight;
+    playerWeaponSocket.position.z = 0.08 + Math.cos(walkPhase) * 0.02 * locoWeight;
   }
 
   // Torso & Pelvis Kinematics: Pelvic bobbing, lateral hip weight transfer, forward sprint lean & pitch tilt
@@ -1136,7 +1331,10 @@ export function updateHorrorCamera(camera, playerPos, yaw, pitch, dt) {
     const targetCamY = playerPos.y + camHeight;
     const targetCamZ = playerPos.z + backZ;
 
-    camera.position.set(targetCamX, targetCamY, targetCamZ);
+    const camLerp = Math.min(1.0, Math.max(0.01, (dt || 0.016) * 18.0));
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, targetCamX, camLerp);
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetCamY, camLerp);
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetCamZ, camLerp);
 
     // Look at target in front of player (towards -Z when yaw=0)
     const lookAheadDist = 6.5;

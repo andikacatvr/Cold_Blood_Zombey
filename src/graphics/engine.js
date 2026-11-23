@@ -21,6 +21,11 @@ export const renderer = new THREE.WebGLRenderer({
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1.0, 2.0));
 renderer.shadowMap.enabled = !isMobileDevice;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Clean soft shadow filtering
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.06;
+if (THREE.SRGBColorSpace) {
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+}
 
 export const FOG_COLOR = 0x325274; // Atmospheric cold cinematic blue horror mist
 renderer.setClearColor(FOG_COLOR);
