@@ -74,7 +74,8 @@ import {
   updateHeroInspectDelta,
   zoomHeroInspect,
   triggerScreenShake,
-  triggerHitStop
+  triggerHitStop,
+  triggerTPSWeaponRecoil
 } from '../entities/playerModel.js';
 
 const THREE = window.THREE;
@@ -531,6 +532,7 @@ export function fireCombatShotgun() {
   updateHUD(state);
 
   Sfx.playShotgun();
+  triggerTPSWeaponRecoil(isSpin ? 0.30 : 0.26);
 
   if (isSpin) {
     pitch += 0.088;

@@ -8,7 +8,8 @@
 const THREE = window.THREE;
 import { getTerrainHeight, checkCameraCollision } from '../world/environment.js';
 import { renderer } from '../graphics/engine.js';
-import { weaponHolder } from './weapons.js';
+import { weaponHolder, meleeSwing, weaponSpin } from './weapons.js';
+import { isStoryDialogueOpen } from '../core/dialogueSystem.js';
 
 export let cameraMode = 'fps'; // Default: Pure FPS (First-Person Shooter)
 export let activeCharacter = 'rodrick'; // 'rodrick' | 'nona_batavia' | 'sister_valentina' | 'kristin'
@@ -1070,35 +1071,77 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
 
   const rawStride = Math.sin(walkPhase);
   const clampedPitch = Math.max(-0.85, Math.min(0.85, aimPitch));
+  const isTalking = (typeof isStoryDialogueOpen === 'function') && isStoryDialogueOpen();
+  const talkClock = performance.now() * 0.001;
 
-  // Stride amplitude smoothly scales down when airborne (natural human range: 0.55 - 0.85 rad)
-  let maxStride = THREE.MathUtils.lerp(0.55, 0.85, sprintWeight) * locoWeight * (1.0 - airWeight);
+  // Decay TPS weapon recoil smoothly
+  tpsWeaponRecoil = THREE.MathUtils.lerp(tpsWeaponRecoil, 0.0, Math.min(1.0, safeDt * 14.0));
+
+  // Compute TPS melee slash & shotgun spin progress (0..1)
+  let slashProgress = -1;
+  if (meleeSwing && meleeSwing.active) {
+    slashProgress = Math.min(1.0, (performance.now() - meleeSwing.startTime) / Math.max(1, meleeSwing.duration));
+  }
+  let spinProgress = -1;
+  if (weaponSpin && weaponSpin.active) {
+    spinProgress = Math.min(1.0, (performance.now() - weaponSpin.startTime) / Math.max(1, weaponSpin.duration));
+  }
+
+  // Stride amplitude smoothly scales down when airborne or talking
+  const talkWeight = isTalking ? 0.0 : 1.0;
+  let maxStride = THREE.MathUtils.lerp(0.55, 0.85, sprintWeight) * locoWeight * (1.0 - airWeight) * talkWeight;
   let currentStride = rawStride * maxStride;
 
   // Real-time kinematic limb angles for deformed models (Nona, Valentina, Kristin)
-  const defLLeg = currentStride;
-  const defRLeg = -currentStride;
+  let defLLeg = currentStride;
+  let defRLeg = -currentStride;
+  if (airWeight > 0.1) {
+    defLLeg += (vertVel > 0.4 ? -0.44 : 0.24) * airWeight;
+    defRLeg += (vertVel > 0.4 ? -0.22 : 0.14) * airWeight;
+  } else if (landingCompression > 0.005) {
+    defLLeg -= landingCompression * 1.8;
+    defRLeg += landingCompression * 1.4;
+  }
+
   let defLArm = 0;
   let defRArm = 0;
 
-  if (activeWeapon !== 'unarmed') {
+  if (isTalking) {
+    // Respectful lowered weapon + natural conversational hand gestures
+    defRArm = -0.32 + Math.sin(talkClock * 4.2) * 0.24;
+    defLArm = -0.22 + Math.cos(talkClock * 3.5) * 0.18;
+  } else if (slashProgress >= 0) {
+    // Full-body Golok slash arc (windup -> cleave -> follow-through)
+    const swingAngle = slashProgress < 0.35
+      ? THREE.MathUtils.lerp(-0.42, -1.45, slashProgress / 0.35)
+      : THREE.MathUtils.lerp(-1.45, 0.72, (slashProgress - 0.35) / 0.65);
+    defRArm = swingAngle;
+    defLArm = -0.35 + Math.sin(slashProgress * Math.PI) * 0.25;
+  } else if (activeWeapon !== 'unarmed') {
     if (activeWeapon === 'golok') {
       defRArm = -0.42 - clampedPitch * 0.50 + Math.sin(walkPhase) * 0.16 * locoWeight;
       defLArm = -0.22 - clampedPitch * 0.25 - Math.sin(walkPhase) * 0.12 * locoWeight;
     } else {
-      // Shotgun ready posture with walking pump motion
-      defRArm = -0.42 - clampedPitch * 0.70 + Math.sin(walkPhase) * 0.18 * locoWeight;
-      defLArm = -0.66 - clampedPitch * 0.68 - Math.sin(walkPhase) * 0.14 * locoWeight;
+      // Shotgun ready posture with walking pump motion + firing recoil kick
+      defRArm = -0.42 - clampedPitch * 0.70 + Math.sin(walkPhase) * 0.18 * locoWeight - tpsWeaponRecoil * 0.85;
+      defLArm = -0.66 - clampedPitch * 0.68 - Math.sin(walkPhase) * 0.14 * locoWeight - tpsWeaponRecoil * 0.65;
     }
   } else {
-    // Natural unarmed walking arm swings (full human swing)
-    defLArm = -rawStride * 0.75 * locoWeight * (1.0 - airWeight);
-    defRArm = rawStride * 0.75 * locoWeight * (1.0 - airWeight);
+    // Natural unarmed walking arm swings + airborne balance flare
+    defLArm = -rawStride * 0.75 * locoWeight * (1.0 - airWeight) + (airWeight * (vertVel > 0 ? -0.35 : 0.25));
+    defRArm = rawStride * 0.75 * locoWeight * (1.0 - airWeight) + (airWeight * (vertVel > 0 ? -0.28 : 0.22));
   }
 
-  const defTorsoX = THREE.MathUtils.lerp(0.02, 0.08, sprintWeight) * locoWeight - clampedPitch * 0.20;
-  const defTorsoY = Math.sin(walkPhase) * 0.07 * locoWeight;
-  const defTorsoZ = -Math.sin(walkPhase) * 0.04 * locoWeight;
+  let defTorsoX = THREE.MathUtils.lerp(0.02, 0.08, sprintWeight) * locoWeight - clampedPitch * 0.20;
+  let defTorsoY = Math.sin(walkPhase) * 0.07 * locoWeight;
+  let defTorsoZ = -Math.sin(walkPhase) * 0.04 * locoWeight;
+  if (isTalking) {
+    defTorsoX = 0.06 + Math.sin(talkClock * 2.5) * 0.025;
+    defTorsoY = Math.sin(talkClock * 2.0) * 0.07;
+  } else if (slashProgress >= 0) {
+    defTorsoY += Math.sin(slashProgress * Math.PI) * 0.32;
+    defTorsoX += Math.sin(slashProgress * Math.PI) * 0.12;
+  }
 
   // Handle Nona Batavia distinct motion dynamics + walking legs & arms
   if (activeCharacter === 'nona_batavia') {
@@ -1179,35 +1222,35 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
   maxStride = THREE.MathUtils.lerp(0.50, 0.78, sprintWeight) * locoWeight * (1.0 - airWeight);
   currentStride = rawStride * maxStride;
 
-  // Legs Kinematics: Walk stride + in-air leg tuck/extension
-  // Legs Kinematics: Walk stride + knee lift and in-air leg tuck/extension
+  // Legs Kinematics: Walk stride + knee lift + realistic jump tuck/extension & landing squash
   if (playerLeftLeg && playerRightLeg) {
     if (airWeight > 0.1) {
-      // In air: tuck up during ascent (vertVel > 0), extend down during fall (vertVel < 0)
-      const airPoseLeft = (vertVel > 0 ? -0.32 : 0.14) * airWeight;
-      const airPoseRight = (vertVel > 0 ? -0.22 : 0.08) * airWeight;
-      playerLeftLeg.rotation.x = THREE.MathUtils.lerp(playerLeftLeg.rotation.x, currentStride + airPoseLeft, safeDt * 12.0);
-      playerRightLeg.rotation.x = THREE.MathUtils.lerp(playerRightLeg.rotation.x, -currentStride + airPoseRight, safeDt * 12.0);
+      // Ascent: knees tuck higher for jump momentum; Descent: legs reach toward snow
+      const airPoseLeft = (vertVel > 0.4 ? -0.46 : 0.24) * airWeight;
+      const airPoseRight = (vertVel > 0.4 ? -0.22 : 0.14) * airWeight;
+      playerLeftLeg.rotation.x = THREE.MathUtils.lerp(playerLeftLeg.rotation.x, currentStride + airPoseLeft, safeDt * 13.0);
+      playerRightLeg.rotation.x = THREE.MathUtils.lerp(playerRightLeg.rotation.x, -currentStride + airPoseRight, safeDt * 13.0);
     } else {
-      playerLeftLeg.rotation.x = THREE.MathUtils.lerp(playerLeftLeg.rotation.x, currentStride, safeDt * 18.0);
-      playerRightLeg.rotation.x = THREE.MathUtils.lerp(playerRightLeg.rotation.x, -currentStride, safeDt * 18.0);
+      const landKneeL = landingCompression * 2.1;
+      const landKneeR = -landingCompression * 1.5;
+      playerLeftLeg.rotation.x = THREE.MathUtils.lerp(playerLeftLeg.rotation.x, currentStride + landKneeL, safeDt * 18.0);
+      playerRightLeg.rotation.x = THREE.MathUtils.lerp(playerRightLeg.rotation.x, -currentStride + landKneeR, safeDt * 18.0);
 
       // Organic knee clearance lift while walking through snow
-      const liftL = Math.max(0, -rawStride) * 0.055 * locoWeight;
-      const liftR = Math.max(0, rawStride) * 0.055 * locoWeight;
-      playerLeftLeg.position.y = THREE.MathUtils.lerp(playerLeftLeg.position.y, (rodrickLeftLegBaseY || 0.90) + liftL, safeDt * 16.0);
-      playerRightLeg.position.y = THREE.MathUtils.lerp(playerRightLeg.position.y, (rodrickRightLegBaseY || 0.90) + liftR, safeDt * 16.0);
+      const liftL = Math.max(0, -rawStride) * 0.065 * locoWeight * talkWeight;
+      const liftR = Math.max(0, rawStride) * 0.065 * locoWeight * talkWeight;
+      playerLeftLeg.position.y = THREE.MathUtils.lerp(playerLeftLeg.position.y, (rodrickLeftLegBaseY || 0.90) + liftL - landingCompression * 0.35, safeDt * 16.0);
+      playerRightLeg.position.y = THREE.MathUtils.lerp(playerRightLeg.position.y, (rodrickRightLegBaseY || 0.90) + liftR - landingCompression * 0.35, safeDt * 16.0);
 
       // Natural outward hip roll during stride
-      playerLeftLeg.rotation.z = Math.sin(walkPhase) * 0.035 * locoWeight;
-      playerRightLeg.rotation.z = -Math.sin(walkPhase) * 0.035 * locoWeight;
+      playerLeftLeg.rotation.z = Math.sin(walkPhase) * 0.035 * locoWeight * talkWeight;
+      playerRightLeg.rotation.z = -Math.sin(walkPhase) * 0.035 * locoWeight * talkWeight;
     }
   }
 
-  // Arms Kinematics & Weapon Ready Aiming with Pitch Tracking
-  // Arms Kinematics & Weapon Ready Aiming with Dynamic Walk Motion
+  // Arms Kinematics: Weapon Grip, Combat Slash/Recoil, Airborne Balance, & Talking Gestures
   const pitchArms = clampedPitch * 0.70;
-  const blendSpeed = safeDt * 14.0;
+  const blendSpeed = safeDt * (slashProgress >= 0 ? 24.0 : 14.0);
 
   let targetRRotX = 0;
   let targetRRotY = 0;
@@ -1216,38 +1259,55 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
   let targetLRotY = 0;
   let targetLRotZ = 0;
 
-  if (activeWeapon !== 'unarmed') {
+  if (isTalking) {
+    // Respectful relaxed weapon carry + expressive conversational hand gestures
+    targetRRotX = 0.14 + Math.sin(talkClock * 3.2) * 0.08;
+    targetRRotY = -0.08;
+    targetRRotZ = 0.10;
+
+    targetLRotX = -0.45 + Math.cos(talkClock * 4.1) * 0.24;
+    targetLRotY = 0.22 + Math.sin(talkClock * 2.6) * 0.10;
+    targetLRotZ = -0.14;
+  } else if (slashProgress >= 0) {
+    // Full-body TPS Golok Slash Arc (windup -> diagonal cleave -> follow-through)
+    if (slashProgress < 0.32) {
+      const p = slashProgress / 0.32;
+      targetRRotX = THREE.MathUtils.lerp(-0.42, -1.48, p);
+      targetRRotY = THREE.MathUtils.lerp(0.10, -0.55, p);
+      targetRRotZ = THREE.MathUtils.lerp(0.06, 0.45, p);
+    } else {
+      const p = (slashProgress - 0.32) / 0.68;
+      targetRRotX = THREE.MathUtils.lerp(-1.48, 0.65, p);
+      targetRRotY = THREE.MathUtils.lerp(-0.55, 0.58, p);
+      targetRRotZ = THREE.MathUtils.lerp(0.45, -0.35, p);
+    }
+    targetLRotX = -0.35 + Math.sin(slashProgress * Math.PI) * 0.28;
+    targetLRotY = 0.18;
+    targetLRotZ = -0.22;
+  } else if (activeWeapon !== 'unarmed') {
     if (activeWeapon === 'golok') {
-      // One-handed melee ready stance: blade held forward ready to parry/slash
-      targetRRotX = -0.42 - pitchArms * 0.6 + currentStride * 0.08;
-      targetRRotY = 0.10;
       // One-handed melee ready stance: blade held forward with natural arm pumping
       targetRRotX = -0.42 - pitchArms * 0.6 + Math.sin(walkPhase) * 0.16 * locoWeight;
       targetRRotY = 0.10 + Math.cos(walkPhase) * 0.05 * locoWeight;
       targetRRotZ = 0.06;
 
-      targetLRotX = -0.22 - pitchArms * 0.25 - currentStride * 0.06;
       targetLRotX = -0.22 - pitchArms * 0.25 - Math.sin(walkPhase) * 0.14 * locoWeight;
       targetLRotY = 0.14;
       targetLRotZ = -0.08;
     } else {
-      // Authentic Two-Handed Survival Horror Shotgun Ready Stance (Leon S. Kennedy / James Sunderland)
-      // Right hand holds grip & trigger pointing downrange; left hand holds forend across chest
-      targetRRotX = -0.42 - pitchArms + currentStride * 0.04;
-      targetRRotY = 0.08;
-      // Authentic Two-Handed Survival Horror Shotgun Ready Stance with dynamic weapon pumping
-      targetRRotX = -0.42 - pitchArms + Math.sin(walkPhase) * 0.16 * locoWeight;
+      // Two-Handed Survival Horror Shotgun Ready Stance + recoil kickback + landing dip
+      const recoilKick = tpsWeaponRecoil * 0.85;
+      const spinLift = (spinProgress >= 0) ? Math.sin(spinProgress * Math.PI) * 0.35 : 0;
+      targetRRotX = -0.42 - pitchArms + Math.sin(walkPhase) * 0.16 * locoWeight - recoilKick - spinLift + landingCompression * 1.2;
       targetRRotY = 0.08 + Math.cos(walkPhase) * 0.04 * locoWeight;
       targetRRotZ = -0.06;
 
-      targetLRotX = -0.66 - pitchArms - currentStride * 0.04;
-      targetLRotY = 0.38;
-      targetLRotX = -0.66 - pitchArms - Math.sin(walkPhase) * 0.14 * locoWeight;
+      targetLRotX = -0.66 - pitchArms - Math.sin(walkPhase) * 0.14 * locoWeight - recoilKick * 0.7 + landingCompression * 1.0;
       targetLRotY = 0.38 + Math.cos(walkPhase) * 0.04 * locoWeight;
       targetLRotZ = -0.22;
     }
   } else {
-    // Unarmed natural walking arm swings (full 45° human swing)
+    // Unarmed natural walking arm swings (full 45° human swing) + airborne balance flare
     const unarmedSwing = rawStride * 0.72 * locoWeight * (1.0 - airWeight);
     const idleLRotX = 0.05 + Math.sin(idlePhase) * 0.02;
     const idleRRotX = -0.05 - Math.sin(idlePhase) * 0.02;
@@ -1255,10 +1315,11 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
     targetLRotX = -unarmedSwing + (idleLRotX * (1.0 - locoWeight));
     targetRRotX = unarmedSwing + (idleRRotX * (1.0 - locoWeight));
 
-    // Slight outward arm flare when falling in air for balance
     if (airWeight > 0.1) {
-      targetLRotZ = -0.18 * airWeight;
-      targetRRotZ = 0.18 * airWeight;
+      targetLRotX += (vertVel > 0.4 ? -0.38 : 0.22) * airWeight;
+      targetRRotX += (vertVel > 0.4 ? -0.28 : 0.18) * airWeight;
+      targetLRotZ = -0.26 * airWeight;
+      targetRRotZ = 0.26 * airWeight;
     }
   }
 
@@ -1274,32 +1335,50 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
     playerLeftArm.rotation.z = THREE.MathUtils.lerp(playerLeftArm.rotation.z, targetLRotZ, blendSpeed);
   }
 
-  // Subtle weapon socket bounce & sway while walking
-  if (playerWeaponSocket && isMoving) {
-    playerWeaponSocket.position.y = -0.48 + Math.sin(walkPhase * 2.0) * 0.02 * locoWeight;
-    playerWeaponSocket.position.z = 0.08 + Math.cos(walkPhase) * 0.02 * locoWeight;
+  // Weapon socket bounce, recoil kick, & lever-action spin in TPS
+  if (playerWeaponSocket) {
+    const walkBobY = isMoving ? Math.sin(walkPhase * 2.0) * 0.02 * locoWeight : 0;
+    const walkSwayZ = isMoving ? Math.cos(walkPhase) * 0.02 * locoWeight : 0;
+    playerWeaponSocket.position.y = -0.48 + walkBobY - landingCompression * 0.25;
+    playerWeaponSocket.position.z = 0.08 + walkSwayZ - tpsWeaponRecoil * 0.18;
+    if (spinProgress >= 0) {
+      playerWeaponSocket.rotation.x = 0.35 - spinProgress * Math.PI * 2;
+    } else {
+      playerWeaponSocket.rotation.x = THREE.MathUtils.lerp(playerWeaponSocket.rotation.x, 0.35 - tpsWeaponRecoil * 0.45, safeDt * 16.0);
+    }
   }
 
-  // Torso & Pelvis Kinematics: Pelvic bobbing, lateral hip weight transfer, forward sprint lean & pitch tilt
+  // Head subtle nod & tilt when interacting in dialogue
+  if (playerHead) {
+    const headPitch = isTalking ? Math.sin(talkClock * 3.6) * 0.07 : 0;
+    const headTilt = isTalking ? Math.sin(talkClock * 1.9) * 0.04 : 0;
+    playerHead.rotation.x = THREE.MathUtils.lerp(playerHead.rotation.x, headPitch, safeDt * 8.0);
+    playerHead.rotation.z = THREE.MathUtils.lerp(playerHead.rotation.z, headTilt, safeDt * 8.0);
+  }
+
+  // Torso & Pelvis Kinematics: Pelvic bobbing, lateral hip weight transfer, slash twist & pitch tilt
   if (playerTorso) {
-    const pelvicBob = Math.abs(rawStride) * 0.034 * locoWeight;
+    const pelvicBob = Math.abs(rawStride) * 0.034 * locoWeight * talkWeight;
     const breathingBob = Math.sin(idlePhase) * 0.010 * (1.0 - locoWeight);
-    const targetTorsoY = baseY + pelvicBob + breathingBob - landingCompression;
+    const targetTorsoY = baseY + pelvicBob + breathingBob - landingCompression * 1.25;
 
     playerTorso.position.y = THREE.MathUtils.lerp(playerTorso.position.y, targetTorsoY, safeDt * 16.0);
 
     // Lateral hip weight shift from foot to foot
-    const targetRollZ = Math.sin(walkPhase) * 0.032 * locoWeight;
+    const targetRollZ = Math.sin(walkPhase) * 0.032 * locoWeight * talkWeight;
     playerTorso.rotation.z = THREE.MathUtils.lerp(playerTorso.rotation.z, targetRollZ, safeDt * 14.0);
 
-    // Torso yaw counter-rotation during stride
-    const targetYawY = Math.cos(walkPhase) * 0.042 * locoWeight;
+    // Torso yaw counter-rotation during stride + slash torso twist
+    let targetYawY = Math.cos(walkPhase) * 0.042 * locoWeight * talkWeight;
+    if (slashProgress >= 0) targetYawY += Math.sin(slashProgress * Math.PI) * 0.35;
+    if (isTalking) targetYawY = Math.sin(talkClock * 1.8) * 0.06;
     playerTorso.rotation.y = THREE.MathUtils.lerp(playerTorso.rotation.y, targetYawY, safeDt * 14.0);
 
-    // Torso pitch tilt: leans forward into sprint, tilts spine with crosshair aim
-    const sprintLean = THREE.MathUtils.lerp(0.02, 0.075, sprintWeight) * locoWeight;
+    // Torso pitch tilt: leans forward into sprint/talk, tilts spine with crosshair aim
+    const sprintLean = THREE.MathUtils.lerp(0.02, 0.075, sprintWeight) * locoWeight * talkWeight;
     const spinePitchTilt = -clampedPitch * 0.28;
-    const targetPitchX = sprintLean + spinePitchTilt;
+    const talkLean = isTalking ? 0.05 : 0;
+    const targetPitchX = sprintLean + spinePitchTilt + talkLean;
     playerTorso.rotation.x = THREE.MathUtils.lerp(playerTorso.rotation.x, targetPitchX, safeDt * 14.0);
   }
 }
@@ -1308,6 +1387,12 @@ export let screenShakeIntensity = 0;
 export let screenShakeDuration = 0;
 export let hitStopTimer = 0;
 let fovKick = 0;
+
+let tpsWeaponRecoil = 0;
+
+export function triggerTPSWeaponRecoil(amount = 0.28) {
+  tpsWeaponRecoil = Math.min(0.45, Math.max(tpsWeaponRecoil, amount));
+}
 
 export function triggerScreenShake(intensity = 0.45, duration = 1.2) {
   screenShakeIntensity = Math.max(screenShakeIntensity, intensity);

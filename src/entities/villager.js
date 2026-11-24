@@ -6,6 +6,7 @@
  */
 
 const THREE = window.THREE;
+import { isStoryDialogueOpen, getActiveDialogueNPC } from '../core/dialogueSystem.js';
 
 /**
  * Builds Old Thomas - The elderly British villager
@@ -500,7 +501,7 @@ export function buildDarrellModel() {
   bootR.position.set(0.14, 0.08, 0.03);
   root.add(bootR);
 
-  root.userData = { headGroup, torsoGroup };
+  root.userData = { headGroup, torsoGroup, lArm, rArm };
   return root;
 }
 
@@ -597,7 +598,7 @@ export function buildMrsEleanorModel() {
   torsoGroup.add(armsFolded);
 
   root.add(torsoGroup);
-  root.userData = { headGroup, torsoGroup };
+  root.userData = { headGroup, torsoGroup, armsFolded };
   return root;
 }
 
@@ -698,7 +699,7 @@ export function buildEdwardVillagerModel() {
   bootR.position.set(0.13, 0.07, 0.03);
   root.add(bootR);
 
-  root.userData = { headGroup, torsoGroup };
+  root.userData = { headGroup, torsoGroup, lArm, rArm };
   return root;
 }
 
@@ -831,26 +832,70 @@ export function setEndlessVillagers(isEndless) {
 
 export function updateVillageNPCs(dt, playerPos) {
   if (window.__ENDLESS_ACTIVE) return;
+  const nowSec = performance.now() * 0.001;
+  const talkingOpen = isStoryDialogueOpen();
+  const activeNPC = talkingOpen ? getActiveDialogueNPC() : null;
+  const safeDt = Math.min(dt || 0.016, 0.05);
+
   VILLAGE_NPCS.forEach(npc => {
     if (!npc.mesh || !npc.mesh.visible) return;
-    // Subtle idle breathing
-    if (npc.mesh.userData && npc.mesh.userData.torsoGroup) {
-      npc.mesh.userData.torsoGroup.position.y = 0.95 + Math.sin(performance.now() * 0.002 + npc.x) * 0.012;
+    const ud = npc.mesh.userData || {};
+    const isTalking = !!(talkingOpen && activeNPC && (activeNPC === npc || activeNPC.name === npc.name));
+
+    // Subtle idle breathing + conversational torso lean & sway
+    if (ud.torsoGroup) {
+      const breathAmp = isTalking ? 0.018 : 0.012;
+      ud.torsoGroup.position.y = 0.95 + Math.sin(nowSec * (isTalking ? 3.2 : 2.0) + npc.x) * breathAmp;
+      const targetLeanX = isTalking ? 0.07 + Math.sin(nowSec * 2.8) * 0.03 : 0.0;
+      const targetSwayY = isTalking ? Math.sin(nowSec * 2.1) * 0.09 : 0.0;
+      ud.torsoGroup.rotation.x = THREE.MathUtils.lerp(ud.torsoGroup.rotation.x, targetLeanX, safeDt * 6.0);
+      ud.torsoGroup.rotation.y = THREE.MathUtils.lerp(ud.torsoGroup.rotation.y, targetSwayY, safeDt * 6.0);
     }
-    // Head turns subtly toward player when nearby
-    if (playerPos && npc.mesh.userData && npc.mesh.userData.headGroup) {
+
+    // Head turns toward player & nods/tilts expressively when talking
+    if (playerPos && ud.headGroup) {
       const dx = playerPos.x - npc.x;
       const dz = playerPos.z - npc.z;
       const dist = Math.sqrt(dx * dx + dz * dz);
-      if (dist < 7.0 && dist > 0.5) {
-        const targetAngle = Math.atan2(dx, dz) - npc.rotY;
-        const clampedAngle = Math.max(-0.6, Math.min(0.6, targetAngle));
-        npc.mesh.userData.headGroup.rotation.y = THREE.MathUtils.lerp(
-          npc.mesh.userData.headGroup.rotation.y,
+      if (dist < 7.0 && dist > 0.3) {
+        let targetAngle = Math.atan2(dx, dz) - npc.rotY;
+        while (targetAngle > Math.PI) targetAngle -= Math.PI * 2;
+        while (targetAngle < -Math.PI) targetAngle += Math.PI * 2;
+        const clampedAngle = Math.max(-0.75, Math.min(0.75, targetAngle));
+        ud.headGroup.rotation.y = THREE.MathUtils.lerp(
+          ud.headGroup.rotation.y,
           clampedAngle,
-          dt * 3.0
+          safeDt * (isTalking ? 6.0 : 3.0)
         );
       }
+      const targetPitch = isTalking ? Math.sin(nowSec * 4.8) * 0.11 : 0.0;
+      const targetTilt = isTalking ? Math.sin(nowSec * 2.2) * 0.06 : 0.0;
+      ud.headGroup.rotation.x = THREE.MathUtils.lerp(ud.headGroup.rotation.x, targetPitch, safeDt * 7.0);
+      ud.headGroup.rotation.z = THREE.MathUtils.lerp(ud.headGroup.rotation.z, targetTilt, safeDt * 7.0);
+    }
+
+    // Expressive Talking Hand & Arm Gestures
+    if (ud.rArmGroup) {
+      const targetRx = isTalking ? (-0.52 + Math.sin(nowSec * 4.2) * 0.28) : 0.0;
+      const targetRz = isTalking ? (0.12 + Math.cos(nowSec * 3.1) * 0.10) : 0.0;
+      ud.rArmGroup.rotation.x = THREE.MathUtils.lerp(ud.rArmGroup.rotation.x, targetRx, safeDt * 7.0);
+      ud.rArmGroup.rotation.z = THREE.MathUtils.lerp(ud.rArmGroup.rotation.z, targetRz, safeDt * 7.0);
+    }
+    if (ud.rArm) {
+      const targetRx = isTalking ? (-0.58 + Math.sin(nowSec * 4.4) * 0.34) : 0.0;
+      const targetRz = isTalking ? (0.15 + Math.cos(nowSec * 3.0) * 0.12) : 0.0;
+      ud.rArm.rotation.x = THREE.MathUtils.lerp(ud.rArm.rotation.x, targetRx, safeDt * 7.0);
+      ud.rArm.rotation.z = THREE.MathUtils.lerp(ud.rArm.rotation.z, targetRz, safeDt * 7.0);
+    }
+    if (ud.lArm) {
+      const targetLx = isTalking ? (-0.34 + Math.cos(nowSec * 3.6) * 0.24) : 0.0;
+      const targetLz = isTalking ? (-0.12 - Math.sin(nowSec * 2.8) * 0.08) : 0.0;
+      ud.lArm.rotation.x = THREE.MathUtils.lerp(ud.lArm.rotation.x, targetLx, safeDt * 7.0);
+      ud.lArm.rotation.z = THREE.MathUtils.lerp(ud.lArm.rotation.z, targetLz, safeDt * 7.0);
+    }
+    if (ud.armsFolded) {
+      const targetFx = isTalking ? (-0.18 + Math.sin(nowSec * 3.8) * 0.12) : 0.0;
+      ud.armsFolded.rotation.x = THREE.MathUtils.lerp(ud.armsFolded.rotation.x, targetFx, safeDt * 6.0);
     }
   });
 }

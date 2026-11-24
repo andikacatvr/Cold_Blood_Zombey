@@ -17,6 +17,10 @@ export function isStoryDialogueOpen() {
   return isDialogueActive;
 }
 
+export function getActiveDialogueNPC() {
+  return isDialogueActive ? currentNPC : null;
+}
+
 export function openStoryDialogue(npc, onComplete = null) {
   if (!npc || !npc.dialog) return;
 
