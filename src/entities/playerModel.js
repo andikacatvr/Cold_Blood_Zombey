@@ -298,6 +298,8 @@ function loadRodrickGLBModel(root) {
         playerRightArm.add(playerWeaponSocket);
       }
     }
+    if (glbLeftLeg) playerLeftLeg = glbLeftLeg;
+    if (glbRightLeg) playerRightLeg = glbRightLeg;
     if (glbLeftLeg) {
       playerLeftLeg = glbLeftLeg;
       rodrickLeftLegBaseY = glbLeftLeg.position.y || 0.90;
@@ -1044,8 +1046,8 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
   const clampedPitch = Math.max(-0.85, Math.min(0.85, aimPitch));
 
   // Stride amplitude smoothly scales down when airborne (natural human range: 0.55 - 0.85 rad)
-  const maxStride = THREE.MathUtils.lerp(0.55, 0.85, sprintWeight) * locoWeight * (1.0 - airWeight);
-  const currentStride = rawStride * maxStride;
+  let maxStride = THREE.MathUtils.lerp(0.55, 0.85, sprintWeight) * locoWeight * (1.0 - airWeight);
+  let currentStride = rawStride * maxStride;
 
   // Real-time kinematic limb angles for deformed models (Nona, Valentina, Kristin)
   const defLLeg = currentStride;
@@ -1081,9 +1083,10 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
       nonaBataviaPlayerScene.rotation.x = THREE.MathUtils.lerp(0.02, 0.075, sprintWeight) * locoWeight - clampedPitch * 0.15;
 
       if (nonaBataviaWeaponSocket) {
+        const targetRotX = 0.25 - clampedPitch * 0.70 + Math.sin(walkPhase) * 0.12 * locoWeight;
         nonaBataviaWeaponSocket.rotation.x = THREE.MathUtils.lerp(
           nonaBataviaWeaponSocket.rotation.x,
-          0.25 - clampedPitch * 0.70 + Math.sin(walkPhase) * 0.12 * locoWeight,
+          targetRotX,
           safeDt * 15.0
         );
       }
@@ -1104,9 +1107,10 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
       sisterValentinaPlayerScene.rotation.x = THREE.MathUtils.lerp(0.035, 0.095, sprintWeight) * locoWeight - clampedPitch * 0.15;
 
       if (sisterValentinaWeaponSocket) {
+        const targetRotX = 0.30 - clampedPitch * 0.70 + Math.sin(walkPhase) * 0.12 * locoWeight;
         sisterValentinaWeaponSocket.rotation.x = THREE.MathUtils.lerp(
           sisterValentinaWeaponSocket.rotation.x,
-          0.30 - clampedPitch * 0.70 + Math.sin(walkPhase) * 0.12 * locoWeight,
+          targetRotX,
           safeDt * 15.0
         );
       }
@@ -1127,9 +1131,10 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
       kristinPlayerScene.rotation.x = THREE.MathUtils.lerp(0.03, 0.085, sprintWeight) * locoWeight - clampedPitch * 0.18;
 
       if (kristinPlayerWeaponSocket) {
+        const targetRotX = 0.25 - clampedPitch * 0.70 + Math.sin(walkPhase) * 0.12 * locoWeight;
         kristinPlayerWeaponSocket.rotation.x = THREE.MathUtils.lerp(
           kristinPlayerWeaponSocket.rotation.x,
-          0.25 - clampedPitch * 0.70 + Math.sin(walkPhase) * 0.12 * locoWeight,
+          targetRotX,
           safeDt * 15.0
         );
       }
@@ -1144,6 +1149,11 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
   // --- Rodrick Primary Locomotion & Bone Kinematics ---
   const baseY = isRodrickGLBLoaded ? rodrickTorsoBaseY : 0.95;
 
+  // Stride amplitude smoothly scales down when airborne
+  maxStride = THREE.MathUtils.lerp(0.50, 0.78, sprintWeight) * locoWeight * (1.0 - airWeight);
+  currentStride = rawStride * maxStride;
+
+  // Legs Kinematics: Walk stride + in-air leg tuck/extension
   // Legs Kinematics: Walk stride + knee lift and in-air leg tuck/extension
   if (playerLeftLeg && playerRightLeg) {
     if (airWeight > 0.1) {
@@ -1168,6 +1178,7 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
     }
   }
 
+  // Arms Kinematics & Weapon Ready Aiming with Pitch Tracking
   // Arms Kinematics & Weapon Ready Aiming with Dynamic Walk Motion
   const pitchArms = clampedPitch * 0.70;
   const blendSpeed = safeDt * 14.0;
@@ -1181,20 +1192,30 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
 
   if (activeWeapon !== 'unarmed') {
     if (activeWeapon === 'golok') {
+      // One-handed melee ready stance: blade held forward ready to parry/slash
+      targetRRotX = -0.42 - pitchArms * 0.6 + currentStride * 0.08;
+      targetRRotY = 0.10;
       // One-handed melee ready stance: blade held forward with natural arm pumping
       targetRRotX = -0.42 - pitchArms * 0.6 + Math.sin(walkPhase) * 0.16 * locoWeight;
       targetRRotY = 0.10 + Math.cos(walkPhase) * 0.05 * locoWeight;
       targetRRotZ = 0.06;
 
+      targetLRotX = -0.22 - pitchArms * 0.25 - currentStride * 0.06;
       targetLRotX = -0.22 - pitchArms * 0.25 - Math.sin(walkPhase) * 0.14 * locoWeight;
       targetLRotY = 0.14;
       targetLRotZ = -0.08;
     } else {
+      // Authentic Two-Handed Survival Horror Shotgun Ready Stance (Leon S. Kennedy / James Sunderland)
+      // Right hand holds grip & trigger pointing downrange; left hand holds forend across chest
+      targetRRotX = -0.42 - pitchArms + currentStride * 0.04;
+      targetRRotY = 0.08;
       // Authentic Two-Handed Survival Horror Shotgun Ready Stance with dynamic weapon pumping
       targetRRotX = -0.42 - pitchArms + Math.sin(walkPhase) * 0.16 * locoWeight;
       targetRRotY = 0.08 + Math.cos(walkPhase) * 0.04 * locoWeight;
       targetRRotZ = -0.06;
 
+      targetLRotX = -0.66 - pitchArms - currentStride * 0.04;
+      targetLRotY = 0.38;
       targetLRotX = -0.66 - pitchArms - Math.sin(walkPhase) * 0.14 * locoWeight;
       targetLRotY = 0.38 + Math.cos(walkPhase) * 0.04 * locoWeight;
       targetLRotZ = -0.22;
@@ -1331,6 +1352,7 @@ export function updateHorrorCamera(camera, playerPos, yaw, pitch, dt) {
     const targetCamY = playerPos.y + camHeight;
     const targetCamZ = playerPos.z + backZ;
 
+    camera.position.set(targetCamX, targetCamY, targetCamZ);
     const camLerp = Math.min(1.0, Math.max(0.01, (dt || 0.016) * 18.0));
     camera.position.x = THREE.MathUtils.lerp(camera.position.x, targetCamX, camLerp);
     camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetCamY, camLerp);
