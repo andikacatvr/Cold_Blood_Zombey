@@ -1,4 +1,5 @@
 import { gameSettings } from '../config/settings.js';
+import { resizePostProcessing } from './postprocess.js';
 
 const THREE = window.THREE;
 
@@ -135,6 +136,7 @@ export function applyGraphicFidelity(mode = 'hd') {
     camera.fov = 62;
   }
   camera.updateProjectionMatrix();
+  resizePostProcessing(renderer);
 }
 
 window.addEventListener('resize', () => {

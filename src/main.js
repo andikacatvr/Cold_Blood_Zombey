@@ -6,6 +6,7 @@
 import { gameSettings, DEFAULT_SETTINGS, saveSettings } from './config/settings.js';
 import { Sfx } from './audio/sfx.js';
 import { scene, camera, renderer, applyGraphicFidelity, playerFlashlight, overcastDirLight } from './graphics/engine.js';
+import { renderWithPostProcessing } from './graphics/postprocess.js';
 import { textures } from './graphics/textures.js';
 import {
   initWorld,
@@ -988,7 +989,13 @@ function updateSimulation(dt) {
 }
 
 function renderScene() {
-  renderer.render(scene, camera);
+  renderWithPostProcessing(
+    renderer,
+    scene,
+    camera,
+    performance.now() * 0.001,
+    gameSettings.graphicMode || 'hd'
+  );
 }
 
 function frameLoop(t) {
