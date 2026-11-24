@@ -109,6 +109,7 @@ import {
 import {
   updatePlayerModelAnimation,
   updateHorrorCamera,
+  consumeHitStop,
   cameraMode,
   activeCharacter,
   setPlayerCharacter,
@@ -301,7 +302,7 @@ function updateSimulation(dt) {
 
   // Update Survivor Player 3D Model & Silent Hill Horror Camera (TPS/FPS)
   updatePlayerModelAnimation(isMoving, keys.shift, dt, state.player.weapon, isGrounded, pVel.y, pitch);
-  updateHorrorCamera(camera, playerPos, yaw, pitch, dt);
+  updateHorrorCamera(camera, playerPos, yaw, pitch, dt, isMoving, keys.shift);
 
   if (weaponHolder) {
     weaponHolder.visible = (cameraMode === 'fps');
@@ -1009,7 +1010,8 @@ function frameLoop(t) {
       busHazardLights.forEach(l => l.intensity = pulse);
     }
   } else if (state.running && !state.isPaused) {
-    updateSimulation(dt);
+    const simDt = consumeHitStop(dt) ? dt * 0.08 : dt;
+    updateSimulation(simDt);
     updateMinimapRadar();
     if (busHazardLights && busHazardLights.length > 0) {
       const pulse = (Math.sin(performance.now() * 0.007) > 0.1 ? 2.5 : 0.2);

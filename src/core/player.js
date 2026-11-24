@@ -72,7 +72,9 @@ import {
   isHeroInspectActive,
   setHeroInspect,
   updateHeroInspectDelta,
-  zoomHeroInspect
+  zoomHeroInspect,
+  triggerScreenShake,
+  triggerHitStop
 } from '../entities/playerModel.js';
 
 const THREE = window.THREE;
@@ -446,8 +448,12 @@ export function performGolokSlash(isQuick = false) {
         }
 
         const pushDir = _tempPushDir.set(fwd.x, 0, fwd.z).normalize();
-        z.x += pushDir.x * (z.isBoss ? 0.25 : 0.70);
-        z.z += pushDir.z * (z.isBoss ? 0.25 : 0.70);
+        z.x += pushDir.x * (z.isBoss ? 0.30 : 0.85);
+        z.z += pushDir.z * (z.isBoss ? 0.30 : 0.85);
+
+        // RE4-style Hit-Stop & Micro-Shake on melee flesh impact
+        triggerHitStop(isHead ? 0.045 : 0.035, -2.5);
+        triggerScreenShake(isHead ? 0.22 : 0.14, 0.14);
 
         spawnBloodPoolOnSnow(zPos.x, zPos.z, 0.85);
         _tempHeadWorld.set(zPos.x, zPos.y + 1.2, zPos.z);
@@ -552,6 +558,9 @@ export function fireCombatShotgun() {
     ? _tempOrigin.set(playerPos.x, playerPos.y + 1.65, playerPos.z)
     : _tempOrigin.copy(cameraRef.position);
 
+  let anyHit = false;
+  let anyHeadshot = false;
+
   for (let pellet = 0; pellet < pelletCount; pellet++) {
     const sprX = (Math.random() - 0.5) * spreadAngle;
     const sprY = (Math.random() - 0.5) * spreadAngle;
@@ -603,12 +612,14 @@ export function fireCombatShotgun() {
       }
 
       if (didHit) {
+        anyHit = true;
+        if (isHeadshot) anyHeadshot = true;
         Sfx.playImpactSplat();
         const baseDmg = isSpin ? 36 : 32;
         const headDmg = isSpin ? 75 : 65;
         const dmg = isHeadshot ? headDmg : baseDmg;
         z.hp -= dmg;
-        z.staggerTimer = 0.32;
+        z.staggerTimer = 0.34;
         if (isHeadshot) {
           Sfx.playL4DHeadDecap();
           spawnBloodPoolOnSnow(zPos.x, zPos.z, 0.75);
@@ -622,8 +633,8 @@ export function fireCombatShotgun() {
           if (bar) bar.style.width = `${pct}%`;
         }
 
-        const shotDir = new THREE.Vector3(zPos.x - originPos.x, 0, zPos.z - originPos.z).normalize();
-        const pushFactor = isSpin ? (z.isBoss ? 0.12 : 0.30) : (z.isBoss ? 0.08 : 0.22);
+        const shotDir = _tempPushDir.set(zPos.x - originPos.x, 0, zPos.z - originPos.z).normalize();
+        const pushFactor = isSpin ? (z.isBoss ? 0.14 : 0.34) : (z.isBoss ? 0.10 : 0.26);
         z.x += shotDir.x * pushFactor;
         z.z += shotDir.z * pushFactor;
 
@@ -635,6 +646,12 @@ export function fireCombatShotgun() {
         break;
       }
     }
+  }
+
+  // Trigger RE4-style Hit-Stop & Micro-Shake once per shotgun blast if pellets connected
+  if (anyHit) {
+    triggerHitStop(anyHeadshot ? 0.042 : 0.030, anyHeadshot ? -2.8 : -2.0);
+    triggerScreenShake(anyHeadshot ? 0.24 : 0.15, 0.16);
   }
 }
 

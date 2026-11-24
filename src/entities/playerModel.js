@@ -1306,17 +1306,50 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
 
 export let screenShakeIntensity = 0;
 export let screenShakeDuration = 0;
+export let hitStopTimer = 0;
+let fovKick = 0;
 
 export function triggerScreenShake(intensity = 0.45, duration = 1.2) {
   screenShakeIntensity = Math.max(screenShakeIntensity, intensity);
   screenShakeDuration = Math.max(screenShakeDuration, duration);
 }
 
+export function triggerHitStop(duration = 0.038, kick = -2.2) {
+  hitStopTimer = Math.max(hitStopTimer, duration);
+  fovKick = kick;
+}
+
+export function consumeHitStop(dt) {
+  if (hitStopTimer <= 0) return false;
+  hitStopTimer = Math.max(0, hitStopTimer - dt);
+  return true;
+}
+
 /**
- * Updates the Third-Person Horror Camera tracking behind the player.
+ * Updates the Third-Person Horror Camera tracking behind the player,
+ * including Dynamic FOV for sprint/inspect/combat impact.
  */
-export function updateHorrorCamera(camera, playerPos, yaw, pitch, dt) {
+export function updateHorrorCamera(camera, playerPos, yaw, pitch, dt, isMoving = false, isSprinting = false) {
   if (!playerMeshRoot) return;
+
+  // Dynamic FOV & Sprint/Inspect Lens Feel
+  if (camera && camera.isPerspectiveCamera) {
+    const aspect = camera.aspect || 1.77;
+    const baseFov = (aspect >= 2.0) ? 68 : (aspect >= 1.7) ? 65 : (aspect <= 1.35) ? 60 : 62;
+    let targetFov = baseFov;
+    if (isHeroInspectActive) {
+      targetFov = baseFov - 6.0;
+    } else if (isMoving && isSprinting) {
+      targetFov = baseFov + 4.5;
+    }
+    fovKick = THREE.MathUtils.lerp(fovKick, 0, Math.min(1.0, (dt || 0.016) * 14.0));
+    targetFov += fovKick;
+
+    if (Math.abs(camera.fov - targetFov) > 0.03) {
+      camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, Math.min(1.0, (dt || 0.016) * 10.0));
+      camera.updateProjectionMatrix();
+    }
+  }
 
   // Keep player's contact shadow grounded on terrain beneath feet
   if (playerContactShadow && typeof getTerrainHeight === 'function') {
