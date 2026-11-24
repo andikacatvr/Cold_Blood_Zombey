@@ -40,6 +40,41 @@ export const zombieGLBCache = { femaleShaggy: null, maleVest: null, maleSuit: nu
 let fleshRawCrimsonMat, fleshDarkClotMat, intestineWetPinkMat, exposedWhiteRibMat, feralGlowingEyesMat;
 let nunHabitMat, nunVeilMat, nunMantleMat, silverCrossMat, bloodyHandsMat, paleFleshMat, nunFaceMat;
 
+let sharedContactShadowGeo = null;
+let sharedContactShadowMat = null;
+
+function attachContactShadow(parts, radiusScale = 1.0) {
+  if (!parts || !parts.root) return;
+  if (!sharedContactShadowGeo) {
+    sharedContactShadowGeo = new THREE.PlaneGeometry(1.15, 1.15);
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createRadialGradient(32, 32, 4, 32, 32, 30);
+    grad.addColorStop(0, 'rgba(6, 12, 22, 0.56)');
+    grad.addColorStop(0.55, 'rgba(6, 12, 22, 0.22)');
+    grad.addColorStop(1, 'rgba(6, 12, 22, 0.0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 64, 64);
+    const tex = new THREE.CanvasTexture(canvas);
+    sharedContactShadowMat = new THREE.MeshBasicMaterial({
+      map: tex,
+      transparent: true,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -2
+    });
+  }
+  const shadow = new THREE.Mesh(sharedContactShadowGeo, sharedContactShadowMat);
+  shadow.rotation.x = -Math.PI * 0.5;
+  shadow.scale.set(radiusScale, radiusScale, 1);
+  shadow.position.set(0, 0.03, 0);
+  shadow.renderOrder = 1;
+  parts.root.add(shadow);
+  parts.contactShadow = shadow;
+}
+
 export function initEnemyMaterials(textures) {
   const {
     l4dFlannelTex,
@@ -654,6 +689,7 @@ export function buildLeft4DeadInfected(variant = 0) {
     if (parts.skirt) parts.skirt.castShadow = true;
   }
 
+  attachContactShadow(parts, 0.95 * scale);
   return parts;
 }
 
@@ -705,6 +741,7 @@ export function buildSisterValentina() {
   headProxy.position.set(0, 1.62 * scale, 0);
   root.add(headProxy);
   parts.head = headProxy;
+  attachContactShadow(parts, 1.15);
 
   if (sisterValentinaTemplate) {
     const clone = sisterValentinaTemplate.clone(true);
@@ -785,6 +822,7 @@ export function buildNonaBatavia() {
   headProxy.position.set(0, 1.54 * scale, 0);
   root.add(headProxy);
   parts.head = headProxy;
+  attachContactShadow(parts, 1.25);
 
   if (ladyMithrillTemplate) {
     const clone = ladyMithrillTemplate.clone(true);
@@ -866,6 +904,7 @@ export function buildVictorianBride() {
   headProxy.position.set(0, 1.62 * scale, 0);
   root.add(headProxy);
   parts.head = headProxy;
+  attachContactShadow(parts, 1.15);
 
   if (victorianBrideTemplate) {
     const clone = victorianBrideTemplate.clone(true);

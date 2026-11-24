@@ -549,6 +549,12 @@ function updateSimulation(dt) {
       });
     }
 
+    // Grounded Contact Shadow: keep blob shadow hugging snow terrain under feet
+    if (z.model && z.model.contactShadow) {
+      const groundY = getTerrainHeight(z.x, z.z);
+      z.model.contactShadow.position.y = (groundY - z.model.root.position.y) + 0.03;
+    }
+
     if (dist < 6.8) nearZombiesCount++;
 
     if (z.isBoss) {
