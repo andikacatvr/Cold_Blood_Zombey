@@ -40,21 +40,23 @@ camera.rotation.order = 'YXZ';
 export const ambientLight = new THREE.AmbientLight(0x304a68, 1.0);
 scene.add(ambientLight);
 
-// Pale Cold Blue Directional Light (creates crisp atmospheric shadows in mist)
+// Pale Cold Blue Directional Light (Follow-Player Shadow Frustum for crisp, smooth shadows)
 export const overcastDirLight = new THREE.DirectionalLight(0x7aa4d4, 0.75);
-overcastDirLight.position.set(18, 45, 22);
+overcastDirLight.position.set(14, 34, 16);
 overcastDirLight.castShadow = !isMobileDevice;
-const shadowRes = 1024;
+const shadowRes = isMobileDevice ? 1024 : 2048;
 overcastDirLight.shadow.mapSize.width = shadowRes;
 overcastDirLight.shadow.mapSize.height = shadowRes;
-overcastDirLight.shadow.camera.near = 1;
-overcastDirLight.shadow.camera.far = 135;
-overcastDirLight.shadow.camera.left = -45;
-overcastDirLight.shadow.camera.right = 45;
-overcastDirLight.shadow.camera.top = 45;
-overcastDirLight.shadow.camera.bottom = -45;
-overcastDirLight.shadow.bias = -0.0008;
+overcastDirLight.shadow.camera.near = 2;
+overcastDirLight.shadow.camera.far = 85;
+overcastDirLight.shadow.camera.left = -18;
+overcastDirLight.shadow.camera.right = 18;
+overcastDirLight.shadow.camera.top = 18;
+overcastDirLight.shadow.camera.bottom = -18;
+overcastDirLight.shadow.bias = -0.0005;
+overcastDirLight.shadow.normalBias = 0.02;
 scene.add(overcastDirLight);
+scene.add(overcastDirLight.target);
 
 // Silent Hill 2 Chest-Pinned Flashlight (optimized high-intensity beam without costly dynamic shadow maps)
 export const playerFlashlight = new THREE.SpotLight(0xfff8e8, 2.8, 32, Math.PI / 4.2, 0.45, 1.15);

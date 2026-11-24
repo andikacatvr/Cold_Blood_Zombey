@@ -3239,6 +3239,24 @@ export function checkWallCollision(x, z) {
 }
 
 /**
+ * Lightweight spatial-grid wall/prop check for TPS camera collision (ignores water).
+ */
+export function checkCameraCollision(x, z) {
+  const cx = Math.floor(x / GRID_CELL_SIZE);
+  const cz = Math.floor(z / GRID_CELL_SIZE);
+  const key = getGridKey(cx, cz);
+  const nearby = colliderGrid.get(key);
+  if (!nearby) return false;
+
+  for (let i = 0; i < nearby.length; i++) {
+    const c = nearby[i];
+    if (c.disabled) continue;
+    if (x > c.minX - 0.15 && x < c.maxX + 0.15 && z > c.minZ - 0.15 && z < c.maxZ + 0.15) return true;
+  }
+  return false;
+}
+
+/**
  * Configure environment specifically for Endless Survival Mode:
  * - Removes houses and road structures for pure, unhindered snow wilderness combat.
  * - Disables collisions for removed structures so player & zombies never hit phantom walls.

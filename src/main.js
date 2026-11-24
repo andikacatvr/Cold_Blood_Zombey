@@ -5,7 +5,7 @@
 
 import { gameSettings, DEFAULT_SETTINGS, saveSettings } from './config/settings.js';
 import { Sfx } from './audio/sfx.js';
-import { scene, camera, renderer, applyGraphicFidelity, playerFlashlight } from './graphics/engine.js';
+import { scene, camera, renderer, applyGraphicFidelity, playerFlashlight, overcastDirLight } from './graphics/engine.js';
 import { textures } from './graphics/textures.js';
 import {
   initWorld,
@@ -147,6 +147,9 @@ const THREE = window.THREE;
 const _tempV3_1 = new THREE.Vector3();
 const _tempV3_2 = new THREE.Vector3();
 const _tempV3_3 = new THREE.Vector3();
+const _moveVec = new THREE.Vector3();
+const _rotVec = new THREE.Vector3();
+const _upAxis = new THREE.Vector3(0, 1, 0);
 const _breathOffset = new THREE.Vector3(0, -0.16, 0);
 const _golokRestPos = new THREE.Vector3(0.28, -0.26, -0.52);
 
@@ -156,6 +159,14 @@ let ambientHordeTimer = 0;
 
 function updateSimulation(dt) {
   if (!state.running) return;
+
+  // Follow-Player Shadow Frustum: keep crisp 2048px shadow map centered around player (texel-snapped to prevent shimmer)
+  if (overcastDirLight && overcastDirLight.castShadow) {
+    const snapX = Math.round(playerPos.x * 4) * 0.25;
+    const snapZ = Math.round(playerPos.z * 4) * 0.25;
+    overcastDirLight.target.position.set(snapX, playerPos.y, snapZ);
+    overcastDirLight.position.set(snapX + 14, playerPos.y + 34, snapZ + 16);
+  }
 
   // Cemetery Lantern & Candle Flickering Atmosphere
   updateCemeteryAtmosphere(performance.now() * 0.001);
@@ -221,25 +232,25 @@ function updateSimulation(dt) {
   }
 
   // 1. Locomotion & Snowstep Audio (Freeze locomotion while reading story dialogue)
-  const move = new THREE.Vector3();
+  _moveVec.set(0, 0, 0);
   if (!isStoryDialogueOpen()) {
-    if (keys.w) move.z -= 1;
-    if (keys.s) move.z += 1;
-    if (keys.a) move.x -= 1;
-    if (keys.d) move.x += 1;
+    if (keys.w) _moveVec.z -= 1;
+    if (keys.s) _moveVec.z += 1;
+    if (keys.a) _moveVec.x -= 1;
+    if (keys.d) _moveVec.x += 1;
     if (touchMove && touchMove.active) {
-      move.x += touchMove.x;
-      move.z += touchMove.z;
+      _moveVec.x += touchMove.x;
+      _moveVec.z += touchMove.z;
     }
   }
-  const isMoving = move.lengthSq() > 0.01;
-  if (isMoving) move.normalize();
+  const isMoving = _moveVec.lengthSq() > 0.01;
+  if (isMoving) _moveVec.normalize();
 
   const spd = (keys.shift ? state.player.sprintSpeed : state.player.walkSpeed) * dt;
-  const rot = new THREE.Vector3(move.x, 0, move.z).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+  _rotVec.set(_moveVec.x, 0, _moveVec.z).applyAxisAngle(_upAxis, yaw);
 
-  const nextX = playerPos.x + rot.x * spd;
-  const nextZ = playerPos.z + rot.z * spd;
+  const nextX = playerPos.x + _rotVec.x * spd;
+  const nextZ = playerPos.z + _rotVec.z * spd;
   if (!checkWallCollision(nextX, playerPos.z)) playerPos.x = nextX;
   if (!checkWallCollision(playerPos.x, nextZ)) playerPos.z = nextZ;
 

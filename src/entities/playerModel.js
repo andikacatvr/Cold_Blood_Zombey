@@ -6,7 +6,7 @@
    ========================================================================= */
 
 const THREE = window.THREE;
-import { getTerrainHeight } from '../world/environment.js';
+import { getTerrainHeight, checkCameraCollision } from '../world/environment.js';
 import { renderer } from '../graphics/engine.js';
 import { weaponHolder } from './weapons.js';
 
@@ -82,6 +82,7 @@ let sisterValentinaPlayerScene = null;
 let sisterValentinaWeaponSocket = null;
 let kristinPlayerScene = null;
 let kristinPlayerWeaponSocket = null;
+let playerContactShadow = null;
 let rodrickTorsoBaseY = 0.893;
 let rodrickLeftLegBaseY = 0.90;
 let rodrickRightLegBaseY = 0.90;
@@ -975,6 +976,31 @@ export function buildSurvivorPlayerModel() {
   placeholderGroup.rotation.y = Math.PI;
   root.add(placeholderGroup);
 
+  // Grounded PS2-style soft contact shadow directly under character's feet
+  const shadowCanvas = document.createElement('canvas');
+  shadowCanvas.width = 64;
+  shadowCanvas.height = 64;
+  const sCtx = shadowCanvas.getContext('2d');
+  const grad = sCtx.createRadialGradient(32, 32, 4, 32, 32, 30);
+  grad.addColorStop(0, 'rgba(6, 12, 22, 0.58)');
+  grad.addColorStop(0.55, 'rgba(6, 12, 22, 0.24)');
+  grad.addColorStop(1, 'rgba(6, 12, 22, 0.0)');
+  sCtx.fillStyle = grad;
+  sCtx.fillRect(0, 0, 64, 64);
+  const shadowTex = new THREE.CanvasTexture(shadowCanvas);
+  const shadowMat = new THREE.MeshBasicMaterial({
+    map: shadowTex,
+    transparent: true,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -2
+  });
+  playerContactShadow = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 1.15), shadowMat);
+  playerContactShadow.rotation.x = -Math.PI * 0.5;
+  playerContactShadow.position.set(0, 0.03, 0);
+  playerContactShadow.renderOrder = 1;
+  root.add(playerContactShadow);
+
   // Load official Rodrick GLB asset
   loadRodrickGLBModel(root);
   // Load official Nona Batavia GLB asset for character switching
@@ -1292,6 +1318,18 @@ export function triggerScreenShake(intensity = 0.45, duration = 1.2) {
 export function updateHorrorCamera(camera, playerPos, yaw, pitch, dt) {
   if (!playerMeshRoot) return;
 
+  // Keep player's contact shadow grounded on terrain beneath feet
+  if (playerContactShadow && typeof getTerrainHeight === 'function') {
+    const groundY = getTerrainHeight(playerPos.x, playerPos.z);
+    const heightAboveGround = Math.max(0, playerPos.y - groundY);
+    playerContactShadow.position.y = (groundY - playerPos.y) + 0.03;
+    const shadowScale = Math.max(0.55, 1.0 - heightAboveGround * 0.18);
+    playerContactShadow.scale.set(shadowScale, shadowScale, 1);
+    if (playerContactShadow.material) {
+      playerContactShadow.material.opacity = Math.max(0.25, 1.0 - heightAboveGround * 0.35);
+    }
+  }
+
   // 1. Right Click 360° Hero Orbit Inspection Mode
   if (isHeroInspectActive) {
     playerMeshRoot.visible = true;
@@ -1348,11 +1386,37 @@ export function updateHorrorCamera(camera, playerPos, yaw, pitch, dt) {
     const backX = sinY * camDist + cosY * camSideOffset;
     const backZ = cosY * camDist - sinY * camSideOffset;
 
-    const targetCamX = playerPos.x + backX;
-    const targetCamY = playerPos.y + camHeight;
-    const targetCamZ = playerPos.z + backZ;
+    const anchorX = playerPos.x + cosY * (camSideOffset * 0.35);
+    const anchorY = playerPos.y + 1.65;
+    const anchorZ = playerPos.z - sinY * (camSideOffset * 0.35);
 
-    camera.position.set(targetCamX, targetCamY, targetCamZ);
+    let targetCamX = playerPos.x + backX;
+    let targetCamY = playerPos.y + camHeight;
+    let targetCamZ = playerPos.z + backZ;
+
+    // TPS Camera Wall Collision: step from shoulder anchor to targetCam and pull forward if blocked
+    if (typeof checkCameraCollision === 'function') {
+      const steps = 10;
+      for (let s = 1; s <= steps; s++) {
+        const frac = s / steps;
+        const testX = anchorX + (targetCamX - anchorX) * frac;
+        const testZ = anchorZ + (targetCamZ - anchorZ) * frac;
+        if (checkCameraCollision(testX, testZ)) {
+          const safeFrac = Math.max(0.18, (s - 1) / steps);
+          targetCamX = anchorX + (targetCamX - anchorX) * safeFrac;
+          targetCamY = anchorY + (targetCamY - anchorY) * safeFrac;
+          targetCamZ = anchorZ + (targetCamZ - anchorZ) * safeFrac;
+          break;
+        }
+      }
+    }
+
+    // Prevent TPS camera from dipping beneath undulating snow terrain
+    if (typeof getTerrainHeight === 'function') {
+      const camGroundY = getTerrainHeight(targetCamX, targetCamZ);
+      targetCamY = Math.max(targetCamY, camGroundY + 0.38);
+    }
+
     const camLerp = Math.min(1.0, Math.max(0.01, (dt || 0.016) * 18.0));
     camera.position.x = THREE.MathUtils.lerp(camera.position.x, targetCamX, camLerp);
     camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetCamY, camLerp);
