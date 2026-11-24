@@ -837,8 +837,10 @@ export function startWinterSurvive(scene, mode = 'story') {
     d.active = false;
     if (d.mesh) d.mesh.visible = false;
   });
-  curseProjectiles.forEach(p => scene.remove(p.mesh));
-  curseProjectiles.length = 0;
+  curseProjectiles.forEach(p => {
+    p.active = false;
+    if (p.mesh) p.mesh.visible = false;
+  });
   woodSplinters.forEach(s => {
     s.active = false;
     if (s.mesh) s.mesh.visible = false;

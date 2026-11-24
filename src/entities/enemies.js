@@ -1150,21 +1150,40 @@ export const spawnLadyMithrillBoss = spawnNonaBataviaBoss;
 const sharedCurseOrbGeo = new THREE.DodecahedronGeometry(0.35, 1);
 const sharedCurseOrbMat = new THREE.MeshBasicMaterial({ color: 0xff1122 });
 
+const MAX_CURSE_ORBS = 16;
+let curseOrbCursor = 0;
+
 export function castCurseBloodOrb(origin, target) {
   if (!sceneRef) return;
   Sfx.playCurseOrbCast();
 
-  const dir = new THREE.Vector3().subVectors(target, origin).normalize();
-  const orbMesh = new THREE.Mesh(sharedCurseOrbGeo, sharedCurseOrbMat);
-  orbMesh.position.copy(origin);
-  sceneRef.add(orbMesh);
+  // Lazily populate fixed pool of Curse Orbs (Zero runtime mesh allocation/deletion)
+  if (curseProjectiles.length === 0) {
+    for (let i = 0; i < MAX_CURSE_ORBS; i++) {
+      const orbMesh = new THREE.Mesh(sharedCurseOrbGeo, sharedCurseOrbMat);
+      orbMesh.visible = false;
+      sceneRef.add(orbMesh);
+      curseProjectiles.push({
+        mesh: orbMesh,
+        dir: new THREE.Vector3(),
+        speed: 13.5,
+        life: 0,
+        active: false
+      });
+    }
+  }
 
-  curseProjectiles.push({
-    mesh: orbMesh,
-    dir: dir,
-    speed: 13.5,
-    life: 4.0
-  });
+  let slot = curseProjectiles.find(o => !o.active);
+  if (!slot) {
+    slot = curseProjectiles[curseOrbCursor];
+    curseOrbCursor = (curseOrbCursor + 1) % MAX_CURSE_ORBS;
+  }
+
+  slot.active = true;
+  slot.life = 4.0;
+  slot.dir.subVectors(target, origin).normalize();
+  slot.mesh.position.copy(origin);
+  slot.mesh.visible = true;
 }
 
 export function killZombieWithKinematics(z, shotDir, hitDistance, isHeadshot, state, updateHUD, nextWave) {

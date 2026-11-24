@@ -476,9 +476,10 @@ function updateSimulation(dt) {
     }
   }
 
-  // 12. Boss Curse Projectiles
-  for (let i = curseProjectiles.length - 1; i >= 0; i--) {
+  // 12. Boss Curse Projectiles (Pooled, Zero-Allocation)
+  for (let i = 0; i < curseProjectiles.length; i++) {
     const orb = curseProjectiles[i];
+    if (!orb.active) continue;
     orb.life -= dt;
     orb.mesh.position.addScaledVector(orb.dir, orb.speed * dt);
     orb.mesh.rotation.x += dt * 5;
@@ -487,15 +488,15 @@ function updateSimulation(dt) {
     if (orb.mesh.position.distanceTo(playerPos) < 1.4) {
       hitPlayer(22);
       Sfx.playImpactSplat();
-      scene.remove(orb.mesh);
-      curseProjectiles.splice(i, 1);
+      orb.active = false;
+      orb.mesh.visible = false;
       continue;
     }
 
     if (orb.life <= 0 || orb.mesh.position.y <= 0.1) {
       spawnBloodPoolOnSnow(orb.mesh.position.x, orb.mesh.position.z, 0.5);
-      scene.remove(orb.mesh);
-      curseProjectiles.splice(i, 1);
+      orb.active = false;
+      orb.mesh.visible = false;
     }
   }
 
@@ -538,6 +539,15 @@ function updateSimulation(dt) {
     const dist = Math.hypot(dx, dz);
     const ang = Math.atan2(dx, dz);
     z.model.root.rotation.y = ang;
+
+    // Shadow Distance Culling: only cast shadows for zombies within 22m of player
+    const shouldCastShadow = dist < 22.0;
+    if (z._shadowActive !== shouldCastShadow && z.model && z.model.root) {
+      z._shadowActive = shouldCastShadow;
+      z.model.root.traverse((c) => {
+        if (c.isMesh) c.castShadow = shouldCastShadow;
+      });
+    }
 
     if (dist < 6.8) nearZombiesCount++;
 
@@ -583,8 +593,9 @@ function updateSimulation(dt) {
         z.curseCooldown -= dt;
         if (z.curseCooldown <= 0 && dist > 4.0) {
           z.curseCooldown = 3.2 + Math.random() * 0.8;
-          const handPos = new THREE.Vector3(z.x, z.y + 1.2, z.z);
-          castCurseBloodOrb(handPos, new THREE.Vector3(playerPos.x, playerPos.y + 1.2, playerPos.z));
+          _tempV3_1.set(z.x, z.y + 1.2, z.z);
+          _tempV3_2.set(playerPos.x, playerPos.y + 1.2, playerPos.z);
+          castCurseBloodOrb(_tempV3_1, _tempV3_2);
         }
 
         // Strides firmly across the ground towards the player
@@ -614,7 +625,8 @@ function updateSimulation(dt) {
         if (z.dripTimer <= 0) {
           z.dripTimer = 0.16;
           spawnWalkingBloodDrip(z.x + (Math.random() - 0.5) * 0.8, z.z + (Math.random() - 0.5) * 0.8, 0.6);
-          createAirborneBloodDrop(new THREE.Vector3(z.x, 1.4, z.z));
+          _tempV3_1.set(z.x, 1.4, z.z);
+          createAirborneBloodDrop(_tempV3_1);
         }
 
         z.teleportCooldown -= dt;
@@ -643,8 +655,9 @@ function updateSimulation(dt) {
         z.curseCooldown -= dt;
         if (z.curseCooldown <= 0 && dist > 5) {
           z.curseCooldown = 3.6;
-          const handPos = new THREE.Vector3(z.x, z.model.root.position.y + 1.6, z.z);
-          castCurseBloodOrb(handPos, new THREE.Vector3(playerPos.x, 1.4, playerPos.z));
+          _tempV3_1.set(z.x, z.model.root.position.y + 1.6, z.z);
+          _tempV3_2.set(playerPos.x, 1.4, playerPos.z);
+          castCurseBloodOrb(_tempV3_1, _tempV3_2);
         }
 
         if (dist > 1.8) {
