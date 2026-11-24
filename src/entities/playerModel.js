@@ -98,13 +98,16 @@ function makeRotator(rx, ry, rz, px, py, pz) {
   const cy = Math.cos(ry), sy = Math.sin(ry);
   const cz = Math.cos(rz), sz = Math.sin(rz);
   return (x, y, z) => {
-    let dx = x - px, dy = y - py, dz = z - pz;
-    let y1 = cy * dy - sy * dz;
-    let z1 = sy * dy + cy * dz;
-    let x2 = cx * dx + sx * z1;
-    let z2 = -sx * dx + cx * z1;
-    let x3 = cz * x2 - sz * y1;
-    let y3 = sz * x2 + cz * y1;
+    const dx = x - px, dy = y - py, dz = z - pz;
+    // 1. X-axis pitch (forward/backward leg & arm swing)
+    const y1 = cx * dy - sx * dz;
+    const z1 = sx * dy + cx * dz;
+    // 2. Y-axis yaw (torso twist)
+    const x2 = cy * dx + sy * z1;
+    const z2 = -sy * dx + cy * z1;
+    // 3. Z-axis roll (inward/outward arm & hip tilt)
+    const x3 = cz * x2 - sz * y1;
+    const y3 = sz * x2 + cz * y1;
     return [x3 + px, y3 + py, z2 + pz];
   };
 }
@@ -156,16 +159,16 @@ function initMeshDeformer(mesh) {
   return { mesh, orig, weights, count };
 }
 
-function applyDeformation(deformer, ll_rx, rl_rx, la_rx, ra_rx, t_rx, t_ry, t_rz) {
+function applyDeformation(deformer, ll_rx, rl_rx, la_rx, ra_rx, t_rx, t_ry, t_rz, armInwardZ = 0.08) {
   if (!deformer) return;
   const { mesh, orig, weights, count } = deformer;
   const posArr = mesh.geometry.attributes.position.array;
 
-  const rotLArm = makeRotator(la_rx, 0, 0.35, -0.30, 1.25, 0);
-  const rotRArm = makeRotator(ra_rx, 0, -0.35, 0.30, 1.25, 0);
+  const rotLArm = makeRotator(la_rx, 0, armInwardZ, -0.26, 1.26, 0);
+  const rotRArm = makeRotator(ra_rx, 0, -armInwardZ, 0.26, 1.26, 0);
   const rotTorso = makeRotator(t_rx, t_ry, t_rz, 0, 0.85, 0);
-  const rotLLeg = makeRotator(ll_rx, 0, 0, -0.12, 0.82, 0);
-  const rotRLeg = makeRotator(rl_rx, 0, 0, 0.12, 0.82, 0);
+  const rotLLeg = makeRotator(ll_rx, 0, 0, -0.11, 0.82, 0);
+  const rotRLeg = makeRotator(rl_rx, 0, 0, 0.11, 0.82, 0);
 
   for (let i = 0; i < count; i++) {
     const i3 = i * 3;
@@ -1103,33 +1106,41 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
     defRLeg += landingCompression * 1.4;
   }
 
-  let defLArm = 0;
-  let defRArm = 0;
+  // Note on deformer mesh local space (rotation.y = Math.PI):
+  // x < -0.22 is character's RIGHT arm (la_rx), x > 0.22 is character's LEFT arm (ra_rx)
+  let defLArm = 0; // Right arm (trigger / golok hand)
+  let defRArm = 0; // Left arm (support forend hand)
+  let defArmInwardZ = 0.05;
 
   if (isTalking) {
     // Respectful lowered weapon + natural conversational hand gestures
-    defRArm = -0.32 + Math.sin(talkClock * 4.2) * 0.24;
-    defLArm = -0.22 + Math.cos(talkClock * 3.5) * 0.18;
+    defLArm = -0.22 + Math.sin(talkClock * 4.2) * 0.18;
+    defRArm = -0.32 + Math.cos(talkClock * 3.5) * 0.22;
+    defArmInwardZ = 0.06;
   } else if (slashProgress >= 0) {
     // Full-body Golok slash arc (windup -> cleave -> follow-through)
     const swingAngle = slashProgress < 0.35
-      ? THREE.MathUtils.lerp(-0.42, -1.45, slashProgress / 0.35)
-      : THREE.MathUtils.lerp(-1.45, 0.72, (slashProgress - 0.35) / 0.65);
-    defRArm = swingAngle;
-    defLArm = -0.35 + Math.sin(slashProgress * Math.PI) * 0.25;
+      ? THREE.MathUtils.lerp(-0.55, -1.45, slashProgress / 0.35)
+      : THREE.MathUtils.lerp(-1.45, 0.65, (slashProgress - 0.35) / 0.65);
+    defLArm = swingAngle;
+    defRArm = -0.30 + Math.sin(slashProgress * Math.PI) * 0.25;
+    defArmInwardZ = -0.05;
   } else if (activeWeapon !== 'unarmed') {
     if (activeWeapon === 'golok') {
-      defRArm = -0.42 - clampedPitch * 0.50 + Math.sin(walkPhase) * 0.16 * locoWeight;
-      defLArm = -0.22 - clampedPitch * 0.25 - Math.sin(walkPhase) * 0.12 * locoWeight;
+      defLArm = -0.52 - clampedPitch * 0.50 + Math.sin(walkPhase) * 0.14 * locoWeight;
+      defRArm = -0.18 - clampedPitch * 0.20 - Math.sin(walkPhase) * 0.12 * locoWeight;
+      defArmInwardZ = 0.04;
     } else {
-      // Shotgun ready posture with walking pump motion + firing recoil kick
-      defRArm = -0.42 - clampedPitch * 0.70 + Math.sin(walkPhase) * 0.18 * locoWeight - tpsWeaponRecoil * 0.85;
-      defLArm = -0.66 - clampedPitch * 0.68 - Math.sin(walkPhase) * 0.14 * locoWeight - tpsWeaponRecoil * 0.65;
+      // Authentic Two-Handed Shotgun Ready Stance (arms raised forward & slightly inward to grip stock + forend)
+      defLArm = -0.62 - clampedPitch * 0.65 + Math.sin(walkPhase) * 0.12 * locoWeight - tpsWeaponRecoil * 0.65;
+      defRArm = -0.82 - clampedPitch * 0.65 - Math.sin(walkPhase) * 0.10 * locoWeight - tpsWeaponRecoil * 0.55;
+      defArmInwardZ = -0.18;
     }
   } else {
     // Natural unarmed walking arm swings + airborne balance flare
-    defLArm = -rawStride * 0.75 * locoWeight * (1.0 - airWeight) + (airWeight * (vertVel > 0 ? -0.35 : 0.25));
-    defRArm = rawStride * 0.75 * locoWeight * (1.0 - airWeight) + (airWeight * (vertVel > 0 ? -0.28 : 0.22));
+    defLArm = -rawStride * 0.72 * locoWeight * (1.0 - airWeight) + (airWeight * (vertVel > 0 ? -0.35 : 0.25));
+    defRArm = rawStride * 0.72 * locoWeight * (1.0 - airWeight) + (airWeight * (vertVel > 0 ? -0.28 : 0.22));
+    defArmInwardZ = 0.06 + airWeight * 0.22;
   }
 
   let defTorsoX = THREE.MathUtils.lerp(0.02, 0.08, sprintWeight) * locoWeight - clampedPitch * 0.20;
@@ -1143,6 +1154,35 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
     defTorsoX += Math.sin(slashProgress * Math.PI) * 0.12;
   }
 
+  // Helper to orient TPS weapon socket naturally in hand for deformer characters
+  const updateCharacterWeaponSocket = (socket, baseHandX, baseHandY, baseHandZ) => {
+    if (!socket) return;
+    socket.visible = (activeWeapon !== 'unarmed');
+    if (!socket.visible) return;
+    if (isTalking) {
+      socket.position.set(baseHandX - 0.04, baseHandY - 0.14, baseHandZ - 0.06);
+      socket.rotation.set(0.32, 0.05, 0.08);
+    } else if (activeWeapon === 'golok') {
+      const slashRotX = slashProgress >= 0
+        ? (slashProgress < 0.35 ? THREE.MathUtils.lerp(-0.22, -1.1, slashProgress / 0.35) : THREE.MathUtils.lerp(-1.1, 0.85, (slashProgress - 0.35) / 0.65))
+        : (-0.22 - clampedPitch * 0.50 + Math.sin(walkPhase) * 0.10 * locoWeight);
+      socket.position.set(baseHandX - 0.04, baseHandY - 0.04 + Math.sin(walkPhase * 2.0) * 0.015 * locoWeight, baseHandZ + 0.06);
+      socket.rotation.set(slashRotX, -0.04, 0.06);
+    } else {
+      // Shotgun held across chest at waist/rib height pointing forward (+Z)
+      const spinRot = (spinProgress >= 0) ? -spinProgress * Math.PI * 2 : 0;
+      const targetRotX = -0.06 - clampedPitch * 0.65 + Math.sin(walkPhase) * 0.08 * locoWeight - tpsWeaponRecoil * 0.45 + spinRot;
+      socket.position.set(
+        baseHandX + 0.06,
+        baseHandY + 0.14 + Math.sin(walkPhase * 2.0) * 0.016 * locoWeight - landingCompression * 0.25,
+        baseHandZ + 0.16 - tpsWeaponRecoil * 0.14
+      );
+      socket.rotation.x = THREE.MathUtils.lerp(socket.rotation.x, targetRotX, safeDt * 18.0);
+      socket.rotation.y = THREE.MathUtils.lerp(socket.rotation.y, 0.18, safeDt * 14.0);
+      socket.rotation.z = THREE.MathUtils.lerp(socket.rotation.z, 0.0, safeDt * 14.0);
+    }
+  };
+
   // Handle Nona Batavia distinct motion dynamics + walking legs & arms
   if (activeCharacter === 'nona_batavia') {
     if (nonaBataviaPlayerScene) {
@@ -1151,17 +1191,10 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
       nonaBataviaPlayerScene.rotation.z = Math.sin(walkPhase) * 0.035 * locoWeight;
       nonaBataviaPlayerScene.rotation.x = THREE.MathUtils.lerp(0.02, 0.075, sprintWeight) * locoWeight - clampedPitch * 0.15;
 
-      if (nonaBataviaWeaponSocket) {
-        const targetRotX = 0.25 - clampedPitch * 0.70 + Math.sin(walkPhase) * 0.12 * locoWeight;
-        nonaBataviaWeaponSocket.rotation.x = THREE.MathUtils.lerp(
-          nonaBataviaWeaponSocket.rotation.x,
-          targetRotX,
-          safeDt * 15.0
-        );
-      }
+      updateCharacterWeaponSocket(nonaBataviaWeaponSocket, -0.22, 0.96, 0.14);
 
       for (let i = 0; i < nonaDeformers.length; i++) {
-        applyDeformation(nonaDeformers[i], defLLeg, defRLeg, defLArm, defRArm, defTorsoX, defTorsoY, defTorsoZ);
+        applyDeformation(nonaDeformers[i], defLLeg, defRLeg, defLArm, defRArm, defTorsoX, defTorsoY, defTorsoZ, defArmInwardZ);
       }
     }
     return;
@@ -1175,17 +1208,10 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
       sisterValentinaPlayerScene.rotation.z = Math.sin(walkPhase) * 0.04 * locoWeight;
       sisterValentinaPlayerScene.rotation.x = THREE.MathUtils.lerp(0.035, 0.095, sprintWeight) * locoWeight - clampedPitch * 0.15;
 
-      if (sisterValentinaWeaponSocket) {
-        const targetRotX = 0.30 - clampedPitch * 0.70 + Math.sin(walkPhase) * 0.12 * locoWeight;
-        sisterValentinaWeaponSocket.rotation.x = THREE.MathUtils.lerp(
-          sisterValentinaWeaponSocket.rotation.x,
-          targetRotX,
-          safeDt * 15.0
-        );
-      }
+      updateCharacterWeaponSocket(sisterValentinaWeaponSocket, -0.24, 1.00, 0.16);
 
       for (let i = 0; i < valentinaDeformers.length; i++) {
-        applyDeformation(valentinaDeformers[i], defLLeg, defRLeg, defLArm, defRArm, defTorsoX, defTorsoY, defTorsoZ);
+        applyDeformation(valentinaDeformers[i], defLLeg, defRLeg, defLArm, defRArm, defTorsoX, defTorsoY, defTorsoZ, defArmInwardZ);
       }
     }
     return;
@@ -1199,17 +1225,10 @@ export function updatePlayerModelAnimation(isMoving, isSprinting, dt, activeWeap
       kristinPlayerScene.rotation.z = Math.sin(walkPhase) * 0.032 * locoWeight;
       kristinPlayerScene.rotation.x = THREE.MathUtils.lerp(0.03, 0.085, sprintWeight) * locoWeight - clampedPitch * 0.18;
 
-      if (kristinPlayerWeaponSocket) {
-        const targetRotX = 0.25 - clampedPitch * 0.70 + Math.sin(walkPhase) * 0.12 * locoWeight;
-        kristinPlayerWeaponSocket.rotation.x = THREE.MathUtils.lerp(
-          kristinPlayerWeaponSocket.rotation.x,
-          targetRotX,
-          safeDt * 15.0
-        );
-      }
+      updateCharacterWeaponSocket(kristinPlayerWeaponSocket, -0.20, 0.96, 0.14);
 
       for (let i = 0; i < kristinDeformers.length; i++) {
-        applyDeformation(kristinDeformers[i], defLLeg, defRLeg, defLArm, defRArm, defTorsoX, defTorsoY, defTorsoZ);
+        applyDeformation(kristinDeformers[i], defLLeg, defRLeg, defLArm, defRArm, defTorsoX, defTorsoY, defTorsoZ, defArmInwardZ);
       }
     }
     return;
