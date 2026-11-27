@@ -9,6 +9,7 @@ import { setEndlessVillagers } from '../entities/villager.js';
 import { initTimesSquareWorld, setTimesSquareActive, updateTimesSquareEffects } from './timesSquare.js';
 
 let groundMeshRef = null;
+let coldbrookGroup = null;
 
 const THREE = window.THREE;
 
@@ -406,6 +407,18 @@ export function blastOpenDoor(doorObj, state, updateHUD) {
 }
 
 export function initWorld(scene, textures) {
+  coldbrookGroup = new THREE.Group();
+  coldbrookGroup.name = 'Coldbrook_Village_World';
+  scene.add(coldbrookGroup);
+
+  const origSceneAdd = scene.add.bind(scene);
+  scene.add = (...objs) => {
+    for (let i = 0; i < objs.length; i++) {
+      if (objs[i] !== coldbrookGroup) coldbrookGroup.add(objs[i]);
+    }
+    return scene;
+  };
+
   const {
     snowTex,
     beachSandTex,
@@ -441,9 +454,6 @@ export function initWorld(scene, textures) {
   groundMesh.receiveShadow = true;
   groundMeshRef = groundMesh;
   scene.add(groundMesh);
-
-  // Pre-build Times Square NYC Arena (activated in Endless Survival Mode)
-  initTimesSquareWorld(scene, colliders);
 
   // Materials
   const houseWallMat = new THREE.MeshLambertMaterial({ map: houseWallTex, color: 0xeef3f7, flatShading: false });
@@ -3187,6 +3197,10 @@ export function initWorld(scene, textures) {
   snowSystem = new THREE.Points(snowGeo, snowMat);
   scene.add(snowSystem);
 
+  // Restore original scene.add and build Times Square NYC Arena separately
+  scene.add = origSceneAdd;
+  initTimesSquareWorld(scene, colliders);
+
   // Build high-speed spatial collision acceleration grid
   indexColliders();
 }
@@ -3296,9 +3310,12 @@ export function setEndlessEnvironment(isEndless, scene) {
     roadObject.visible = !isEndless;
   }
 
-  // 3. Disable/Enable House and Road Colliders & Activate Times Square NYC Arena
+  // 3. Isolate World Visibility & Colliders cleanly (Coldbrook Village vs Times Square NYC)
+  if (coldbrookGroup) {
+    coldbrookGroup.visible = !isEndless;
+  }
   colliders.forEach(c => {
-    if (c.category === 'house' || c.category === 'road') {
+    if (c.category !== 'nyc') {
       c.disabled = !!isEndless;
     }
   });
