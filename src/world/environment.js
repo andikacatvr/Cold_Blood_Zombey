@@ -107,13 +107,22 @@ export function getUpperRiverWaterY(z) {
  * Smoothly flattens around buildings and spawn point to keep architecture level.
  */
 export function getTerrainHeight(x, z) {
-  // Times Square NYC Arena (flat avenue + walkable Grand Central 42nd St Subway stairs & platform)
+  // Multi-Level Subway Stairwell & Concourse + Flat Times Square NYC Avenue
   if (window.__ENDLESS_ACTIVE) {
-    if (x >= -21.5 && x <= -16.5 && z <= -18.0 && z >= -25.0) {
-      const stairFrac = (-18.0 - z) / 7.0;
-      return -stairFrac * 3.4;
+    // Flight 1: z = -18.0 (y = 0.0) down to z = -24.0 (y = -2.2)
+    if (x >= -21.5 && x <= -16.5 && z <= -18.0 && z >= -24.0) {
+      return -((-18.0 - z) / 6.0) * 2.2;
     }
-    if (x >= -27.5 && x <= -13.5 && z < -25.0 && z >= -37.2) {
+    // Mid-landing: z = -24.0 to -27.0 (y = -2.2)
+    if (x >= -21.5 && x <= -16.5 && z < -24.0 && z >= -27.0) {
+      return -2.2;
+    }
+    // Flight 2: z = -27.0 (y = -2.2) down to z = -30.5 (y = -3.4)
+    if (x >= -21.5 && x <= -16.5 && z < -27.0 && z >= -30.5) {
+      return -2.2 - ((-27.0 - z) / 3.5) * 1.2;
+    }
+    // Underground Subway Concourse & Enterable Train Interior
+    if (x >= -27.6 && x <= -13.5 && z < -30.5 && z >= -43.2) {
       return -3.4;
     }
     return 0.0;
