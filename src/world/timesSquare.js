@@ -26,26 +26,48 @@ function createCanvasTex(w, h, drawFn) {
 
 function makeAsphaltTex() {
   return createCanvasTex(512, 512, (ctx, w, h) => {
-    ctx.fillStyle = '#14171e';
+    ctx.fillStyle = '#181b20';
     ctx.fillRect(0, 0, w, h);
-    for (let i = 0; i < 4500; i++) {
-      const v = 16 + Math.floor(Math.random() * 20);
-      ctx.fillStyle = `rgb(${v},${v + 2},${v + 6})`;
-      ctx.fillRect(Math.random() * w, Math.random() * h, 2, 2);
+    // Heavy PS2/Source gritty aggregate noise
+    for (let i = 0; i < 16000; i++) {
+      const v = 12 + Math.floor(Math.random() * 34);
+      ctx.fillStyle = `rgb(${v},${v + 1},${v + 3})`;
+      ctx.fillRect(Math.random() * w, Math.random() * h, 2 + Math.random() * 2, 2 + Math.random() * 2);
     }
-    // Subtle wet sheen streaks
-    ctx.fillStyle = 'rgba(40, 55, 80, 0.08)';
-    for (let i = 0; i < 18; i++) {
-      ctx.fillRect(Math.random() * w, Math.random() * h, 30 + Math.random() * 60, 4);
+    // Oil stains, puddles & weathered cracks
+    for (let i = 0; i < 24; i++) {
+      ctx.fillStyle = `rgba(6, 8, 12, ${0.15 + Math.random() * 0.25})`;
+      ctx.beginPath();
+      ctx.arc(Math.random() * w, Math.random() * h, 10 + Math.random() * 28, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.strokeStyle = 'rgba(8, 10, 14, 0.55)';
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 12; i++) {
+      ctx.beginPath();
+      let cx = Math.random() * w;
+      let cy = Math.random() * h;
+      ctx.moveTo(cx, cy);
+      for (let s = 0; s < 5; s++) {
+        cx += (Math.random() - 0.5) * 40;
+        cy += (Math.random() - 0.5) * 40;
+        ctx.lineTo(cx, cy);
+      }
+      ctx.stroke();
     }
   });
 }
 
 function makeSidewalkTex() {
   return createCanvasTex(256, 256, (ctx, w, h) => {
-    ctx.fillStyle = '#2d3138';
+    ctx.fillStyle = '#33363b';
     ctx.fillRect(0, 0, w, h);
-    ctx.strokeStyle = '#1b1e24';
+    for (let i = 0; i < 4000; i++) {
+      const v = 35 + Math.floor(Math.random() * 30);
+      ctx.fillStyle = `rgb(${v},${v},${v - 2})`;
+      ctx.fillRect(Math.random() * w, Math.random() * h, 2, 2);
+    }
+    ctx.strokeStyle = '#15171b';
     ctx.lineWidth = 3;
     for (let x = 0; x <= w; x += 64) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
@@ -58,49 +80,85 @@ function makeSidewalkTex() {
 
 function makeSkyscraperWindowsTex(tint = '#ffd98e') {
   return createCanvasTex(256, 512, (ctx, w, h) => {
-    ctx.fillStyle = '#090c14';
+    ctx.fillStyle = '#11141a';
     ctx.fillRect(0, 0, w, h);
-    const cols = 12;
-    const rows = 28;
+    // Gritty concrete/brick facade noise
+    for (let i = 0; i < 4000; i++) {
+      const v = 14 + Math.floor(Math.random() * 20);
+      ctx.fillStyle = `rgb(${v},${v + 2},${v + 5})`;
+      ctx.fillRect(Math.random() * w, Math.random() * h, 2, 2);
+    }
+    const cols = 10;
+    const rows = 26;
     const cw = w / cols;
     const rh = h / rows;
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const rnd = Math.random();
-        if (rnd > 0.42) {
+        if (rnd > 0.45) {
           if (rnd > 0.88) ctx.fillStyle = '#a8e6ff';
-          else if (rnd > 0.72) ctx.fillStyle = '#fff3d1';
+          else if (rnd > 0.72) ctx.fillStyle = '#ffe9b8';
           else ctx.fillStyle = tint;
-          ctx.globalAlpha = 0.45 + Math.random() * 0.55;
+          ctx.globalAlpha = 0.40 + Math.random() * 0.55;
         } else {
-          ctx.fillStyle = '#121826';
-          ctx.globalAlpha = 0.9;
+          ctx.fillStyle = '#151a24';
+          ctx.globalAlpha = 0.92;
         }
         ctx.fillRect(c * cw + 3, r * rh + 3, cw - 6, rh - 6);
       }
     }
     ctx.globalAlpha = 1.0;
+    // Baked bottom grime / ambient occlusion
+    const ao = ctx.createLinearGradient(0, h * 0.75, 0, h);
+    ao.addColorStop(0, 'rgba(0,0,0,0)');
+    ao.addColorStop(1, 'rgba(0,0,0,0.65)');
+    ctx.fillStyle = ao;
+    ctx.fillRect(0, h * 0.75, w, h * 0.25);
   });
 }
 
-function makeSubwayTileTex() {
-  return createCanvasTex(256, 256, (ctx, w, h) => {
-    ctx.fillStyle = '#d6d2c4';
+function makeSubwayTileTex(withGraffiti = false) {
+  return createCanvasTex(512, 512, (ctx, w, h) => {
+    ctx.fillStyle = '#9a988b';
     ctx.fillRect(0, 0, w, h);
-    ctx.strokeStyle = '#8b8779';
-    ctx.lineWidth = 2;
-    for (let y = 0; y <= h; y += 24) {
+    // Heavy PS1/PS2 concrete & tile grime
+    for (let i = 0; i < 12000; i++) {
+      const v = 105 + Math.floor(Math.random() * 55);
+      ctx.fillStyle = `rgb(${v},${v - 2},${v - 8})`;
+      ctx.fillRect(Math.random() * w, Math.random() * h, 3, 3);
+    }
+    ctx.strokeStyle = '#3c3b34';
+    ctx.lineWidth = 3;
+    for (let y = 0; y <= h; y += 32) {
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
     }
-    for (let r = 0; r < 11; r++) {
-      const off = (r % 2) * 24;
-      for (let x = off; x <= w; x += 48) {
-        ctx.beginPath(); ctx.moveTo(x, r * 24); ctx.lineTo(x, (r + 1) * 24); ctx.stroke();
+    for (let r = 0; r < 16; r++) {
+      const off = (r % 2) * 32;
+      for (let x = off; x <= w; x += 64) {
+        ctx.beginPath(); ctx.moveTo(x, r * 32); ctx.lineTo(x, (r + 1) * 32); ctx.stroke();
       }
     }
-    // Classic NYC subway green accent stripe
-    ctx.fillStyle = '#135c36';
-    ctx.fillRect(0, 44, w, 18);
+    // Classic NYC subway green accent stripe + rust drips
+    ctx.fillStyle = '#14492b';
+    ctx.fillRect(0, 64, w, 26);
+    for (let i = 0; i < 20; i++) {
+      ctx.fillStyle = 'rgba(42, 30, 18, 0.28)';
+      ctx.fillRect(Math.random() * w, Math.random() * h, 6 + Math.random() * 14, 30 + Math.random() * 80);
+    }
+    if (withGraffiti) {
+      ctx.save();
+      ctx.font = 'bold 58px Impact, sans-serif';
+      ctx.fillStyle = 'rgba(255, 70, 35, 0.78)';
+      ctx.strokeStyle = 'rgba(15, 15, 20, 0.85)';
+      ctx.lineWidth = 5;
+      ctx.rotate(-0.08);
+      ctx.strokeText('NYC 42', 45, 270);
+      ctx.fillText('NYC 42', 45, 270);
+      ctx.fillStyle = 'rgba(40, 210, 255, 0.72)';
+      ctx.font = 'bold 44px Impact, sans-serif';
+      ctx.fillText('NO ESCAPE', 210, 360);
+      ctx.restore();
+    }
   });
 }
 
@@ -412,14 +470,44 @@ function buildSubwayStation(group, colliders, tileTex, signTex, arrivalTex) {
   yellowEdge.position.set(-4.6, -3.38, -13.0);
   sub.add(yellowEdge);
 
-  // Tiled Underground Walls & Ceiling with Fluorescent Light Tubes
-  const backWall = new THREE.Mesh(new THREE.BoxGeometry(10.4, 4.2, 0.4), tileMat);
+  // Tiled Underground Walls (with Graffiti, Fire Extinguisher, Green EXIT Sign, Blood Trail & Red Sneaker)
+  const graffitiTileMat = new THREE.MeshLambertMaterial({ map: makeSubwayTileTex(true) });
+  const backWall = new THREE.Mesh(new THREE.BoxGeometry(10.4, 4.2, 0.4), graffitiTileMat);
   backWall.position.set(0, -1.5, -19.2);
   sub.add(backWall);
 
-  const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4.2, 13.0), tileMat);
+  const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4.2, 13.0), graffitiTileMat);
   rightWall.position.set(4.9, -1.5, -13.0);
   sub.add(rightWall);
+
+  const exitSign = new THREE.Mesh(
+    new THREE.BoxGeometry(1.6, 0.42, 0.08),
+    new THREE.MeshBasicMaterial({ map: makeNeonSignTex('EXIT ->', '#155c2e', '#ffffff', '#b8e8c8') })
+  );
+  exitSign.position.set(2.2, -0.4, -18.95);
+  sub.add(exitSign);
+
+  const extCabinet = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.1, 0.14), new THREE.MeshLambertMaterial({ color: 0xb88618 }));
+  extCabinet.position.set(0.4, -1.5, -18.95);
+  sub.add(extCabinet);
+
+  const extTank = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.65, 8), new THREE.MeshLambertMaterial({ color: 0xb81818 }));
+  extTank.position.set(0.4, -1.55, -18.85);
+  sub.add(extTank);
+
+  const bloodStreak = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.65, 4.2),
+    new THREE.MeshBasicMaterial({ color: 0x450508, transparent: true, opacity: 0.85, depthWrite: false })
+  );
+  bloodStreak.rotation.x = -Math.PI * 0.36;
+  bloodStreak.rotation.z = 0.08;
+  bloodStreak.position.set(0.2, -1.45, -3.2);
+  sub.add(bloodStreak);
+
+  const redSneaker = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.18, 0.44), new THREE.MeshLambertMaterial({ color: 0xc41a1a }));
+  redSneaker.position.set(-1.35, -0.42, -0.9);
+  redSneaker.rotation.y = 0.45;
+  sub.add(redSneaker);
 
   const ceiling = new THREE.Mesh(new THREE.BoxGeometry(10.4, 0.3, 13.0), ironMat);
   ceiling.position.set(0, 0.35, -13.0);
@@ -439,36 +527,46 @@ function buildSubwayStation(group, colliders, tileTex, signTex, arrivalTex) {
   sub.add(subLight);
   nycLights.push(subLight);
 
-  // Parked NYC Stainless-Steel Subway Train Car on Track (x = -7.0 relative to sub)
+  // Enterable NYC Subway Train Car on Track (Orange Vinyl Seats & Vertical Steel Poles)
   const trainCar = new THREE.Group();
-  trainCar.position.set(-6.8, -2.1, -13.0);
-  const trainBody = new THREE.Mesh(
-    new THREE.BoxGeometry(3.0, 2.9, 13.5),
-    new THREE.MeshLambertMaterial({ color: 0x8b95a5 })
-  );
-  trainCar.add(trainBody);
-  const blueStripe = new THREE.Mesh(
-    new THREE.BoxGeometry(3.06, 0.35, 13.52),
-    new THREE.MeshBasicMaterial({ color: 0x0055cc })
-  );
-  blueStripe.position.y = -0.35;
-  trainCar.add(blueStripe);
-  for (let wz = -4.5; wz <= 4.5; wz += 2.2) {
-    const win = new THREE.Mesh(
-      new THREE.BoxGeometry(3.08, 0.85, 1.3),
-      new THREE.MeshBasicMaterial({ color: 0xfff0c2 })
-    );
-    win.position.set(0, 0.45, wz);
-    trainCar.add(win);
+  trainCar.position.set(-6.8, -2.0, -13.0);
+  const steelMat = new THREE.MeshLambertMaterial({ color: 0x76808e });
+  const trainFloor = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.2, 13.5), new THREE.MeshLambertMaterial({ color: 0x262930 }));
+  trainFloor.position.y = -1.35;
+  trainCar.add(trainFloor);
+  const trainRoof = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.2, 13.5), steelMat);
+  trainRoof.position.y = 1.45;
+  trainCar.add(trainRoof);
+  const trainBack = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.8, 13.5), steelMat);
+  trainBack.position.x = -1.42;
+  trainCar.add(trainBack);
+  [-4.6, 0, 4.6].forEach(szWall => {
+    const wallSeg = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.8, 2.5), steelMat);
+    wallSeg.position.set(1.42, 0.05, szWall);
+    trainCar.add(wallSeg);
+  });
+  const orangeSeatMat = new THREE.MeshLambertMaterial({ color: 0xc95a1e });
+  [-1.05, 1.05].forEach(sxSeat => {
+    const bench = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.55, 11.2), orangeSeatMat);
+    bench.position.set(sxSeat, -0.95, 0);
+    trainCar.add(bench);
+  });
+  for (let pz = -4.0; pz <= 4.0; pz += 2.6) {
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.75, 6), new THREE.MeshLambertMaterial({ color: 0xc2cbd6 }));
+    pole.position.set(0, 0.05, pz);
+    trainCar.add(pole);
   }
+  const trainTube = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.08, 10.0), new THREE.MeshBasicMaterial({ color: 0xfff0cc }));
+  trainTube.position.set(0, 1.30, 0);
+  trainCar.add(trainTube);
   sub.add(trainCar);
 
-  // Colliders for Subway side walls & back wall (staircase & platform stay open & walkable!)
+  // Colliders for Subway side walls & back wall (staircase, platform & train doorway stay walkable!)
   addNYCBoxCollider(colliders, sx - 2.6, sx - 2.1, sz - 7.2, sz + 0.4);
   addNYCBoxCollider(colliders, sx + 2.1, sx + 2.6, sz - 7.2, sz + 0.4);
-  addNYCBoxCollider(colliders, sx - 5.2, sx + 5.2, sz - 19.6, sz - 18.8);
+  addNYCBoxCollider(colliders, sx - 8.4, sx + 5.2, sz - 19.6, sz - 18.8);
   addNYCBoxCollider(colliders, sx + 4.5, sx + 5.2, sz - 19.2, sz - 6.8);
-  addNYCBoxCollider(colliders, sx - 5.4, sx - 4.7, sz - 19.2, sz - 6.8);
+  addNYCBoxCollider(colliders, sx - 8.4, sx - 8.0, sz - 19.2, sz - 6.8);
 
   group.add(sub);
 }

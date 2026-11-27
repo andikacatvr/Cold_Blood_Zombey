@@ -112,7 +112,7 @@ export function getTerrainHeight(x, z) {
       const stairFrac = (-18.0 - z) / 7.0;
       return -stairFrac * 3.4;
     }
-    if (x >= -24.5 && x <= -13.5 && z < -25.0 && z >= -37.2) {
+    if (x >= -27.5 && x <= -13.5 && z < -25.0 && z >= -37.2) {
       return -3.4;
     }
     return 0.0;
