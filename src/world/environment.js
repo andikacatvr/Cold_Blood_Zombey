@@ -6,6 +6,9 @@
 import { Sfx } from '../audio/sfx.js';
 import { spawnWoodSplinters } from '../entities/effects.js';
 import { setEndlessVillagers } from '../entities/villager.js';
+import { initTimesSquareWorld, setTimesSquareActive, updateTimesSquareEffects } from './timesSquare.js';
+
+let groundMeshRef = null;
 
 const THREE = window.THREE;
 
@@ -102,6 +105,18 @@ export function getUpperRiverWaterY(z) {
  * Smoothly flattens around buildings and spawn point to keep architecture level.
  */
 export function getTerrainHeight(x, z) {
+  // Times Square NYC Arena (flat avenue + walkable Grand Central 42nd St Subway stairs & platform)
+  if (window.__ENDLESS_ACTIVE) {
+    if (x >= -21.5 && x <= -16.5 && z <= -18.0 && z >= -25.0) {
+      const stairFrac = (-18.0 - z) / 7.0;
+      return -stairFrac * 3.4;
+    }
+    if (x >= -24.5 && x <= -13.5 && z < -25.0 && z >= -37.2) {
+      return -3.4;
+    }
+    return 0.0;
+  }
+
   // Multi-frequency natural forest ground rolling waves
   const h1 = Math.sin(x * 0.052) * Math.cos(z * 0.048) * 2.5;
   const h2 = Math.sin(x * 0.105 + 1.2) * Math.cos(z * 0.092 - 0.7) * 1.35;
@@ -424,7 +439,11 @@ export function initWorld(scene, textures) {
   const groundMat = new THREE.MeshLambertMaterial({ map: snowTex, flatShading: false });
   const groundMesh = new THREE.Mesh(groundGeo, groundMat);
   groundMesh.receiveShadow = true;
+  groundMeshRef = groundMesh;
   scene.add(groundMesh);
+
+  // Pre-build Times Square NYC Arena (activated in Endless Survival Mode)
+  initTimesSquareWorld(scene, colliders);
 
   // Materials
   const houseWallMat = new THREE.MeshLambertMaterial({ map: houseWallTex, color: 0xeef3f7, flatShading: false });
@@ -3207,20 +3226,22 @@ export function indexColliders() {
 export function checkWallCollision(x, z) {
   if (Math.abs(x) > MAP_LIMIT - 0.5 || Math.abs(z) > MAP_LIMIT - 0.5) return true;
 
-  // Natural Water Boundary: Player cannot swim into deep ocean or deep river
-  const isOnPier = (z >= 112.0 && z <= 138.0 && Math.abs(x - 14.0) < 1.8);
-  const bridgeCenterX = getRiverCenterX(4.0);
-  const isOnBridge = (Math.abs(z - 4.0) < 1.7 && Math.abs(x - bridgeCenterX) < 6.6);
+  // Natural Water Boundary: Only in Coldbrook Village Story Mode (Times Square NYC has no river/ocean)
+  if (!window.__ENDLESS_ACTIVE) {
+    const isOnPier = (z >= 112.0 && z <= 138.0 && Math.abs(x - 14.0) < 1.8);
+    const bridgeCenterX = getRiverCenterX(4.0);
+    const isOnBridge = (Math.abs(z - 4.0) < 1.7 && Math.abs(x - bridgeCenterX) < 6.6);
 
-  if (!isOnPier && !isOnBridge) {
-    // Ocean Shoreline Barrier: Player cannot walk out into open sea
-    if (z > 124.5) return true;
+    if (!isOnPier && !isOnBridge) {
+      // Ocean Shoreline Barrier: Player cannot walk out into open sea
+      if (z > 124.5) return true;
 
-    // Deep River Barrier: Player cannot drown or enter deep river channels
-    const wsY = getWaterSurfaceY(x, z);
-    if (wsY !== null) {
-      const gY = getTerrainHeight(x, z);
-      if (wsY - gY > 0.65) return true;
+      // Deep River Barrier: Player cannot drown or enter deep river channels
+      const wsY = getWaterSurfaceY(x, z);
+      if (wsY !== null) {
+        const gY = getTerrainHeight(x, z);
+        if (wsY - gY > 0.65) return true;
+      }
     }
   }
 
@@ -3275,23 +3296,29 @@ export function setEndlessEnvironment(isEndless, scene) {
     roadObject.visible = !isEndless;
   }
 
-  // 3. Disable/Enable House and Road Colliders
+  // 3. Disable/Enable House and Road Colliders & Activate Times Square NYC Arena
   colliders.forEach(c => {
     if (c.category === 'house' || c.category === 'road') {
       c.disabled = !!isEndless;
     }
   });
+  if (groundMeshRef) {
+    groundMeshRef.visible = !isEndless;
+  }
+  setTimesSquareActive(isEndless);
   indexColliders();
 
-  // 4. Dense atmospheric horror fog ("buat lebih berkabut")
+  // 4. Night Atmosphere: Manhattan Midnight Sky for Times Square vs Coldbrook Mist for Story Mode
+  if (scene) {
+    scene.background = isEndless ? new THREE.Color(0x070b16) : null;
+  }
   if (scene && scene.fog) {
-    scene.fog.color.setHex(0x325274);
     if (isEndless) {
-      // Dense drifting teal mist: sightline cut off past 16 meters
-      scene.fog.near = 1.0;
-      scene.fog.far = 16.0;
+      scene.fog.color.setHex(0x070b16);
+      scene.fog.near = 22.0;
+      scene.fog.far = 135.0;
     } else {
-      // Restore normal atmospheric story mode fog
+      scene.fog.color.setHex(0x325274);
       scene.fog.near = 2.0;
       scene.fog.far = 32.0;
     }
@@ -3300,3 +3327,5 @@ export function setEndlessEnvironment(isEndless, scene) {
   // 5. Hide/Show Village NPCs (Old Thomas, Martha, Edward, etc.)
   setEndlessVillagers(isEndless);
 }
+
+export { updateTimesSquareEffects };

@@ -821,8 +821,12 @@ export function startWinterSurvive(scene, mode = 'story') {
   window.__GAME_MODE = mode;
   window.__GAME_RUNNING = true;
 
-  // Toggle Endless Environment: remove houses & roads, disable collisions, increase fog density
+  // Toggle Endless Environment: Times Square NYC Night Arena vs Coldbrook Village
   setEndlessEnvironment(mode === 'endless', scene);
+  if (cameraRef) {
+    cameraRef.far = (mode === 'endless') ? 175.0 : 75.0;
+    cameraRef.updateProjectionMatrix();
+  }
 
   Sfx.init(state);
   respawnHousePickups();
