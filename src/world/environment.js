@@ -6,11 +6,6 @@
 import { Sfx } from '../audio/sfx.js';
 import { spawnWoodSplinters } from '../entities/effects.js';
 import { setEndlessVillagers } from '../entities/villager.js';
-import { ambientLight, overcastDirLight } from '../graphics/engine.js';
-import { initTimesSquareWorld, setTimesSquareActive, updateTimesSquareEffects } from './timesSquare.js';
-
-let groundMeshRef = null;
-let coldbrookGroup = null;
 
 const THREE = window.THREE;
 
@@ -107,27 +102,6 @@ export function getUpperRiverWaterY(z) {
  * Smoothly flattens around buildings and spawn point to keep architecture level.
  */
 export function getTerrainHeight(x, z) {
-  // Multi-Level Subway Stairwell & Concourse + Flat Times Square NYC Avenue
-  if (window.__ENDLESS_ACTIVE) {
-    // Flight 1: z = -18.0 (y = 0.0) down to z = -24.0 (y = -2.2)
-    if (x >= -21.5 && x <= -16.5 && z <= -18.0 && z >= -24.0) {
-      return -((-18.0 - z) / 6.0) * 2.2;
-    }
-    // Mid-landing: z = -24.0 to -27.0 (y = -2.2)
-    if (x >= -21.5 && x <= -16.5 && z < -24.0 && z >= -27.0) {
-      return -2.2;
-    }
-    // Flight 2: z = -27.0 (y = -2.2) down to z = -30.5 (y = -3.4)
-    if (x >= -21.5 && x <= -16.5 && z < -27.0 && z >= -30.5) {
-      return -2.2 - ((-27.0 - z) / 3.5) * 1.2;
-    }
-    // Underground Subway Concourse & Enterable Train Interior
-    if (x >= -27.6 && x <= -13.5 && z < -30.5 && z >= -43.2) {
-      return -3.4;
-    }
-    return 0.0;
-  }
-
   // Multi-frequency natural forest ground rolling waves
   const h1 = Math.sin(x * 0.052) * Math.cos(z * 0.048) * 2.5;
   const h2 = Math.sin(x * 0.105 + 1.2) * Math.cos(z * 0.092 - 0.7) * 1.35;
@@ -417,18 +391,6 @@ export function blastOpenDoor(doorObj, state, updateHUD) {
 }
 
 export function initWorld(scene, textures) {
-  coldbrookGroup = new THREE.Group();
-  coldbrookGroup.name = 'Coldbrook_Village_World';
-  scene.add(coldbrookGroup);
-
-  const origSceneAdd = scene.add.bind(scene);
-  scene.add = (...objs) => {
-    for (let i = 0; i < objs.length; i++) {
-      if (objs[i] !== coldbrookGroup) coldbrookGroup.add(objs[i]);
-    }
-    return scene;
-  };
-
   const {
     snowTex,
     beachSandTex,
@@ -462,7 +424,6 @@ export function initWorld(scene, textures) {
   const groundMat = new THREE.MeshLambertMaterial({ map: snowTex, flatShading: false });
   const groundMesh = new THREE.Mesh(groundGeo, groundMat);
   groundMesh.receiveShadow = true;
-  groundMeshRef = groundMesh;
   scene.add(groundMesh);
 
   // Materials
@@ -3207,10 +3168,6 @@ export function initWorld(scene, textures) {
   snowSystem = new THREE.Points(snowGeo, snowMat);
   scene.add(snowSystem);
 
-  // Restore original scene.add and build Times Square NYC Arena separately
-  scene.add = origSceneAdd;
-  initTimesSquareWorld(scene, colliders);
-
   // Build high-speed spatial collision acceleration grid
   indexColliders();
 }
@@ -3250,22 +3207,20 @@ export function indexColliders() {
 export function checkWallCollision(x, z) {
   if (Math.abs(x) > MAP_LIMIT - 0.5 || Math.abs(z) > MAP_LIMIT - 0.5) return true;
 
-  // Natural Water Boundary: Only in Coldbrook Village Story Mode (Times Square NYC has no river/ocean)
-  if (!window.__ENDLESS_ACTIVE) {
-    const isOnPier = (z >= 112.0 && z <= 138.0 && Math.abs(x - 14.0) < 1.8);
-    const bridgeCenterX = getRiverCenterX(4.0);
-    const isOnBridge = (Math.abs(z - 4.0) < 1.7 && Math.abs(x - bridgeCenterX) < 6.6);
+  // Natural Water Boundary: Player cannot swim into deep ocean or deep river
+  const isOnPier = (z >= 112.0 && z <= 138.0 && Math.abs(x - 14.0) < 1.8);
+  const bridgeCenterX = getRiverCenterX(4.0);
+  const isOnBridge = (Math.abs(z - 4.0) < 1.7 && Math.abs(x - bridgeCenterX) < 6.6);
 
-    if (!isOnPier && !isOnBridge) {
-      // Ocean Shoreline Barrier: Player cannot walk out into open sea
-      if (z > 124.5) return true;
+  if (!isOnPier && !isOnBridge) {
+    // Ocean Shoreline Barrier: Player cannot walk out into open sea
+    if (z > 124.5) return true;
 
-      // Deep River Barrier: Player cannot drown or enter deep river channels
-      const wsY = getWaterSurfaceY(x, z);
-      if (wsY !== null) {
-        const gY = getTerrainHeight(x, z);
-        if (wsY - gY > 0.65) return true;
-      }
+    // Deep River Barrier: Player cannot drown or enter deep river channels
+    const wsY = getWaterSurfaceY(x, z);
+    if (wsY !== null) {
+      const gY = getTerrainHeight(x, z);
+      if (wsY - gY > 0.65) return true;
     }
   }
 
@@ -3320,39 +3275,23 @@ export function setEndlessEnvironment(isEndless, scene) {
     roadObject.visible = !isEndless;
   }
 
-  // 3. Isolate World Visibility & Colliders cleanly (Coldbrook Village vs Times Square NYC)
-  if (coldbrookGroup) {
-    coldbrookGroup.visible = !isEndless;
-  }
+  // 3. Disable/Enable House and Road Colliders
   colliders.forEach(c => {
-    if (c.category !== 'nyc') {
+    if (c.category === 'house' || c.category === 'road') {
       c.disabled = !!isEndless;
     }
   });
-  if (groundMeshRef) {
-    groundMeshRef.visible = !isEndless;
-  }
-  setTimesSquareActive(isEndless);
   indexColliders();
 
-  // 4. Night Atmosphere: Crisp, readable NYC Night Lighting for Times Square vs Coldbrook Mist
-  if (ambientLight) {
-    ambientLight.color.setHex(isEndless ? 0x4c5b73 : 0x304a68);
-    ambientLight.intensity = isEndless ? 0.85 : 1.0;
-  }
-  if (overcastDirLight) {
-    overcastDirLight.intensity = isEndless ? 0.58 : 0.75;
-  }
-  if (scene) {
-    scene.background = isEndless ? new THREE.Color(0x101828) : null;
-  }
+  // 4. Dense atmospheric horror fog ("buat lebih berkabut")
   if (scene && scene.fog) {
+    scene.fog.color.setHex(0x325274);
     if (isEndless) {
-      scene.fog.color.setHex(0x101828);
-      scene.fog.near = 28.0;
-      scene.fog.far = 135.0;
+      // Dense drifting teal mist: sightline cut off past 16 meters
+      scene.fog.near = 1.0;
+      scene.fog.far = 16.0;
     } else {
-      scene.fog.color.setHex(0x325274);
+      // Restore normal atmospheric story mode fog
       scene.fog.near = 2.0;
       scene.fog.far = 32.0;
     }
@@ -3361,5 +3300,3 @@ export function setEndlessEnvironment(isEndless, scene) {
   // 5. Hide/Show Village NPCs (Old Thomas, Martha, Edward, etc.)
   setEndlessVillagers(isEndless);
 }
-
-export { updateTimesSquareEffects };

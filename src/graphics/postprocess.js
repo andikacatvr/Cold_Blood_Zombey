@@ -95,12 +95,11 @@ const COMPOSITE_FRAG = `
     // ACES Filmic tone mapping + slight exposure lift
     color = acesFilmic(color * 1.08);
 
-    // Gritty PS2 Survival Horror Color Grading (Silent Hill 3 / Cry of Fear: cool shadows, punchy contrast)
+    // Subtle PS2 Survival Horror Color Grading (cool shadow tint, gentle S-curve contrast)
     float luma = dot(color, vec3(0.299, 0.587, 0.114));
-    vec3 desat = mix(color, vec3(luma), 0.14);
-    vec3 shadowTint = vec3(0.88, 0.95, 1.04);
-    color = mix(desat * shadowTint, desat, smoothstep(0.05, 0.58, luma));
-    color = mix(color, smoothstep(0.0, 1.0, color), 0.18);
+    vec3 shadowTint = vec3(0.92, 0.97, 1.06);
+    color = mix(color * shadowTint, color, smoothstep(0.05, 0.55, luma));
+    color = mix(color, smoothstep(0.0, 1.0, color), 0.12);
 
     // Soft horror vignette around screen edges
     vec2 centered = vUv - 0.5;
@@ -239,8 +238,8 @@ export function renderWithPostProcessing(renderer, scene, camera, timeSec = 0, g
   matComposite.uniforms.tBloom.value = rtBloomA.texture;
   matComposite.uniforms.uTime.value = timeSec;
   matComposite.uniforms.uBloomStrength.value = (graphicMode === 'ps1') ? 0.18 : 0.30;
-  matComposite.uniforms.uGrainAmount.value = (graphicMode === 'ps1') ? 0.042 : 0.028;
-  matComposite.uniforms.uVignetteStrength.value = 0.42;
+  matComposite.uniforms.uGrainAmount.value = (graphicMode === 'ps1') ? 0.032 : 0.020;
+  matComposite.uniforms.uVignetteStrength.value = 0.36;
 
   postQuad.material = matComposite;
   renderer.setRenderTarget(null);
