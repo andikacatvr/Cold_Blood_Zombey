@@ -499,17 +499,18 @@ function buildOverheadNeonTruss(group, z, texA, texB, texC, texD) {
   });
 
   // Horizontal Crossbeams
-  [7.2, 11.2].forEach(by => {
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(31.5, 0.32, 0.32), trussMat);
+  [7.0, 11.4].forEach(by => {
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(31.5, 0.34, 0.34), trussMat);
     beam.position.set(0, by, 0);
     rack.add(beam);
   });
 
-  // Stacked Overlapping Neon Signs
-  addLEDDisplay(rack, -8.2, 9.4, 0.2, 9.5, 3.8, 0, texA, 0x00ff99);
-  addLEDDisplay(rack, 1.8, 10.6, -0.2, 8.2, 3.4, 0, texB, 0xff2a55);
-  addLEDDisplay(rack, 9.5, 8.6, 0.25, 8.8, 3.6, 0, texC, 0xffd24d);
-  addLEDDisplay(rack, -3.5, 6.6, 0.3, 7.2, 2.5, 0, texD);
+  // Clean Non-Overlapping Neon Signs arranged in neat 2-tier rack
+  addLEDDisplay(rack, -9.6, 9.2, 0.22, 8.4, 3.6, 0, texA, 0x00ff99);
+  addLEDDisplay(rack, 0.0, 9.2, 0.22, 8.4, 3.6, 0, texB, 0xff2a55);
+  addLEDDisplay(rack, 9.6, 9.2, 0.22, 8.4, 3.6, 0, texC, 0xffd24d);
+  addLEDDisplay(rack, -4.8, 13.4, 0.22, 8.2, 3.0, 0, texD);
+  addLEDDisplay(rack, 4.8, 13.4, 0.22, 8.2, 3.0, 0, texA);
 
   group.add(rack);
 }
@@ -664,8 +665,8 @@ function buildSubwayComplex(group, colliders, concreteTex, gridTileTex, graffiti
     tube.position.set(0, 0.15, lz);
     sub.add(tube);
   });
-  const subLight = new THREE.PointLight(0xd8f0dc, 2.4, 22);
-  subLight.position.set(0, -0.5, -18.5);
+  const subLight = new THREE.PointLight(0xe4f8e8, 3.2, 26);
+  subLight.position.set(0, -0.4, -18.5);
   sub.add(subLight);
   nycLights.push(subLight);
 
@@ -918,14 +919,20 @@ export function initTimesSquareWorld(scene, colliders) {
     }
   });
 
-  // Sidewalks
+  // Sidewalks (with clean cutout around West Subway stairwell at x:[-21.5,-16.5], z:[-18,-43.2])
   const swMat = new THREE.MeshLambertMaterial({ map: sidewalkTex });
-  [-24, 24].forEach(sx => {
-    const sw = new THREE.Mesh(new THREE.BoxGeometry(16, 0.14, 140), swMat);
-    sw.position.set(sx, 0.07, 10);
+  const addSidewalkSlab = (minX, maxX, minZ, maxZ) => {
+    const sw = new THREE.Mesh(new THREE.BoxGeometry(maxX - minX, 0.14, maxZ - minZ), swMat);
+    sw.position.set((minX + maxX) * 0.5, 0.07, (minZ + maxZ) * 0.5);
     sw.receiveShadow = true;
     nycGroup.add(sw);
-  });
+  };
+  // East Sidewalk (continuous)
+  addSidewalkSlab(16.0, 32.0, -60.0, 80.0);
+  // West Sidewalk (cut out cleanly around Subway entrance)
+  addSidewalkSlab(-32.0, -16.0, -18.0, 80.0);
+  addSidewalkSlab(-32.0, -21.5, -43.2, -18.0);
+  addSidewalkSlab(-32.0, -16.0, -60.0, -43.2);
 
   // 2. ZONA A: Detailed Low-Poly Times Square Skyscrapers (North & Mid Plaza)
   buildDetailedSkyscraper(nycGroup, colliders, -34, -8, 18, 22, 58, winGold);
@@ -966,9 +973,9 @@ export function initTimesSquareWorld(scene, colliders) {
   addLEDDisplay(nycGroup, 0, 28.5, -48.6, 16, 11, 0, texCube, 0x24e5ff);
   addLEDDisplay(nycGroup, 0, 41.0, -48.6, 14, 9, 0, texTulsa, 0xff7722);
 
-  // Overhead Steel Truss Neon Racks (Image 3)
-  buildOverheadNeonTruss(nycGroup, -36, texHK1, texHK2, texTulsa, makeNeonSignTex('SEAFOOD • 24H', '#f5f0e6', '#d62828', '#111'));
-  buildOverheadNeonTruss(nycGroup, -6, texHK2, texVice, texHK1, makeNeonSignTex('I ♥ VICE CITY', '#280a48', '#ffffff', '#ff3b9a'));
+  // Overhead Steel Truss Neon Racks (cleanly spaced along avenue)
+  buildOverheadNeonTruss(nycGroup, -34, texHK1, texHK2, texTulsa, makeNeonSignTex('SEAFOOD • 24H', '#f5f0e6', '#d62828', '#111'));
+  buildOverheadNeonTruss(nycGroup, -12, texHK2, texVice, texHK1, makeNeonSignTex('I ♥ VICE CITY', '#280a48', '#ffffff', '#ff3b9a'));
 
   // Chainlink Fence across North Alley Perimeter (Image 3)
   const chainTex = makeChainlinkTex();
@@ -1016,10 +1023,18 @@ export function initTimesSquareWorld(scene, colliders) {
     const bulb = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.08, 0.24), new THREE.MeshBasicMaterial({ color: 0xffe4b5 }));
     bulb.position.set(lx + (lx < 0 ? 1.0 : -1.0), 6.26, lz);
     nycGroup.add(bulb);
-    const lampLight = new THREE.PointLight(0xffcf82, 1.9, 22);
+    const lampLight = new THREE.PointLight(0xffd896, 2.5, 32);
     lampLight.position.set(lx + (lx < 0 ? 1.0 : -1.0), 5.8, lz);
     nycGroup.add(lampLight);
     nycLights.push(lampLight);
+  });
+
+  // Extra Plaza & North Alley Overhead Fill Lights so buildings & streets are clearly readable
+  [[0, -24, 0xb8d4ff], [0, 8, 0xffe4b8], [0, 38, 0xc8daf0]].forEach(([fx, fz, fcol]) => {
+    const fill = new THREE.PointLight(fcol, 1.8, 42);
+    fill.position.set(fx, 11.0, fz);
+    nycGroup.add(fill);
+    nycLights.push(fill);
   });
 
   nycGroup.visible = false;

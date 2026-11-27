@@ -3335,22 +3335,22 @@ export function setEndlessEnvironment(isEndless, scene) {
   setTimesSquareActive(isEndless);
   indexColliders();
 
-  // 4. Night Atmosphere: Dark Moody PS2 Horror Lighting for Times Square vs Coldbrook Mist
+  // 4. Night Atmosphere: Crisp, readable NYC Night Lighting for Times Square vs Coldbrook Mist
   if (ambientLight) {
-    ambientLight.color.setHex(isEndless ? 0x1a2230 : 0x304a68);
-    ambientLight.intensity = isEndless ? 0.34 : 1.0;
+    ambientLight.color.setHex(isEndless ? 0x4c5b73 : 0x304a68);
+    ambientLight.intensity = isEndless ? 0.85 : 1.0;
   }
   if (overcastDirLight) {
-    overcastDirLight.intensity = isEndless ? 0.24 : 0.75;
+    overcastDirLight.intensity = isEndless ? 0.58 : 0.75;
   }
   if (scene) {
-    scene.background = isEndless ? new THREE.Color(0x050811) : null;
+    scene.background = isEndless ? new THREE.Color(0x101828) : null;
   }
   if (scene && scene.fog) {
     if (isEndless) {
-      scene.fog.color.setHex(0x050811);
-      scene.fog.near = 16.0;
-      scene.fog.far = 96.0;
+      scene.fog.color.setHex(0x101828);
+      scene.fog.near = 28.0;
+      scene.fog.far = 135.0;
     } else {
       scene.fog.color.setHex(0x325274);
       scene.fog.near = 2.0;
