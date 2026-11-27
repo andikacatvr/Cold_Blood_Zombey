@@ -6,6 +6,7 @@
 import { Sfx } from '../audio/sfx.js';
 import { spawnWoodSplinters } from '../entities/effects.js';
 import { setEndlessVillagers } from '../entities/villager.js';
+import { ambientLight, overcastDirLight } from '../graphics/engine.js';
 import { initTimesSquareWorld, setTimesSquareActive, updateTimesSquareEffects } from './timesSquare.js';
 
 let groundMeshRef = null;
@@ -3325,15 +3326,22 @@ export function setEndlessEnvironment(isEndless, scene) {
   setTimesSquareActive(isEndless);
   indexColliders();
 
-  // 4. Night Atmosphere: Manhattan Midnight Sky for Times Square vs Coldbrook Mist for Story Mode
+  // 4. Night Atmosphere: Dark Moody PS2 Horror Lighting for Times Square vs Coldbrook Mist
+  if (ambientLight) {
+    ambientLight.color.setHex(isEndless ? 0x1a2230 : 0x304a68);
+    ambientLight.intensity = isEndless ? 0.34 : 1.0;
+  }
+  if (overcastDirLight) {
+    overcastDirLight.intensity = isEndless ? 0.24 : 0.75;
+  }
   if (scene) {
-    scene.background = isEndless ? new THREE.Color(0x070b16) : null;
+    scene.background = isEndless ? new THREE.Color(0x050811) : null;
   }
   if (scene && scene.fog) {
     if (isEndless) {
-      scene.fog.color.setHex(0x070b16);
-      scene.fog.near = 22.0;
-      scene.fog.far = 135.0;
+      scene.fog.color.setHex(0x050811);
+      scene.fog.near = 16.0;
+      scene.fog.far = 96.0;
     } else {
       scene.fog.color.setHex(0x325274);
       scene.fog.near = 2.0;

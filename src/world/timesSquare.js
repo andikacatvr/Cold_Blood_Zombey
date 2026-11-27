@@ -13,44 +13,47 @@ let tickerTex = null;
 let nycLights = [];
 const nycColliders = [];
 
-function createCanvasTex(w, h, drawFn) {
+function createCanvasTex(w, h, drawFn, crispRetro = true) {
   const canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d');
   drawFn(ctx, w, h);
   const tex = new THREE.CanvasTexture(canvas);
+  if (crispRetro) {
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.LinearMipmapLinearFilter;
+  }
   tex.needsUpdate = true;
   return tex;
 }
 
 function makeAsphaltTex() {
-  return createCanvasTex(512, 512, (ctx, w, h) => {
-    ctx.fillStyle = '#181b20';
+  return createCanvasTex(128, 128, (ctx, w, h) => {
+    ctx.fillStyle = '#191c22';
     ctx.fillRect(0, 0, w, h);
-    // Heavy PS2/Source gritty aggregate noise
-    for (let i = 0; i < 16000; i++) {
-      const v = 12 + Math.floor(Math.random() * 34);
+    // Chunky PS1/PS2 gritty asphalt texels (like Silent Hill / Cry of Fear)
+    for (let i = 0; i < 3200; i++) {
+      const v = 14 + Math.floor(Math.random() * 34);
       ctx.fillStyle = `rgb(${v},${v + 1},${v + 3})`;
-      ctx.fillRect(Math.random() * w, Math.random() * h, 2 + Math.random() * 2, 2 + Math.random() * 2);
+      ctx.fillRect(Math.floor(Math.random() * w), Math.floor(Math.random() * h), 1, 1);
     }
-    // Oil stains, puddles & weathered cracks
-    for (let i = 0; i < 24; i++) {
-      ctx.fillStyle = `rgba(6, 8, 12, ${0.15 + Math.random() * 0.25})`;
+    for (let i = 0; i < 10; i++) {
+      ctx.fillStyle = `rgba(6, 8, 12, ${0.22 + Math.random() * 0.25})`;
       ctx.beginPath();
-      ctx.arc(Math.random() * w, Math.random() * h, 10 + Math.random() * 28, 0, Math.PI * 2);
+      ctx.arc(Math.random() * w, Math.random() * h, 5 + Math.random() * 12, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.strokeStyle = 'rgba(8, 10, 14, 0.55)';
-    ctx.lineWidth = 1.5;
-    for (let i = 0; i < 12; i++) {
+    ctx.strokeStyle = 'rgba(6, 8, 10, 0.65)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 6; i++) {
       ctx.beginPath();
       let cx = Math.random() * w;
       let cy = Math.random() * h;
       ctx.moveTo(cx, cy);
-      for (let s = 0; s < 5; s++) {
-        cx += (Math.random() - 0.5) * 40;
-        cy += (Math.random() - 0.5) * 40;
+      for (let s = 0; s < 4; s++) {
+        cx += (Math.random() - 0.5) * 18;
+        cy += (Math.random() - 0.5) * 18;
         ctx.lineTo(cx, cy);
       }
       ctx.stroke();
@@ -765,7 +768,7 @@ export function initTimesSquareWorld(scene, colliders) {
   buildNYCTaxi(nycGroup, colliders, 10.2, -16.0, Math.PI + 0.08, false);
   buildNYCTaxi(nycGroup, colliders, -11.5, 34.0, -0.18, true);
 
-  // Warm NYC Streetlamps lining the sidewalks
+  // Warm NYC Streetlamps casting localized sodium light pools on dark wet asphalt
   const poleMat = new THREE.MeshLambertMaterial({ color: 0x1a1e26 });
   [[-16.2, 6], [-16.2, 28], [16.2, -6], [16.2, 24]].forEach(([lx, lz]) => {
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 6.2, 8), poleMat);
@@ -774,6 +777,10 @@ export function initTimesSquareWorld(scene, colliders) {
     const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.28, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffe4a8 }));
     bulb.position.set(lx, 6.2, lz);
     nycGroup.add(bulb);
+    const lampLight = new THREE.PointLight(0xffcf82, 1.9, 22);
+    lampLight.position.set(lx, 5.8, lz);
+    nycGroup.add(lampLight);
+    nycLights.push(lampLight);
   });
 
   nycGroup.visible = false;
