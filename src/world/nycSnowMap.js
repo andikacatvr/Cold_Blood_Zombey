@@ -308,15 +308,76 @@ function buildDetailedBrownstoneRow(group, colliders, sideX, startZ, count, dirZ
   }
 }
 
-function buildSkyscraper(group, colliders, x, z, w, d, h, winTex, spire = false) {
+function buildSkyscraper(group, colliders, x, z, w, d, h, winTex, spire = false, addStorefront = false) {
   const g = new THREE.Group();
   g.position.set(x, 0, z);
+  const trimMat = new THREE.MeshLambertMaterial({ color: 0x262d38, flatShading: true });
+  const steelMat = new THREE.MeshLambertMaterial({ color: 0x161b22, flatShading: true });
+  const snowCapMat = new THREE.MeshLambertMaterial({ color: 0xc2ceda, flatShading: true });
+
   const body = new THREE.Mesh(
     new THREE.BoxGeometry(w, h, d),
     new THREE.MeshLambertMaterial({ map: winTex, flatShading: true })
   );
   body.position.y = h * 0.5;
   g.add(body);
+
+  // 3D Vertical Structural Pilaster Ribs along facade (breaks up flat box silhouette)
+  const ribSpacing = Math.max(4.0, w * 0.3);
+  for (let rx = -w * 0.42; rx <= w * 0.42; rx += ribSpacing) {
+    const rib = new THREE.Mesh(new THREE.BoxGeometry(0.45, h, d + 0.42), steelMat);
+    rib.position.set(rx, h * 0.5, 0);
+    g.add(rib);
+  }
+  for (let rz = -d * 0.42; rz <= d * 0.42; rz += ribSpacing) {
+    const ribZ = new THREE.Mesh(new THREE.BoxGeometry(w + 0.42, h, 0.45), steelMat);
+    ribZ.position.set(0, h * 0.5, rz);
+    g.add(ribZ);
+  }
+
+  // 3D Horizontal Belt Ledges every 9m
+  for (let ly = 4.6; ly < h - 2; ly += 9.0) {
+    const ledge = new THREE.Mesh(new THREE.BoxGeometry(w + 0.65, 0.45, d + 0.65), trimMat);
+    ledge.position.y = ly;
+    g.add(ledge);
+  }
+
+  // Rooftop Parapet, Snow Rim & HVAC / Water Tower
+  const parapet = new THREE.Mesh(new THREE.BoxGeometry(w + 0.8, 0.9, d + 0.8), trimMat);
+  parapet.position.y = h + 0.4;
+  g.add(parapet);
+  const roofSnow = new THREE.Mesh(new THREE.BoxGeometry(w + 0.6, 0.22, d + 0.6), snowCapMat);
+  roofSnow.position.y = h + 0.95;
+  g.add(roofSnow);
+
+  // Ground-Floor 3D Glass Storefront & Illuminated Marquee Canopy
+  if (addStorefront) {
+    const facing = (x < 0) ? 1 : -1;
+    const storeGlass = new THREE.Mesh(
+      new THREE.BoxGeometry(0.24, 3.6, d - 2.4),
+      new THREE.MeshBasicMaterial({ color: 0xffd284 })
+    );
+    storeGlass.position.set(facing * (w * 0.5 + 0.14), 1.9, 0);
+    g.add(storeGlass);
+
+    // Storefront Mullion Pillars
+    for (let pz = -d * 0.4; pz <= d * 0.4; pz += 3.2) {
+      const pil = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4.2, 0.35), steelMat);
+      pil.position.set(facing * (w * 0.5 + 0.22), 2.1, pz);
+      g.add(pil);
+    }
+
+    // Protruding Illuminated Theater / Shop Marquee Canopy
+    const marquee = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.65, d - 3.0), trimMat);
+    marquee.position.set(facing * (w * 0.5 + 1.05), 4.25, 0);
+    g.add(marquee);
+    const marqueeTrim = new THREE.Mesh(
+      new THREE.BoxGeometry(2.26, 0.18, d - 2.9),
+      new THREE.MeshBasicMaterial({ color: 0xffdd78 })
+    );
+    marqueeTrim.position.set(facing * (w * 0.5 + 1.05), 4.25, 0);
+    g.add(marqueeTrim);
+  }
 
   if (spire) {
     const crown = new THREE.Mesh(
@@ -694,26 +755,55 @@ export function initNYCSnowMap(scene, colliders) {
     nycGroup.add(tkts);
   });
 
-  // 3. CURVED GIANT LED SCREEN ON WEST CORNER
+  // 3. CURVED GIANT LED SCREENS ON BOTH CORNERS + MULTI-TIER BROADWAY BILLBOARD STACKS
   const curveGeo = new THREE.CylinderGeometry(9.5, 9.5, 16.0, 14, 1, true, 0.25, 1.35);
   const curveScreen = new THREE.Mesh(curveGeo, new THREE.MeshBasicMaterial({ map: adVerizon, side: THREE.DoubleSide }));
   curveScreen.position.set(-22.5, 17.5, -18.0);
   nycGroup.add(curveScreen);
 
-  buildSkyscraper(nycGroup, colliders, -28, -18, 16, 18, 46, winGold);
-  buildSkyscraper(nycGroup, colliders, 28, -16, 16, 20, 52, winBlue);
-  buildSkyscraper(nycGroup, colliders, 28, 6, 16, 18, 42, winGold);
-  buildSkyscraper(nycGroup, colliders, -28, 6, 16, 18, 40, winBlue);
+  const curveScreenEast = new THREE.Mesh(
+    new THREE.CylinderGeometry(9.5, 9.5, 14.0, 14, 1, true, -1.65, 1.35),
+    new THREE.MeshBasicMaterial({ map: adSnap, side: THREE.DoubleSide })
+  );
+  curveScreenEast.position.set(22.5, 18.0, -18.0);
+  nycGroup.add(curveScreenEast);
+
+  buildSkyscraper(nycGroup, colliders, -28, -18, 16, 18, 46, winGold, false, true);
+  buildSkyscraper(nycGroup, colliders, 28, -16, 16, 20, 52, winBlue, false, true);
+  buildSkyscraper(nycGroup, colliders, 28, 6, 16, 18, 42, winGold, false, true);
+  buildSkyscraper(nycGroup, colliders, -28, 6, 16, 18, 40, winBlue, false, true);
 
   // Towering Manhattan Skyscraper Silhouettes & Statue of Liberty Looming in the Mist!
-  buildSkyscraper(nycGroup, null, 24, -62, 22, 20, 78, winBlue, true);
-  buildSkyscraper(nycGroup, null, -48, -58, 20, 20, 72, winGold, false);
-  buildSkyscraper(nycGroup, null, 48, -52, 20, 20, 68, winGold, false);
+  buildSkyscraper(nycGroup, null, 24, -62, 22, 20, 78, winBlue, true, false);
+  buildSkyscraper(nycGroup, null, -48, -58, 20, 20, 72, winGold, false, false);
+  buildSkyscraper(nycGroup, null, 48, -52, 20, 20, 68, winGold, false, false);
   buildStatueOfLibertySilhouette(nycGroup, -26, -64);
 
-  addScreen(nycGroup, -19.8, 11.5, 6, 14, 7.5, Math.PI / 2, adDisney, 0xff7722);
-  addScreen(nycGroup, 19.8, 12.5, -16, 15, 8.0, -Math.PI / 2, adSnap, 0xff2a9d);
-  addScreen(nycGroup, 19.8, 12.0, 6, 14, 7.5, -Math.PI / 2, adGatsby, 0xffd270);
+  // Dense Multi-Tier Times Square LED Billboards & Neon Blade Signs
+  const adShrek = makeAdTex('SHREK', 'THE MUSICAL • BROADWAY', '#2d6814', '#5ca822', '#fff275');
+  const adChicago = makeAdTex('CHICAGO', 'BROADWAY HIT MUSICAL', '#8a0e18', '#141418', '#ffd24d', '#ff2a38');
+  const adMarriott = makeAdTex('TIMES SQ', 'MARRIOTT • H&M NYC', '#121826', '#281422', '#ff3848', '#ffffff');
+  const adDeli = makeAdTex('FAMOUS DELI', '24H PIZZA & COFFEE', '#d4a818', '#9e740c', '#111111');
+  const adBlade = makeAdTex('PALACE', 'THEATRE', '#2a0814', '#5c0c22', '#ffdf6b', '#ffdf6b');
+
+  // West Buildings LED Screens (3 tiers!)
+  addScreen(nycGroup, -19.6, 10.5, 6, 14.5, 7.2, Math.PI / 2, adDisney, 0xff7722);
+  addScreen(nycGroup, -19.6, 19.8, 6, 13.5, 6.8, Math.PI / 2, adChicago, 0xff2233);
+  addScreen(nycGroup, -19.6, 29.5, 6, 12.0, 6.2, Math.PI / 2, adShrek, 0x66ff44);
+  addScreen(nycGroup, -19.6, 10.0, -18, 13.0, 6.8, Math.PI / 2, adDeli);
+  addScreen(nycGroup, -19.6, 30.0, -18, 13.0, 6.8, Math.PI / 2, adMarriott, 0xff3848);
+
+  // East Buildings LED Screens (3 tiers!)
+  addScreen(nycGroup, 19.6, 11.0, -16, 15.0, 7.6, -Math.PI / 2, adSnap, 0xff2a9d);
+  addScreen(nycGroup, 19.6, 29.0, -16, 13.5, 6.8, -Math.PI / 2, adPrudential, 0x3868ff);
+  addScreen(nycGroup, 19.6, 11.0, 6, 14.5, 7.2, -Math.PI / 2, adGatsby, 0xffd270);
+  addScreen(nycGroup, 19.6, 20.2, 6, 13.5, 6.8, -Math.PI / 2, adSamsung, 0x22aaff);
+  addScreen(nycGroup, 19.6, 29.8, 6, 12.5, 6.4, -Math.PI / 2, adCoke, 0xff2233);
+
+  // Vertical Projecting Neon Blade Signs (sticking out over sidewalks like Ref 3)
+  addScreen(nycGroup, -18.2, 13.5, 14.5, 2.2, 9.5, 0, adBlade, 0xffaa22);
+  addScreen(nycGroup, 18.2, 13.5, 14.5, 2.2, 9.5, Math.PI, adBlade, 0xffaa22);
+  addScreen(nycGroup, 18.2, 14.5, -7.0, 2.2, 9.5, Math.PI, adMarriott, 0xff3858);
 
   // 4. DETAILED SNOWY BRICK BROWNSTONE STREET (Doors, Stoops, Multi-pane Windows, Fire Escapes)
   buildDetailedBrownstoneRow(nycGroup, colliders, -23, 24, 4, 1, brickRed, brickCream, snowMat, doorMat, winDarkMat, winLitMat);
