@@ -60,7 +60,7 @@ const THREE = window.THREE;
         ctx.beginPath();
         ctx.arc(30, 30, 11, 0, Math.PI * 2);
         ctx.fill();
-      if (type === 'clapboard_white') {
+      } else if (type === 'clapboard_white') {
         ctx.fillStyle = '#d4dce0';
         ctx.fillRect(0, 0, 64, 64);
         ctx.fillStyle = '#9eaab2';
