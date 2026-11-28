@@ -6,6 +6,10 @@
 import { Sfx } from '../audio/sfx.js';
 import { spawnWoodSplinters } from '../entities/effects.js';
 import { setEndlessVillagers } from '../entities/villager.js';
+import { ambientLight, overcastDirLight } from '../graphics/engine.js';
+import { initNYCSnowMap, setNYCSnowMapActive } from './nycSnowMap.js';
+
+let coldbrookGroup = null;
 
 const THREE = window.THREE;
 
@@ -102,6 +106,14 @@ export function getUpperRiverWaterY(z) {
  * Smoothly flattens around buildings and spawn point to keep architecture level.
  */
 export function getTerrainHeight(x, z) {
+  // Snowy Low-Poly NYC Times Square Arena + Walkable TKTS Red Stairs
+  if (window.__ENDLESS_ACTIVE) {
+    if (Math.abs(x) <= 5.4 && z <= -24.2 && z >= -32.6) {
+      return ((-24.2 - z) / 8.4) * 3.36;
+    }
+    return 0.0;
+  }
+
   // Multi-frequency natural forest ground rolling waves
   const h1 = Math.sin(x * 0.052) * Math.cos(z * 0.048) * 2.5;
   const h2 = Math.sin(x * 0.105 + 1.2) * Math.cos(z * 0.092 - 0.7) * 1.35;
@@ -391,6 +403,18 @@ export function blastOpenDoor(doorObj, state, updateHUD) {
 }
 
 export function initWorld(scene, textures) {
+  coldbrookGroup = new THREE.Group();
+  coldbrookGroup.name = 'Coldbrook_Village_World';
+  scene.add(coldbrookGroup);
+
+  const origSceneAdd = scene.add.bind(scene);
+  scene.add = (...objs) => {
+    for (let i = 0; i < objs.length; i++) {
+      if (objs[i] !== coldbrookGroup) coldbrookGroup.add(objs[i]);
+    }
+    return scene;
+  };
+
   const {
     snowTex,
     beachSandTex,
@@ -3172,7 +3196,11 @@ export function initWorld(scene, textures) {
     opacity: 0.85
   });
   snowSystem = new THREE.Points(snowGeo, snowMat);
+  // Restore original scene.add so snow & Snowy NYC Times Square sit directly on scene
+  scene.add = origSceneAdd;
   scene.add(snowSystem);
+
+  initNYCSnowMap(scene, colliders);
 
   // Build high-speed spatial collision acceleration grid
   indexColliders();
@@ -3213,20 +3241,19 @@ export function indexColliders() {
 export function checkWallCollision(x, z) {
   if (Math.abs(x) > MAP_LIMIT - 0.5 || Math.abs(z) > MAP_LIMIT - 0.5) return true;
 
-  // Natural Water Boundary: Player cannot swim into deep ocean or deep river
-  const isOnPier = (z >= 112.0 && z <= 138.0 && Math.abs(x - 14.0) < 1.8);
-  const bridgeCenterX = getRiverCenterX(4.0);
-  const isOnBridge = (Math.abs(z - 4.0) < 1.7 && Math.abs(x - bridgeCenterX) < 6.6);
+  // Natural Water Boundary: Only in Coldbrook Village Story Mode
+  if (!window.__ENDLESS_ACTIVE) {
+    const isOnPier = (z >= 112.0 && z <= 138.0 && Math.abs(x - 14.0) < 1.8);
+    const bridgeCenterX = getRiverCenterX(4.0);
+    const isOnBridge = (Math.abs(z - 4.0) < 1.7 && Math.abs(x - bridgeCenterX) < 6.6);
 
-  if (!isOnPier && !isOnBridge) {
-    // Ocean Shoreline Barrier: Player cannot walk out into open sea
-    if (z > 124.5) return true;
-
-    // Deep River Barrier: Player cannot drown or enter deep river channels
-    const wsY = getWaterSurfaceY(x, z);
-    if (wsY !== null) {
-      const gY = getTerrainHeight(x, z);
-      if (wsY - gY > 0.65) return true;
+    if (!isOnPier && !isOnBridge) {
+      if (z > 124.5) return true;
+      const wsY = getWaterSurfaceY(x, z);
+      if (wsY !== null) {
+        const gY = getTerrainHeight(x, z);
+        if (wsY - gY > 0.65) return true;
+      }
     }
   }
 
@@ -3281,23 +3308,36 @@ export function setEndlessEnvironment(isEndless, scene) {
     roadObject.visible = !isEndless;
   }
 
-  // 3. Disable/Enable House and Road Colliders
+  // 3. Cleanly isolate Coldbrook Village vs Snowy Low-Poly NYC Times Square
+  if (coldbrookGroup) {
+    coldbrookGroup.visible = !isEndless;
+  }
   colliders.forEach(c => {
-    if (c.category === 'house' || c.category === 'road') {
+    if (c.category !== 'nyc') {
       c.disabled = !!isEndless;
     }
   });
+  setNYCSnowMapActive(isEndless);
   indexColliders();
 
-  // 4. Dense atmospheric horror fog ("buat lebih berkabut")
+  // 4. Misty Overcast Snowy NYC Atmosphere (matches maps_reference)
+  if (ambientLight) {
+    ambientLight.color.setHex(isEndless ? 0x5c6f84 : 0x304a68);
+    ambientLight.intensity = isEndless ? 1.05 : 1.0;
+  }
+  if (overcastDirLight) {
+    overcastDirLight.intensity = isEndless ? 0.65 : 0.75;
+  }
+  if (scene) {
+    scene.background = isEndless ? new THREE.Color(0x3a4a5a) : null;
+  }
   if (scene && scene.fog) {
-    scene.fog.color.setHex(0x325274);
     if (isEndless) {
-      // Dense drifting teal mist: sightline cut off past 16 meters
-      scene.fog.near = 1.0;
-      scene.fog.far = 16.0;
+      scene.fog.color.setHex(0x3a4a5a);
+      scene.fog.near = 18.0;
+      scene.fog.far = 95.0;
     } else {
-      // Restore normal atmospheric story mode fog
+      scene.fog.color.setHex(0x325274);
       scene.fog.near = 2.0;
       scene.fog.far = 32.0;
     }
