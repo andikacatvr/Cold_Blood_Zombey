@@ -612,34 +612,17 @@ function buildCentralParkWinter(group, colliders, snowMat) {
   pond.position.set(114, 0.06, -42);
   group.add(pond);
 
-  // Winter Trees & Park Benches
-  const trunkMat = new THREE.MeshLambertMaterial({ color: 0x3b2a1e, flatShading: true });
-  const pineMat = new THREE.MeshLambertMaterial({ color: 0x2a453c, flatShading: true });
-  const benchMat = new THREE.MeshLambertMaterial({ color: 0x4f3524, flatShading: true });
-
+  // Priority 3 GLB: Layered Snowy Winter Trees & Cast-Iron Park Benches
   for (let i = 0; i < 24; i++) {
     const tx = 80 + ((i * 23) % 66);
     const tz = -88 + ((i * 19) % 92);
     if (Math.hypot(tx - 114, tz + 42) < 16) continue;
-    const tree = new THREE.Group();
-    tree.position.set(tx, 0, tz);
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.42, 3.4, 6), trunkMat);
-    trunk.position.y = 1.7;
-    tree.add(trunk);
-    const cone = new THREE.Mesh(new THREE.ConeGeometry(2.4, 6.2, 6), pineMat);
-    cone.position.y = 5.4;
-    tree.add(cone);
-    const snowCone = new THREE.Mesh(new THREE.ConeGeometry(1.7, 2.2, 6), snowMat);
-    snowCone.position.y = 7.4;
-    tree.add(snowCone);
-    group.add(tree);
-    addCol(colliders, tx - 0.6, tx + 0.6, tz - 0.6, tz + 0.6);
+    const s = 0.88 + (i % 4) * 0.12;
+    placeModularNYCBuilding(group, colliders, '/models/winter_tree.glb', tx, tz, (i * 1.1) % (Math.PI * 2), s, s, s, 0.65, 0.65);
   }
 
-  [[-16, -42], [16, -42], [0, -24], [0, -60]].forEach(([ox, oz]) => {
-    const bench = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.65, 0.8), benchMat);
-    bench.position.set(114 + ox, 0.45, oz);
-    group.add(bench);
+  [[-16, -42, Math.PI / 2], [16, -42, -Math.PI / 2], [0, -24, 0], [0, -60, Math.PI]].forEach(([ox, oz, rot]) => {
+    placeModularNYCBuilding(group, colliders, '/models/nyc_park_bench.glb', 114 + ox, oz, rot, 1.0, 1.0, 1.0, 1.25, 0.45);
   });
 }
 
@@ -920,8 +903,7 @@ export function initNYCSnowMap(scene, colliders) {
     [50, 26, 0.06, 'suv'], [62, 68, Math.PI - 0.04, 'cab']
   ].forEach(([cx, cz, crot, ctype]) => buildDetailedPS2Vehicle(nycGroup, colliders, cx, cz, crot, ctype));
 
-  // 9. STREETLAMPS, TRAFFIC LIGHTS & SWIRLING GOLDEN "KUNANG-KUNANG" LIGHT-SPARKS
-  const poleMat = new THREE.MeshLambertMaterial({ color: 0x22262e, flatShading: true });
+  // 9. STREETLAMPS, TRAFFIC LIGHTS, SIDEWALK PROPS & SWIRLING GOLDEN "KUNANG-KUNANG" LIGHT-SPARKS
   const lampPositions = [
     [-14.5, -24], [14.5, -24], [-14.5, 4], [14.5, 4],
     [-14.5, 32], [14.5, 32], [-14.5, 78], [14.5, 78],
@@ -935,19 +917,11 @@ export function initNYCSnowMap(scene, colliders) {
 
   lampPositions.forEach(([px, pz], lIdx) => {
     const dir = (px < 0 && px > -20) || px < -40 ? 1 : -1;
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, 6.4, 6), poleMat);
-    pole.position.set(px, 3.2, pz);
-    nycGroup.add(pole);
-
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.14, 0.14), poleMat);
-    arm.position.set(px + dir * 1.65, 6.2, pz);
-    nycGroup.add(arm);
+    // Priority 3 GLB: NYC Traffic Lamp (fluted post, mast arm, cobra head, yellow 3-aspect signal)
+    placeModularNYCBuilding(nycGroup, colliders, '/models/nyc_traffic_lamp.glb', px, pz, dir === 1 ? 0 : Math.PI, 1.0, 1.0, 1.0, 0.25, 0.25);
 
     const hx = px + dir * 3.0;
     const hy = 6.1;
-    const lampHead = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.12, 0.3), new THREE.MeshBasicMaterial({ color: 0xffe4aa }));
-    lampHead.position.set(hx, hy, pz);
-    nycGroup.add(lampHead);
 
     // Localized light pool
     if (lIdx < 8) {
@@ -956,17 +930,11 @@ export function initNYCSnowMap(scene, colliders) {
       nycGroup.add(light);
     }
 
-    // Traffic Signals at major avenue intersections
-    if (pz === -24 || pz === 32) {
-      const sig = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.15, 0.45), poleMat);
-      sig.position.set(px + dir * 1.9, 5.4, pz);
-      nycGroup.add(sig);
-      const lens = new THREE.Mesh(
-        new THREE.BoxGeometry(0.24, 0.24, 0.50),
-        new THREE.MeshBasicMaterial({ color: pz === -24 ? 0xffaa22 : 0xff2a2a })
-      );
-      lens.position.set(px + dir * 1.9, 5.4, pz);
-      nycGroup.add(lens);
+    // Priority 3 GLB: Sidewalk Props (Hydrant, Wire Trash Bin, USPS Mailbox) at street corners
+    if (lIdx % 2 === 0) {
+      placeModularNYCBuilding(nycGroup, colliders, '/models/nyc_street_props.glb', px - dir * 1.1, pz + 1.8, Math.PI * 0.5, 1.0, 1.0, 1.0, 0.45, 1.2);
+    } else if (lIdx < 6) {
+      placeModularNYCBuilding(nycGroup, colliders, '/models/nyc_park_bench.glb', px - dir * 1.3, pz + 2.2, dir === 1 ? Math.PI * 0.5 : -Math.PI * 0.5, 0.9, 0.9, 0.9, 0.45, 1.15);
     }
 
     // Seed glowing "Kunang-Kunang" light-sparks swirling around each lamp head
