@@ -1,9 +1,11 @@
 /* =========================================================================
-   SNOWY LOW-POLY PS2 NYC TIMES SQUARE (Detailed Architecture & Atmosphere)
-   - Detailed Brick/Stone Brownstones: Doors, Stoops, Multi-Pane Windows, Blinds, Fire Escapes
-   - Detailed Grand Central Terminal: Classical Columns, Arched Entrances, Ornate Clock
-   - One Times Square Vertical LED Stack + Walkable TKTS Red Stairs + Curved LED Screen
-   - Authentic PS2 Cars (honda_civic_1985_ps2.glb + Detailed Wheel/Bumper/Windshield SUVs)
+   OPEN-CITY MANHATTAN (GTA SA / SPIDER-MAN GRID SCALE: 440m x 440m)
+   - 3 North-South Avenues + 5 East-West Cross Streets + Raised Sidewalks
+   - Midtown Times Square (One TS, TKTS Red Stairs/Deck, Curved & Multi-Tier LEDs)
+   - Walkable Underground Subway (42nd St Concourse, Graffiti, Fire Ext, Train Interior)
+   - Central Park Winter (Frozen Lake, Snowy Trees, Benches, Park Lamps)
+   - Hell's Kitchen Brownstones + Financial District + Empire State & One WTC + Liberty
+   - Streetlights with Swirling Golden "Kunang-Kunang" Light-Sparks + Traffic Lights
    ========================================================================= */
 
 const THREE = window.THREE;
@@ -13,6 +15,8 @@ const nycColliders = [];
 let civicTemplate = null;
 let civicLoading = false;
 const pendingCarSlots = [];
+let lampFireflies = null;
+let fireflyBasePos = null;
 
 function makeTex(w, h, drawFn) {
   const c = document.createElement('canvas');
@@ -29,21 +33,19 @@ function makeTex(w, h, drawFn) {
 
 function makeSnowyStreetTex() {
   return makeTex(256, 256, (ctx, w, h) => {
-    ctx.fillStyle = '#4e5864';
+    ctx.fillStyle = '#48525e';
     ctx.fillRect(0, 0, w, h);
     for (let y = 0; y < h; y += 2) {
       for (let x = 0; x < w; x += 2) {
-        const v = 64 + Math.floor(Math.random() * 44);
+        const v = 58 + Math.floor(Math.random() * 44);
         ctx.fillStyle = `rgb(${v},${v + 6},${v + 12})`;
         ctx.fillRect(x, y, 2, 2);
       }
     }
-    // Single avenue dual tire tracks down the road (repeat.x = 1)
     [72, 96, 152, 176].forEach(tx => {
-      ctx.fillStyle = 'rgba(20, 24, 30, 0.58)';
+      ctx.fillStyle = 'rgba(18, 22, 28, 0.58)';
       ctx.fillRect(tx, 0, 14, h);
     });
-    // Subtle center double yellow line peeking through snow
     ctx.fillStyle = 'rgba(195, 150, 42, 0.45)';
     ctx.fillRect(124, 0, 3, h);
     ctx.fillRect(129, 0, 3, h);
@@ -52,14 +54,13 @@ function makeSnowyStreetTex() {
 
 function makePlazaTileTex() {
   return makeTex(128, 128, (ctx, w, h) => {
-    // Snowy frosted Times Square stone tiles
-    ctx.fillStyle = '#5c6978';
+    ctx.fillStyle = '#586472';
     ctx.fillRect(0, 0, w, h);
     for (let y = 0; y < h; y += 8) {
       for (let x = 0; x < w; x += 8) {
-        const isSnowPatch = Math.random() > 0.42;
-        const v = isSnowPatch ? (145 + Math.floor(Math.random() * 45)) : (58 + Math.floor(Math.random() * 28));
-        ctx.fillStyle = `rgb(${v},${v + 8},${v + 16})`;
+        const isSnow = Math.random() > 0.45;
+        const v = isSnow ? (142 + Math.floor(Math.random() * 42)) : (54 + Math.floor(Math.random() * 26));
+        ctx.fillStyle = `rgb(${v},${v + 7},${v + 14})`;
         ctx.fillRect(x + 1, y + 1, 6, 6);
       }
     }
@@ -90,16 +91,42 @@ function makeBrickTex(r, g, b) {
   });
 }
 
+function makeSubwayGridTileTex(withGraffiti = false) {
+  return makeTex(256, 256, (ctx, w, h) => {
+    ctx.fillStyle = '#8b8c82';
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 4500; i++) {
+      const v = 96 + Math.floor(Math.random() * 60);
+      ctx.fillStyle = `rgb(${v},${v},${v - 8})`;
+      ctx.fillRect(Math.floor(Math.random() * w), Math.floor(Math.random() * h), 2, 2);
+    }
+    ctx.strokeStyle = '#252622';
+    ctx.lineWidth = 3;
+    for (let x = 0; x <= w; x += 24) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+    for (let y = 0; y <= h; y += 24) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+    if (withGraffiti) {
+      ctx.save();
+      ctx.font = 'bold 34px Impact, sans-serif';
+      ctx.fillStyle = 'rgba(255, 115, 25, 0.85)';
+      ctx.strokeStyle = 'rgba(10, 10, 15, 0.9)';
+      ctx.lineWidth = 4;
+      ctx.rotate(-0.08);
+      ctx.strokeText('NYC 42', 22, 118);
+      ctx.fillText('NYC 42', 22, 118);
+      ctx.fillStyle = 'rgba(220, 220, 230, 0.72)';
+      ctx.font = 'bold 22px Impact, sans-serif';
+      ctx.fillText('NO WAY OUT', 105, 185);
+      ctx.restore();
+    }
+  });
+}
+
 function makeWindowPaneTex(isLit = false) {
   return makeTex(64, 96, (ctx, w, h) => {
     ctx.fillStyle = isLit ? '#8a683a' : '#121820';
     ctx.fillRect(0, 0, w, h);
-    // Venetian blinds slats (inspired by references/e2d61de...)
     ctx.fillStyle = isLit ? '#cfa45e' : '#242d38';
-    for (let y = 6; y < 58; y += 5) {
-      ctx.fillRect(4, y, w - 8, 2);
-    }
-    // Wooden/iron cross mullions
+    for (let y = 6; y < 58; y += 5) ctx.fillRect(4, y, w - 8, 2);
     ctx.fillStyle = '#181412';
     ctx.fillRect(w * 0.5 - 2, 0, 4, h);
     ctx.fillRect(0, h * 0.5 - 2, w, 4);
@@ -113,14 +140,12 @@ function makeDoorTex() {
   return makeTex(64, 128, (ctx, w, h) => {
     ctx.fillStyle = '#2d1e17';
     ctx.fillRect(0, 0, w, h);
-    // Upper glass window with posters
     ctx.fillStyle = '#3c4854';
     ctx.fillRect(10, 12, w - 20, 46);
     ctx.fillStyle = '#9c3228';
     ctx.fillRect(16, 22, 16, 22);
     ctx.fillStyle = '#d4b886';
     ctx.fillRect(36, 26, 12, 18);
-    // Lower wood panel + brass handle
     ctx.fillStyle = '#1c120d';
     ctx.fillRect(10, 68, w - 20, 48);
     ctx.fillStyle = '#c8a858';
@@ -172,6 +197,36 @@ function makeAdTex(title, sub, bg1, bg2, fg = '#ffffff', border = null) {
   });
 }
 
+function makeSubwaySignTex() {
+  return makeTex(256, 128, (ctx, w, h) => {
+    ctx.fillStyle = '#0c0e12';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 8, w, 2);
+    ctx.font = 'bold 20px Arial, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Times Sq -', 14, 38);
+    ctx.fillText('42 Street Station', 14, 62);
+    const bullets = [
+      { label: '4', col: '#00933c' },
+      { label: '5', col: '#00933c' },
+      { label: '6', col: '#00933c' },
+      { label: '7', col: '#b933ad' },
+      { label: 'S', col: '#808183' }
+    ];
+    bullets.forEach((b, i) => {
+      const cx = 28 + i * 34, cy = 96;
+      ctx.fillStyle = b.col;
+      ctx.beginPath(); ctx.arc(cx, cy, 13, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 15px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(b.label, cx, cy + 1);
+    });
+  });
+}
+
 function addCol(colliders, minX, maxX, minZ, maxZ) {
   const c = { minX, maxX, minZ, maxZ, category: 'nyc', disabled: true };
   colliders.push(c);
@@ -196,120 +251,6 @@ function addScreen(group, x, y, z, w, h, rotY, tex, glowCol = null) {
   group.add(frame);
 }
 
-/**
- * Detailed PS2 Brownstone / Brick Building with Doors, Stoops, Multi-Pane Windows, Blinds & Fire Escapes
- */
-function buildDetailedBrownstoneRow(group, colliders, sideX, startZ, count, dirZ, brickRed, brickCream, snowMat, doorMat, winDarkMat, winLitMat) {
-  const facing = sideX < 0 ? 1 : -1;
-  const trimMat = new THREE.MeshLambertMaterial({ color: 0x3a3430, flatShading: true });
-  const ironMat = new THREE.MeshLambertMaterial({ color: 0x181a1e, flatShading: true });
-  const awningMat = new THREE.MeshLambertMaterial({ color: 0x2f3842, flatShading: true });
-
-  for (let i = 0; i < count; i++) {
-    const bw = 12.0;
-    const bd = 12.0;
-    const floors = 3 + (i % 2);
-    const bh = floors * 3.8;
-    const bx = sideX;
-    const bz = startZ + i * bd * dirZ;
-
-    const b = new THREE.Group();
-    b.position.set(bx, 0, bz);
-
-    const wallMat = new THREE.MeshLambertMaterial({
-      map: (i % 2 === 0) ? brickRed : brickCream,
-      flatShading: true
-    });
-    const body = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd - 0.15), wallMat);
-    body.position.y = bh * 0.5;
-    b.add(body);
-
-    // Ground-floor Recessed Entrance Door + Concrete Stoop Steps + Transom Light
-    const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(0.28, 2.75, 1.75), trimMat);
-    doorFrame.position.set(facing * (bw * 0.5 + 0.04), 1.48, 0);
-    b.add(doorFrame);
-
-    const doorPanel = new THREE.Mesh(new THREE.BoxGeometry(0.10, 2.45, 1.40), doorMat);
-    doorPanel.position.set(facing * (bw * 0.5 + 0.14), 1.42, 0);
-    b.add(doorPanel);
-
-    const stoop = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.35, 2.3), trimMat);
-    stoop.position.set(facing * (bw * 0.5 + 0.55), 0.18, 0);
-    b.add(stoop);
-
-    // Shop / Cafe Windows flanking the door with sills & awnings
-    [-3.6, 3.6].forEach(wz => {
-      const wFrame = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.1, 2.2), trimMat);
-      wFrame.position.set(facing * (bw * 0.5 + 0.04), 1.95, wz);
-      b.add(wFrame);
-
-      const pane = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.85, 1.95), (i % 2 === 0) ? winLitMat : winDarkMat);
-      pane.position.set(facing * (bw * 0.5 + 0.13), 1.95, wz);
-      b.add(pane);
-
-      const sill = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.18, 2.35), trimMat);
-      sill.position.set(facing * (bw * 0.5 + 0.14), 0.88, wz);
-      b.add(sill);
-    });
-
-    // Upper-Floor Multi-Pane Windows with Protruding Frames & Stone Sills
-    for (let f = 1; f < floors; f++) {
-      const wy = 2.1 + f * 3.8;
-      [-3.6, 0, 3.6].forEach(wz => {
-        const wFrame = new THREE.Mesh(new THREE.BoxGeometry(0.22, 1.95, 1.55), trimMat);
-        wFrame.position.set(facing * (bw * 0.5 + 0.04), wy, wz);
-        b.add(wFrame);
-
-        const isLit = ((f + i + Math.round(wz)) % 5 === 0);
-        const pane = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.70, 1.30), isLit ? winLitMat : winDarkMat);
-        pane.position.set(facing * (bw * 0.5 + 0.13), wy, wz);
-        b.add(pane);
-
-        const sill = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.18, 1.72), trimMat);
-        sill.position.set(facing * (bw * 0.5 + 0.14), wy - 0.98, wz);
-        b.add(sill);
-      });
-
-      // Iron Fire-Escape Balcony on upper floors
-      if (i % 2 === 1) {
-        const balc = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.12, 4.2), ironMat);
-        balc.position.set(facing * (bw * 0.5 + 0.48), wy - 1.05, 0);
-        b.add(balc);
-        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.75, 4.2), ironMat);
-        rail.position.set(facing * (bw * 0.5 + 0.92), wy - 0.65, 0);
-        b.add(rail);
-      }
-    }
-
-    // Snowy Shop Awning above Ground Floor
-    const awning = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.30, bd - 1.4), awningMat);
-    awning.position.set(facing * (bw * 0.5 + 0.78), 3.35, 0);
-    awning.rotation.z = facing * -0.24;
-    b.add(awning);
-
-    const awningSnow = new THREE.Mesh(new THREE.BoxGeometry(1.70, 0.14, bd - 1.5), snowMat);
-    awningSnow.position.set(facing * (bw * 0.5 + 0.78), 3.54, 0);
-    awningSnow.rotation.z = facing * -0.24;
-    b.add(awningSnow);
-
-    // Ornate Roof Cornice + Snow Cap + Chimney
-    const cornice = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.6, 0.6, bd + 0.2), trimMat);
-    cornice.position.y = bh + 0.22;
-    b.add(cornice);
-
-    const roofSnow = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.5, 0.24, bd + 0.1), snowMat);
-    roofSnow.position.y = bh + 0.58;
-    b.add(roofSnow);
-
-    const chimney = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.0, 1.2), wallMat);
-    chimney.position.set(-facing * 2.5, bh + 1.2, 2.2);
-    b.add(chimney);
-
-    group.add(b);
-    addCol(colliders, bx - bw * 0.5 - 0.3, bx + bw * 0.5 + 0.3, bz - bd * 0.5, bz + bd * 0.5);
-  }
-}
-
 function buildSkyscraper(group, colliders, x, z, w, d, h, winTex, spire = false, addStorefront = false) {
   const g = new THREE.Group();
   g.position.set(x, 0, z);
@@ -324,35 +265,26 @@ function buildSkyscraper(group, colliders, x, z, w, d, h, winTex, spire = false,
   body.position.y = h * 0.5;
   g.add(body);
 
-  // 3D Vertical Structural Pilaster Ribs along facade (breaks up flat box silhouette)
-  const ribSpacing = Math.max(4.0, w * 0.3);
-  for (let rx = -w * 0.42; rx <= w * 0.42; rx += ribSpacing) {
+  // 3D Vertical Pilaster Ribs + Horizontal Belt Ledges
+  const ribSpacing = Math.max(5.0, w * 0.34);
+  for (let rx = -w * 0.4; rx <= w * 0.4; rx += ribSpacing) {
     const rib = new THREE.Mesh(new THREE.BoxGeometry(0.45, h, d + 0.42), steelMat);
     rib.position.set(rx, h * 0.5, 0);
     g.add(rib);
   }
-  for (let rz = -d * 0.42; rz <= d * 0.42; rz += ribSpacing) {
-    const ribZ = new THREE.Mesh(new THREE.BoxGeometry(w + 0.42, h, 0.45), steelMat);
-    ribZ.position.set(0, h * 0.5, rz);
-    g.add(ribZ);
-  }
-
-  // 3D Horizontal Belt Ledges every 9m
-  for (let ly = 4.6; ly < h - 2; ly += 9.0) {
-    const ledge = new THREE.Mesh(new THREE.BoxGeometry(w + 0.65, 0.45, d + 0.65), trimMat);
+  for (let ly = 4.6; ly < h - 2; ly += 10.0) {
+    const ledge = new THREE.Mesh(new THREE.BoxGeometry(w + 0.6, 0.45, d + 0.6), trimMat);
     ledge.position.y = ly;
     g.add(ledge);
   }
 
-  // Rooftop Parapet, Snow Rim & HVAC / Water Tower
-  const parapet = new THREE.Mesh(new THREE.BoxGeometry(w + 0.8, 0.9, d + 0.8), trimMat);
+  const parapet = new THREE.Mesh(new THREE.BoxGeometry(w + 0.7, 0.85, d + 0.7), trimMat);
   parapet.position.y = h + 0.4;
   g.add(parapet);
-  const roofSnow = new THREE.Mesh(new THREE.BoxGeometry(w + 0.6, 0.22, d + 0.6), snowCapMat);
-  roofSnow.position.y = h + 0.95;
+  const roofSnow = new THREE.Mesh(new THREE.BoxGeometry(w + 0.5, 0.22, d + 0.5), snowCapMat);
+  roofSnow.position.y = h + 0.92;
   g.add(roofSnow);
 
-  // Ground-Floor 3D Glass Storefront & Illuminated Marquee Canopy
   if (addStorefront) {
     const facing = (x < 0) ? 1 : -1;
     const storeGlass = new THREE.Mesh(
@@ -362,22 +294,14 @@ function buildSkyscraper(group, colliders, x, z, w, d, h, winTex, spire = false,
     storeGlass.position.set(facing * (w * 0.5 + 0.14), 1.9, 0);
     g.add(storeGlass);
 
-    // Storefront Mullion Pillars
-    for (let pz = -d * 0.4; pz <= d * 0.4; pz += 3.2) {
-      const pil = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4.2, 0.35), steelMat);
-      pil.position.set(facing * (w * 0.5 + 0.22), 2.1, pz);
-      g.add(pil);
-    }
-
-    // Protruding Illuminated Theater / Shop Marquee Canopy
-    const marquee = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.65, d - 3.0), trimMat);
-    marquee.position.set(facing * (w * 0.5 + 1.05), 4.25, 0);
+    const marquee = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.6, d - 3.0), trimMat);
+    marquee.position.set(facing * (w * 0.5 + 1.05), 4.2, 0);
     g.add(marquee);
     const marqueeTrim = new THREE.Mesh(
-      new THREE.BoxGeometry(2.26, 0.18, d - 2.9),
+      new THREE.BoxGeometry(2.26, 0.16, d - 2.9),
       new THREE.MeshBasicMaterial({ color: 0xffdd78 })
     );
-    marqueeTrim.position.set(facing * (w * 0.5 + 1.05), 4.25, 0);
+    marqueeTrim.position.set(facing * (w * 0.5 + 1.05), 4.2, 0);
     g.add(marqueeTrim);
   }
 
@@ -389,10 +313,10 @@ function buildSkyscraper(group, colliders, x, z, w, d, h, winTex, spire = false,
     crown.position.y = h + h * 0.11;
     g.add(crown);
     const mast = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.15, 0.6, 16, 6),
-      new THREE.MeshLambertMaterial({ color: 0x3b4452, flatShading: true })
+      new THREE.CylinderGeometry(0.18, 0.7, 22, 6),
+      new THREE.MeshLambertMaterial({ color: 0x455060, flatShading: true })
     );
-    mast.position.y = h + h * 0.22 + 8;
+    mast.position.y = h + h * 0.22 + 11;
     g.add(mast);
   }
 
@@ -400,6 +324,198 @@ function buildSkyscraper(group, colliders, x, z, w, d, h, winTex, spire = false,
   if (colliders) {
     addCol(colliders, x - w * 0.5 - 0.3, x + w * 0.5 + 0.3, z - d * 0.5 - 0.3, z + d * 0.5 + 0.3);
   }
+}
+
+function buildDetailedBrownstone(group, colliders, bx, bz, bw, bd, floors, facingX, wallTex, snowMat, doorMat, winDarkMat, winLitMat) {
+  const trimMat = new THREE.MeshLambertMaterial({ color: 0x3a3430, flatShading: true });
+  const ironMat = new THREE.MeshLambertMaterial({ color: 0x181a1e, flatShading: true });
+  const awningMat = new THREE.MeshLambertMaterial({ color: 0x2f3842, flatShading: true });
+  const bh = floors * 3.8;
+
+  const b = new THREE.Group();
+  b.position.set(bx, 0, bz);
+
+  const wallMat = new THREE.MeshLambertMaterial({ map: wallTex, flatShading: true });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd - 0.15), wallMat);
+  body.position.y = bh * 0.5;
+  b.add(body);
+
+  // Door + Stoop
+  const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(0.28, 2.75, 1.75), trimMat);
+  doorFrame.position.set(facingX * (bw * 0.5 + 0.04), 1.48, 0);
+  b.add(doorFrame);
+  const doorPanel = new THREE.Mesh(new THREE.BoxGeometry(0.10, 2.45, 1.40), doorMat);
+  doorPanel.position.set(facingX * (bw * 0.5 + 0.14), 1.42, 0);
+  b.add(doorPanel);
+  const stoop = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.35, 2.3), trimMat);
+  stoop.position.set(facingX * (bw * 0.5 + 0.55), 0.18, 0);
+  b.add(stoop);
+
+  // Multi-pane windows + sills + fire escape
+  for (let f = 0; f < floors; f++) {
+    const wy = 2.05 + f * 3.8;
+    [-3.4, 3.4].forEach(wz => {
+      const wFrame = new THREE.Mesh(new THREE.BoxGeometry(0.22, 1.95, 1.55), trimMat);
+      wFrame.position.set(facingX * (bw * 0.5 + 0.04), wy, wz);
+      b.add(wFrame);
+      const pane = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.70, 1.30), f === 0 ? winLitMat : winDarkMat);
+      pane.position.set(facingX * (bw * 0.5 + 0.13), wy, wz);
+      b.add(pane);
+      const sill = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.18, 1.72), trimMat);
+      sill.position.set(facingX * (bw * 0.5 + 0.14), wy - 0.98, wz);
+      b.add(sill);
+    });
+    if (f >= 1) {
+      const balc = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.12, 4.0), ironMat);
+      balc.position.set(facingX * (bw * 0.5 + 0.48), wy - 1.05, 0);
+      b.add(balc);
+    }
+  }
+
+  const awning = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.28, bd - 1.4), awningMat);
+  awning.position.set(facingX * (bw * 0.5 + 0.75), 3.35, 0);
+  awning.rotation.z = facingX * -0.24;
+  b.add(awning);
+  const awningSnow = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.14, bd - 1.5), snowMat);
+  awningSnow.position.set(facingX * (bw * 0.5 + 0.75), 3.52, 0);
+  awningSnow.rotation.z = facingX * -0.24;
+  b.add(awningSnow);
+
+  const cornice = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.5, 0.55, bd + 0.2), trimMat);
+  cornice.position.y = bh + 0.2;
+  b.add(cornice);
+  const roofSnow = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.4, 0.22, bd + 0.1), snowMat);
+  roofSnow.position.y = bh + 0.54;
+  b.add(roofSnow);
+
+  group.add(b);
+  addCol(colliders, bx - bw * 0.5 - 0.3, bx + bw * 0.5 + 0.3, bz - bd * 0.5, bz + bd * 0.5);
+}
+
+function buildSubwayStation(group, colliders, concTex, gridTileTex, graffitiTileTex, signTex, arrivalTex) {
+  // Walkable Underground 42nd St Subway at x = -21.0, z = -10.0 (facing +Z)
+  const sub = new THREE.Group();
+  const sx = -21.0;
+  const sz = -10.0;
+  sub.position.set(sx, 0, sz);
+
+  const ironMat = new THREE.MeshLambertMaterial({ color: 0x161b18, flatShading: true });
+  const concMat = new THREE.MeshLambertMaterial({ map: concTex, flatShading: true });
+  const tileMat = new THREE.MeshLambertMaterial({ map: gridTileTex, flatShading: true });
+  const grafMat = new THREE.MeshLambertMaterial({ map: graffitiTileTex, flatShading: true });
+  const floorTileMat = new THREE.MeshLambertMaterial({ map: makeBrickTex(82, 58, 46), flatShading: true });
+
+  [-2.35, 2.35].forEach(rx => {
+    const railWall = new THREE.Mesh(new THREE.BoxGeometry(0.24, 1.3, 6.5), ironMat);
+    railWall.position.set(rx, 0.65, -3.1);
+    sub.add(railWall);
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.40, 2.8, 0.40), ironMat);
+    post.position.set(rx, 1.4, 0.1);
+    sub.add(post);
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 10), new THREE.MeshBasicMaterial({ color: 0x3dff8b }));
+    globe.position.set(rx, 2.95, 0.1);
+    sub.add(globe);
+  });
+
+  const greenGlow = new THREE.PointLight(0x28ff78, 2.4, 18);
+  greenGlow.position.set(0, 3.0, 0.6);
+  sub.add(greenGlow);
+
+  const signBoard = new THREE.Mesh(new THREE.BoxGeometry(4.9, 1.4, 0.22), new THREE.MeshBasicMaterial({ map: signTex }));
+  signBoard.position.set(0, 2.75, 0.05);
+  sub.add(signBoard);
+  const arrivalBoard = new THREE.Mesh(new THREE.BoxGeometry(4.5, 1.25, 0.18), new THREE.MeshBasicMaterial({ map: arrivalTex }));
+  arrivalBoard.position.set(0, 4.2, 0.05);
+  sub.add(arrivalBoard);
+
+  // Flight 1 (z = 0 to -6, y = 0 to -2.2)
+  for (let i = 0; i < 12; i++) {
+    const frac = (i + 0.5) / 12;
+    const step = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.24, 6.0 / 12 + 0.08), concMat);
+    step.position.set(0, -frac * 2.2 - 0.1, -frac * 6.0);
+    sub.add(step);
+  }
+  [-2.35, 2.35].forEach(wx => {
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(0.3, 4.6, 9.2), concMat);
+    wall.position.set(wx, -1.2, -4.6);
+    sub.add(wall);
+    const handrail = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 6.5, 6), ironMat);
+    handrail.rotation.x = Math.PI * 0.5 - 0.35;
+    handrail.position.set(wx * 0.86, -0.35, -3.0);
+    sub.add(handrail);
+  });
+  const midLanding = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.3, 3.2), concMat);
+  midLanding.position.set(0, -2.35, -7.5);
+  sub.add(midLanding);
+
+  // Flight 2 (z = -9 to -12.5, y = -2.2 to -3.4)
+  for (let i = 0; i < 8; i++) {
+    const frac = (i + 0.5) / 8;
+    const step = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.22, 3.5 / 8 + 0.08), floorTileMat);
+    step.position.set(0, -2.2 - frac * 1.2 - 0.1, -9.0 - frac * 3.5);
+    sub.add(step);
+  }
+
+  // Concourse & Enterable Subway Train (z = -12.5 to -24.5, y = -3.4)
+  const platFloor = new THREE.Mesh(new THREE.BoxGeometry(10.6, 0.3, 12.6), floorTileMat);
+  platFloor.position.set(0, -3.55, -18.5);
+  sub.add(platFloor);
+  const backWall = new THREE.Mesh(new THREE.BoxGeometry(10.8, 4.2, 0.4), grafMat);
+  backWall.position.set(0, -1.5, -24.6);
+  sub.add(backWall);
+  const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4.2, 12.6), tileMat);
+  rightWall.position.set(5.1, -1.5, -18.5);
+  sub.add(rightWall);
+  const ceiling = new THREE.Mesh(new THREE.BoxGeometry(10.8, 0.3, 15.6), ironMat);
+  ceiling.position.set(0, 0.35, -17.0);
+  sub.add(ceiling);
+
+  [-14.5, -18.5, -22.0].forEach(lz => {
+    const tube = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.1, 0.22), new THREE.MeshBasicMaterial({ color: 0xe6f8ee }));
+    tube.position.set(0, 0.15, lz);
+    sub.add(tube);
+  });
+  const subLight = new THREE.PointLight(0xd8f0dc, 2.8, 24);
+  subLight.position.set(0, -0.5, -18.5);
+  sub.add(subLight);
+
+  // Enterable Train Car
+  const trainCar = new THREE.Group();
+  trainCar.position.set(-7.0, -2.0, -18.5);
+  const steelMat = new THREE.MeshLambertMaterial({ color: 0x76808e, flatShading: true });
+  const orangeSeatMat = new THREE.MeshLambertMaterial({ color: 0xd05c1c, flatShading: true });
+  const trainFloor = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.2, 12.6), concMat);
+  trainFloor.position.y = -1.35;
+  trainCar.add(trainFloor);
+  const trainRoof = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.2, 12.6), steelMat);
+  trainRoof.position.y = 1.45;
+  trainCar.add(trainRoof);
+  const trainBack = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.8, 12.6), grafMat);
+  trainBack.position.x = -1.52;
+  trainCar.add(trainBack);
+  [-4.4, 0, 4.4].forEach(szWall => {
+    const wallSeg = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.8, 2.4), steelMat);
+    wallSeg.position.set(1.52, 0.05, szWall);
+    trainCar.add(wallSeg);
+  });
+  [-1.12, 1.12].forEach(sxSeat => {
+    const bench = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.45, 10.6), orangeSeatMat);
+    bench.position.set(sxSeat, -1.0, 0);
+    trainCar.add(bench);
+  });
+  for (let pz = -4.2; pz <= 4.2; pz += 2.8) {
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.75, 6), steelMat);
+    pole.position.set(0, 0.05, pz);
+    trainCar.add(pole);
+  }
+  sub.add(trainCar);
+
+  addCol(colliders, sx - 2.6, sx - 2.1, sz - 12.6, sz + 0.4);
+  addCol(colliders, sx + 2.1, sx + 2.6, sz - 12.6, sz + 0.4);
+  addCol(colliders, sx - 8.8, sx + 5.3, sz - 25.0, sz - 24.2);
+  addCol(colliders, sx + 4.7, sx + 5.4, sz - 24.6, sz - 12.2);
+  addCol(colliders, sx - 8.8, sx - 8.2, sz - 24.6, sz - 12.2);
+  group.add(sub);
 }
 
 function spawnCivicIntoSlot(slot) {
@@ -411,7 +527,6 @@ function spawnCivicIntoSlot(slot) {
     if (c.isMesh && c.material) {
       const mName = (c.material.name || '').toLowerCase();
       const nName = (c.name || '').toLowerCase();
-      // Keep glass, tires, chrome, lights untouched; tint body paint panels!
       if (!mName.includes('glass') && !mName.includes('tire') && !mName.includes('wheel') &&
           !mName.includes('chrome') && !mName.includes('light') && !nName.includes('glass') &&
           !nName.includes('wheel') && !nName.includes('tire')) {
@@ -421,7 +536,6 @@ function spawnCivicIntoSlot(slot) {
     }
   });
   slot.group.add(clone);
-
   if (slot.type === 'cab') {
     const taxiSign = new THREE.Mesh(
       new THREE.BoxGeometry(0.62, 0.20, 0.30),
@@ -432,9 +546,6 @@ function spawnCivicIntoSlot(slot) {
   }
 }
 
-/**
- * Detailed PS2 Vehicle: uses authentic honda_civic_1985_ps2.glb for ALL NYC cars & cabs!
- */
 function buildDetailedPS2Vehicle(group, colliders, x, z, rotY, type = 'cab') {
   const v = new THREE.Group();
   v.position.set(x, 0, z);
@@ -464,12 +575,60 @@ function buildDetailedPS2Vehicle(group, colliders, x, z, rotY, type = 'cab') {
   addCol(colliders, x - hw, x + hw, z - hd, z + hd);
 }
 
-/**
- * Detailed Classical Grand Central Terminal Facade (Columns, Arched Glass Doors, Cornice, Clock)
- */
-function buildGrandCentralFacade(group, colliders, stoneTex, snowMat) {
+function buildCentralParkWinter(group, colliders, snowMat) {
+  // Snowy Central Park (East-North District: x: +72..+156, z: -96..+12)
+  const parkLawn = new THREE.Mesh(
+    new THREE.PlaneGeometry(84, 108),
+    new THREE.MeshLambertMaterial({ color: 0xaab8c6, flatShading: true })
+  );
+  parkLawn.rotation.x = -Math.PI / 2;
+  parkLawn.position.set(114, 0.04, -42);
+  group.add(parkLawn);
+
+  // Frozen Ice Pond
+  const pond = new THREE.Mesh(
+    new THREE.CircleGeometry(14, 16),
+    new THREE.MeshLambertMaterial({ color: 0x5c7f99, flatShading: true })
+  );
+  pond.rotation.x = -Math.PI / 2;
+  pond.position.set(114, 0.06, -42);
+  group.add(pond);
+
+  // Winter Trees & Park Benches
+  const trunkMat = new THREE.MeshLambertMaterial({ color: 0x3b2a1e, flatShading: true });
+  const pineMat = new THREE.MeshLambertMaterial({ color: 0x2a453c, flatShading: true });
+  const benchMat = new THREE.MeshLambertMaterial({ color: 0x4f3524, flatShading: true });
+
+  for (let i = 0; i < 24; i++) {
+    const tx = 80 + ((i * 23) % 66);
+    const tz = -88 + ((i * 19) % 92);
+    if (Math.hypot(tx - 114, tz + 42) < 16) continue;
+    const tree = new THREE.Group();
+    tree.position.set(tx, 0, tz);
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.42, 3.4, 6), trunkMat);
+    trunk.position.y = 1.7;
+    tree.add(trunk);
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(2.4, 6.2, 6), pineMat);
+    cone.position.y = 5.4;
+    tree.add(cone);
+    const snowCone = new THREE.Mesh(new THREE.ConeGeometry(1.7, 2.2, 6), snowMat);
+    snowCone.position.y = 7.4;
+    tree.add(snowCone);
+    group.add(tree);
+    addCol(colliders, tx - 0.6, tx + 0.6, tz - 0.6, tz + 0.6);
+  }
+
+  [[-16, -42], [16, -42], [0, -24], [0, -60]].forEach(([ox, oz]) => {
+    const bench = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.65, 0.8), benchMat);
+    bench.position.set(114 + ox, 0.45, oz);
+    group.add(bench);
+  });
+}
+
+function buildGrandCentralAndLiberty(group, colliders, stoneTex, snowMat) {
+  // Grand Central Terminal at South Broadway (z = +132)
   const gc = new THREE.Group();
-  gc.position.set(0, 0, 82);
+  gc.position.set(0, 0, 132);
   const stoneMat = new THREE.MeshLambertMaterial({ map: stoneTex, color: 0xa89b80, flatShading: true });
   const trimMat = new THREE.MeshLambertMaterial({ color: 0x6e6452, flatShading: true });
   const glowMat = new THREE.MeshBasicMaterial({ color: 0xffe099 });
@@ -478,8 +637,6 @@ function buildGrandCentralFacade(group, colliders, stoneTex, snowMat) {
   const main = new THREE.Mesh(new THREE.BoxGeometry(36, 17, 12), stoneMat);
   main.position.y = 8.5;
   gc.add(main);
-
-  // Classical Pediment & Snow-Capped Roof Cornice
   const cornice = new THREE.Mesh(new THREE.BoxGeometry(37.5, 1.2, 13.0), trimMat);
   cornice.position.y = 17.2;
   gc.add(cornice);
@@ -487,90 +644,50 @@ function buildGrandCentralFacade(group, colliders, stoneTex, snowMat) {
   roofSnow.position.y = 17.95;
   gc.add(roofSnow);
 
-  // 6 Classical Fluted Stone Columns across the front
   [-14, -6.5, -3.2, 3.2, 6.5, 14].forEach(cx => {
     const col = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.78, 14.5, 8), trimMat);
     col.position.set(cx, 7.25, -6.3);
     gc.add(col);
   });
-
-  // 3 Recessed Arched Glowing Entrances + Iron Mullions
   [-10.2, 0, 10.2].forEach(ax => {
     const archGlass = new THREE.Mesh(new THREE.BoxGeometry(5.2, 11.2, 0.35), glowMat);
     archGlass.position.set(ax, 5.8, -6.05);
     gc.add(archGlass);
-    // Mullion bars & entrance doors at bottom
     const mullionV = new THREE.Mesh(new THREE.BoxGeometry(0.22, 11.2, 0.45), ironMat);
     mullionV.position.set(ax, 5.8, -6.12);
     gc.add(mullionV);
-    const doorBar = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.32, 0.45), ironMat);
-    doorBar.position.set(ax, 3.2, -6.12);
-    gc.add(doorBar);
   });
-
-  // Ornate Glowing Grand Clock Dial + Sculpted Pediment Block
-  const clockFrame = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.1, 0.7, 12), trimMat);
-  clockFrame.rotation.x = Math.PI * 0.5;
-  clockFrame.position.set(0, 14.8, -6.2);
-  gc.add(clockFrame);
   const clockFace = new THREE.Mesh(new THREE.CylinderGeometry(1.65, 1.65, 0.78, 12), glowMat);
   clockFace.rotation.x = Math.PI * 0.5;
   clockFace.position.set(0, 14.8, -6.25);
   gc.add(clockFace);
-
-  const gcLight = new THREE.PointLight(0xffd27a, 2.4, 40);
-  gcLight.position.set(0, 8, -10);
-  gc.add(gcLight);
-
   group.add(gc);
-  addCol(colliders, -18.5, 18.5, 75.5, 88.5);
-}
+  addCol(colliders, -18.5, 18.5, 125.5, 138.5);
 
-function buildStatueOfLibertySilhouette(group, x, z) {
+  // Statue of Liberty Silhouette looming in Northern Mist
   const lib = new THREE.Group();
-  lib.position.set(x, 0, z);
+  lib.position.set(-28, 0, -96);
   const copperMat = new THREE.MeshLambertMaterial({ color: 0x4b6e65, flatShading: true });
   const pedMat = new THREE.MeshLambertMaterial({ color: 0x45494e, flatShading: true });
-  const torchMat = new THREE.MeshBasicMaterial({ color: 0xffd26a });
-
-  // Star-shaped Pedestal Base
   const base = new THREE.Mesh(new THREE.CylinderGeometry(7.5, 9.0, 14, 8), pedMat);
   base.position.y = 7;
   lib.add(base);
   const ped = new THREE.Mesh(new THREE.BoxGeometry(8.5, 12, 8.5), pedMat);
   ped.position.y = 20;
   lib.add(ped);
-
-  // Robed Figure
   const robe = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 4.4, 22, 8), copperMat);
   robe.position.y = 37;
   lib.add(robe);
-
-  // Head + 7-Spike Crown
   const head = new THREE.Mesh(new THREE.SphereGeometry(2.1, 8, 8), copperMat);
   head.position.y = 50;
   lib.add(head);
-  for (let a = -0.9; a <= 0.9; a += 0.3) {
-    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.25, 2.2, 4), copperMat);
-    spike.position.set(Math.sin(a) * 2.1, 51.8 + Math.cos(a) * 1.1, 0.4);
-    spike.rotation.z = -a * 0.9;
-    lib.add(spike);
-  }
-
-  // Raised Right Arm + Glowing Torch
   const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.85, 13, 6), copperMat);
   arm.position.set(3.2, 51, 0);
   arm.rotation.z = -0.22;
   lib.add(arm);
-
-  const flame = new THREE.Mesh(new THREE.ConeGeometry(1.1, 3.2, 6), torchMat);
+  const flame = new THREE.Mesh(new THREE.ConeGeometry(1.2, 3.6, 6), new THREE.MeshBasicMaterial({ color: 0xffd26a }));
   flame.position.set(4.6, 58.5, 0);
   lib.add(flame);
-
-  const torchLight = new THREE.PointLight(0xffc966, 2.6, 45);
-  torchLight.position.set(4.6, 59, 2);
-  lib.add(torchLight);
-
   group.add(lib);
 }
 
@@ -578,11 +695,15 @@ export function initNYCSnowMap(scene, colliders) {
   if (nycGroup) return nycGroup;
 
   nycGroup = new THREE.Group();
-  nycGroup.name = 'NYC_Times_Square_Snow_Arena';
+  nycGroup.name = 'OpenCity_Manhattan_440m';
 
   const streetTex = makeSnowyStreetTex();
   streetTex.wrapS = streetTex.wrapT = THREE.RepeatWrapping;
-  streetTex.repeat.set(1, 14); // 1x across road width so tire tracks align cleanly!
+  streetTex.repeat.set(1, 28);
+
+  const crossTex = makeSnowyStreetTex();
+  crossTex.wrapS = crossTex.wrapT = THREE.RepeatWrapping;
+  crossTex.repeat.set(1, 26);
 
   const plazaTex = makePlazaTileTex();
   plazaTex.wrapS = plazaTex.wrapT = THREE.RepeatWrapping;
@@ -596,6 +717,14 @@ export function initNYCSnowMap(scene, colliders) {
   brickCream.wrapS = brickCream.wrapT = THREE.RepeatWrapping;
   brickCream.repeat.set(3, 3);
 
+  const concTex = makeBrickTex(88, 90, 82);
+  concTex.wrapS = concTex.wrapT = THREE.RepeatWrapping;
+  concTex.repeat.set(3, 3);
+
+  const gridTileTex = makeSubwayGridTileTex(false);
+  gridTileTex.wrapS = gridTileTex.wrapT = THREE.RepeatWrapping;
+  gridTileTex.repeat.set(3, 1.5);
+
   const doorMat = new THREE.MeshLambertMaterial({ map: makeDoorTex(), flatShading: true });
   const winDarkMat = new THREE.MeshLambertMaterial({ map: makeWindowPaneTex(false), flatShading: true });
   const winLitMat = new THREE.MeshLambertMaterial({ map: makeWindowPaneTex(true), emissive: 0x3b2a12, flatShading: true });
@@ -604,226 +733,238 @@ export function initNYCSnowMap(scene, colliders) {
   const winBlue = makeTowerWindowsTex('#9fd8f5');
   const snowMat = new THREE.MeshLambertMaterial({ color: 0xc2ceda, flatShading: true });
 
-  // 1. Full 260x260 Snowy NYC City Base (prevents any empty ground/void in side alleys!)
-  const cityFloor = new THREE.Mesh(
-    new THREE.PlaneGeometry(260, 260),
-    new THREE.MeshLambertMaterial({ color: 0x2a323c, flatShading: true })
-  );
-  cityFloor.rotation.x = -Math.PI / 2;
-  cityFloor.position.set(0, 0.0, 10);
-  cityFloor.receiveShadow = true;
-  nycGroup.add(cityFloor);
+  // 1. Full 480x480 Manhattan Ground Base (with cutout for Subway stairwell x:[-23.5,-18.5], z:[-10,-35.2])
+  const baseMat = new THREE.MeshLambertMaterial({ color: 0x2e3640, flatShading: true });
+  const addFloorTile = (minX, maxX, minZ, maxZ) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(maxX - minX, maxZ - minZ), baseMat);
+    m.rotation.x = -Math.PI / 2;
+    m.position.set((minX + maxX) * 0.5, 0.0, (minZ + maxZ) * 0.5);
+    m.receiveShadow = true;
+    nycGroup.add(m);
+  };
+  addFloorTile(-240, 240, -10.0, 240);
+  addFloorTile(-240, -23.5, -240, -10.0);
+  addFloorTile(-18.5, 240, -240, -10.0);
+  addFloorTile(-23.5, -18.5, -240, -35.2);
 
-  // Snowy Avenue & Wet Reflective Times Square Plaza
-  const avenue = new THREE.Mesh(
-    new THREE.PlaneGeometry(32, 190),
-    new THREE.MeshLambertMaterial({ map: streetTex, flatShading: true })
-  );
-  avenue.rotation.x = -Math.PI / 2;
-  avenue.position.set(0, 0.01, 10);
-  avenue.receiveShadow = true;
-  nycGroup.add(avenue);
+  // 3 North-South Avenues (West -56, Central Broadway 0, East +56)
+  [-56, 0, 56].forEach(ax => {
+    const ave = new THREE.Mesh(
+      new THREE.PlaneGeometry(28, 360),
+      new THREE.MeshLambertMaterial({ map: streetTex, flatShading: true })
+    );
+    ave.rotation.x = -Math.PI / 2;
+    ave.position.set(ax, 0.015, 0);
+    ave.receiveShadow = true;
+    nycGroup.add(ave);
+  });
 
+  // 5 East-West Cross Streets (z = -84, -36, +12, +60, +108)
+  [-84, -36, 12, 60, 108].forEach(cz => {
+    const cs = new THREE.Mesh(
+      new THREE.PlaneGeometry(24, 340),
+      new THREE.MeshLambertMaterial({ map: crossTex, flatShading: true })
+    );
+    cs.rotation.x = -Math.PI / 2;
+    cs.rotation.z = Math.PI * 0.5;
+    cs.position.set(0, 0.012, cz);
+    cs.receiveShadow = true;
+    nycGroup.add(cs);
+  });
+
+  // Raised Sidewalks along avenues (cut cleanly around Subway at x:[-23.5,-18.5], z:[-10,-35.2])
+  const swMat = new THREE.MeshLambertMaterial({ color: 0x3d444e, flatShading: true });
+  const addSW = (minX, maxX, minZ, maxZ) => {
+    const sw = new THREE.Mesh(new THREE.BoxGeometry(maxX - minX, 0.14, maxZ - minZ), swMat);
+    sw.position.set((minX + maxX) * 0.5, 0.07, (minZ + maxZ) * 0.5);
+    sw.receiveShadow = true;
+    nycGroup.add(sw);
+  };
+  addSW(14, 42, -24, 0);
+  addSW(14, 42, 24, 48);
+  addSW(14, 42, 72, 96);
+  addSW(-42, -14, 24, 48);
+  addSW(-42, -14, 72, 96);
+  // West Times Square Sidewalk cleanly cut around Subway entrance
+  addSW(-42, -14, -10.0, 0.0);
+  addSW(-42, -23.5, -24.0, -10.0);
+  addSW(-18.5, -14, -24.0, -10.0);
+
+  // Times Square Wet Snowy Plaza
   const plaza = new THREE.Mesh(
-    new THREE.PlaneGeometry(32, 42),
+    new THREE.PlaneGeometry(28, 36),
     new THREE.MeshLambertMaterial({ map: plazaTex, flatShading: true })
   );
   plaza.rotation.x = -Math.PI / 2;
-  plaza.position.set(0, 0.02, -6);
-  plaza.receiveShadow = true;
+  plaza.position.set(0, 0.025, -6);
   nycGroup.add(plaza);
 
-  [
-    { x: -10, z: -8, col: 0xff6a2a },
-    { x: 10, z: -10, col: 0xff2a9d },
-    { x: 0, z: -20, col: 0x3898ff }
-  ].forEach(ref => {
-    const glowPool = new THREE.Mesh(
-      new THREE.PlaneGeometry(10, 14),
-      new THREE.MeshBasicMaterial({ color: ref.col, transparent: true, opacity: 0.16, depthWrite: false })
-    );
-    glowPool.rotation.x = -Math.PI / 2;
-    glowPool.position.set(ref.x, 0.025, ref.z);
-    nycGroup.add(glowPool);
-  });
-
-  // Sidewalks + Snow Berms
-  const swMat = new THREE.MeshLambertMaterial({ color: 0x3d444e, flatShading: true });
-  [-19, 19].forEach(sx => {
-    const sw = new THREE.Mesh(new THREE.BoxGeometry(10, 0.16, 170), swMat);
-    sw.position.set(sx, 0.08, 10);
-    sw.receiveShadow = true;
-    nycGroup.add(sw);
-
-    for (let bz = -18; bz <= 58; bz += 18) {
-      const berm = new THREE.Mesh(new THREE.ConeGeometry(1.4, 0.95, 5), snowMat);
-      berm.scale.set(1.0, 1.0, 2.2);
-      berm.position.set(sx < 0 ? -14.8 : 14.8, 0.35, bz);
-      nycGroup.add(berm);
-    }
-  });
-
-  // 2. ONE TIMES SQUARE TOWER + VERTICAL LED BILLBOARD STACK (shifted back so TKTS top deck is walkable!)
+  // 2. ONE TIMES SQUARE + WALKABLE TKTS RED STAIRS & DECK (z = -24 to -52)
   const oneTS = new THREE.Group();
-  oneTS.position.set(0, 0, -47);
-  const towerBody = new THREE.Mesh(
-    new THREE.BoxGeometry(13, 62, 12),
-    new THREE.MeshLambertMaterial({ color: 0x1a2029, flatShading: true })
-  );
-  towerBody.position.y = 31;
+  oneTS.position.set(0, 0, -49);
+  const towerBody = new THREE.Mesh(new THREE.BoxGeometry(13, 66, 12), new THREE.MeshLambertMaterial({ color: 0x1a2029, flatShading: true }));
+  towerBody.position.y = 33;
   oneTS.add(towerBody);
   nycGroup.add(oneTS);
-  addCol(colliders, -6.8, 6.8, -53.2, -40.8);
+  addCol(colliders, -6.8, 6.8, -55.2, -42.8);
 
-  const adPrudential = makeAdTex('PRUDENTIAL', 'RETIREMENT TRIVIA • NYC', '#0b2294', '#1638c4', '#ffffff');
-  const adHSBC = makeAdTex('3.00% APY', 'HSBC DIRECT • NO MONTHLY FEES', '#111216', '#231618', '#ff6a2a');
-  const adSamsung = makeAdTex('SAMSUNG', 'TIMES SQUARE LIVE HD', '#0640b8', '#00a8ff', '#ffffff', '#ffdf6b');
-  const adCoke = makeAdTex('COCA-COLA', 'SHARE A COKE IN NYC', '#9e0b14', '#d91a24', '#ffffff');
-  const adVerizon = makeAdTex('A GIFT AS THE', 'VERIZON • NYC WINTER', '#dce4ec', '#b6c6d6', '#182436');
-  const adGatsby = makeAdTex('PHANTOM', 'THE MUSICAL • BROADWAY', '#0e1118', '#222836', '#e5c468', '#e5c468');
-  const adDisney = makeAdTex('DISNEY', 'TIGER\'S APPRENTICE', '#c44a14', '#5c1488', '#ffd84d', '#38e8ff');
-  const adSnap = makeAdTex('ONE LOVE', 'SNAP ON • TIMES SQUARE', '#a61472', '#f5189c', '#ffffff');
+  const adPrud = makeAdTex('PRUDENTIAL', 'RETIREMENT TRIVIA • NYC', '#0b2294', '#1638c4');
+  const adHSBC = makeAdTex('3.00% APY', 'HSBC DIRECT • NYC', '#111216', '#231618', '#ff6a2a');
+  const adSams = makeAdTex('SAMSUNG', 'TIMES SQUARE LIVE HD', '#0640b8', '#00a8ff', '#ffffff', '#ffdf6b');
+  const adCoke = makeAdTex('COCA-COLA', 'SHARE A COKE IN NYC', '#9e0b14', '#d91a24');
+  const adVeri = makeAdTex('A GIFT AS THE', 'VERIZON • NYC WINTER', '#dce4ec', '#b6c6d6', '#182436');
+  const adSnap = makeAdTex('ONE LOVE', 'SNAP ON • TIMES SQUARE', '#a61472', '#f5189c');
+  const adChic = makeAdTex('CHICAGO', 'BROADWAY MUSICAL', '#8a0e18', '#141418', '#ffd24d', '#ff2a38');
+  const adDisn = makeAdTex('DISNEY', 'TIGER\'S APPRENTICE', '#c44a14', '#5c1488', '#ffd84d', '#38e8ff');
 
-  addScreen(nycGroup, 0, 48.5, -40.8, 11.4, 7.2, 0, adPrudential, 0x3868ff);
-  addScreen(nycGroup, 0, 40.2, -40.8, 11.4, 7.2, 0, adHSBC, 0xff5522);
-  addScreen(nycGroup, 0, 31.6, -40.8, 11.4, 7.8, 0, adSamsung, 0x22aaff);
-  addScreen(nycGroup, 0, 22.6, -40.8, 11.4, 8.2, 0, adCoke, 0xff2233);
+  addScreen(nycGroup, 0, 50.5, -42.8, 11.4, 7.2, 0, adPrud, 0x3868ff);
+  addScreen(nycGroup, 0, 42.2, -42.8, 11.4, 7.2, 0, adHSBC, 0xff5522);
+  addScreen(nycGroup, 0, 33.6, -42.8, 11.4, 7.8, 0, adSams, 0x22aaff);
+  addScreen(nycGroup, 0, 24.6, -42.8, 11.4, 8.2, 0, adCoke, 0xff2233);
 
-  // Walkable TKTS Red Stairs -> Elevated Tactical Observation Deck (y = 3.36m)
   const redStepMat = new THREE.MeshLambertMaterial({ color: 0xa81822, flatShading: true });
   for (let i = 0; i < 12; i++) {
     const step = new THREE.Mesh(new THREE.BoxGeometry(10.8, 0.35, 0.72), redStepMat);
     step.position.set(0, 0.18 + i * 0.28, -24.5 - i * 0.68);
     nycGroup.add(step);
   }
-  // Top Observation Platform (z = -32.6 to -39.5, y = 3.36)
   const tktsDeck = new THREE.Mesh(new THREE.BoxGeometry(11.4, 3.36, 7.2), new THREE.MeshLambertMaterial({ color: 0x3b181d, flatShading: true }));
   tktsDeck.position.set(0, 1.68, -36.1);
   nycGroup.add(tktsDeck);
   const deckSnow = new THREE.Mesh(new THREE.BoxGeometry(11.0, 0.12, 6.8), snowMat);
   deckSnow.position.set(0, 3.40, -36.1);
   nycGroup.add(deckSnow);
-  // Deck Side Railings +Glowing Supply Crate on Top
-  [-5.5, 5.5].forEach(rx => {
-    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.0, 7.2), new THREE.MeshLambertMaterial({ color: 0x1c2026 }));
-    rail.position.set(rx, 3.9, -36.1);
-    nycGroup.add(rail);
-  });
-  [-6.2, 6.2].forEach(px => {
-    const tkts = new THREE.Mesh(new THREE.BoxGeometry(1.1, 3.8, 1.1), redStepMat);
-    tkts.position.set(px, 1.9, -24.2);
-    nycGroup.add(tkts);
-  });
 
-  // 3. CURVED GIANT LED SCREENS ON BOTH CORNERS + MULTI-TIER BROADWAY BILLBOARD STACKS
-  const curveGeo = new THREE.CylinderGeometry(9.5, 9.5, 16.0, 14, 1, true, 0.25, 1.35);
-  const curveScreen = new THREE.Mesh(curveGeo, new THREE.MeshBasicMaterial({ map: adVerizon, side: THREE.DoubleSide }));
-  curveScreen.position.set(-22.5, 17.5, -18.0);
-  nycGroup.add(curveScreen);
-
-  const curveScreenEast = new THREE.Mesh(
-    new THREE.CylinderGeometry(9.5, 9.5, 14.0, 14, 1, true, -1.65, 1.35),
-    new THREE.MeshBasicMaterial({ map: adSnap, side: THREE.DoubleSide })
+  // Curved LEDs
+  const curveWest = new THREE.Mesh(
+    new THREE.CylinderGeometry(8.5, 8.5, 15.0, 12, 1, true, 0.25, 1.35),
+    new THREE.MeshBasicMaterial({ map: adVeri, side: THREE.DoubleSide })
   );
-  curveScreenEast.position.set(22.5, 18.0, -18.0);
-  nycGroup.add(curveScreenEast);
+  curveWest.position.set(-28, 17, -14);
+  nycGroup.add(curveWest);
 
-  buildSkyscraper(nycGroup, colliders, -28, -18, 16, 20, 46, winGold, false, true);
-  buildSkyscraper(nycGroup, colliders, 28, -16, 16, 22, 52, winBlue, false, true);
-  buildSkyscraper(nycGroup, colliders, 28, 6, 16, 20, 42, winGold, false, true);
-  buildSkyscraper(nycGroup, colliders, -28, 6, 16, 20, 40, winBlue, false, true);
+  // 3. WALKABLE UNDERGROUND 42ND ST SUBWAY
+  buildSubwayStation(nycGroup, colliders, concTex, gridTileTex, makeSubwayGridTileTex(true), makeSubwaySignTex(), makeAdTex('42 ST LIVE', 'PELHAM 2m • BKLYN 5m', '#050811', '#141a28', '#38ff8c'));
 
-  // Close ALL Side-Alley Gaps & Surround All 360° Directions with Manhattan City Blocks!
-  [-46, 46].forEach(bx => {
-    [-36, -12, 12, 36, 60, 82].forEach((bz, idx) => {
-      const h = 44 + ((idx * 11) % 34);
-      buildSkyscraper(nycGroup, colliders, bx, bz, 18, 22, h, idx % 2 === 0 ? winGold : winBlue, idx === 1);
-    });
+  // 4. MIDTOWN & FINANCIAL DISTRICT SKYSCRAPERS (4x4 City Grid)
+  const blockCenters = [
+    [-28, -60, 58, true], [28, -60, 68, true], [-28, -14, 46, false], [28, -14, 52, false],
+    [28, 36, 48, false], [-28, 84, 54, false], [28, 84, 62, true],
+    [-86, -60, 52, false], [-86, -14, 48, false], [-86, 84, 60, true],
+    [86, 36, 56, false], [86, 84, 72, true]
+  ];
+  blockCenters.forEach(([bx, bz, bh, hasSpire], idx) => {
+    const wt = idx % 2 === 0 ? winGold : winBlue;
+    buildSkyscraper(nycGroup, colliders, bx, bz, 22, 20, bh, wt, hasSpire, Math.abs(bx) < 35);
+    if (Math.abs(bx) === 28 && bz > -30 && bz < 50) {
+      const rot = bx < 0 ? Math.PI / 2 : -Math.PI / 2;
+      const sx = bx < 0 ? bx + 11.3 : bx - 11.3;
+      addScreen(nycGroup, sx, 11, bz, 14, 7, rot, idx % 2 === 0 ? adDisn : adSnap, 0xff5599);
+      addScreen(nycGroup, sx, 20, bz, 13, 6.5, rot, idx % 2 === 0 ? adChic : adSams, 0x38aaff);
+    }
   });
-  // Fill North & South Perimeter Gaps behind One Times Square & Grand Central
-  [-36, -18, 18, 36].forEach((nx, idx) => {
-    buildSkyscraper(nycGroup, null, nx, -62, 17, 18, 64 + (idx % 2) * 14, idx % 2 === 0 ? winBlue : winGold, idx === 2);
-    buildSkyscraper(nycGroup, null, nx, 98, 17, 18, 52 + (idx % 2) * 12, idx % 2 === 0 ? winGold : winBlue, false);
+
+  // Towering Empire State & One WTC Silhouettes in Distant Snowy Fog
+  buildSkyscraper(nycGroup, null, -20, -118, 26, 24, 118, winGold, true, false);
+  buildSkyscraper(nycGroup, null, 34, -124, 24, 24, 125, winBlue, true, false);
+  buildSkyscraper(nycGroup, null, -88, -116, 24, 22, 86, winBlue, false, false);
+
+  // 5. HELL'S KITCHEN BROWNSTONE DISTRICT (West Blocks)
+  [-28, -86].forEach(bx => {
+    buildDetailedBrownstone(nycGroup, colliders, bx, 30, 18, 12, 3, bx < 0 ? 1 : -1, brickRed, snowMat, doorMat, winDarkMat, winLitMat);
+    buildDetailedBrownstone(nycGroup, colliders, bx, 44, 18, 12, 4, bx < 0 ? 1 : -1, brickCream, snowMat, doorMat, winDarkMat, winLitMat);
   });
 
-  // Towering Manhattan Skyscraper Silhouettes & Statue of Liberty Looming in the Mist!
-  buildSkyscraper(nycGroup, null, 24, -66, 22, 20, 78, winBlue, true, false);
-  buildSkyscraper(nycGroup, null, -52, -62, 20, 20, 72, winGold, false, false);
-  buildSkyscraper(nycGroup, null, 52, -56, 20, 20, 68, winGold, false, false);
-  buildStatueOfLibertySilhouette(nycGroup, -26, -64);
+  // 6. CENTRAL PARK WINTER (East-North)
+  buildCentralParkWinter(nycGroup, colliders, snowMat);
 
-  // Dense Multi-Tier Times Square LED Billboards & Neon Blade Signs
-  const adShrek = makeAdTex('SHREK', 'THE MUSICAL • BROADWAY', '#2d6814', '#5ca822', '#fff275');
-  const adChicago = makeAdTex('CHICAGO', 'BROADWAY HIT MUSICAL', '#8a0e18', '#141418', '#ffd24d', '#ff2a38');
-  const adMarriott = makeAdTex('TIMES SQ', 'MARRIOTT • H&M NYC', '#121826', '#281422', '#ff3848', '#ffffff');
-  const adDeli = makeAdTex('FAMOUS DELI', '24H PIZZA & COFFEE', '#d4a818', '#9e740c', '#111111');
-  const adBlade = makeAdTex('PALACE', 'THEATRE', '#2a0814', '#5c0c22', '#ffdf6b', '#ffdf6b');
+  // 7. GRAND CENTRAL & STATUE OF LIBERTY
+  buildGrandCentralAndLiberty(nycGroup, colliders, brickCream, snowMat);
 
-  // West Buildings LED Screens (3 tiers!)
-  addScreen(nycGroup, -19.6, 10.5, 6, 14.5, 7.2, Math.PI / 2, adDisney, 0xff7722);
-  addScreen(nycGroup, -19.6, 19.8, 6, 13.5, 6.8, Math.PI / 2, adChicago, 0xff2233);
-  addScreen(nycGroup, -19.6, 29.5, 6, 12.0, 6.2, Math.PI / 2, adShrek, 0x66ff44);
-  addScreen(nycGroup, -19.6, 10.0, -18, 13.0, 6.8, Math.PI / 2, adDeli);
-  addScreen(nycGroup, -19.6, 30.0, -18, 13.0, 6.8, Math.PI / 2, adMarriott, 0xff3848);
+  // 8. AUTHENTIC PS2 CARS ALONG ALL 3 AVENUES
+  [
+    [-8, 6, 0.05, 'cab'], [8, -4, Math.PI - 0.05, 'suv'],
+    [-8, 34, -0.05, 'sedan'], [8, 42, Math.PI + 0.04, 'cab'],
+    [-50, 22, 0.04, 'cab'], [-62, -24, Math.PI, 'sedan'],
+    [50, 26, 0.06, 'suv'], [62, 68, Math.PI - 0.04, 'cab']
+  ].forEach(([cx, cz, crot, ctype]) => buildDetailedPS2Vehicle(nycGroup, colliders, cx, cz, crot, ctype));
 
-  // East Buildings LED Screens (3 tiers!)
-  addScreen(nycGroup, 19.6, 11.0, -16, 15.0, 7.6, -Math.PI / 2, adSnap, 0xff2a9d);
-  addScreen(nycGroup, 19.6, 29.0, -16, 13.5, 6.8, -Math.PI / 2, adPrudential, 0x3868ff);
-  addScreen(nycGroup, 19.6, 11.0, 6, 14.5, 7.2, -Math.PI / 2, adGatsby, 0xffd270);
-  addScreen(nycGroup, 19.6, 20.2, 6, 13.5, 6.8, -Math.PI / 2, adSamsung, 0x22aaff);
-  addScreen(nycGroup, 19.6, 29.8, 6, 12.5, 6.4, -Math.PI / 2, adCoke, 0xff2233);
-
-  // Vertical Projecting Neon Blade Signs (sticking out over sidewalks like Ref 3)
-  addScreen(nycGroup, -18.2, 13.5, 14.5, 2.2, 9.5, 0, adBlade, 0xffaa22);
-  addScreen(nycGroup, 18.2, 13.5, 14.5, 2.2, 9.5, Math.PI, adBlade, 0xffaa22);
-  addScreen(nycGroup, 18.2, 14.5, -7.0, 2.2, 9.5, Math.PI, adMarriott, 0xff3858);
-
-  // 4. DETAILED SNOWY BRICK BROWNSTONE STREET (Doors, Stoops, Multi-pane Windows, Fire Escapes)
-  buildDetailedBrownstoneRow(nycGroup, colliders, -23, 24, 4, 1, brickRed, brickCream, snowMat, doorMat, winDarkMat, winLitMat);
-  buildDetailedBrownstoneRow(nycGroup, colliders, 23, 24, 4, 1, brickCream, brickRed, snowMat, doorMat, winDarkMat, winLitMat);
-
-  // 5. DETAILED GRAND CENTRAL TERMINAL FACADE
-  buildGrandCentralFacade(nycGroup, colliders, brickCream, snowMat);
-
-  // 6. AUTHENTIC PS2 VEHICLES (honda_civic_1985_ps2.glb + Detailed SUVs & Yellow Cabs)
-  buildDetailedPS2Vehicle(nycGroup, colliders, -10.0, 10.0, 0.05, 'cab');
-  buildDetailedPS2Vehicle(nycGroup, colliders, 10.2, 2.0, Math.PI - 0.06, 'suv');
-  buildDetailedPS2Vehicle(nycGroup, colliders, -10.5, 32.0, -0.05, 'sedan');
-  buildDetailedPS2Vehicle(nycGroup, colliders, 10.5, 28.0, Math.PI + 0.04, 'cab');
-  buildDetailedPS2Vehicle(nycGroup, colliders, -9.8, 52.0, 0.08, 'suv');
-
-  // 7. STREETLAMPS & HANGING TRAFFIC SIGNALS
+  // 9. STREETLAMPS, TRAFFIC LIGHTS & SWIRLING GOLDEN "KUNANG-KUNANG" LIGHT-SPARKS
   const poleMat = new THREE.MeshLambertMaterial({ color: 0x22262e, flatShading: true });
-  [[-14.5, -14], [14.5, -14], [-14.5, 22], [14.5, 22], [-14.5, 48], [14.5, 48]].forEach(([px, pz]) => {
-    const dir = px < 0 ? 1 : -1;
+  const lampPositions = [
+    [-14.5, -24], [14.5, -24], [-14.5, 4], [14.5, 4],
+    [-14.5, 32], [14.5, 32], [-14.5, 78], [14.5, 78],
+    [-42.5, -14], [-42.5, 34], [42.5, -14], [42.5, 34]
+  ];
+  const fireflyCountPerLamp = 14;
+  const totalFireflies = lampPositions.length * fireflyCountPerLamp;
+  const ffPos = new Float32Array(totalFireflies * 3);
+  fireflyBasePos = new Float32Array(totalFireflies * 3);
+  let ffIdx = 0;
+
+  lampPositions.forEach(([px, pz], lIdx) => {
+    const dir = (px < 0 && px > -20) || px < -40 ? 1 : -1;
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, 6.4, 6), poleMat);
     pole.position.set(px, 3.2, pz);
     nycGroup.add(pole);
 
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.14, 0.14), poleMat);
-    arm.position.set(px + dir * 1.75, 6.2, pz);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.14, 0.14), poleMat);
+    arm.position.set(px + dir * 1.65, 6.2, pz);
     nycGroup.add(arm);
 
+    const hx = px + dir * 3.0;
+    const hy = 6.1;
     const lampHead = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.12, 0.3), new THREE.MeshBasicMaterial({ color: 0xffe4aa }));
-    lampHead.position.set(px + dir * 3.2, 6.1, pz);
+    lampHead.position.set(hx, hy, pz);
     nycGroup.add(lampHead);
 
-    const light = new THREE.PointLight(0xffd288, 1.9, 26);
-    light.position.set(px + dir * 2.8, 5.6, pz);
-    nycGroup.add(light);
+    // Localized light pool
+    if (lIdx < 8) {
+      const light = new THREE.PointLight(0xffd288, 1.8, 28);
+      light.position.set(hx, 5.6, pz);
+      nycGroup.add(light);
+    }
 
-    if (pz === -14 || pz === 22) {
-      const sig = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.1, 0.45), poleMat);
-      sig.position.set(px + dir * 2.1, 5.4, pz);
+    // Traffic Signals at major avenue intersections
+    if (pz === -24 || pz === 32) {
+      const sig = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.15, 0.45), poleMat);
+      sig.position.set(px + dir * 1.9, 5.4, pz);
       nycGroup.add(sig);
-      const amberDot = new THREE.Mesh(
+      const lens = new THREE.Mesh(
         new THREE.BoxGeometry(0.24, 0.24, 0.50),
-        new THREE.MeshBasicMaterial({ color: pz === -14 ? 0xffaa22 : 0xff2a2a })
+        new THREE.MeshBasicMaterial({ color: pz === -24 ? 0xffaa22 : 0xff2a2a })
       );
-      amberDot.position.set(px + dir * 2.1, 5.4, pz);
-      nycGroup.add(amberDot);
+      lens.position.set(px + dir * 1.9, 5.4, pz);
+      nycGroup.add(lens);
+    }
+
+    // Seed glowing "Kunang-Kunang" light-sparks swirling around each lamp head
+    for (let k = 0; k < fireflyCountPerLamp; k++) {
+      const bx = hx + (Math.random() - 0.5) * 2.2;
+      const by = hy - 0.8 + Math.random() * 1.6;
+      const bz = pz + (Math.random() - 0.5) * 2.2;
+      ffPos[ffIdx * 3] = bx;
+      ffPos[ffIdx * 3 + 1] = by;
+      ffPos[ffIdx * 3 + 2] = bz;
+      fireflyBasePos[ffIdx * 3] = bx;
+      fireflyBasePos[ffIdx * 3 + 1] = by;
+      fireflyBasePos[ffIdx * 3 + 2] = bz;
+      ffIdx++;
     }
   });
+
+  const ffGeo = new THREE.BufferGeometry();
+  ffGeo.setAttribute('position', new THREE.BufferAttribute(ffPos, 3));
+  const ffMat = new THREE.PointsMaterial({
+    color: 0xffe699,
+    size: 0.24,
+    transparent: true,
+    opacity: 0.88,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  lampFireflies = new THREE.Points(ffGeo, ffMat);
+  nycGroup.add(lampFireflies);
 
   nycGroup.visible = false;
   scene.add(nycGroup);
@@ -833,4 +974,19 @@ export function initNYCSnowMap(scene, colliders) {
 export function setNYCSnowMapActive(active) {
   if (nycGroup) nycGroup.visible = !!active;
   nycColliders.forEach(c => { c.disabled = !active; });
+}
+
+export function updateNYCSnowMapEffects(timeSec) {
+  if (!nycGroup || !nycGroup.visible || !lampFireflies || !fireflyBasePos) return;
+  const posAttr = lampFireflies.geometry.attributes.position;
+  const arr = posAttr.array;
+  const count = posAttr.count;
+  for (let i = 0; i < count; i++) {
+    const i3 = i * 3;
+    const phase = timeSec * 2.2 + i * 1.37;
+    arr[i3] = fireflyBasePos[i3] + Math.sin(phase) * 0.45;
+    arr[i3 + 1] = fireflyBasePos[i3 + 1] + Math.cos(phase * 1.3) * 0.32;
+    arr[i3 + 2] = fireflyBasePos[i3 + 2] + Math.cos(phase * 0.9) * 0.45;
+  }
+  posAttr.needsUpdate = true;
 }

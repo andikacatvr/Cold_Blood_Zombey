@@ -30,7 +30,8 @@ import {
   snowGeo,
   snowVel,
   busHazardLights,
-  updateCemeteryAtmosphere
+  updateCemeteryAtmosphere,
+  updateNYCSnowMapEffects
 } from './world/environment.js';
 import { isCinematicActive, updateCutscene } from './core/cutscene.js';
 import {
@@ -170,8 +171,10 @@ function updateSimulation(dt) {
     overcastDirLight.position.set(snapX + 14, playerPos.y + 34, snapZ + 16);
   }
 
-  // Cemetery Lantern & Candle Flickering Atmosphere
-  updateCemeteryAtmosphere(performance.now() * 0.001);
+  // Cemetery Lantern & Candle Flickering Atmosphere + NYC Streetlamp Fireflies
+  const nowSec = performance.now() * 0.001;
+  updateCemeteryAtmosphere(nowSec);
+  updateNYCSnowMapEffects(nowSec);
 
   // Village NPC Breathing & Head Tracking
   updateVillageNPCs(dt, playerPos);

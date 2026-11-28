@@ -91,14 +91,14 @@ export function applyGraphicFidelity(mode = 'hd') {
 
     if (scene.fog) {
       if (window.__ENDLESS_ACTIVE) {
-        scene.fog.near = 4.0;
-        scene.fog.far = 76.0;
+        scene.fog.near = 8.0;
+        scene.fog.far = 112.0;
       } else {
         scene.fog.near = 2.0;
         scene.fog.far = 32.0;
       }
     }
-    camera.far = window.__ENDLESS_ACTIVE ? 175.0 : 75.0;
+    camera.far = window.__ENDLESS_ACTIVE ? 225.0 : 75.0;
   } else {
     canvas.classList.remove('hd-mode');
     canvas.classList.add('ps1-pixelated');

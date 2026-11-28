@@ -821,10 +821,10 @@ export function startWinterSurvive(scene, mode = 'story') {
   window.__GAME_MODE = mode;
   window.__GAME_RUNNING = true;
 
-  // Toggle Endless Environment: Snowy Low-Poly NYC Times Square vs Coldbrook Village
+  // Toggle Endless Environment: Open-City Manhattan vs Coldbrook Village
   setEndlessEnvironment(mode === 'endless', scene);
   if (cameraRef) {
-    cameraRef.far = (mode === 'endless') ? 175.0 : 75.0;
+    cameraRef.far = (mode === 'endless') ? 225.0 : 75.0;
     cameraRef.updateProjectionMatrix();
   }
 

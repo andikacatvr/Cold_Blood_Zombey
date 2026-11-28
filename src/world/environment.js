@@ -7,13 +7,13 @@ import { Sfx } from '../audio/sfx.js';
 import { spawnWoodSplinters } from '../entities/effects.js';
 import { setEndlessVillagers } from '../entities/villager.js';
 import { ambientLight, overcastDirLight } from '../graphics/engine.js';
-import { initNYCSnowMap, setNYCSnowMapActive } from './nycSnowMap.js';
+import { initNYCSnowMap, setNYCSnowMapActive, updateNYCSnowMapEffects } from './nycSnowMap.js';
 
 let coldbrookGroup = null;
 
 const THREE = window.THREE;
 
-export const MAP_LIMIT = 150;
+export let MAP_LIMIT = 150;
 export const TERRAIN_LIMIT = 230;
 
 export let riverWaterMesh = null;
@@ -106,13 +106,27 @@ export function getUpperRiverWaterY(z) {
  * Smoothly flattens around buildings and spawn point to keep architecture level.
  */
 export function getTerrainHeight(x, z) {
-  // Snowy Low-Poly NYC Times Square Arena + Walkable TKTS Red Stairs & Observation Deck
+  // Open-City Manhattan: Walkable TKTS Red Stairs/Deck + Multi-Level 42nd St Subway & Train
   if (window.__ENDLESS_ACTIVE) {
+    // 1. TKTS Red Stairs & Observation Deck (x: [-5.5, 5.5], z: [-24.2, -39.6])
     if (Math.abs(x) <= 5.4 && z <= -24.2 && z >= -32.6) {
       return ((-24.2 - z) / 8.4) * 3.36;
     }
     if (Math.abs(x) <= 5.5 && z < -32.6 && z >= -39.6) {
       return 3.36;
+    }
+    // 2. Underground 42nd St Subway Stairwell (x: [-23.5, -18.5], z: [-10.0, -22.5]) & Concourse
+    if (x >= -23.5 && x <= -18.5 && z <= -10.0 && z >= -16.0) {
+      return -((-10.0 - z) / 6.0) * 2.2;
+    }
+    if (x >= -23.5 && x <= -18.5 && z < -16.0 && z >= -19.0) {
+      return -2.2;
+    }
+    if (x >= -23.5 && x <= -18.5 && z < -19.0 && z >= -22.5) {
+      return -2.2 - ((-19.0 - z) / 3.5) * 1.2;
+    }
+    if (x >= -29.6 && x <= -15.5 && z < -22.5 && z >= -35.2) {
+      return -3.4;
     }
     return 0.0;
   }
@@ -3300,6 +3314,7 @@ export function checkCameraCollision(x, z) {
  */
 export function setEndlessEnvironment(isEndless, scene) {
   window.__ENDLESS_ACTIVE = !!isEndless;
+  MAP_LIMIT = isEndless ? 220 : 150;
 
   // 1. Hide/Show All Village Houses and Sanctuary Farmhouse
   houseObjects.forEach(h => {
@@ -3337,8 +3352,8 @@ export function setEndlessEnvironment(isEndless, scene) {
   if (scene && scene.fog) {
     if (isEndless) {
       scene.fog.color.setHex(0x364656);
-      scene.fog.near = 4.0;
-      scene.fog.far = 76.0;
+      scene.fog.near = 8.0;
+      scene.fog.far = 112.0;
     } else {
       scene.fog.color.setHex(0x325274);
       scene.fog.near = 2.0;
@@ -3349,3 +3364,5 @@ export function setEndlessEnvironment(isEndless, scene) {
   // 5. Hide/Show Village NPCs (Old Thomas, Martha, Edward, etc.)
   setEndlessVillagers(isEndless);
 }
+
+export { updateNYCSnowMapEffects };
