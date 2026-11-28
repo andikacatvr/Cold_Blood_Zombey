@@ -106,7 +106,7 @@ export function getUpperRiverWaterY(z) {
  * Smoothly flattens around buildings and spawn point to keep architecture level.
  */
 export function getTerrainHeight(x, z) {
-  // Open-City Manhattan: Walkable TKTS Red Stairs/Deck + Multi-Level 42nd St Subway & Train
+  // Open-City Manhattan: Walkable TKTS Red Stairs/Deck + Inter-City Subway + Suspension Bridge + Sidewalk Gravity
   if (window.__ENDLESS_ACTIVE) {
     // 1. TKTS Red Stairs & Observation Deck (x: [-5.5, 5.5], z: [-24.2, -39.6])
     if (Math.abs(x) <= 5.4 && z <= -24.2 && z >= -32.6) {
@@ -115,7 +115,15 @@ export function getTerrainHeight(x, z) {
     if (Math.abs(x) <= 5.5 && z < -32.6 && z >= -39.6) {
       return 3.36;
     }
-    // 2. Underground 42nd St Subway Stairwell (x: [-23.5, -18.5], z: [-10.0, -22.5]) & Concourse
+
+    // 2. Walkable Brooklyn / Harbor Suspension Bridge (x: [27.0, 37.0], z: [140.0, 222.0])
+    if (x >= 27.0 && x <= 37.0 && z >= 140.0 && z <= 222.0) {
+      if (z <= 156.0) return ((z - 140.0) / 16.0) * 5.2; // Approach ramp 0 -> 5.2m
+      if (z <= 206.0) return 5.2;                         // Main suspension deck over Harbor Sea
+      return 5.2;                                         // Outer pier overlook
+    }
+
+    // 3. Underground 42nd St Subway Stairwell (z: [-10.0, -22.5]) & Inter-City Tunnel to North Station (z: [-96.0, -120.5])
     if (x >= -23.5 && x <= -18.5 && z <= -10.0 && z >= -16.0) {
       return -((-10.0 - z) / 6.0) * 2.2;
     }
@@ -125,9 +133,34 @@ export function getTerrainHeight(x, z) {
     if (x >= -23.5 && x <= -18.5 && z < -19.0 && z >= -22.5) {
       return -2.2 - ((-19.0 - z) / 3.5) * 1.2;
     }
+    // North Inter-City Station Stairwell (descending from z = -96.0 Southward to z = -108.5? No, stairs go -96 -> -83.5 or -108.5 -> -96)
+    // North Station entrance at z = -121.0, stairs go Southward (-121 -> -108.5) down to -3.4
+    if (x >= -23.5 && x <= -18.5 && z >= -121.0 && z <= -115.0) {
+      return -((z + 121.0) / 6.0) * 2.2;
+    }
+    if (x >= -23.5 && x <= -18.5 && z > -115.0 && z <= -112.0) {
+      return -2.2;
+    }
+    if (x >= -23.5 && x <= -18.5 && z > -112.0 && z <= -108.5) {
+      return -2.2 - ((z + 112.0) / 3.5) * 1.2;
+    }
+    // 42nd St Concourse + Inter-City Connecting Underground Tunnel (z: [-22.5, -108.5])
     if (x >= -29.6 && x <= -15.5 && z < -22.5 && z >= -35.2) {
       return -3.4;
     }
+    if (x >= -25.0 && x <= -17.0 && z < -35.2 && z > -108.5) {
+      return -3.4;
+    }
+
+    // 4. Raised Sidewalks Gravity (y = 0.14m on sidewalk blocks outside streets & crosswalks)
+    const onSidewalkX = (x >= 14.0 && x <= 42.0) || (x <= -14.0 && x >= -42.0) ||
+                        (x >= 70.0 && x <= 98.0) || (x <= -70.0 && x >= -98.0);
+    const onSidewalkZ = (z >= -72.0 && z <= -48.0) || (z >= -24.0 && z <= 0.0) ||
+                        (z >= 24.0 && z <= 48.0) || (z >= 72.0 && z <= 96.0);
+    if (onSidewalkX && onSidewalkZ) {
+      return 0.14;
+    }
+
     return 0.0;
   }
 

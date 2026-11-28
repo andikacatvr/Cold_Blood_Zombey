@@ -20,6 +20,7 @@ const glbBuildingLoading = {};
 const pendingBuildingSlots = {};
 let lampFireflies = null;
 let fireflyBasePos = null;
+let expressSubwayTrain = null;
 
 function placeModularNYCBuilding(group, colliders, url, x, z, rotY = 0, sx = 1, sy = 1, sz = 1, colHalfW = 0, colHalfD = 0) {
   const slotGroup = new THREE.Group();
@@ -530,9 +531,57 @@ function buildSubwayStation(group, colliders, concTex, gridTileTex, graffitiTile
 
   addCol(colliders, sx - 2.6, sx - 2.1, sz - 12.6, sz + 0.4);
   addCol(colliders, sx + 2.1, sx + 2.6, sz - 12.6, sz + 0.4);
-  addCol(colliders, sx - 8.8, sx + 5.3, sz - 25.0, sz - 24.2);
   addCol(colliders, sx + 4.7, sx + 5.4, sz - 24.6, sz - 12.2);
   addCol(colliders, sx - 8.8, sx - 8.2, sz - 24.6, sz - 12.2);
+
+  // Inter-City Underground Subway Tunnel (z = -35.2 to -108.5) + North Midtown Station (z = -121.0)
+  const tunnelLen = 73.3;
+  const tunnelMidZ = -71.85;
+  const tunFloor = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.3, tunnelLen), floorTileMat);
+  tunFloor.position.set(0, -3.55, tunnelMidZ - sz);
+  sub.add(tunFloor);
+  const tunCeil = new THREE.Mesh(new THREE.BoxGeometry(11.6, 0.3, tunnelLen), ironMat);
+  tunCeil.position.set(-1.5, 0.35, tunnelMidZ - sz);
+  sub.add(tunCeil);
+  const tunRight = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4.2, tunnelLen), tileMat);
+  tunRight.position.set(4.1, -1.5, tunnelMidZ - sz);
+  sub.add(tunRight);
+  const tunLeft = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4.2, tunnelLen), grafMat);
+  tunLeft.position.set(-8.5, -1.5, tunnelMidZ - sz);
+  sub.add(tunLeft);
+  for (let lz = -38; lz >= -106; lz -= 8) {
+    const tube = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.1, 0.22), new THREE.MeshBasicMaterial({ color: 0xe6f8ee }));
+    tube.position.set(0, 0.15, lz - sz);
+    sub.add(tube);
+  }
+  addCol(colliders, sx + 3.8, sx + 4.5, -108.5, -35.2);
+  addCol(colliders, sx - 8.8, sx - 8.2, -108.5, -35.2);
+
+  // North Station Entrance & Stairs (z = -121.0 -> -108.5)
+  const northEntrance = placeModularNYCBuilding(sub, null, '/models/nyc_subway_entrance.glb', 0, -121.0 - sz, Math.PI, 1.0, 1.0, 1.0);
+  northEntrance.position.y = 0;
+  for (let i = 0; i < 12; i++) {
+    const frac = (i + 0.5) / 12;
+    const step = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.24, 6.0 / 12 + 0.08), concMat);
+    step.position.set(0, -frac * 2.2 - 0.1, (-121.0 + frac * 6.0) - sz);
+    sub.add(step);
+  }
+  const northMid = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.3, 3.2), concMat);
+  northMid.position.set(0, -2.35, -113.5 - sz);
+  sub.add(northMid);
+  for (let i = 0; i < 8; i++) {
+    const frac = (i + 0.5) / 8;
+    const step = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.22, 3.5 / 8 + 0.08), floorTileMat);
+    step.position.set(0, -2.2 - frac * 1.2 - 0.1, (-112.0 + frac * 3.5) - sz);
+    sub.add(step);
+  }
+  addCol(colliders, sx - 2.6, sx - 2.1, -121.4, -108.5);
+  addCol(colliders, sx + 2.1, sx + 2.6, -121.4, -108.5);
+
+  // Animated Moving Inter-City Express Subway Train gliding on adjacent underground track (x = -25.4)
+  expressSubwayTrain = placeModularNYCBuilding(sub, null, '/models/nyc_subway_train.glb', -4.4, -68.0 - sz, 0, 0.95, 0.95, 0.95);
+  expressSubwayTrain.position.y = -3.42;
+
   group.add(sub);
 }
 
@@ -747,6 +796,80 @@ function buildGrandCentralAndLiberty(group, colliders, stoneTex, snowMat) {
 
   // Priority 4 GLB: Statue of Liberty standing on Liberty Island in the Sea (facing North toward Manhattan)
   placeModularNYCBuilding(group, null, '/models/statue_of_liberty.glb', -22, 198, Math.PI, 1.45, 1.60, 1.45);
+
+  // Walkable Brooklyn / Harbor Suspension Bridge spanning across NY Harbor Sea (x: 27..37, z: 140..222)
+  const bridge = new THREE.Group();
+  const deckMat = new THREE.MeshLambertMaterial({ color: 0x3b424c, flatShading: true });
+  const steelMat = new THREE.MeshLambertMaterial({ color: 0x252b34, flatShading: true });
+  const cableMat = new THREE.MeshLambertMaterial({ color: 0x7a8594, flatShading: true });
+
+  // Approach Ramp (z = 140 -> 156, y = 0 -> 5.2)
+  const rampLen = Math.hypot(16.0, 5.2);
+  const ramp = new THREE.Mesh(new THREE.BoxGeometry(10.0, 0.45, rampLen), deckMat);
+  ramp.position.set(32, 2.45, 148.0);
+  ramp.rotation.x = -Math.atan2(5.2, 16.0);
+  bridge.add(ramp);
+
+  // Main Bridge Deck & Outer Harbor Pier Overlook (z = 156 -> 222, y = 5.2)
+  const mainDeck = new THREE.Mesh(new THREE.BoxGeometry(10.2, 0.55, 66.0), deckMat);
+  mainDeck.position.set(32, 4.95, 189.0);
+  bridge.add(mainDeck);
+
+  // Bridge Guardrails (left & right) + Colliders
+  [27.0, 37.0].forEach((rx) => {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.1, 66.0), steelMat);
+    rail.position.set(rx, 5.7, 189.0);
+    bridge.add(rail);
+  });
+  addCol(colliders, 26.5, 27.3, 140.0, 222.0);
+  addCol(colliders, 36.7, 37.5, 140.0, 222.0);
+  addCol(colliders, 27.0, 37.0, 221.5, 222.5);
+
+  // Twin Gothic Stone Suspension Towers (z = 158 and z = 200)
+  [158, 200].forEach((tz) => {
+    [27.2, 36.8].forEach((tx) => {
+      const col = new THREE.Mesh(new THREE.BoxGeometry(1.8, 26.0, 2.2), trimMat);
+      col.position.set(tx, 13.0, tz);
+      bridge.add(col);
+    });
+    const arch = new THREE.Mesh(new THREE.BoxGeometry(11.4, 3.2, 2.0), trimMat);
+    arch.position.set(32, 22.5, tz);
+    bridge.add(arch);
+    const crown = new THREE.Mesh(new THREE.BoxGeometry(11.8, 1.2, 2.4), snowMat);
+    crown.position.set(32, 26.2, tz);
+    bridge.add(crown);
+  });
+
+  // Suspension Cables & Vertical Suspender Ropes
+  [27.2, 36.8].forEach((cx) => {
+    for (let z = 158; z < 200; z += 4) {
+      const t0 = (z - 158) / 42;
+      const t1 = (z + 4 - 158) / 42;
+      const y0 = 24.5 - Math.sin(t0 * Math.PI) * 14.5;
+      const y1 = 24.5 - Math.sin(t1 * Math.PI) * 14.5;
+      const segLen = Math.hypot(4, y1 - y0);
+      const cable = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, segLen), cableMat);
+      cable.position.set(cx, (y0 + y1) * 0.5, z + 2);
+      cable.rotation.x = Math.atan2(y0 - y1, 4);
+      bridge.add(cable);
+
+      const suspH = Math.max(0.5, y0 - 5.2);
+      const susp = new THREE.Mesh(new THREE.BoxGeometry(0.08, suspH, 0.08), cableMat);
+      susp.position.set(cx, 5.2 + suspH * 0.5, z);
+      bridge.add(susp);
+    }
+  });
+
+  // Bridge Warm Streetlamps
+  for (let lz = 160; lz <= 216; lz += 14) {
+    const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.28, 6, 6), glowMat);
+    lamp.position.set(27.5, 7.6, lz);
+    bridge.add(lamp);
+    const lampR = lamp.clone();
+    lampR.position.set(36.5, 7.6, lz);
+    bridge.add(lampR);
+  }
+  group.add(bridge);
 }
 
 export function initNYCSnowMap(scene, colliders) {
@@ -803,7 +926,8 @@ export function initNYCSnowMap(scene, colliders) {
   addFloorTile(-240, 240, -10.0, 152.0);
   addFloorTile(-240, -23.5, -240, -10.0);
   addFloorTile(-18.5, 240, -240, -10.0);
-  addFloorTile(-23.5, -18.5, -240, -35.2);
+  addFloorTile(-23.5, -18.5, -108.5, -35.2);
+  addFloorTile(-23.5, -18.5, -240, -121.0);
 
   // 3 North-South Avenues (West -56, Central Broadway 0, East +56, ending at Battery Park Seawall z = +152)
   [-56, 0, 56].forEach(ax => {
@@ -838,11 +962,19 @@ export function initNYCSnowMap(scene, colliders) {
     sw.receiveShadow = true;
     nycGroup.add(sw);
   };
+  addSW(14, 42, -72, -48);
   addSW(14, 42, -24, 0);
   addSW(14, 42, 24, 48);
   addSW(14, 42, 72, 96);
+  addSW(-42, -14, -72, -48);
   addSW(-42, -14, 24, 48);
   addSW(-42, -14, 72, 96);
+  addSW(70, 98, 24, 48);
+  addSW(70, 98, 72, 96);
+  addSW(-98, -70, -72, -48);
+  addSW(-98, -70, -24, 0);
+  addSW(-98, -70, 24, 48);
+  addSW(-98, -70, 72, 96);
   // West Times Square Sidewalk cleanly cut around Subway entrance
   addSW(-42, -14, -10.0, 0.0);
   addSW(-42, -23.5, -24.0, -10.0);
@@ -925,11 +1057,16 @@ export function initNYCSnowMap(scene, colliders) {
       // Detailed NYC brick apartment with fire escape & rooftop water tower
       placeModularNYCBuilding(nycGroup, colliders, '/models/nyc_apartment_brick.glb', bx, bz, faceAvenueRot, 1.45, bh / 24.0, 1.45, 10.4, 9.0);
     }
-    if (Math.abs(bx) === 28 && bz > -30 && bz < 50) {
+    if (Math.abs(bx) === 28 && bz >= -60 && bz <= 84) {
       const rot = bx < 0 ? Math.PI / 2 : -Math.PI / 2;
       const sx = bx < 0 ? bx + 10.8 : bx - 10.8;
-      addScreen(nycGroup, sx, 11, bz, 14, 7, rot, idx % 2 === 0 ? adDisn : adSnap, 0xff5599);
-      addScreen(nycGroup, sx, 20, bz, 13, 6.5, rot, idx % 2 === 0 ? adChic : adSams, 0x38aaff);
+      addScreen(nycGroup, sx, 10.5, bz, 15, 7.5, rot, idx % 2 === 0 ? adDisn : adSnap, 0xff5599);
+      addScreen(nycGroup, sx, 19.5, bz, 14, 7.0, rot, idx % 2 === 0 ? adChic : adSams, 0x38aaff);
+      addScreen(nycGroup, sx, 28.5, bz, 12, 6.0, rot, idx % 2 === 0 ? adVeri : adDisn, 0xffd055);
+      // Broadway-facing corner LED ticker
+      const faceZ = bz < 0 ? bz + 10.6 : bz - 10.6;
+      const rotZ = bz < 0 ? 0 : Math.PI;
+      addScreen(nycGroup, bx, 13.0, faceZ, 12, 6.0, rotZ, idx % 2 === 0 ? adSams : adVeri, 0x55ffaa);
     }
   });
 
@@ -1067,16 +1204,23 @@ export function setNYCSnowMapActive(active) {
 }
 
 export function updateNYCSnowMapEffects(timeSec) {
-  if (!nycGroup || !nycGroup.visible || !lampFireflies || !fireflyBasePos) return;
-  const posAttr = lampFireflies.geometry.attributes.position;
-  const arr = posAttr.array;
-  const count = posAttr.count;
-  for (let i = 0; i < count; i++) {
-    const i3 = i * 3;
-    const phase = timeSec * 2.2 + i * 1.37;
-    arr[i3] = fireflyBasePos[i3] + Math.sin(phase) * 0.45;
-    arr[i3 + 1] = fireflyBasePos[i3 + 1] + Math.cos(phase * 1.3) * 0.32;
-    arr[i3 + 2] = fireflyBasePos[i3 + 2] + Math.cos(phase * 0.9) * 0.45;
+  if (!nycGroup || !nycGroup.visible) return;
+  if (lampFireflies && fireflyBasePos) {
+    const posAttr = lampFireflies.geometry.attributes.position;
+    const arr = posAttr.array;
+    const count = posAttr.count;
+    for (let i = 0; i < count; i++) {
+      const i3 = i * 3;
+      const phase = timeSec * 2.2 + i * 1.37;
+      arr[i3] = fireflyBasePos[i3] + Math.sin(phase) * 0.45;
+      arr[i3 + 1] = fireflyBasePos[i3 + 1] + Math.cos(phase * 1.3) * 0.32;
+      arr[i3 + 2] = fireflyBasePos[i3 + 2] + Math.cos(phase * 0.9) * 0.45;
+    }
+    posAttr.needsUpdate = true;
   }
-  posAttr.needsUpdate = true;
+  // Animate Inter-City Express Subway Train gliding between 42nd St (z=-35) & North Midtown (z=-105)
+  if (expressSubwayTrain) {
+    const worldZ = -66 + Math.sin(timeSec * 0.45) * 34;
+    expressSubwayTrain.position.z = worldZ - (-10.0);
+  }
 }
