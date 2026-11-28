@@ -1,15 +1,16 @@
 /* =========================================================================
-   SNOWY LOW-POLY NYC TIMES SQUARE (Inspired by maps_reference)
-   - One Times Square Vertical Billboard Stack + Walkable TKTS Red Stairs
-   - Curved Times Square LED Screen + Wet Plaza with Neon Reflections
-   - Snowy Brick Brownstones with Awnings, Snow Berms & Tire-Track Avenue
-   - Grand Central Terminal Facade + Hanging Traffic Lights + Yellow Cabs
+   SNOWY LOW-POLY PS2 NYC TIMES SQUARE (Detailed Architecture & Atmosphere)
+   - Detailed Brick/Stone Brownstones: Doors, Stoops, Multi-Pane Windows, Blinds, Fire Escapes
+   - Detailed Grand Central Terminal: Classical Columns, Arched Entrances, Ornate Clock
+   - One Times Square Vertical LED Stack + Walkable TKTS Red Stairs + Curved LED Screen
+   - Authentic PS2 Cars (honda_civic_1985_ps2.glb + Detailed Wheel/Bumper/Windshield SUVs)
    ========================================================================= */
 
 const THREE = window.THREE;
 
 let nycGroup = null;
 const nycColliders = [];
+let civicTemplate = null;
 
 function makeTex(w, h, drawFn) {
   const c = document.createElement('canvas');
@@ -25,33 +26,36 @@ function makeTex(w, h, drawFn) {
 }
 
 function makeSnowyStreetTex() {
-  return makeTex(128, 128, (ctx, w, h) => {
-    // Pixelated snowy cobblestone/asphalt with dark tire-track ruts (Ref 1 & 2)
-    ctx.fillStyle = '#6f7c8a';
+  return makeTex(256, 256, (ctx, w, h) => {
+    ctx.fillStyle = '#4e5864';
     ctx.fillRect(0, 0, w, h);
     for (let y = 0; y < h; y += 2) {
       for (let x = 0; x < w; x += 2) {
-        const v = 96 + Math.floor(Math.random() * 44);
-        ctx.fillStyle = `rgb(${v},${v + 8},${v + 16})`;
+        const v = 64 + Math.floor(Math.random() * 44);
+        ctx.fillStyle = `rgb(${v},${v + 6},${v + 12})`;
         ctx.fillRect(x, y, 2, 2);
       }
     }
-    // Dual tire track ruts
-    [34, 48, 80, 94].forEach(tx => {
-      ctx.fillStyle = 'rgba(28, 34, 42, 0.52)';
-      ctx.fillRect(tx, 0, 8, h);
+    // Single avenue dual tire tracks down the road (repeat.x = 1)
+    [72, 96, 152, 176].forEach(tx => {
+      ctx.fillStyle = 'rgba(20, 24, 30, 0.58)';
+      ctx.fillRect(tx, 0, 14, h);
     });
+    // Subtle center double yellow line peeking through snow
+    ctx.fillStyle = 'rgba(195, 150, 42, 0.45)';
+    ctx.fillRect(124, 0, 3, h);
+    ctx.fillRect(129, 0, 3, h);
   });
 }
 
 function makePlazaTileTex() {
   return makeTex(128, 128, (ctx, w, h) => {
-    ctx.fillStyle = '#303842';
+    ctx.fillStyle = '#2a3038';
     ctx.fillRect(0, 0, w, h);
     for (let y = 0; y < h; y += 8) {
       for (let x = 0; x < w; x += 8) {
-        const v = 38 + Math.floor(Math.random() * 24);
-        ctx.fillStyle = `rgb(${v},${v + 5},${v + 12})`;
+        const v = 34 + Math.floor(Math.random() * 24);
+        ctx.fillStyle = `rgb(${v},${v + 4},${v + 10})`;
         ctx.fillRect(x + 1, y + 1, 6, 6);
       }
     }
@@ -60,35 +64,79 @@ function makePlazaTileTex() {
 
 function makeBrickTex(r, g, b) {
   return makeTex(128, 128, (ctx, w, h) => {
-    ctx.fillStyle = '#2c2826';
+    ctx.fillStyle = '#221e1c';
     ctx.fillRect(0, 0, w, h);
     for (let row = 0; row < 16; row++) {
       const off = (row % 2) * 8;
       for (let col = -1; col < 9; col++) {
-        const j = Math.floor((Math.random() - 0.5) * 26);
+        const j = Math.floor((Math.random() - 0.5) * 28);
         ctx.fillStyle = `rgb(${r + j},${g + j},${b + j})`;
         ctx.fillRect(col * 16 + off + 1, row * 8 + 1, 14, 6);
       }
     }
-    // Bottom grime
-    const ao = ctx.createLinearGradient(0, 88, 0, 128);
+    for (let i = 0; i < 600; i++) {
+      ctx.fillStyle = 'rgba(10, 12, 14, 0.25)';
+      ctx.fillRect(Math.floor(Math.random() * 128), Math.floor(Math.random() * 128), 2, 2);
+    }
+    const ao = ctx.createLinearGradient(0, 80, 0, 128);
     ao.addColorStop(0, 'rgba(0,0,0,0)');
-    ao.addColorStop(1, 'rgba(12,14,18,0.55)');
+    ao.addColorStop(1, 'rgba(8,10,12,0.68)');
     ctx.fillStyle = ao;
-    ctx.fillRect(0, 88, 128, 40);
+    ctx.fillRect(0, 80, 128, 48);
+  });
+}
+
+function makeWindowPaneTex(isLit = false) {
+  return makeTex(64, 96, (ctx, w, h) => {
+    ctx.fillStyle = isLit ? '#8a683a' : '#121820';
+    ctx.fillRect(0, 0, w, h);
+    // Venetian blinds slats (inspired by references/e2d61de...)
+    ctx.fillStyle = isLit ? '#cfa45e' : '#242d38';
+    for (let y = 6; y < 58; y += 5) {
+      ctx.fillRect(4, y, w - 8, 2);
+    }
+    // Wooden/iron cross mullions
+    ctx.fillStyle = '#181412';
+    ctx.fillRect(w * 0.5 - 2, 0, 4, h);
+    ctx.fillRect(0, h * 0.5 - 2, w, 4);
+    ctx.strokeStyle = '#2e2926';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, w - 4, h - 4);
+  });
+}
+
+function makeDoorTex() {
+  return makeTex(64, 128, (ctx, w, h) => {
+    ctx.fillStyle = '#2d1e17';
+    ctx.fillRect(0, 0, w, h);
+    // Upper glass window with posters
+    ctx.fillStyle = '#3c4854';
+    ctx.fillRect(10, 12, w - 20, 46);
+    ctx.fillStyle = '#9c3228';
+    ctx.fillRect(16, 22, 16, 22);
+    ctx.fillStyle = '#d4b886';
+    ctx.fillRect(36, 26, 12, 18);
+    // Lower wood panel + brass handle
+    ctx.fillStyle = '#1c120d';
+    ctx.fillRect(10, 68, w - 20, 48);
+    ctx.fillStyle = '#c8a858';
+    ctx.fillRect(w - 15, 62, 5, 12);
+    ctx.strokeStyle = '#14100e';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, w - 4, h - 4);
   });
 }
 
 function makeTowerWindowsTex(tint = '#ffe39e') {
   return makeTex(128, 256, (ctx, w, h) => {
-    ctx.fillStyle = '#202833';
+    ctx.fillStyle = '#181e28';
     ctx.fillRect(0, 0, w, h);
     const cols = 8, rows = 22;
     const cw = w / cols, rh = h / rows;
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const rnd = Math.random();
-        ctx.fillStyle = rnd > 0.55 ? (rnd > 0.85 ? '#a8dcf5' : tint) : '#141a22';
+        ctx.fillStyle = rnd > 0.55 ? (rnd > 0.85 ? '#a8dcf5' : tint) : '#10151c';
         ctx.globalAlpha = rnd > 0.55 ? (0.45 + Math.random() * 0.5) : 0.92;
         ctx.fillRect(c * cw + 2, r * rh + 2, cw - 4, rh - 4);
       }
@@ -144,16 +192,18 @@ function addScreen(group, x, y, z, w, h, rotY, tex, glowCol = null) {
   group.add(frame);
 }
 
-function buildBrownstoneRow(group, colliders, sideX, startZ, count, dirZ, brickRed, brickCream, snowMat) {
+/**
+ * Detailed PS2 Brownstone / Brick Building with Doors, Stoops, Multi-Pane Windows, Blinds & Fire Escapes
+ */
+function buildDetailedBrownstoneRow(group, colliders, sideX, startZ, count, dirZ, brickRed, brickCream, snowMat, doorMat, winDarkMat, winLitMat) {
   const facing = sideX < 0 ? 1 : -1;
-  const winMat = new THREE.MeshLambertMaterial({ color: 0x161c24, flatShading: true });
-  const warmWinMat = new THREE.MeshBasicMaterial({ color: 0xffc66e });
-  const awningMat = new THREE.MeshLambertMaterial({ color: 0x3b4450, flatShading: true });
-  const trimMat = new THREE.MeshLambertMaterial({ color: 0x4b433e, flatShading: true });
+  const trimMat = new THREE.MeshLambertMaterial({ color: 0x3a3430, flatShading: true });
+  const ironMat = new THREE.MeshLambertMaterial({ color: 0x181a1e, flatShading: true });
+  const awningMat = new THREE.MeshLambertMaterial({ color: 0x2f3842, flatShading: true });
 
   for (let i = 0; i < count; i++) {
     const bw = 12.0;
-    const bd = 11.5;
+    const bd = 12.0;
     const floors = 3 + (i % 2);
     const bh = floors * 3.8;
     const bx = sideX;
@@ -170,39 +220,86 @@ function buildBrownstoneRow(group, colliders, sideX, startZ, count, dirZ, brickR
     body.position.y = bh * 0.5;
     b.add(body);
 
-    // 3D Windows & Cornice
-    for (let f = 0; f < floors; f++) {
-      const wy = 2.2 + f * 3.8;
-      for (let wz = -3.4; wz <= 3.4; wz += 3.4) {
-        const isLit = (f === 0 && (i + Math.round(wz)) % 2 === 0);
-        const pane = new THREE.Mesh(
-          new THREE.BoxGeometry(0.14, 1.75, 1.35),
-          isLit ? warmWinMat : winMat
-        );
-        pane.position.set(facing * (bw * 0.5 + 0.04), wy, wz);
+    // Ground-floor Recessed Entrance Door + Concrete Stoop Steps + Transom Light
+    const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(0.28, 2.75, 1.75), trimMat);
+    doorFrame.position.set(facing * (bw * 0.5 + 0.04), 1.48, 0);
+    b.add(doorFrame);
+
+    const doorPanel = new THREE.Mesh(new THREE.BoxGeometry(0.10, 2.45, 1.40), doorMat);
+    doorPanel.position.set(facing * (bw * 0.5 + 0.14), 1.42, 0);
+    b.add(doorPanel);
+
+    const stoop = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.35, 2.3), trimMat);
+    stoop.position.set(facing * (bw * 0.5 + 0.55), 0.18, 0);
+    b.add(stoop);
+
+    // Shop / Cafe Windows flanking the door with sills & awnings
+    [-3.6, 3.6].forEach(wz => {
+      const wFrame = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.1, 2.2), trimMat);
+      wFrame.position.set(facing * (bw * 0.5 + 0.04), 1.95, wz);
+      b.add(wFrame);
+
+      const pane = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.85, 1.95), (i % 2 === 0) ? winLitMat : winDarkMat);
+      pane.position.set(facing * (bw * 0.5 + 0.13), 1.95, wz);
+      b.add(pane);
+
+      const sill = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.18, 2.35), trimMat);
+      sill.position.set(facing * (bw * 0.5 + 0.14), 0.88, wz);
+      b.add(sill);
+    });
+
+    // Upper-Floor Multi-Pane Windows with Protruding Frames & Stone Sills
+    for (let f = 1; f < floors; f++) {
+      const wy = 2.1 + f * 3.8;
+      [-3.6, 0, 3.6].forEach(wz => {
+        const wFrame = new THREE.Mesh(new THREE.BoxGeometry(0.22, 1.95, 1.55), trimMat);
+        wFrame.position.set(facing * (bw * 0.5 + 0.04), wy, wz);
+        b.add(wFrame);
+
+        const isLit = ((f + i + Math.round(wz)) % 5 === 0);
+        const pane = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.70, 1.30), isLit ? winLitMat : winDarkMat);
+        pane.position.set(facing * (bw * 0.5 + 0.13), wy, wz);
         b.add(pane);
+
+        const sill = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.18, 1.72), trimMat);
+        sill.position.set(facing * (bw * 0.5 + 0.14), wy - 0.98, wz);
+        b.add(sill);
+      });
+
+      // Iron Fire-Escape Balcony on upper floors
+      if (i % 2 === 1) {
+        const balc = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.12, 4.2), ironMat);
+        balc.position.set(facing * (bw * 0.5 + 0.48), wy - 1.05, 0);
+        b.add(balc);
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.75, 4.2), ironMat);
+        rail.position.set(facing * (bw * 0.5 + 0.92), wy - 0.65, 0);
+        b.add(rail);
       }
     }
 
-    // Snowy Shop Awning on Ground Floor (Ref 1)
-    const awning = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.35, bd - 1.2), awningMat);
-    awning.position.set(facing * (bw * 0.5 + 0.75), 3.4, 0);
-    awning.rotation.z = facing * -0.25;
+    // Snowy Shop Awning above Ground Floor
+    const awning = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.30, bd - 1.4), awningMat);
+    awning.position.set(facing * (bw * 0.5 + 0.78), 3.35, 0);
+    awning.rotation.z = facing * -0.24;
     b.add(awning);
 
-    const awningSnow = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.14, bd - 1.3), snowMat);
-    awningSnow.position.set(facing * (bw * 0.5 + 0.75), 3.60, 0);
-    awningSnow.rotation.z = facing * -0.25;
+    const awningSnow = new THREE.Mesh(new THREE.BoxGeometry(1.70, 0.14, bd - 1.5), snowMat);
+    awningSnow.position.set(facing * (bw * 0.5 + 0.78), 3.54, 0);
+    awningSnow.rotation.z = facing * -0.24;
     b.add(awningSnow);
 
-    // Roof Cornice + Snow Cap
-    const cornice = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.5, 0.55, bd + 0.2), trimMat);
-    cornice.position.y = bh + 0.2;
+    // Ornate Roof Cornice + Snow Cap + Chimney
+    const cornice = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.6, 0.6, bd + 0.2), trimMat);
+    cornice.position.y = bh + 0.22;
     b.add(cornice);
 
-    const roofSnow = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.4, 0.25, bd + 0.1), snowMat);
-    roofSnow.position.y = bh + 0.55;
+    const roofSnow = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.5, 0.24, bd + 0.1), snowMat);
+    roofSnow.position.y = bh + 0.58;
     b.add(roofSnow);
+
+    const chimney = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.0, 1.2), wallMat);
+    chimney.position.set(-facing * 2.5, bh + 1.2, 2.2);
+    b.add(chimney);
 
     group.add(b);
     addCol(colliders, bx - bw * 0.5 - 0.3, bx + bw * 0.5 + 0.3, bz - bd * 0.5, bz + bd * 0.5);
@@ -240,36 +337,113 @@ function buildSkyscraper(group, colliders, x, z, w, d, h, winTex, spire = false)
   }
 }
 
-function buildVehicle(group, colliders, x, z, rotY, type = 'cab') {
+/**
+ * Detailed PS2 Vehicle: uses authentic honda_civic_1985_ps2.glb when loaded,
+ * or detailed multi-part PS2 vehicle with wheels, sloped hood/windshield, grille & bumpers!
+ */
+function buildDetailedPS2Vehicle(group, colliders, x, z, rotY, type = 'cab') {
   const v = new THREE.Group();
   v.position.set(x, 0, z);
   v.rotation.y = rotY;
-  const col = type === 'cab' ? 0xeab318 : (type === 'suv' ? 0x1b2028 : 0x7b8490);
+
+  const col = type === 'cab' ? 0xd9a41a : (type === 'suv' ? 0x1b2028 : 0x626b75);
   const bodyMat = new THREE.MeshLambertMaterial({ color: col, flatShading: true });
-  const glassMat = new THREE.MeshLambertMaterial({ color: 0x1c2530, flatShading: true });
-  const snowMat = new THREE.MeshLambertMaterial({ color: 0xc8d4df, flatShading: true });
+  const glassMat = new THREE.MeshLambertMaterial({ color: 0x151e28, flatShading: true });
+  const tireMat = new THREE.MeshLambertMaterial({ color: 0x141618, flatShading: true });
+  const rimMat = new THREE.MeshLambertMaterial({ color: 0x8e96a0, flatShading: true });
+  const chromeMat = new THREE.MeshLambertMaterial({ color: 0x555c64, flatShading: true });
+  const snowMat = new THREE.MeshLambertMaterial({ color: 0xc2ceda, flatShading: true });
 
-  const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.72, 4.4), bodyMat);
-  chassis.position.y = 0.54;
-  v.add(chassis);
+  const buildFallback = () => {
+    const fb = new THREE.Group();
+    // Lower body + sloped hood & trunk
+    const lower = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.58, 4.35), bodyMat);
+    lower.position.y = 0.55;
+    fb.add(lower);
 
-  const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.78, 0.65, type === 'suv' ? 2.9 : 2.2), glassMat);
-  cabin.position.set(0, 1.18, -0.1);
-  v.add(cabin);
+    // Front & Rear Chrome Bumpers
+    const fBump = new THREE.Mesh(new THREE.BoxGeometry(1.98, 0.20, 0.22), chromeMat);
+    fBump.position.set(0, 0.36, 2.22);
+    fb.add(fBump);
+    const rBump = new THREE.Mesh(new THREE.BoxGeometry(1.98, 0.20, 0.22), chromeMat);
+    rBump.position.set(0, 0.36, -2.22);
+    fb.add(rBump);
 
-  // Snow dust on vehicle roof (Ref 1 & 2)
-  const roofSnow = new THREE.Mesh(new THREE.BoxGeometry(1.66, 0.12, type === 'suv' ? 2.6 : 1.9), snowMat);
-  roofSnow.position.set(0, 1.54, -0.1);
-  v.add(roofSnow);
+    // Front Grille
+    const grille = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.24, 0.08), tireMat);
+    grille.position.set(0, 0.58, 2.18);
+    fb.add(grille);
 
-  [-0.65, 0.65].forEach(lx => {
-    const hl = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.18, 0.08), new THREE.MeshBasicMaterial({ color: 0xfff3c4 }));
-    hl.position.set(lx, 0.56, 2.22);
-    v.add(hl);
-    const tl = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.18, 0.08), new THREE.MeshBasicMaterial({ color: 0xff2222 }));
-    tl.position.set(lx, 0.58, -2.22);
-    v.add(tl);
-  });
+    // Sloped Cabin + Windshield + Side Windows
+    const cabinLen = (type === 'suv') ? 2.6 : 1.95;
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.58, cabinLen), bodyMat);
+    cabin.position.set(0, 1.10, -0.22);
+    fb.add(cabin);
+
+    const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.56, 0.12), glassMat);
+    windshield.position.set(0, 1.08, (type === 'suv' ? 1.12 : 0.80));
+    windshield.rotation.x = -0.48;
+    fb.add(windshield);
+
+    const sideGlass = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.42, cabinLen - 0.25), glassMat);
+    sideGlass.position.set(0, 1.12, -0.22);
+    fb.add(sideGlass);
+
+    // Snow cap on roof & hood
+    const roofSnow = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.10, cabinLen - 0.2), snowMat);
+    roofSnow.position.set(0, 1.42, -0.22);
+    fb.add(roofSnow);
+
+    // 4 Detailed Wheels + Hubcap Rims
+    [-0.92, 0.92].forEach(wx => {
+      [-1.35, 1.35].forEach(wz => {
+        const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.26, 10), tireMat);
+        tire.rotation.z = Math.PI * 0.5;
+        tire.position.set(wx, 0.36, wz);
+        fb.add(tire);
+        const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.20, 0.28, 8), rimMat);
+        rim.rotation.z = Math.PI * 0.5;
+        rim.position.set(wx, 0.36, wz);
+        fb.add(rim);
+      });
+    });
+
+    // Headlights & Taillights
+    [-0.68, 0.68].forEach(lx => {
+      const hl = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.16, 0.08), new THREE.MeshBasicMaterial({ color: 0xfff3c4 }));
+      hl.position.set(lx, 0.58, 2.19);
+      fb.add(hl);
+      const tl = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.16, 0.08), new THREE.MeshBasicMaterial({ color: 0xff2222 }));
+      tl.position.set(lx, 0.62, -2.19);
+      fb.add(tl);
+    });
+    return fb;
+  };
+
+  if (type === 'sedan' && typeof THREE.GLTFLoader !== 'undefined') {
+    if (civicTemplate) {
+      const clone = civicTemplate.clone(true);
+      v.add(clone);
+    } else {
+      const loader = new THREE.GLTFLoader();
+      loader.load('/models/honda_civic_1985_ps2.glb', (gltf) => {
+        const model = gltf.scene;
+        const box = new THREE.Box3().setFromObject(model);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+        const maxDim = Math.max(size.x, size.y, size.z, 0.01);
+        const scale = 4.4 / maxDim;
+        model.scale.setScalar(scale);
+        model.position.y = -box.min.y * scale;
+        civicTemplate = model;
+        v.add(model.clone(true));
+      }, undefined, () => {
+        v.add(buildFallback());
+      });
+    }
+  } else {
+    v.add(buildFallback());
+  }
 
   group.add(v);
   const hw = Math.abs(Math.cos(rotY)) * 1.1 + Math.abs(Math.sin(rotY)) * 2.25;
@@ -277,36 +451,66 @@ function buildVehicle(group, colliders, x, z, rotY, type = 'cab') {
   addCol(colliders, x - hw, x + hw, z - hd, z + hd);
 }
 
-function buildGrandCentralFacade(group, colliders) {
-  // Glowing Golden Grand Central Terminal at South end of Avenue (z = +78, Ref 4)
+/**
+ * Detailed Classical Grand Central Terminal Facade (Columns, Arched Glass Doors, Cornice, Clock)
+ */
+function buildGrandCentralFacade(group, colliders, stoneTex, snowMat) {
   const gc = new THREE.Group();
   gc.position.set(0, 0, 82);
-  const stoneMat = new THREE.MeshLambertMaterial({ color: 0x8f8266, flatShading: true });
+  const stoneMat = new THREE.MeshLambertMaterial({ map: stoneTex, color: 0xa89b80, flatShading: true });
+  const trimMat = new THREE.MeshLambertMaterial({ color: 0x6e6452, flatShading: true });
   const glowMat = new THREE.MeshBasicMaterial({ color: 0xffe099 });
+  const ironMat = new THREE.MeshLambertMaterial({ color: 0x1e2228, flatShading: true });
 
-  const main = new THREE.Mesh(new THREE.BoxGeometry(34, 16, 12), stoneMat);
-  main.position.y = 8;
+  const main = new THREE.Mesh(new THREE.BoxGeometry(36, 17, 12), stoneMat);
+  main.position.y = 8.5;
   gc.add(main);
 
-  // 3 Iconic Arched Glowing Windows
-  [-9, 0, 9].forEach(ax => {
-    const arch = new THREE.Mesh(new THREE.BoxGeometry(5.6, 10.5, 0.4), glowMat);
-    arch.position.set(ax, 6.2, -6.1);
-    gc.add(arch);
+  // Classical Pediment & Snow-Capped Roof Cornice
+  const cornice = new THREE.Mesh(new THREE.BoxGeometry(37.5, 1.2, 13.0), trimMat);
+  cornice.position.y = 17.2;
+  gc.add(cornice);
+  const roofSnow = new THREE.Mesh(new THREE.BoxGeometry(37.4, 0.35, 12.8), snowMat);
+  roofSnow.position.y = 17.95;
+  gc.add(roofSnow);
+
+  // 6 Classical Fluted Stone Columns across the front
+  [-14, -6.5, -3.2, 3.2, 6.5, 14].forEach(cx => {
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.78, 14.5, 8), trimMat);
+    col.position.set(cx, 7.25, -6.3);
+    gc.add(col);
   });
 
-  // Grand Clock Pediment
-  const clock = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 0.6, 12), glowMat);
-  clock.rotation.x = Math.PI * 0.5;
-  clock.position.set(0, 14.2, -6.2);
-  gc.add(clock);
+  // 3 Recessed Arched Glowing Entrances + Iron Mullions
+  [-10.2, 0, 10.2].forEach(ax => {
+    const archGlass = new THREE.Mesh(new THREE.BoxGeometry(5.2, 11.2, 0.35), glowMat);
+    archGlass.position.set(ax, 5.8, -6.05);
+    gc.add(archGlass);
+    // Mullion bars & entrance doors at bottom
+    const mullionV = new THREE.Mesh(new THREE.BoxGeometry(0.22, 11.2, 0.45), ironMat);
+    mullionV.position.set(ax, 5.8, -6.12);
+    gc.add(mullionV);
+    const doorBar = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.32, 0.45), ironMat);
+    doorBar.position.set(ax, 3.2, -6.12);
+    gc.add(doorBar);
+  });
 
-  const gcLight = new THREE.PointLight(0xffd27a, 2.2, 38);
+  // Ornate Glowing Grand Clock Dial + Sculpted Pediment Block
+  const clockFrame = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.1, 0.7, 12), trimMat);
+  clockFrame.rotation.x = Math.PI * 0.5;
+  clockFrame.position.set(0, 14.8, -6.2);
+  gc.add(clockFrame);
+  const clockFace = new THREE.Mesh(new THREE.CylinderGeometry(1.65, 1.65, 0.78, 12), glowMat);
+  clockFace.rotation.x = Math.PI * 0.5;
+  clockFace.position.set(0, 14.8, -6.25);
+  gc.add(clockFace);
+
+  const gcLight = new THREE.PointLight(0xffd27a, 2.4, 40);
   gcLight.position.set(0, 8, -10);
   gc.add(gcLight);
 
   group.add(gc);
-  addCol(colliders, -17.5, 17.5, 75.5, 88.5);
+  addCol(colliders, -18.5, 18.5, 75.5, 88.5);
 }
 
 export function initNYCSnowMap(scene, colliders) {
@@ -317,11 +521,11 @@ export function initNYCSnowMap(scene, colliders) {
 
   const streetTex = makeSnowyStreetTex();
   streetTex.wrapS = streetTex.wrapT = THREE.RepeatWrapping;
-  streetTex.repeat.set(16, 40);
+  streetTex.repeat.set(1, 14); // 1x across road width so tire tracks align cleanly!
 
   const plazaTex = makePlazaTileTex();
   plazaTex.wrapS = plazaTex.wrapT = THREE.RepeatWrapping;
-  plazaTex.repeat.set(14, 18);
+  plazaTex.repeat.set(12, 16);
 
   const brickRed = makeBrickTex(112, 48, 38);
   brickRed.wrapS = brickRed.wrapT = THREE.RepeatWrapping;
@@ -331,13 +535,17 @@ export function initNYCSnowMap(scene, colliders) {
   brickCream.wrapS = brickCream.wrapT = THREE.RepeatWrapping;
   brickCream.repeat.set(3, 3);
 
+  const doorMat = new THREE.MeshLambertMaterial({ map: makeDoorTex(), flatShading: true });
+  const winDarkMat = new THREE.MeshLambertMaterial({ map: makeWindowPaneTex(false), flatShading: true });
+  const winLitMat = new THREE.MeshLambertMaterial({ map: makeWindowPaneTex(true), emissive: 0x3b2a12, flatShading: true });
+
   const winGold = makeTowerWindowsTex('#ffde8f');
   const winBlue = makeTowerWindowsTex('#9fd8f5');
-  const snowMat = new THREE.MeshLambertMaterial({ color: 0xcfd9e3, flatShading: true });
+  const snowMat = new THREE.MeshLambertMaterial({ color: 0xc2ceda, flatShading: true });
 
-  // 1. Snowy Avenue & Wet Reflective Times Square Plaza (Ref 1, 2, 5)
+  // 1. Snowy Avenue & Wet Reflective Times Square Plaza
   const avenue = new THREE.Mesh(
-    new THREE.PlaneGeometry(36, 190),
+    new THREE.PlaneGeometry(32, 190),
     new THREE.MeshLambertMaterial({ map: streetTex, flatShading: true })
   );
   avenue.rotation.x = -Math.PI / 2;
@@ -346,7 +554,7 @@ export function initNYCSnowMap(scene, colliders) {
   nycGroup.add(avenue);
 
   const plaza = new THREE.Mesh(
-    new THREE.PlaneGeometry(34, 42),
+    new THREE.PlaneGeometry(32, 42),
     new THREE.MeshLambertMaterial({ map: plazaTex, flatShading: true })
   );
   plaza.rotation.x = -Math.PI / 2;
@@ -354,7 +562,6 @@ export function initNYCSnowMap(scene, colliders) {
   plaza.receiveShadow = true;
   nycGroup.add(plaza);
 
-  // Subtle Colored Neon Reflection Pools on Wet Plaza (Ref 5)
   [
     { x: -10, z: -8, col: 0xff6a2a },
     { x: 10, z: -10, col: 0xff2a9d },
@@ -362,30 +569,30 @@ export function initNYCSnowMap(scene, colliders) {
   ].forEach(ref => {
     const glowPool = new THREE.Mesh(
       new THREE.PlaneGeometry(10, 14),
-      new THREE.MeshBasicMaterial({ color: ref.col, transparent: true, opacity: 0.18, depthWrite: false })
+      new THREE.MeshBasicMaterial({ color: ref.col, transparent: true, opacity: 0.16, depthWrite: false })
     );
     glowPool.rotation.x = -Math.PI / 2;
     glowPool.position.set(ref.x, 0.025, ref.z);
     nycGroup.add(glowPool);
   });
 
-  // Sidewalks + Low-Poly Plowed Snow Berms along Curbs (Ref 2)
-  const swMat = new THREE.MeshLambertMaterial({ color: 0x454d58, flatShading: true });
+  // Sidewalks + Snow Berms
+  const swMat = new THREE.MeshLambertMaterial({ color: 0x3d444e, flatShading: true });
   [-19, 19].forEach(sx => {
     const sw = new THREE.Mesh(new THREE.BoxGeometry(10, 0.16, 170), swMat);
     sw.position.set(sx, 0.08, 10);
     sw.receiveShadow = true;
     nycGroup.add(sw);
 
-    for (let bz = -20; bz <= 55; bz += 16) {
-      const berm = new THREE.Mesh(new THREE.ConeGeometry(1.5, 1.1, 5), snowMat);
+    for (let bz = -18; bz <= 58; bz += 18) {
+      const berm = new THREE.Mesh(new THREE.ConeGeometry(1.4, 0.95, 5), snowMat);
       berm.scale.set(1.0, 1.0, 2.2);
-      berm.position.set(sx < 0 ? -14.8 : 14.8, 0.4, bz);
+      berm.position.set(sx < 0 ? -14.8 : 14.8, 0.35, bz);
       nycGroup.add(berm);
     }
   });
 
-  // 2. ONE TIMES SQUARE TOWER + VERTICAL LED BILLBOARD STACK (Ref 3)
+  // 2. ONE TIMES SQUARE TOWER + VERTICAL LED BILLBOARD STACK
   const oneTS = new THREE.Group();
   oneTS.position.set(0, 0, -40);
   const towerBody = new THREE.Mesh(
@@ -411,7 +618,7 @@ export function initNYCSnowMap(scene, colliders) {
   addScreen(nycGroup, 0, 27.6, -33.8, 11.4, 7.8, 0, adSamsung, 0x22aaff);
   addScreen(nycGroup, 0, 18.6, -33.8, 11.4, 8.2, 0, adCoke, 0xff2233);
 
-  // Walkable TKTS Red Stairs directly in front of One Times Square (Ref 3)
+  // Walkable TKTS Red Stairs
   const redStepMat = new THREE.MeshLambertMaterial({ color: 0xa81822, flatShading: true });
   for (let i = 0; i < 12; i++) {
     const step = new THREE.Mesh(new THREE.BoxGeometry(10.8, 0.35, 0.72), redStepMat);
@@ -424,25 +631,17 @@ export function initNYCSnowMap(scene, colliders) {
     nycGroup.add(tkts);
   });
 
-  // 3. CURVED GIANT LED SCREEN ON WEST CORNER (Ref 2)
+  // 3. CURVED GIANT LED SCREEN ON WEST CORNER
   const curveGeo = new THREE.CylinderGeometry(9.5, 9.5, 16.0, 14, 1, true, 0.25, 1.35);
-  const curveScreen = new THREE.Mesh(
-    curveGeo,
-    new THREE.MeshBasicMaterial({ map: adVerizon, side: THREE.DoubleSide })
-  );
+  const curveScreen = new THREE.Mesh(curveGeo, new THREE.MeshBasicMaterial({ map: adVerizon, side: THREE.DoubleSide }));
   curveScreen.position.set(-22.5, 17.5, -18.0);
   nycGroup.add(curveScreen);
-  const curveLight = new THREE.PointLight(0xd8ecff, 1.8, 30);
-  curveLight.position.set(-14, 16, -14);
-  nycGroup.add(curveLight);
 
-  // Side Skyscrapers & Bright Broadway Billboards (Ref 3 & 5)
   buildSkyscraper(nycGroup, colliders, -28, -18, 16, 18, 44, winGold);
   buildSkyscraper(nycGroup, colliders, 28, -16, 16, 20, 48, winBlue);
   buildSkyscraper(nycGroup, colliders, 28, 6, 16, 18, 40, winGold);
   buildSkyscraper(nycGroup, colliders, -28, 6, 16, 18, 38, winBlue);
 
-  // Distant Misty Empire State & Skyline Silhouettes (Ref 1 & 3)
   buildSkyscraper(nycGroup, null, -12, -88, 22, 22, 92, winGold, true);
   buildSkyscraper(nycGroup, null, 24, -84, 24, 22, 76, winBlue, false);
   buildSkyscraper(nycGroup, null, -48, -76, 20, 20, 66, winBlue, false);
@@ -451,20 +650,21 @@ export function initNYCSnowMap(scene, colliders) {
   addScreen(nycGroup, 19.8, 12.5, -16, 15, 8.0, -Math.PI / 2, adSnap, 0xff2a9d);
   addScreen(nycGroup, 19.8, 12.0, 6, 14, 7.5, -Math.PI / 2, adGatsby, 0xffd270);
 
-  // 4. SNOWY BRICK BROWNSTONE STREET DISTRICT (Ref 1)
-  buildBrownstoneRow(nycGroup, colliders, -23, 24, 4, 1, brickRed, brickCream, snowMat);
-  buildBrownstoneRow(nycGroup, colliders, 23, 24, 4, 1, brickCream, brickRed, snowMat);
+  // 4. DETAILED SNOWY BRICK BROWNSTONE STREET (Doors, Stoops, Multi-pane Windows, Fire Escapes)
+  buildDetailedBrownstoneRow(nycGroup, colliders, -23, 24, 4, 1, brickRed, brickCream, snowMat, doorMat, winDarkMat, winLitMat);
+  buildDetailedBrownstoneRow(nycGroup, colliders, 23, 24, 4, 1, brickCream, brickRed, snowMat, doorMat, winDarkMat, winLitMat);
 
-  // 5. GRAND CENTRAL TERMINAL FACADE (Ref 4)
-  buildGrandCentralFacade(nycGroup, colliders);
+  // 5. DETAILED GRAND CENTRAL TERMINAL FACADE
+  buildGrandCentralFacade(nycGroup, colliders, brickCream, snowMat);
 
-  // 6. YELLOW NYC CABS, SNOWY SUVs & HANGING TRAFFIC LIGHTS (Ref 1, 2, 3)
-  buildVehicle(nycGroup, colliders, -10.0, 10.0, 0.05, 'cab');
-  buildVehicle(nycGroup, colliders, 10.2, 2.0, Math.PI - 0.06, 'suv');
-  buildVehicle(nycGroup, colliders, -10.5, 32.0, -0.05, 'suv');
-  buildVehicle(nycGroup, colliders, 10.5, 28.0, Math.PI + 0.04, 'cab');
-  buildVehicle(nycGroup, colliders, -9.8, 52.0, 0.08, 'cab');
+  // 6. AUTHENTIC PS2 VEHICLES (honda_civic_1985_ps2.glb + Detailed SUVs & Yellow Cabs)
+  buildDetailedPS2Vehicle(nycGroup, colliders, -10.0, 10.0, 0.05, 'cab');
+  buildDetailedPS2Vehicle(nycGroup, colliders, 10.2, 2.0, Math.PI - 0.06, 'suv');
+  buildDetailedPS2Vehicle(nycGroup, colliders, -10.5, 32.0, -0.05, 'sedan');
+  buildDetailedPS2Vehicle(nycGroup, colliders, 10.5, 28.0, Math.PI + 0.04, 'cab');
+  buildDetailedPS2Vehicle(nycGroup, colliders, -9.8, 52.0, 0.08, 'suv');
 
+  // 7. STREETLAMPS & HANGING TRAFFIC SIGNALS
   const poleMat = new THREE.MeshLambertMaterial({ color: 0x22262e, flatShading: true });
   [[-14.5, -14], [14.5, -14], [-14.5, 22], [14.5, 22], [-14.5, 48], [14.5, 48]].forEach(([px, pz]) => {
     const dir = px < 0 ? 1 : -1;
@@ -480,11 +680,10 @@ export function initNYCSnowMap(scene, colliders) {
     lampHead.position.set(px + dir * 3.2, 6.1, pz);
     nycGroup.add(lampHead);
 
-    const light = new THREE.PointLight(0xffd288, 1.8, 28);
+    const light = new THREE.PointLight(0xffd288, 1.9, 26);
     light.position.set(px + dir * 2.8, 5.6, pz);
     nycGroup.add(light);
 
-    // Hanging Traffic Signal Box (Ref 2)
     if (pz === -14 || pz === 22) {
       const sig = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.1, 0.45), poleMat);
       sig.position.set(px + dir * 2.1, 5.4, pz);

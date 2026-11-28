@@ -91,8 +91,8 @@ export function applyGraphicFidelity(mode = 'hd') {
 
     if (scene.fog) {
       if (window.__ENDLESS_ACTIVE) {
-        scene.fog.near = 18.0;
-        scene.fog.far = 95.0;
+        scene.fog.near = 6.0;
+        scene.fog.far = 56.0;
       } else {
         scene.fog.near = 2.0;
         scene.fog.far = 32.0;

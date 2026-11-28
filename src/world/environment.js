@@ -3320,22 +3320,22 @@ export function setEndlessEnvironment(isEndless, scene) {
   setNYCSnowMapActive(isEndless);
   indexColliders();
 
-  // 4. Misty Overcast Snowy NYC Atmosphere (matches maps_reference)
+  // 4. Misty Overcast Snowy PS2 Horror Atmosphere (matches references/ & maps_reference/)
   if (ambientLight) {
-    ambientLight.color.setHex(isEndless ? 0x5c6f84 : 0x304a68);
-    ambientLight.intensity = isEndless ? 1.05 : 1.0;
+    ambientLight.color.setHex(isEndless ? 0x425163 : 0x304a68);
+    ambientLight.intensity = isEndless ? 0.65 : 1.0;
   }
   if (overcastDirLight) {
-    overcastDirLight.intensity = isEndless ? 0.65 : 0.75;
+    overcastDirLight.intensity = isEndless ? 0.48 : 0.75;
   }
   if (scene) {
-    scene.background = isEndless ? new THREE.Color(0x3a4a5a) : null;
+    scene.background = isEndless ? new THREE.Color(0x2b3642) : null;
   }
   if (scene && scene.fog) {
     if (isEndless) {
-      scene.fog.color.setHex(0x3a4a5a);
-      scene.fog.near = 18.0;
-      scene.fog.far = 95.0;
+      scene.fog.color.setHex(0x2b3642);
+      scene.fog.near = 6.0;
+      scene.fog.far = 56.0;
     } else {
       scene.fog.color.setHex(0x325274);
       scene.fog.near = 2.0;
