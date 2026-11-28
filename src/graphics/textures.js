@@ -60,13 +60,23 @@ const THREE = window.THREE;
         ctx.beginPath();
         ctx.arc(30, 30, 11, 0, Math.PI * 2);
         ctx.fill();
-      } else if (type === 'clapboard_white') {
-        ctx.fillStyle = '#edf2f5';
+      if (type === 'clapboard_white') {
+        ctx.fillStyle = '#d4dce0';
         ctx.fillRect(0, 0, 64, 64);
-        ctx.fillStyle = '#cbd6dd';
+        ctx.fillStyle = '#9eaab2';
         for (let y = 0; y < 64; y += 8) {
           ctx.fillRect(0, y, 64, 1);
         }
+        // Weathered PS1/PS2 grime & vertical rain streaks
+        for (let i = 0; i < 180; i++) {
+          ctx.fillStyle = 'rgba(30, 36, 38, 0.16)';
+          ctx.fillRect(Math.floor(Math.random() * 64), Math.floor(Math.random() * 64), 2, 2);
+        }
+        const ao = ctx.createLinearGradient(0, 40, 0, 64);
+        ao.addColorStop(0, 'rgba(0,0,0,0)');
+        ao.addColorStop(1, 'rgba(18, 22, 20, 0.42)');
+        ctx.fillStyle = ao;
+        ctx.fillRect(0, 40, 64, 24);
       } else if (type === 'nun_bloody_face') {
         // Pale face streaked with tears and vertical streams of blood from eyes/mouth
         ctx.fillStyle = '#b8c3cb';
@@ -845,11 +855,37 @@ const THREE = window.THREE;
       }
 
       const tex = new THREE.CanvasTexture(c);
+      const retroWorldTypes = new Set([
+        'snow', 'clapboard_white', 'wood_planks', 'fireplace_brick',
+        'cream_wood_cabin', 'cream_barn_wood', 'cream_stone_wall',
+        'asphalt_road', 'concrete_curb', 'storefront_brick', 'grime_bump'
+      ]);
       tex.generateMipmaps = true;
-      tex.magFilter = THREE.LinearFilter;
+      tex.magFilter = retroWorldTypes.has(type) ? THREE.NearestFilter : THREE.LinearFilter;
       tex.minFilter = THREE.LinearMipmapLinearFilter;
       return tex;
     }
+
+    // Shared organic multi-octave grime/bump map for tactile low-poly surfaces
+    const grimeBumpTex = (() => {
+      const c = document.createElement('canvas');
+      c.width = 128;
+      c.height = 128;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#808080';
+      ctx.fillRect(0, 0, 128, 128);
+      for (let i = 0; i < 4200; i++) {
+        const v = 70 + Math.floor(Math.random() * 115);
+        ctx.fillStyle = `rgb(${v},${v},${v})`;
+        ctx.fillRect(Math.floor(Math.random() * 128), Math.floor(Math.random() * 128), 2, 2);
+      }
+      const t = new THREE.CanvasTexture(c);
+      t.wrapS = THREE.RepeatWrapping;
+      t.wrapT = THREE.RepeatWrapping;
+      t.repeat.set(8, 8);
+      t.magFilter = THREE.NearestFilter;
+      return t;
+    })();
 
     const snowTex = createProceduralTexture('snow');
     snowTex.wrapS = THREE.RepeatWrapping;
@@ -1034,6 +1070,7 @@ export const textures = {
   storefrontBrickTex,
   awningFabricTex,
   concreteCurbTex,
+  grimeBumpTex,
   faceFemaleShaggyTex,
   faceMaleTiredTex,
   faceMaleFadeTex,
@@ -1041,5 +1078,5 @@ export const textures = {
   faceFemaleMeghanTex
 };
 
-export { createProceduralTexture, snowTex, beachSandTex, wetBeachSandTex, oceanWaterTex, shorelineFoamTex, asphaltRoadTex, riverWaterTex, waterfallTex, waterfallMistTex, topStreamTex, crestFoamTex, chainlinkTex, bloodSnowTex, bloodDripTex, houseWallTex, woodPlanksTex, brickHearthTex, creamCabinTex, creamBarnTex, creamStoneTex, nunFaceTex, l4dFlannelTex, l4dHoodieTex, l4dPatientTex, l4dBruiserTex, l4dDenimTex, l4dDarkPantsTex, l4dFaceTex, l4dNecroticSkinTex, l4dClawsTex, kristinSweaterTex, kristinCargoTex, kristinFaceTex, kristinSneakerTex, katzSignTex, martinSignTex, parkingSignTex, drainGrateTex, storefrontBrickTex, awningFabricTex, concreteCurbTex, faceFemaleShaggyTex, faceMaleTiredTex, faceMaleFadeTex, faceFemaleSleekTex, faceFemaleMeghanTex };
+export { createProceduralTexture, snowTex, beachSandTex, wetBeachSandTex, oceanWaterTex, shorelineFoamTex, asphaltRoadTex, riverWaterTex, waterfallTex, waterfallMistTex, topStreamTex, crestFoamTex, chainlinkTex, bloodSnowTex, bloodDripTex, houseWallTex, woodPlanksTex, brickHearthTex, creamCabinTex, creamBarnTex, creamStoneTex, nunFaceTex, l4dFlannelTex, l4dHoodieTex, l4dPatientTex, l4dBruiserTex, l4dDenimTex, l4dDarkPantsTex, l4dFaceTex, l4dNecroticSkinTex, l4dClawsTex, kristinSweaterTex, kristinCargoTex, kristinFaceTex, kristinSneakerTex, katzSignTex, martinSignTex, parkingSignTex, drainGrateTex, storefrontBrickTex, awningFabricTex, concreteCurbTex, grimeBumpTex, faceFemaleShaggyTex, faceMaleTiredTex, faceMaleFadeTex, faceFemaleSleekTex, faceFemaleMeghanTex };
 

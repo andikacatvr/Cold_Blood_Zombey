@@ -68,6 +68,7 @@ const COMPOSITE_FRAG = `
   uniform float uTime;
   uniform float uGrainAmount;
   uniform float uVignetteStrength;
+  uniform float uDitherScale;
   varying vec2 vUv;
 
   vec3 acesFilmic(vec3 x) {
@@ -85,6 +86,29 @@ const COMPOSITE_FRAG = `
     return fract((p3.x + p3.y) * p3.z);
   }
 
+  // 4x4 Ordered Bayer Dithering (authentic PS1/PS2 fog & shadow banding aesthetic)
+  float bayer4x4(vec2 pos) {
+    int x = int(mod(pos.x, 4.0));
+    int y = int(mod(pos.y, 4.0));
+    int index = x + y * 4;
+    if (index == 0) return 0.0 / 16.0;
+    if (index == 1) return 8.0 / 16.0;
+    if (index == 2) return 2.0 / 16.0;
+    if (index == 3) return 10.0 / 16.0;
+    if (index == 4) return 12.0 / 16.0;
+    if (index == 5) return 4.0 / 16.0;
+    if (index == 6) return 14.0 / 16.0;
+    if (index == 7) return 6.0 / 16.0;
+    if (index == 8) return 3.0 / 16.0;
+    if (index == 9) return 11.0 / 16.0;
+    if (index == 10) return 1.0 / 16.0;
+    if (index == 11) return 9.0 / 16.0;
+    if (index == 12) return 15.0 / 16.0;
+    if (index == 13) return 7.0 / 16.0;
+    if (index == 14) return 13.0 / 16.0;
+    return 5.0 / 16.0;
+  }
+
   void main() {
     vec3 base = texture2D(tDiffuse, vUv).rgb;
     vec3 bloom = texture2D(tBloom, vUv).rgb;
@@ -92,24 +116,26 @@ const COMPOSITE_FRAG = `
     // Combine scene + subtle PS2 bloom
     vec3 color = base + bloom * uBloomStrength;
 
-    // ACES Filmic tone mapping + slight exposure lift
-    color = acesFilmic(color * 1.08);
+    // ACES Filmic tone mapping + slight exposure calibration
+    color = acesFilmic(color * 1.06);
 
-    // Subtle PS2 Survival Horror Color Grading (cool shadow tint, gentle S-curve contrast)
+    // Silent Hill / Cry of Fear Grimy Color Grading (desaturated olive-slate shadows + punchy contrast)
     float luma = dot(color, vec3(0.299, 0.587, 0.114));
-    vec3 shadowTint = vec3(0.92, 0.97, 1.06);
-    color = mix(color * shadowTint, color, smoothstep(0.05, 0.55, luma));
-    color = mix(color, smoothstep(0.0, 1.0, color), 0.12);
+    vec3 desat = mix(color, vec3(luma), 0.26);
+    vec3 shadowTint = vec3(0.84, 0.91, 0.92);
+    color = mix(desat * shadowTint, desat, smoothstep(0.05, 0.58, luma));
+    color = mix(color, smoothstep(0.0, 1.0, color), 0.22);
 
     // Soft horror vignette around screen edges
     vec2 centered = vUv - 0.5;
     float dist = length(centered) * 1.4142135;
-    float vignette = 1.0 - smoothstep(0.55, 1.32, dist) * uVignetteStrength;
+    float vignette = 1.0 - smoothstep(0.50, 1.28, dist) * uVignetteStrength;
     color *= vignette;
 
-    // Subtle animated film grain (Silent Hill 2 style)
+    // Subtle PS1/PS2 ordered Bayer dithering + animated film grain
+    float dither = (bayer4x4(gl_FragCoord.xy) - 0.5) * uDitherScale;
     float grain = (hash12(vUv * 512.0 + fract(uTime * 17.3)) - 0.5) * uGrainAmount;
-    color = clamp(color + grain, 0.0, 1.0);
+    color = clamp(color + dither + grain, 0.0, 1.0);
 
     gl_FragColor = vec4(color, 1.0);
   }
@@ -149,8 +175,9 @@ function ensureInitialized(renderer) {
       tBloom: { value: null },
       uBloomStrength: { value: 0.30 },
       uTime: { value: 0 },
-      uGrainAmount: { value: 0.022 },
-      uVignetteStrength: { value: 0.36 }
+      uGrainAmount: { value: 0.026 },
+      uVignetteStrength: { value: 0.44 },
+      uDitherScale: { value: 0.012 }
     },
     vertexShader: FULLSCREEN_VERT,
     fragmentShader: COMPOSITE_FRAG,
@@ -237,9 +264,10 @@ export function renderWithPostProcessing(renderer, scene, camera, timeSec = 0, g
   matComposite.uniforms.tDiffuse.value = rtScene.texture;
   matComposite.uniforms.tBloom.value = rtBloomA.texture;
   matComposite.uniforms.uTime.value = timeSec;
-  matComposite.uniforms.uBloomStrength.value = (graphicMode === 'ps1') ? 0.18 : 0.30;
-  matComposite.uniforms.uGrainAmount.value = (graphicMode === 'ps1') ? 0.032 : 0.020;
-  matComposite.uniforms.uVignetteStrength.value = 0.36;
+  matComposite.uniforms.uBloomStrength.value = (graphicMode === 'ps1') ? 0.18 : 0.28;
+  matComposite.uniforms.uGrainAmount.value = (graphicMode === 'ps1') ? 0.040 : 0.026;
+  matComposite.uniforms.uVignetteStrength.value = 0.44;
+  matComposite.uniforms.uDitherScale.value = (graphicMode === 'ps1') ? 0.032 : 0.012;
 
   postQuad.material = matComposite;
   renderer.setRenderTarget(null);

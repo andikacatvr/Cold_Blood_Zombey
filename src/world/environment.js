@@ -404,7 +404,8 @@ export function initWorld(scene, textures) {
     creamCabinTex,
     creamBarnTex,
     creamStoneTex,
-    asphaltRoadTex
+    asphaltRoadTex,
+    grimeBumpTex
   } = textures;
 
   // Undulating Natural Forest Ground Mesh (Expanded 460m Expanse - Infinite snowy & coastal horizon past boundary)
@@ -421,31 +422,36 @@ export function initWorld(scene, textures) {
   if (snowTex) {
     snowTex.repeat.set(130, 130);
   }
-  const groundMat = new THREE.MeshLambertMaterial({ map: snowTex, flatShading: false });
+  const groundMat = new THREE.MeshLambertMaterial({
+    map: snowTex,
+    bumpMap: grimeBumpTex || null,
+    bumpScale: 0.06,
+    flatShading: true
+  });
   const groundMesh = new THREE.Mesh(groundGeo, groundMat);
   groundMesh.receiveShadow = true;
   scene.add(groundMesh);
 
-  // Materials
-  const houseWallMat = new THREE.MeshLambertMaterial({ map: houseWallTex, color: 0xeef3f7, flatShading: false });
-  const roofSnowMat = new THREE.MeshLambertMaterial({ color: 0xdde7ee, flatShading: false });
-  const chimneyMat = new THREE.MeshLambertMaterial({ color: 0x7a2d26, flatShading: false });
-  const windowDarkMat = new THREE.MeshLambertMaterial({ color: 0x1f2b34, flatShading: false });
-  const trimMat = new THREE.MeshLambertMaterial({ color: 0xb5c8d4, flatShading: false });
-  const metalTurquoiseRoofMat = new THREE.MeshLambertMaterial({ color: 0x476b6d, flatShading: false });
+  // Materials (Crisp Low-Poly PS1/PS2 Faceted Shading + Tactile Grime Bump)
+  const houseWallMat = new THREE.MeshLambertMaterial({ map: houseWallTex, bumpMap: grimeBumpTex || null, bumpScale: 0.05, color: 0xe2e8ec, flatShading: true });
+  const roofSnowMat = new THREE.MeshLambertMaterial({ color: 0xd0dce4, flatShading: true });
+  const chimneyMat = new THREE.MeshLambertMaterial({ color: 0x6e2a24, flatShading: true });
+  const windowDarkMat = new THREE.MeshLambertMaterial({ color: 0x19232b, flatShading: true });
+  const trimMat = new THREE.MeshLambertMaterial({ color: 0xa2b4bf, flatShading: true });
+  const metalTurquoiseRoofMat = new THREE.MeshLambertMaterial({ color: 0x3f5e60, flatShading: true });
 
-  const interiorFloorMat = new THREE.MeshLambertMaterial({ map: woodPlanksTex, color: 0x5a4132, flatShading: false });
-  const hearthBrickMat = new THREE.MeshLambertMaterial({ map: brickHearthTex, color: 0x63352f, flatShading: false });
-  const darkWoodMat = new THREE.MeshLambertMaterial({ color: 0x2e1e17, flatShading: false });
-  const tableMat = new THREE.MeshLambertMaterial({ color: 0x483327, flatShading: false });
+  const interiorFloorMat = new THREE.MeshLambertMaterial({ map: woodPlanksTex, bumpMap: grimeBumpTex || null, bumpScale: 0.05, color: 0x523b2e, flatShading: true });
+  const hearthBrickMat = new THREE.MeshLambertMaterial({ map: brickHearthTex, bumpMap: grimeBumpTex || null, bumpScale: 0.06, color: 0x5c312b, flatShading: true });
+  const darkWoodMat = new THREE.MeshLambertMaterial({ color: 0x2b1c15, flatShading: true });
+  const tableMat = new THREE.MeshLambertMaterial({ color: 0x453024, flatShading: true });
   const amberGlowMat = new THREE.MeshBasicMaterial({ color: 0xffb74d });
   const fireEmbersMat = new THREE.MeshBasicMaterial({ color: 0xff3b00 });
 
-  const creamCabinMat = new THREE.MeshLambertMaterial({ map: creamCabinTex, color: 0xf5eedc, flatShading: false });
-  const creamBarnMat = new THREE.MeshLambertMaterial({ map: creamBarnTex, color: 0xf2e7d3, flatShading: false });
-  const creamStoneMat = new THREE.MeshLambertMaterial({ map: creamStoneTex, color: 0xeee4d2, flatShading: false });
-  const creamTrimMat = new THREE.MeshLambertMaterial({ color: 0x6e4732, flatShading: false });
-  const boardedWoodMat = new THREE.MeshLambertMaterial({ color: 0x5a3e2b, flatShading: false });
+  const creamCabinMat = new THREE.MeshLambertMaterial({ map: creamCabinTex, bumpMap: grimeBumpTex || null, bumpScale: 0.05, color: 0xe6decb, flatShading: true });
+  const creamBarnMat = new THREE.MeshLambertMaterial({ map: creamBarnTex, bumpMap: grimeBumpTex || null, bumpScale: 0.05, color: 0xe2d8c4, flatShading: true });
+  const creamStoneMat = new THREE.MeshLambertMaterial({ map: creamStoneTex, bumpMap: grimeBumpTex || null, bumpScale: 0.07, color: 0xded4c2, flatShading: true });
+  const creamTrimMat = new THREE.MeshLambertMaterial({ color: 0x63402d, flatShading: true });
+  const boardedWoodMat = new THREE.MeshLambertMaterial({ color: 0x523827, flatShading: true });
 
   // 1. Build White Farmhouse
   function buildWhiteFarmhouse(x, z) {
