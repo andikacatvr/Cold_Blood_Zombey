@@ -11,6 +11,8 @@ const THREE = window.THREE;
 let nycGroup = null;
 const nycColliders = [];
 let civicTemplate = null;
+let civicLoading = false;
+const pendingCarSlots = [];
 
 function makeTex(w, h, drawFn) {
   const c = document.createElement('canvas');
@@ -400,117 +402,65 @@ function buildSkyscraper(group, colliders, x, z, w, d, h, winTex, spire = false,
   }
 }
 
+function spawnCivicIntoSlot(slot) {
+  if (!civicTemplate || !slot || slot.filled) return;
+  slot.filled = true;
+  const clone = civicTemplate.clone(true);
+  const paintColor = slot.type === 'cab' ? 0xe5a918 : (slot.type === 'suv' ? 0x202630 : 0x76808c);
+  clone.traverse((c) => {
+    if (c.isMesh && c.material) {
+      const mName = (c.material.name || '').toLowerCase();
+      const nName = (c.name || '').toLowerCase();
+      // Keep glass, tires, chrome, lights untouched; tint body paint panels!
+      if (!mName.includes('glass') && !mName.includes('tire') && !mName.includes('wheel') &&
+          !mName.includes('chrome') && !mName.includes('light') && !nName.includes('glass') &&
+          !nName.includes('wheel') && !nName.includes('tire')) {
+        c.material = c.material.clone();
+        c.material.color.setHex(paintColor);
+      }
+    }
+  });
+  slot.group.add(clone);
+
+  if (slot.type === 'cab') {
+    const taxiSign = new THREE.Mesh(
+      new THREE.BoxGeometry(0.62, 0.20, 0.30),
+      new THREE.MeshBasicMaterial({ color: 0xffe066 })
+    );
+    taxiSign.position.set(0, 1.98, 0.1);
+    slot.group.add(taxiSign);
+  }
+}
+
 /**
- * Detailed PS2 Vehicle: uses authentic honda_civic_1985_ps2.glb when loaded,
- * or detailed multi-part PS2 vehicle with wheels, sloped hood/windshield, grille & bumpers!
+ * Detailed PS2 Vehicle: uses authentic honda_civic_1985_ps2.glb for ALL NYC cars & cabs!
  */
 function buildDetailedPS2Vehicle(group, colliders, x, z, rotY, type = 'cab') {
   const v = new THREE.Group();
   v.position.set(x, 0, z);
   v.rotation.y = rotY;
+  group.add(v);
 
-  const col = type === 'cab' ? 0xd9a41a : (type === 'suv' ? 0x1b2028 : 0x626b75);
-  const bodyMat = new THREE.MeshLambertMaterial({ color: col, flatShading: true });
-  const glassMat = new THREE.MeshLambertMaterial({ color: 0x151e28, flatShading: true });
-  const tireMat = new THREE.MeshLambertMaterial({ color: 0x141618, flatShading: true });
-  const rimMat = new THREE.MeshLambertMaterial({ color: 0x8e96a0, flatShading: true });
-  const chromeMat = new THREE.MeshLambertMaterial({ color: 0x555c64, flatShading: true });
-  const snowMat = new THREE.MeshLambertMaterial({ color: 0xc2ceda, flatShading: true });
+  const slot = { group: v, type, filled: false };
+  pendingCarSlots.push(slot);
 
-  const buildFallback = () => {
-    const fb = new THREE.Group();
-    // Lower body + sloped hood & trunk
-    const lower = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.58, 4.35), bodyMat);
-    lower.position.y = 0.55;
-    fb.add(lower);
-
-    // Front & Rear Chrome Bumpers
-    const fBump = new THREE.Mesh(new THREE.BoxGeometry(1.98, 0.20, 0.22), chromeMat);
-    fBump.position.set(0, 0.36, 2.22);
-    fb.add(fBump);
-    const rBump = new THREE.Mesh(new THREE.BoxGeometry(1.98, 0.20, 0.22), chromeMat);
-    rBump.position.set(0, 0.36, -2.22);
-    fb.add(rBump);
-
-    // Front Grille
-    const grille = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.24, 0.08), tireMat);
-    grille.position.set(0, 0.58, 2.18);
-    fb.add(grille);
-
-    // Sloped Cabin + Windshield + Side Windows
-    const cabinLen = (type === 'suv') ? 2.6 : 1.95;
-    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.58, cabinLen), bodyMat);
-    cabin.position.set(0, 1.10, -0.22);
-    fb.add(cabin);
-
-    const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.56, 0.12), glassMat);
-    windshield.position.set(0, 1.08, (type === 'suv' ? 1.12 : 0.80));
-    windshield.rotation.x = -0.48;
-    fb.add(windshield);
-
-    const sideGlass = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.42, cabinLen - 0.25), glassMat);
-    sideGlass.position.set(0, 1.12, -0.22);
-    fb.add(sideGlass);
-
-    // Snow cap on roof & hood
-    const roofSnow = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.10, cabinLen - 0.2), snowMat);
-    roofSnow.position.set(0, 1.42, -0.22);
-    fb.add(roofSnow);
-
-    // 4 Detailed Wheels + Hubcap Rims
-    [-0.92, 0.92].forEach(wx => {
-      [-1.35, 1.35].forEach(wz => {
-        const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.26, 10), tireMat);
-        tire.rotation.z = Math.PI * 0.5;
-        tire.position.set(wx, 0.36, wz);
-        fb.add(tire);
-        const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.20, 0.28, 8), rimMat);
-        rim.rotation.z = Math.PI * 0.5;
-        rim.position.set(wx, 0.36, wz);
-        fb.add(rim);
-      });
+  if (civicTemplate) {
+    spawnCivicIntoSlot(slot);
+  } else if (!civicLoading && typeof THREE.GLTFLoader !== 'undefined') {
+    civicLoading = true;
+    const loader = new THREE.GLTFLoader();
+    loader.load('/models/honda_civic_1985_ps2.glb', (gltf) => {
+      const model = gltf.scene;
+      model.scale.set(1.58, 1.58, 1.58);
+      const box = new THREE.Box3().setFromObject(model);
+      model.position.y = -box.min.y;
+      civicTemplate = model;
+      pendingCarSlots.forEach(s => spawnCivicIntoSlot(s));
     });
-
-    // Headlights & Taillights
-    [-0.68, 0.68].forEach(lx => {
-      const hl = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.16, 0.08), new THREE.MeshBasicMaterial({ color: 0xfff3c4 }));
-      hl.position.set(lx, 0.58, 2.19);
-      fb.add(hl);
-      const tl = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.16, 0.08), new THREE.MeshBasicMaterial({ color: 0xff2222 }));
-      tl.position.set(lx, 0.62, -2.19);
-      fb.add(tl);
-    });
-    return fb;
-  };
-
-  if (type === 'sedan' && typeof THREE.GLTFLoader !== 'undefined') {
-    if (civicTemplate) {
-      const clone = civicTemplate.clone(true);
-      v.add(clone);
-    } else {
-      const loader = new THREE.GLTFLoader();
-      loader.load('/models/honda_civic_1985_ps2.glb', (gltf) => {
-        const model = gltf.scene;
-        const box = new THREE.Box3().setFromObject(model);
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        const maxDim = Math.max(size.x, size.y, size.z, 0.01);
-        const scale = 4.4 / maxDim;
-        model.scale.setScalar(scale);
-        model.position.y = -box.min.y * scale;
-        civicTemplate = model;
-        v.add(model.clone(true));
-      }, undefined, () => {
-        v.add(buildFallback());
-      });
-    }
-  } else {
-    v.add(buildFallback());
   }
 
-  group.add(v);
-  const hw = Math.abs(Math.cos(rotY)) * 1.1 + Math.abs(Math.sin(rotY)) * 2.25;
-  const hd = Math.abs(Math.sin(rotY)) * 1.1 + Math.abs(Math.cos(rotY)) * 2.25;
+  const hw = Math.abs(Math.cos(rotY)) * 1.15 + Math.abs(Math.sin(rotY)) * 2.35;
+  const hd = Math.abs(Math.sin(rotY)) * 1.15 + Math.abs(Math.cos(rotY)) * 2.35;
   addCol(colliders, x - hw, x + hw, z - hd, z + hd);
 }
 
