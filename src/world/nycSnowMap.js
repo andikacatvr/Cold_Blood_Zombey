@@ -594,35 +594,83 @@ function buildDetailedPS2Vehicle(group, colliders, x, z, rotY, type = 'cab') {
 }
 
 function buildCentralParkWinter(group, colliders, snowMat) {
-  // Snowy Central Park (East-North District: x: +72..+156, z: -96..+12)
+  // Hutan Kota Manhattan / Snowy Central Park Forest (East-North District: x: +72..+208, z: -120..+24)
   const parkLawn = new THREE.Mesh(
-    new THREE.PlaneGeometry(84, 108),
-    new THREE.MeshLambertMaterial({ color: 0xaab8c6, flatShading: true })
+    new THREE.PlaneGeometry(136, 144),
+    new THREE.MeshLambertMaterial({ color: 0xa4b4c4, flatShading: true })
   );
   parkLawn.rotation.x = -Math.PI / 2;
-  parkLawn.position.set(114, 0.04, -42);
+  parkLawn.position.set(140, 0.04, -48);
   group.add(parkLawn);
 
-  // Frozen Ice Pond
+  // Winding Park Trails (North-South & East-West gravel/snow paths)
+  const pathMat = new THREE.MeshLambertMaterial({ color: 0x5c636c, flatShading: true });
+  const nsPath = new THREE.Mesh(new THREE.PlaneGeometry(5.5, 136), pathMat);
+  nsPath.rotation.x = -Math.PI / 2;
+  nsPath.position.set(104, 0.055, -48);
+  group.add(nsPath);
+  const ewPath = new THREE.Mesh(new THREE.PlaneGeometry(128, 5.2), pathMat);
+  ewPath.rotation.x = -Math.PI / 2;
+  ewPath.position.set(138, 0.055, -36);
+  group.add(ewPath);
+
+  // Low Stone Park Perimeter Wall along East Ave (x = +72.5) with arched openings
+  const wallMat = new THREE.MeshLambertMaterial({ color: 0x6b665c, flatShading: true });
+  [[-118, -44], [-28, 20]].forEach(([z0, z1]) => {
+    const len = z1 - z0;
+    const wMesh = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.15, len), wallMat);
+    wMesh.position.set(72.5, 0.58, (z0 + z1) * 0.5);
+    group.add(wMesh);
+    addCol(colliders, 71.9, 73.1, z0, z1);
+  });
+
+  // Frozen Central Park Lake / Reservoir
   const pond = new THREE.Mesh(
-    new THREE.CircleGeometry(14, 16),
-    new THREE.MeshLambertMaterial({ color: 0x5c7f99, flatShading: true })
+    new THREE.CircleGeometry(18, 20),
+    new THREE.MeshLambertMaterial({ color: 0x4f7490, flatShading: true })
   );
   pond.rotation.x = -Math.PI / 2;
-  pond.position.set(114, 0.06, -42);
+  pond.position.set(138, 0.06, -56);
   group.add(pond);
 
-  // Priority 3 GLB: Layered Snowy Winter Trees & Cast-Iron Park Benches
-  for (let i = 0; i < 24; i++) {
-    const tx = 80 + ((i * 23) % 66);
-    const tz = -88 + ((i * 19) % 92);
-    if (Math.hypot(tx - 114, tz + 42) < 16) continue;
-    const s = 0.88 + (i % 4) * 0.12;
-    placeModularNYCBuilding(group, colliders, '/models/winter_tree.glb', tx, tz, (i * 1.1) % (Math.PI * 2), s, s, s, 0.65, 0.65);
+  // Wooden Footbridge & Gazebo Edge over Frozen Pond
+  const woodMat = new THREE.MeshLambertMaterial({ color: 0x4f3524, flatShading: true });
+  const bridge = new THREE.Mesh(new THREE.BoxGeometry(12, 0.35, 3.2), woodMat);
+  bridge.position.set(122, 0.25, -56);
+  group.add(bridge);
+
+  // Dense City Forest: 68 Layered Snowy Evergreen Trees (winter_tree.glb)
+  for (let i = 0; i < 68; i++) {
+    const tx = 77 + ((i * 29) % 124);
+    const tz = -114 + ((i * 23) % 132);
+    // Keep frozen lake & main walking trails clear
+    if (Math.hypot(tx - 138, tz + 56) < 20.5) continue;
+    if (Math.abs(tx - 104) < 4.2 || Math.abs(tz + 36) < 4.0) continue;
+    const s = 0.85 + (i % 5) * 0.14;
+    placeModularNYCBuilding(group, colliders, '/models/winter_tree.glb', tx, tz, (i * 1.17) % (Math.PI * 2), s, s, s, 0.65, 0.65);
   }
 
-  [[-16, -42, Math.PI / 2], [16, -42, -Math.PI / 2], [0, -24, 0], [0, -60, Math.PI]].forEach(([ox, oz, rot]) => {
-    placeModularNYCBuilding(group, colliders, '/models/nyc_park_bench.glb', 114 + ox, oz, rot, 1.0, 1.0, 1.0, 1.25, 0.45);
+  // Snowy Forest Boulders
+  const rockMat = new THREE.MeshLambertMaterial({ color: 0x5c646d, flatShading: true });
+  [[92, -62, 2.2], [116, -24, 1.8], [164, -84, 2.6], [156, -12, 2.0]].forEach(([rx, rz, rs]) => {
+    const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(rs, 0), rockMat);
+    rock.position.set(rx, rs * 0.45, rz);
+    rock.scale.set(1.3, 0.7, 1.1);
+    group.add(rock);
+    addCol(colliders, rx - rs, rx + rs, rz - rs, rz + rs);
+  });
+
+  // Park Benches & Warm Forest Lanterns along the Trails
+  [[100, -56, Math.PI / 2], [100, -16, Math.PI / 2], [118, -32, 0], [152, -32, 0], [128, -74, Math.PI]].forEach(([bx, bz, rot]) => {
+    placeModularNYCBuilding(group, colliders, '/models/nyc_park_bench.glb', bx, bz, rot, 1.0, 1.0, 1.0, 1.25, 0.45);
+  });
+  [[100, -76], [100, -36], [100, 4], [138, -32]].forEach(([lx, lz]) => {
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 3.6, 6), new THREE.MeshLambertMaterial({ color: 0x18221c }));
+    pole.position.set(lx, 1.8, lz);
+    group.add(pole);
+    const lantern = new THREE.Mesh(new THREE.SphereGeometry(0.24, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffdf9a }));
+    lantern.position.set(lx, 3.75, lz);
+    group.add(lantern);
   });
 }
 
@@ -665,8 +713,40 @@ function buildGrandCentralAndLiberty(group, colliders, stoneTex, snowMat) {
   group.add(gc);
   addCol(colliders, -18.5, 18.5, 125.5, 138.5);
 
-  // Priority 4 GLB: Statue of Liberty Silhouette looming in Northern Mist
-  placeModularNYCBuilding(group, colliders, '/models/statue_of_liberty.glb', -28, -96, 0, 1.5, 1.65, 1.5, 9.0, 9.0);
+  // Battery Park Waterfront Seawall (z = +152) + New York Harbor Sea + Liberty Island
+  const seawall = new THREE.Mesh(
+    new THREE.BoxGeometry(480, 1.4, 2.2),
+    new THREE.MeshLambertMaterial({ color: 0x555b62, flatShading: true })
+  );
+  seawall.position.set(0, 0.45, 152.0);
+  group.add(seawall);
+  addCol(colliders, -240, 240, 150.8, 153.2);
+
+  // Dark Icy New York Harbor Ocean Water (z = +153 to +320)
+  const harborSea = new THREE.Mesh(
+    new THREE.PlaneGeometry(560, 170),
+    new THREE.MeshLambertMaterial({ color: 0x162b3c, flatShading: true })
+  );
+  harborSea.rotation.x = -Math.PI / 2;
+  harborSea.position.set(0, -0.35, 238);
+  group.add(harborSea);
+
+  // Liberty Island in the Middle of the Sea (z = +198, x = -22)
+  const libertyIsland = new THREE.Mesh(
+    new THREE.CylinderGeometry(16, 19, 1.6, 12),
+    new THREE.MeshLambertMaterial({ color: 0x5d6268, flatShading: true })
+  );
+  libertyIsland.position.set(-22, -0.1, 198);
+  group.add(libertyIsland);
+  const islandSnow = new THREE.Mesh(
+    new THREE.CylinderGeometry(15.2, 15.8, 0.22, 12),
+    snowMat
+  );
+  islandSnow.position.set(-22, 0.72, 198);
+  group.add(islandSnow);
+
+  // Priority 4 GLB: Statue of Liberty standing on Liberty Island in the Sea (facing North toward Manhattan)
+  placeModularNYCBuilding(group, null, '/models/statue_of_liberty.glb', -22, 198, Math.PI, 1.45, 1.60, 1.45);
 }
 
 export function initNYCSnowMap(scene, colliders) {
@@ -720,19 +800,19 @@ export function initNYCSnowMap(scene, colliders) {
     m.receiveShadow = true;
     nycGroup.add(m);
   };
-  addFloorTile(-240, 240, -10.0, 240);
+  addFloorTile(-240, 240, -10.0, 152.0);
   addFloorTile(-240, -23.5, -240, -10.0);
   addFloorTile(-18.5, 240, -240, -10.0);
   addFloorTile(-23.5, -18.5, -240, -35.2);
 
-  // 3 North-South Avenues (West -56, Central Broadway 0, East +56)
+  // 3 North-South Avenues (West -56, Central Broadway 0, East +56, ending at Battery Park Seawall z = +152)
   [-56, 0, 56].forEach(ax => {
     const ave = new THREE.Mesh(
-      new THREE.PlaneGeometry(28, 360),
+      new THREE.PlaneGeometry(28, 332),
       new THREE.MeshLambertMaterial({ map: streetTex, flatShading: true })
     );
     ave.rotation.x = -Math.PI / 2;
-    ave.position.set(ax, 0.015, 0);
+    ave.position.set(ax, 0.015, -14.0);
     ave.receiveShadow = true;
     nycGroup.add(ave);
   });
