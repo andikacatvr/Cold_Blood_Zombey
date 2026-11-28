@@ -15,8 +15,61 @@ const nycColliders = [];
 let civicTemplate = null;
 let civicLoading = false;
 const pendingCarSlots = [];
+const glbBuildingTemplates = {};
+const glbBuildingLoading = {};
+const pendingBuildingSlots = {};
 let lampFireflies = null;
 let fireflyBasePos = null;
+
+function placeModularNYCBuilding(group, colliders, url, x, z, rotY = 0, sx = 1, sy = 1, sz = 1, colHalfW = 0, colHalfD = 0) {
+  const slotGroup = new THREE.Group();
+  slotGroup.position.set(x, 0, z);
+  slotGroup.rotation.y = rotY;
+  slotGroup.scale.set(sx, sy, sz);
+  group.add(slotGroup);
+
+  if (colliders && colHalfW > 0 && colHalfD > 0) {
+    const hw = Math.abs(Math.cos(rotY)) * colHalfW + Math.abs(Math.sin(rotY)) * colHalfD;
+    const hd = Math.abs(Math.sin(rotY)) * colHalfW + Math.abs(Math.cos(rotY)) * colHalfD;
+    addCol(colliders, x - hw, x + hw, z - hd, z + hd);
+  }
+
+  const spawnClone = (tpl) => {
+    const clone = tpl.clone(true);
+    slotGroup.add(clone);
+  };
+
+  if (glbBuildingTemplates[url]) {
+    spawnClone(glbBuildingTemplates[url]);
+    return slotGroup;
+  }
+
+  if (!pendingBuildingSlots[url]) pendingBuildingSlots[url] = [];
+  pendingBuildingSlots[url].push(slotGroup);
+
+  if (!glbBuildingLoading[url] && typeof THREE.GLTFLoader !== 'undefined') {
+    glbBuildingLoading[url] = true;
+    const loader = new THREE.GLTFLoader();
+    loader.load(
+      url,
+      (gltf) => {
+        const model = gltf.scene;
+        model.traverse((child) => {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+        glbBuildingTemplates[url] = model;
+        (pendingBuildingSlots[url] || []).forEach((sg) => sg.add(model.clone(true)));
+        pendingBuildingSlots[url] = [];
+      },
+      undefined,
+      (err) => console.warn(`[NYC MAP] Failed loading ${url}:`, err)
+    );
+  }
+  return slotGroup;
+}
 
 function makeTex(w, h, drawFn) {
   const c = document.createElement('canvas');
@@ -846,7 +899,7 @@ export function initNYCSnowMap(scene, colliders) {
   // 3. WALKABLE UNDERGROUND 42ND ST SUBWAY
   buildSubwayStation(nycGroup, colliders, concTex, gridTileTex, makeSubwayGridTileTex(true), makeSubwaySignTex(), makeAdTex('42 ST LIVE', 'PELHAM 2m • BKLYN 5m', '#050811', '#141a28', '#38ff8c'));
 
-  // 4. MIDTOWN & FINANCIAL DISTRICT SKYSCRAPERS (4x4 City Grid)
+  // 4. MIDTOWN & FINANCIAL DISTRICT SKYSCRAPERS & BRICK APARTMENTS (Priority 1 GLB Modular Kit)
   const blockCenters = [
     [-28, -60, 58, true], [28, -60, 68, true], [-28, -14, 46, false], [28, -14, 52, false],
     [28, 36, 48, false], [-28, 84, 54, false], [28, 84, 62, true],
@@ -854,25 +907,38 @@ export function initNYCSnowMap(scene, colliders) {
     [86, 36, 56, false], [86, 84, 72, true]
   ];
   blockCenters.forEach(([bx, bz, bh, hasSpire], idx) => {
-    const wt = idx % 2 === 0 ? winGold : winBlue;
-    buildSkyscraper(nycGroup, colliders, bx, bz, 22, 20, bh, wt, hasSpire, Math.abs(bx) < 35);
+    const faceAvenueRot = bx < 0 ? Math.PI / 2 : -Math.PI / 2;
+    if (hasSpire || Math.abs(bx) === 28 && bz < 0) {
+      // High-rise glass curtain-wall skyscraper (18x18x65m base)
+      const sy = bh / 58.0;
+      placeModularNYCBuilding(nycGroup, colliders, '/models/nyc_skyscraper_glass.glb', bx, bz, faceAvenueRot, 1.15, sy, 1.10, 10.6, 10.2);
+    } else if (idx % 3 === 1) {
+      // Corner storefront building + mid-rise brick apartment pair
+      placeModularNYCBuilding(nycGroup, colliders, '/models/nyc_storefront_corner.glb', bx, bz - 4.5, faceAvenueRot, 1.45, 1.25, 1.15, 9.0, 7.0);
+      placeModularNYCBuilding(nycGroup, colliders, '/models/nyc_apartment_brick.glb', bx, bz + 6.5, faceAvenueRot, 1.25, 1.15, 1.0, 9.0, 6.2);
+    } else {
+      // Detailed NYC brick apartment with fire escape & rooftop water tower
+      placeModularNYCBuilding(nycGroup, colliders, '/models/nyc_apartment_brick.glb', bx, bz, faceAvenueRot, 1.45, bh / 24.0, 1.45, 10.4, 9.0);
+    }
     if (Math.abs(bx) === 28 && bz > -30 && bz < 50) {
       const rot = bx < 0 ? Math.PI / 2 : -Math.PI / 2;
-      const sx = bx < 0 ? bx + 11.3 : bx - 11.3;
+      const sx = bx < 0 ? bx + 10.8 : bx - 10.8;
       addScreen(nycGroup, sx, 11, bz, 14, 7, rot, idx % 2 === 0 ? adDisn : adSnap, 0xff5599);
       addScreen(nycGroup, sx, 20, bz, 13, 6.5, rot, idx % 2 === 0 ? adChic : adSams, 0x38aaff);
     }
   });
 
   // Towering Empire State & One WTC Silhouettes in Distant Snowy Fog
-  buildSkyscraper(nycGroup, null, -20, -118, 26, 24, 118, winGold, true, false);
-  buildSkyscraper(nycGroup, null, 34, -124, 24, 24, 125, winBlue, true, false);
-  buildSkyscraper(nycGroup, null, -88, -116, 24, 22, 86, winBlue, false, false);
+  placeModularNYCBuilding(nycGroup, null, '/models/nyc_skyscraper_glass.glb', -20, -118, 0, 1.45, 1.85, 1.40);
+  placeModularNYCBuilding(nycGroup, null, '/models/nyc_skyscraper_glass.glb', 34, -124, Math.PI / 2, 1.40, 1.95, 1.40);
+  placeModularNYCBuilding(nycGroup, null, '/models/nyc_skyscraper_glass.glb', -88, -116, 0, 1.30, 1.35, 1.25);
 
-  // 5. HELL'S KITCHEN BROWNSTONE DISTRICT (West Blocks)
-  [-28, -86].forEach(bx => {
-    buildDetailedBrownstone(nycGroup, colliders, bx, 30, 18, 12, 3, bx < 0 ? 1 : -1, brickRed, snowMat, doorMat, winDarkMat, winLitMat);
-    buildDetailedBrownstone(nycGroup, colliders, bx, 44, 18, 12, 4, bx < 0 ? 1 : -1, brickCream, snowMat, doorMat, winDarkMat, winLitMat);
+  // 5. HELL'S KITCHEN BROWNSTONE & CORNER STOREFRONT DISTRICT (West Blocks)
+  [-28, -86].forEach((bx) => {
+    const rot = bx < 0 ? Math.PI / 2 : -Math.PI / 2;
+    placeModularNYCBuilding(nycGroup, colliders, '/models/nyc_brownstone.glb', bx, 28, rot, 1.35, 1.15, 1.20, 7.0, 6.2);
+    placeModularNYCBuilding(nycGroup, colliders, '/models/nyc_brownstone.glb', bx, 40, rot, 1.35, 1.25, 1.20, 7.0, 6.2);
+    placeModularNYCBuilding(nycGroup, colliders, '/models/nyc_storefront_corner.glb', bx, 53, rot, 1.20, 1.10, 1.10, 7.4, 6.8);
   });
 
   // 6. CENTRAL PARK WINTER (East-North)
