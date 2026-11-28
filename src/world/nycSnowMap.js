@@ -666,7 +666,6 @@ export function initNYCSnowMap(scene, colliders) {
 
   // Snowy Avenue & Wet Reflective Times Square Plaza
   const avenue = new THREE.Mesh(
-  const avenue = new THREE.Mesh(
     new THREE.PlaneGeometry(32, 190),
     new THREE.MeshLambertMaterial({ map: streetTex, flatShading: true })
   );
