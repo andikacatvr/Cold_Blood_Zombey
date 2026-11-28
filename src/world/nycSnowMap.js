@@ -458,25 +458,13 @@ function buildSubwayStation(group, colliders, concTex, gridTileTex, graffitiTile
   const grafMat = new THREE.MeshLambertMaterial({ map: graffitiTileTex, flatShading: true });
   const floorTileMat = new THREE.MeshLambertMaterial({ map: makeBrickTex(82, 58, 46), flatShading: true });
 
-  [-2.35, 2.35].forEach(rx => {
-    const railWall = new THREE.Mesh(new THREE.BoxGeometry(0.24, 1.3, 6.5), ironMat);
-    railWall.position.set(rx, 0.65, -3.1);
-    sub.add(railWall);
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.40, 2.8, 0.40), ironMat);
-    post.position.set(rx, 1.4, 0.1);
-    sub.add(post);
-    const globe = new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 10), new THREE.MeshBasicMaterial({ color: 0x3dff8b }));
-    globe.position.set(rx, 2.95, 0.1);
-    sub.add(globe);
-  });
+  // Priority 2 GLB: Iconic NYC Street-Level Subway Entrance (railings, twin emerald globes, 42 ST marquee)
+  placeModularNYCBuilding(sub, null, '/models/nyc_subway_entrance.glb', 0, 0, 0, 1.0, 1.0, 1.0);
 
   const greenGlow = new THREE.PointLight(0x28ff78, 2.4, 18);
   greenGlow.position.set(0, 3.0, 0.6);
   sub.add(greenGlow);
 
-  const signBoard = new THREE.Mesh(new THREE.BoxGeometry(4.9, 1.4, 0.22), new THREE.MeshBasicMaterial({ map: signTex }));
-  signBoard.position.set(0, 2.75, 0.05);
-  sub.add(signBoard);
   const arrivalBoard = new THREE.Mesh(new THREE.BoxGeometry(4.5, 1.25, 0.18), new THREE.MeshBasicMaterial({ map: arrivalTex }));
   arrivalBoard.position.set(0, 4.2, 0.05);
   sub.add(arrivalBoard);
@@ -532,36 +520,13 @@ function buildSubwayStation(group, colliders, concTex, gridTileTex, graffitiTile
   subLight.position.set(0, -0.5, -18.5);
   sub.add(subLight);
 
-  // Enterable Train Car
-  const trainCar = new THREE.Group();
-  trainCar.position.set(-7.0, -2.0, -18.5);
-  const steelMat = new THREE.MeshLambertMaterial({ color: 0x76808e, flatShading: true });
-  const orangeSeatMat = new THREE.MeshLambertMaterial({ color: 0xd05c1c, flatShading: true });
-  const trainFloor = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.2, 12.6), concMat);
-  trainFloor.position.y = -1.35;
-  trainCar.add(trainFloor);
-  const trainRoof = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.2, 12.6), steelMat);
-  trainRoof.position.y = 1.45;
-  trainCar.add(trainRoof);
-  const trainBack = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.8, 12.6), grafMat);
-  trainBack.position.x = -1.52;
-  trainCar.add(trainBack);
-  [-4.4, 0, 4.4].forEach(szWall => {
-    const wallSeg = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.8, 2.4), steelMat);
-    wallSeg.position.set(1.52, 0.05, szWall);
-    trainCar.add(wallSeg);
-  });
-  [-1.12, 1.12].forEach(sxSeat => {
-    const bench = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.45, 10.6), orangeSeatMat);
-    bench.position.set(sxSeat, -1.0, 0);
-    trainCar.add(bench);
-  });
-  for (let pz = -4.2; pz <= 4.2; pz += 2.8) {
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.75, 6), steelMat);
-    pole.position.set(0, 0.05, pz);
-    trainCar.add(pole);
-  }
-  sub.add(trainCar);
+  // Priority 2 GLB: Enterable MTA Stainless Subway Train Car & Concourse Turnstiles
+  const trainSlot = placeModularNYCBuilding(sub, null, '/models/nyc_subway_train.glb', -7.0, -18.5, 0, 1.0, 1.0, 1.0);
+  trainSlot.position.y = -3.42;
+
+  const turnstileSlot = placeModularNYCBuilding(sub, null, '/models/nyc_subway_turnstile.glb', 2.8, -14.2, 0, 1.0, 1.0, 1.0);
+  turnstileSlot.position.y = -3.40;
+  addCol(colliders, sx + 1.4, sx + 4.2, sz - 14.7, sz - 13.7);
 
   addCol(colliders, sx - 2.6, sx - 2.1, sz - 12.6, sz + 0.4);
   addCol(colliders, sx + 2.1, sx + 2.6, sz - 12.6, sz + 0.4);
