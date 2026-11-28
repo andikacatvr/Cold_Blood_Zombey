@@ -506,7 +506,17 @@ function loadKristinPlayerModel(root) {
 
 export function captureSisterValentinaPortrait(rndr = renderer, targetId = 'hud-portrait-canvas') {
   const targetCanvas = document.getElementById(targetId);
-  if (!targetCanvas || !rndr || !sisterValentinaPlayerScene) return;
+  if (!targetCanvas) return;
+
+  if (!rndr || !sisterValentinaPlayerScene) {
+    const img = new Image();
+    img.onload = () => {
+      const ctx = targetCanvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, targetCanvas.width, targetCanvas.height);
+    };
+    img.src = '/textures/sister_valentina_face.png';
+    return;
+  }
 
   const w = 96;
   const h = 96;
@@ -521,9 +531,9 @@ export function captureSisterValentinaPortrait(rndr = renderer, targetId = 'hud-
     const portraitScene = new THREE.Scene();
     portraitScene.background = new THREE.Color(0x1a0508);
 
-    const amb = new THREE.AmbientLight(0xffeedd, 1.4);
+    const amb = new THREE.AmbientLight(0xffeedd, 1.5);
     portraitScene.add(amb);
-    const key = new THREE.DirectionalLight(0xffcccc, 2.0);
+    const key = new THREE.DirectionalLight(0xffcccc, 2.2);
     key.position.set(1.2, 2.2, 2.2);
     portraitScene.add(key);
     const rim = new THREE.DirectionalLight(0xff2244, 2.0);
@@ -531,14 +541,22 @@ export function captureSisterValentinaPortrait(rndr = renderer, targetId = 'hud-
     portraitScene.add(rim);
 
     const rigClone = sisterValentinaPlayerScene.clone(true);
+    rigClone.visible = true;
+    rigClone.traverse((child) => { child.visible = true; });
     rigClone.scale.set(1.0, 1.0, 1.0);
     rigClone.rotation.set(0, 0, 0); // Face points +Z straight at camera
     rigClone.position.set(0, 0, 0);
     portraitScene.add(rigClone);
 
+    const box = new THREE.Box3().setFromObject(rigClone);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const faceY = size.y > 0.2 ? (box.max.y - size.y * 0.13) : 1.56;
+    const dist = size.y > 0.2 ? Math.max(0.55, size.y * 0.42) : 0.70;
+
     const cam = new THREE.PerspectiveCamera(28, 1.0, 0.1, 10);
-    cam.position.set(0, 1.58, 0.70);
-    cam.lookAt(0, 1.54, 0);
+    cam.position.set(center.x, faceY, center.z + dist);
+    cam.lookAt(center.x, faceY - 0.03, center.z);
 
     const oldTarget = rndr.getRenderTarget();
     rndr.setRenderTarget(renderTarget);
@@ -581,7 +599,22 @@ export function captureKristinPortrait(targetId = 'hud-portrait-canvas') {
 
 export function captureNonaBataviaPortrait(rndr = renderer, targetId = 'hud-portrait-canvas') {
   const targetCanvas = document.getElementById(targetId);
-  if (!targetCanvas || !rndr || !nonaBataviaPlayerScene) return;
+  if (!targetCanvas) return;
+
+  if (!rndr || !nonaBataviaPlayerScene) {
+    const img = new Image();
+    img.onload = () => {
+      const ctx = targetCanvas.getContext('2d');
+      // Crop upper-center head/face area from nona_batavia.jpg
+      const sw = img.width * 0.34;
+      const sh = img.width * 0.34;
+      const sx = (img.width - sw) * 0.5;
+      const sy = img.height * 0.04;
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetCanvas.width, targetCanvas.height);
+    };
+    img.src = '/textures/bestiary/nona_batavia.jpg';
+    return;
+  }
 
   const w = 96;
   const h = 96;
@@ -596,7 +629,7 @@ export function captureNonaBataviaPortrait(rndr = renderer, targetId = 'hud-port
     const portraitScene = new THREE.Scene();
     portraitScene.background = new THREE.Color(0x120c18);
 
-    const amb = new THREE.AmbientLight(0xffeedd, 1.5);
+    const amb = new THREE.AmbientLight(0xffeedd, 1.6);
     portraitScene.add(amb);
     const key = new THREE.DirectionalLight(0xffdfba, 2.2);
     key.position.set(1.2, 2.2, 2.2);
@@ -606,14 +639,22 @@ export function captureNonaBataviaPortrait(rndr = renderer, targetId = 'hud-port
     portraitScene.add(rim);
 
     const rigClone = nonaBataviaPlayerScene.clone(true);
+    rigClone.visible = true;
+    rigClone.traverse((child) => { child.visible = true; });
     rigClone.scale.set(1.0, 1.0, 1.0);
     rigClone.rotation.set(0, 0, 0); // Face points +Z straight at portrait camera
     rigClone.position.set(0, 0, 0);
     portraitScene.add(rigClone);
 
+    const box = new THREE.Box3().setFromObject(rigClone);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const faceY = size.y > 0.2 ? (box.max.y - size.y * 0.13) : 1.50;
+    const dist = size.y > 0.2 ? Math.max(0.55, size.y * 0.42) : 0.65;
+
     const cam = new THREE.PerspectiveCamera(28, 1.0, 0.1, 10);
-    cam.position.set(0, 1.50, 0.65);
-    cam.lookAt(0, 1.48, 0);
+    cam.position.set(center.x, faceY, center.z + dist);
+    cam.lookAt(center.x, faceY - 0.03, center.z);
 
     const oldTarget = rndr.getRenderTarget();
     rndr.setRenderTarget(renderTarget);
