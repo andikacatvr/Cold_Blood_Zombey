@@ -50,12 +50,14 @@ function makeSnowyStreetTex() {
 
 function makePlazaTileTex() {
   return makeTex(128, 128, (ctx, w, h) => {
-    ctx.fillStyle = '#2a3038';
+    // Snowy frosted Times Square stone tiles
+    ctx.fillStyle = '#5c6978';
     ctx.fillRect(0, 0, w, h);
     for (let y = 0; y < h; y += 8) {
       for (let x = 0; x < w; x += 8) {
-        const v = 34 + Math.floor(Math.random() * 24);
-        ctx.fillStyle = `rgb(${v},${v + 4},${v + 10})`;
+        const isSnowPatch = Math.random() > 0.42;
+        const v = isSnowPatch ? (145 + Math.floor(Math.random() * 45)) : (58 + Math.floor(Math.random() * 28));
+        ctx.fillStyle = `rgb(${v},${v + 8},${v + 16})`;
         ctx.fillRect(x + 1, y + 1, 6, 6);
       }
     }
@@ -513,6 +515,54 @@ function buildGrandCentralFacade(group, colliders, stoneTex, snowMat) {
   addCol(colliders, -18.5, 18.5, 75.5, 88.5);
 }
 
+function buildStatueOfLibertySilhouette(group, x, z) {
+  const lib = new THREE.Group();
+  lib.position.set(x, 0, z);
+  const copperMat = new THREE.MeshLambertMaterial({ color: 0x4b6e65, flatShading: true });
+  const pedMat = new THREE.MeshLambertMaterial({ color: 0x45494e, flatShading: true });
+  const torchMat = new THREE.MeshBasicMaterial({ color: 0xffd26a });
+
+  // Star-shaped Pedestal Base
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(7.5, 9.0, 14, 8), pedMat);
+  base.position.y = 7;
+  lib.add(base);
+  const ped = new THREE.Mesh(new THREE.BoxGeometry(8.5, 12, 8.5), pedMat);
+  ped.position.y = 20;
+  lib.add(ped);
+
+  // Robed Figure
+  const robe = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 4.4, 22, 8), copperMat);
+  robe.position.y = 37;
+  lib.add(robe);
+
+  // Head + 7-Spike Crown
+  const head = new THREE.Mesh(new THREE.SphereGeometry(2.1, 8, 8), copperMat);
+  head.position.y = 50;
+  lib.add(head);
+  for (let a = -0.9; a <= 0.9; a += 0.3) {
+    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.25, 2.2, 4), copperMat);
+    spike.position.set(Math.sin(a) * 2.1, 51.8 + Math.cos(a) * 1.1, 0.4);
+    spike.rotation.z = -a * 0.9;
+    lib.add(spike);
+  }
+
+  // Raised Right Arm + Glowing Torch
+  const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.85, 13, 6), copperMat);
+  arm.position.set(3.2, 51, 0);
+  arm.rotation.z = -0.22;
+  lib.add(arm);
+
+  const flame = new THREE.Mesh(new THREE.ConeGeometry(1.1, 3.2, 6), torchMat);
+  flame.position.set(4.6, 58.5, 0);
+  lib.add(flame);
+
+  const torchLight = new THREE.PointLight(0xffc966, 2.6, 45);
+  torchLight.position.set(4.6, 59, 2);
+  lib.add(torchLight);
+
+  group.add(lib);
+}
+
 export function initNYCSnowMap(scene, colliders) {
   if (nycGroup) return nycGroup;
 
@@ -592,17 +642,17 @@ export function initNYCSnowMap(scene, colliders) {
     }
   });
 
-  // 2. ONE TIMES SQUARE TOWER + VERTICAL LED BILLBOARD STACK
+  // 2. ONE TIMES SQUARE TOWER + VERTICAL LED BILLBOARD STACK (shifted back so TKTS top deck is walkable!)
   const oneTS = new THREE.Group();
-  oneTS.position.set(0, 0, -40);
+  oneTS.position.set(0, 0, -47);
   const towerBody = new THREE.Mesh(
-    new THREE.BoxGeometry(13, 52, 12),
+    new THREE.BoxGeometry(13, 62, 12),
     new THREE.MeshLambertMaterial({ color: 0x1a2029, flatShading: true })
   );
-  towerBody.position.y = 26;
+  towerBody.position.y = 31;
   oneTS.add(towerBody);
   nycGroup.add(oneTS);
-  addCol(colliders, -6.8, 6.8, -46.2, -33.8);
+  addCol(colliders, -6.8, 6.8, -53.2, -40.8);
 
   const adPrudential = makeAdTex('PRUDENTIAL', 'RETIREMENT TRIVIA • NYC', '#0b2294', '#1638c4', '#ffffff');
   const adHSBC = makeAdTex('3.00% APY', 'HSBC DIRECT • NO MONTHLY FEES', '#111216', '#231618', '#ff6a2a');
@@ -613,18 +663,31 @@ export function initNYCSnowMap(scene, colliders) {
   const adDisney = makeAdTex('DISNEY', 'TIGER\'S APPRENTICE', '#c44a14', '#5c1488', '#ffd84d', '#38e8ff');
   const adSnap = makeAdTex('ONE LOVE', 'SNAP ON • TIMES SQUARE', '#a61472', '#f5189c', '#ffffff');
 
-  addScreen(nycGroup, 0, 44.5, -33.8, 11.4, 7.2, 0, adPrudential, 0x3868ff);
-  addScreen(nycGroup, 0, 36.2, -33.8, 11.4, 7.2, 0, adHSBC, 0xff5522);
-  addScreen(nycGroup, 0, 27.6, -33.8, 11.4, 7.8, 0, adSamsung, 0x22aaff);
-  addScreen(nycGroup, 0, 18.6, -33.8, 11.4, 8.2, 0, adCoke, 0xff2233);
+  addScreen(nycGroup, 0, 48.5, -40.8, 11.4, 7.2, 0, adPrudential, 0x3868ff);
+  addScreen(nycGroup, 0, 40.2, -40.8, 11.4, 7.2, 0, adHSBC, 0xff5522);
+  addScreen(nycGroup, 0, 31.6, -40.8, 11.4, 7.8, 0, adSamsung, 0x22aaff);
+  addScreen(nycGroup, 0, 22.6, -40.8, 11.4, 8.2, 0, adCoke, 0xff2233);
 
-  // Walkable TKTS Red Stairs
+  // Walkable TKTS Red Stairs -> Elevated Tactical Observation Deck (y = 3.36m)
   const redStepMat = new THREE.MeshLambertMaterial({ color: 0xa81822, flatShading: true });
   for (let i = 0; i < 12; i++) {
     const step = new THREE.Mesh(new THREE.BoxGeometry(10.8, 0.35, 0.72), redStepMat);
     step.position.set(0, 0.18 + i * 0.28, -24.5 - i * 0.68);
     nycGroup.add(step);
   }
+  // Top Observation Platform (z = -32.6 to -39.5, y = 3.36)
+  const tktsDeck = new THREE.Mesh(new THREE.BoxGeometry(11.4, 3.36, 7.2), new THREE.MeshLambertMaterial({ color: 0x3b181d, flatShading: true }));
+  tktsDeck.position.set(0, 1.68, -36.1);
+  nycGroup.add(tktsDeck);
+  const deckSnow = new THREE.Mesh(new THREE.BoxGeometry(11.0, 0.12, 6.8), snowMat);
+  deckSnow.position.set(0, 3.40, -36.1);
+  nycGroup.add(deckSnow);
+  // Deck Side Railings +Glowing Supply Crate on Top
+  [-5.5, 5.5].forEach(rx => {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.0, 7.2), new THREE.MeshLambertMaterial({ color: 0x1c2026 }));
+    rail.position.set(rx, 3.9, -36.1);
+    nycGroup.add(rail);
+  });
   [-6.2, 6.2].forEach(px => {
     const tkts = new THREE.Mesh(new THREE.BoxGeometry(1.1, 3.8, 1.1), redStepMat);
     tkts.position.set(px, 1.9, -24.2);
@@ -637,14 +700,16 @@ export function initNYCSnowMap(scene, colliders) {
   curveScreen.position.set(-22.5, 17.5, -18.0);
   nycGroup.add(curveScreen);
 
-  buildSkyscraper(nycGroup, colliders, -28, -18, 16, 18, 44, winGold);
-  buildSkyscraper(nycGroup, colliders, 28, -16, 16, 20, 48, winBlue);
-  buildSkyscraper(nycGroup, colliders, 28, 6, 16, 18, 40, winGold);
-  buildSkyscraper(nycGroup, colliders, -28, 6, 16, 18, 38, winBlue);
+  buildSkyscraper(nycGroup, colliders, -28, -18, 16, 18, 46, winGold);
+  buildSkyscraper(nycGroup, colliders, 28, -16, 16, 20, 52, winBlue);
+  buildSkyscraper(nycGroup, colliders, 28, 6, 16, 18, 42, winGold);
+  buildSkyscraper(nycGroup, colliders, -28, 6, 16, 18, 40, winBlue);
 
-  buildSkyscraper(nycGroup, null, -12, -88, 22, 22, 92, winGold, true);
-  buildSkyscraper(nycGroup, null, 24, -84, 24, 22, 76, winBlue, false);
-  buildSkyscraper(nycGroup, null, -48, -76, 20, 20, 66, winBlue, false);
+  // Towering Manhattan Skyscraper Silhouettes & Statue of Liberty Looming in the Mist!
+  buildSkyscraper(nycGroup, null, 24, -62, 22, 20, 78, winBlue, true);
+  buildSkyscraper(nycGroup, null, -48, -58, 20, 20, 72, winGold, false);
+  buildSkyscraper(nycGroup, null, 48, -52, 20, 20, 68, winGold, false);
+  buildStatueOfLibertySilhouette(nycGroup, -26, -64);
 
   addScreen(nycGroup, -19.8, 11.5, 6, 14, 7.5, Math.PI / 2, adDisney, 0xff7722);
   addScreen(nycGroup, 19.8, 12.5, -16, 15, 8.0, -Math.PI / 2, adSnap, 0xff2a9d);

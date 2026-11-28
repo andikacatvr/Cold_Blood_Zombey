@@ -106,10 +106,13 @@ export function getUpperRiverWaterY(z) {
  * Smoothly flattens around buildings and spawn point to keep architecture level.
  */
 export function getTerrainHeight(x, z) {
-  // Snowy Low-Poly NYC Times Square Arena + Walkable TKTS Red Stairs
+  // Snowy Low-Poly NYC Times Square Arena + Walkable TKTS Red Stairs & Observation Deck
   if (window.__ENDLESS_ACTIVE) {
     if (Math.abs(x) <= 5.4 && z <= -24.2 && z >= -32.6) {
       return ((-24.2 - z) / 8.4) * 3.36;
+    }
+    if (Math.abs(x) <= 5.5 && z < -32.6 && z >= -39.6) {
+      return 3.36;
     }
     return 0.0;
   }
@@ -272,7 +275,7 @@ export const housePickups = [
   }
 ];
 
-export const SNOW_COUNT = 400;
+export const SNOW_COUNT = 950;
 export const snowGeo = new THREE.BufferGeometry();
 export const snowPos = new Float32Array(SNOW_COUNT * 3);
 export const snowVel = [];
@@ -3190,10 +3193,10 @@ export function initWorld(scene, textures) {
 
   snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
   const snowMat = new THREE.PointsMaterial({
-    color: 0xf0f6fa,
-    size: 0.16,
+    color: 0xf4f8fc,
+    size: 0.24,
     transparent: true,
-    opacity: 0.85
+    opacity: 0.90
   });
   snowSystem = new THREE.Points(snowGeo, snowMat);
   // Restore original scene.add so snow & Snowy NYC Times Square sit directly on scene
@@ -3320,22 +3323,22 @@ export function setEndlessEnvironment(isEndless, scene) {
   setNYCSnowMapActive(isEndless);
   indexColliders();
 
-  // 4. Misty Overcast Snowy PS2 Horror Atmosphere (matches references/ & maps_reference/)
+  // 4. Heavy Fog + Snowy Overcast Atmosphere so Liberty & Skyscrapers loom in mist
   if (ambientLight) {
-    ambientLight.color.setHex(isEndless ? 0x425163 : 0x304a68);
-    ambientLight.intensity = isEndless ? 0.65 : 1.0;
+    ambientLight.color.setHex(isEndless ? 0x4b5c6e : 0x304a68);
+    ambientLight.intensity = isEndless ? 0.72 : 1.0;
   }
   if (overcastDirLight) {
-    overcastDirLight.intensity = isEndless ? 0.48 : 0.75;
+    overcastDirLight.intensity = isEndless ? 0.50 : 0.75;
   }
   if (scene) {
-    scene.background = isEndless ? new THREE.Color(0x2b3642) : null;
+    scene.background = isEndless ? new THREE.Color(0x364656) : null;
   }
   if (scene && scene.fog) {
     if (isEndless) {
-      scene.fog.color.setHex(0x2b3642);
-      scene.fog.near = 6.0;
-      scene.fog.far = 56.0;
+      scene.fog.color.setHex(0x364656);
+      scene.fog.near = 4.0;
+      scene.fog.far = 76.0;
     } else {
       scene.fog.color.setHex(0x325274);
       scene.fog.near = 2.0;
