@@ -665,31 +665,8 @@ function buildGrandCentralAndLiberty(group, colliders, stoneTex, snowMat) {
   group.add(gc);
   addCol(colliders, -18.5, 18.5, 125.5, 138.5);
 
-  // Statue of Liberty Silhouette looming in Northern Mist
-  const lib = new THREE.Group();
-  lib.position.set(-28, 0, -96);
-  const copperMat = new THREE.MeshLambertMaterial({ color: 0x4b6e65, flatShading: true });
-  const pedMat = new THREE.MeshLambertMaterial({ color: 0x45494e, flatShading: true });
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(7.5, 9.0, 14, 8), pedMat);
-  base.position.y = 7;
-  lib.add(base);
-  const ped = new THREE.Mesh(new THREE.BoxGeometry(8.5, 12, 8.5), pedMat);
-  ped.position.y = 20;
-  lib.add(ped);
-  const robe = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 4.4, 22, 8), copperMat);
-  robe.position.y = 37;
-  lib.add(robe);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(2.1, 8, 8), copperMat);
-  head.position.y = 50;
-  lib.add(head);
-  const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.85, 13, 6), copperMat);
-  arm.position.set(3.2, 51, 0);
-  arm.rotation.z = -0.22;
-  lib.add(arm);
-  const flame = new THREE.Mesh(new THREE.ConeGeometry(1.2, 3.6, 6), new THREE.MeshBasicMaterial({ color: 0xffd26a }));
-  flame.position.set(4.6, 58.5, 0);
-  lib.add(flame);
-  group.add(lib);
+  // Priority 4 GLB: Statue of Liberty Silhouette looming in Northern Mist
+  placeModularNYCBuilding(group, colliders, '/models/statue_of_liberty.glb', -28, -96, 0, 1.5, 1.65, 1.5, 9.0, 9.0);
 }
 
 export function initNYCSnowMap(scene, colliders) {
@@ -876,17 +853,42 @@ export function initNYCSnowMap(scene, colliders) {
     }
   });
 
-  // Towering Empire State & One WTC Silhouettes in Distant Snowy Fog
-  placeModularNYCBuilding(nycGroup, null, '/models/nyc_skyscraper_glass.glb', -20, -118, 0, 1.45, 1.85, 1.40);
-  placeModularNYCBuilding(nycGroup, null, '/models/nyc_skyscraper_glass.glb', 34, -124, Math.PI / 2, 1.40, 1.95, 1.40);
-  placeModularNYCBuilding(nycGroup, null, '/models/nyc_skyscraper_glass.glb', -88, -116, 0, 1.30, 1.35, 1.25);
+  // Towering Empire State & One WTC Silhouettes in Distant Snowy Fog (Full Skyline Ring)
+  [
+    [-20, -118, 0, 1.45, 1.85, 1.40],
+    [34, -124, Math.PI / 2, 1.40, 1.95, 1.40],
+    [-88, -116, 0, 1.30, 1.35, 1.25],
+    [88, -120, Math.PI, 1.35, 1.55, 1.30],
+    [-132, -72, Math.PI / 2, 1.30, 1.30, 1.30],
+    [-132, 36, Math.PI / 2, 1.25, 1.20, 1.25],
+    [132, 84, -Math.PI / 2, 1.35, 1.45, 1.35],
+    [-46, 132, 0, 1.30, 1.25, 1.25],
+    [46, 132, 0, 1.30, 1.35, 1.25]
+  ].forEach(([sx, sz, srot, scx, scy, scz]) => {
+    placeModularNYCBuilding(nycGroup, null, '/models/nyc_skyscraper_glass.glb', sx, sz, srot, scx, scy, scz);
+  });
 
-  // 5. HELL'S KITCHEN BROWNSTONE & CORNER STOREFRONT DISTRICT (West Blocks)
+  // 5. HELL'S KITCHEN BROWNSTONE, APARTMENT & CORNER STOREFRONT DISTRICTS (Expanded Dense City Blocks)
   [-28, -86].forEach((bx) => {
     const rot = bx < 0 ? Math.PI / 2 : -Math.PI / 2;
     placeModularNYCBuilding(nycGroup, colliders, '/models/nyc_brownstone.glb', bx, 28, rot, 1.35, 1.15, 1.20, 7.0, 6.2);
     placeModularNYCBuilding(nycGroup, colliders, '/models/nyc_brownstone.glb', bx, 40, rot, 1.35, 1.25, 1.20, 7.0, 6.2);
     placeModularNYCBuilding(nycGroup, colliders, '/models/nyc_storefront_corner.glb', bx, 53, rot, 1.20, 1.10, 1.10, 7.4, 6.8);
+  });
+
+  // Additional Outer Avenue Apartment, Brownstone & Corner Blocks (x = ±118, ±86, ±28)
+  [
+    [-118, -60, '/models/nyc_apartment_brick.glb', Math.PI / 2, 1.35, 1.25, 1.35, 9.6, 8.2],
+    [-118, -14, '/models/nyc_brownstone.glb', Math.PI / 2, 1.35, 1.20, 1.25, 7.0, 6.4],
+    [-118, 36, '/models/nyc_storefront_corner.glb', Math.PI / 2, 1.25, 1.15, 1.20, 7.6, 7.2],
+    [-118, 84, '/models/nyc_apartment_brick.glb', Math.PI / 2, 1.35, 1.30, 1.35, 9.6, 8.2],
+    [118, 36, '/models/nyc_apartment_brick.glb', -Math.PI / 2, 1.35, 1.20, 1.35, 9.6, 8.2],
+    [118, 84, '/models/nyc_storefront_corner.glb', -Math.PI / 2, 1.25, 1.15, 1.20, 7.6, 7.2],
+    [86, -112, '/models/nyc_apartment_brick.glb', 0, 1.40, 1.35, 1.35, 9.8, 8.2],
+    [-86, 118, '/models/nyc_apartment_brick.glb', Math.PI, 1.40, 1.25, 1.35, 9.8, 8.2],
+    [86, 118, '/models/nyc_brownstone.glb', Math.PI, 1.35, 1.20, 1.25, 7.0, 6.4]
+  ].forEach(([bx, bz, url, rot, scx, scy, scz, hw, hd]) => {
+    placeModularNYCBuilding(nycGroup, colliders, url, bx, bz, rot, scx, scy, scz, hw, hd);
   });
 
   // 6. CENTRAL PARK WINTER (East-North)
@@ -895,13 +897,22 @@ export function initNYCSnowMap(scene, colliders) {
   // 7. GRAND CENTRAL & STATUE OF LIBERTY
   buildGrandCentralAndLiberty(nycGroup, colliders, brickCream, snowMat);
 
-  // 8. AUTHENTIC PS2 CARS ALONG ALL 3 AVENUES
+  // 8. AUTHENTIC NYC TAXIS, NYPD CRUISERS & PS2 CARS ALONG ALL 3 AVENUES
   [
-    [-8, 6, 0.05, 'cab'], [8, -4, Math.PI - 0.05, 'suv'],
+    [-8, 6, 0.05, 'cab'], [8, -4, Math.PI - 0.05, 'police'],
     [-8, 34, -0.05, 'sedan'], [8, 42, Math.PI + 0.04, 'cab'],
-    [-50, 22, 0.04, 'cab'], [-62, -24, Math.PI, 'sedan'],
-    [50, 26, 0.06, 'suv'], [62, 68, Math.PI - 0.04, 'cab']
-  ].forEach(([cx, cz, crot, ctype]) => buildDetailedPS2Vehicle(nycGroup, colliders, cx, cz, crot, ctype));
+    [-50, 22, 0.04, 'police'], [-62, -24, Math.PI, 'cab'],
+    [50, 26, 0.06, 'cab'], [62, 68, Math.PI - 0.04, 'police'],
+    [-8, -54, 0.03, 'cab'], [8, 76, Math.PI, 'suv']
+  ].forEach(([cx, cz, crot, ctype]) => {
+    if (ctype === 'cab') {
+      placeModularNYCBuilding(nycGroup, colliders, '/models/nyc_taxi_cab.glb', cx, cz, crot, 1.05, 1.05, 1.05, 1.15, 2.35);
+    } else if (ctype === 'police') {
+      placeModularNYCBuilding(nycGroup, colliders, '/models/nyc_police_car.glb', cx, cz, crot, 1.05, 1.05, 1.05, 1.15, 2.35);
+    } else {
+      buildDetailedPS2Vehicle(nycGroup, colliders, cx, cz, crot, ctype);
+    }
+  });
 
   // 9. STREETLAMPS, TRAFFIC LIGHTS, SIDEWALK PROPS & SWIRLING GOLDEN "KUNANG-KUNANG" LIGHT-SPARKS
   const lampPositions = [
