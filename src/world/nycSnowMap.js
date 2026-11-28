@@ -654,7 +654,18 @@ export function initNYCSnowMap(scene, colliders) {
   const winBlue = makeTowerWindowsTex('#9fd8f5');
   const snowMat = new THREE.MeshLambertMaterial({ color: 0xc2ceda, flatShading: true });
 
-  // 1. Snowy Avenue & Wet Reflective Times Square Plaza
+  // 1. Full 260x260 Snowy NYC City Base (prevents any empty ground/void in side alleys!)
+  const cityFloor = new THREE.Mesh(
+    new THREE.PlaneGeometry(260, 260),
+    new THREE.MeshLambertMaterial({ color: 0x2a323c, flatShading: true })
+  );
+  cityFloor.rotation.x = -Math.PI / 2;
+  cityFloor.position.set(0, 0.0, 10);
+  cityFloor.receiveShadow = true;
+  nycGroup.add(cityFloor);
+
+  // Snowy Avenue & Wet Reflective Times Square Plaza
+  const avenue = new THREE.Mesh(
   const avenue = new THREE.Mesh(
     new THREE.PlaneGeometry(32, 190),
     new THREE.MeshLambertMaterial({ map: streetTex, flatShading: true })
@@ -768,15 +779,28 @@ export function initNYCSnowMap(scene, colliders) {
   curveScreenEast.position.set(22.5, 18.0, -18.0);
   nycGroup.add(curveScreenEast);
 
-  buildSkyscraper(nycGroup, colliders, -28, -18, 16, 18, 46, winGold, false, true);
-  buildSkyscraper(nycGroup, colliders, 28, -16, 16, 20, 52, winBlue, false, true);
-  buildSkyscraper(nycGroup, colliders, 28, 6, 16, 18, 42, winGold, false, true);
-  buildSkyscraper(nycGroup, colliders, -28, 6, 16, 18, 40, winBlue, false, true);
+  buildSkyscraper(nycGroup, colliders, -28, -18, 16, 20, 46, winGold, false, true);
+  buildSkyscraper(nycGroup, colliders, 28, -16, 16, 22, 52, winBlue, false, true);
+  buildSkyscraper(nycGroup, colliders, 28, 6, 16, 20, 42, winGold, false, true);
+  buildSkyscraper(nycGroup, colliders, -28, 6, 16, 20, 40, winBlue, false, true);
+
+  // Close ALL Side-Alley Gaps & Surround All 360° Directions with Manhattan City Blocks!
+  [-46, 46].forEach(bx => {
+    [-36, -12, 12, 36, 60, 82].forEach((bz, idx) => {
+      const h = 44 + ((idx * 11) % 34);
+      buildSkyscraper(nycGroup, colliders, bx, bz, 18, 22, h, idx % 2 === 0 ? winGold : winBlue, idx === 1);
+    });
+  });
+  // Fill North & South Perimeter Gaps behind One Times Square & Grand Central
+  [-36, -18, 18, 36].forEach((nx, idx) => {
+    buildSkyscraper(nycGroup, null, nx, -62, 17, 18, 64 + (idx % 2) * 14, idx % 2 === 0 ? winBlue : winGold, idx === 2);
+    buildSkyscraper(nycGroup, null, nx, 98, 17, 18, 52 + (idx % 2) * 12, idx % 2 === 0 ? winGold : winBlue, false);
+  });
 
   // Towering Manhattan Skyscraper Silhouettes & Statue of Liberty Looming in the Mist!
-  buildSkyscraper(nycGroup, null, 24, -62, 22, 20, 78, winBlue, true, false);
-  buildSkyscraper(nycGroup, null, -48, -58, 20, 20, 72, winGold, false, false);
-  buildSkyscraper(nycGroup, null, 48, -52, 20, 20, 68, winGold, false, false);
+  buildSkyscraper(nycGroup, null, 24, -66, 22, 20, 78, winBlue, true, false);
+  buildSkyscraper(nycGroup, null, -52, -62, 20, 20, 72, winGold, false, false);
+  buildSkyscraper(nycGroup, null, 52, -56, 20, 20, 68, winGold, false, false);
   buildStatueOfLibertySilhouette(nycGroup, -26, -64);
 
   // Dense Multi-Tier Times Square LED Billboards & Neon Blade Signs
