@@ -324,7 +324,10 @@ function loadRodrickGLBModel(root) {
     console.log(`[PLAYER] rodrick.glb loaded successfully from ${src} as official player model!`);
 
     setTimeout(() => {
-      if (renderer) captureRodrickPortrait(renderer);
+      if (renderer) {
+        captureRodrickPortrait(renderer, 'hud-portrait-canvas');
+        captureRodrickPortrait(renderer, 'roster-portrait-rodrick');
+      }
     }, 150);
   }
 
@@ -385,9 +388,12 @@ function loadNonaBataviaPlayerModel(root) {
       isNonaBataviaLoaded = true;
       console.log('[PLAYER] nona_batavia.glb loaded successfully as playable character!');
 
-      if (activeCharacter === 'nona_batavia' && renderer) {
-        setTimeout(() => captureNonaBataviaPortrait(renderer), 150);
-      }
+      setTimeout(() => {
+        if (renderer) {
+          captureNonaBataviaPortrait(renderer, 'roster-portrait-batavia');
+          if (activeCharacter === 'nona_batavia') captureNonaBataviaPortrait(renderer, 'hud-portrait-canvas');
+        }
+      }, 180);
     },
     undefined,
     (err) => console.warn('[PLAYER] Failed loading nona_batavia.glb for player:', err)
@@ -435,9 +441,12 @@ function loadSisterValentinaPlayerModel(root) {
       isValentinaLoaded = true;
       console.log('[PLAYER] sister_valentina.glb loaded successfully as playable character!');
 
-      if (activeCharacter === 'sister_valentina' && renderer) {
-        setTimeout(() => captureSisterValentinaPortrait(renderer), 150);
-      }
+      setTimeout(() => {
+        if (renderer) {
+          captureSisterValentinaPortrait(renderer, 'roster-portrait-valentina');
+          if (activeCharacter === 'sister_valentina') captureSisterValentinaPortrait(renderer, 'hud-portrait-canvas');
+        }
+      }, 220);
     },
     undefined,
     (err) => console.warn('[PLAYER] Failed loading sister_valentina.glb for player:', err)
@@ -485,17 +494,18 @@ function loadKristinPlayerModel(root) {
       isKristinPlayerLoaded = true;
       console.log('[PLAYER] ps2_character_asset.glb loaded successfully as playable character Kristin!');
 
-      if (activeCharacter === 'kristin' && renderer) {
-        setTimeout(() => captureKristinPortrait(), 150);
-      }
+      setTimeout(() => {
+        captureKristinPortrait('roster-portrait-kristin');
+        if (activeCharacter === 'kristin' && renderer) captureKristinPortrait('hud-portrait-canvas');
+      }, 180);
     },
     undefined,
     (err) => console.warn('[PLAYER] Failed loading ps2_character_asset.glb for player Kristin:', err)
   );
 }
 
-export function captureSisterValentinaPortrait(rndr = renderer) {
-  const targetCanvas = document.getElementById('hud-portrait-canvas');
+export function captureSisterValentinaPortrait(rndr = renderer, targetId = 'hud-portrait-canvas') {
+  const targetCanvas = document.getElementById(targetId);
   if (!targetCanvas || !rndr || !sisterValentinaPlayerScene) return;
 
   const w = 96;
@@ -558,8 +568,8 @@ export function captureSisterValentinaPortrait(rndr = renderer) {
   }
 }
 
-export function captureKristinPortrait() {
-  const targetCanvas = document.getElementById('hud-portrait-canvas');
+export function captureKristinPortrait(targetId = 'hud-portrait-canvas') {
+  const targetCanvas = document.getElementById(targetId);
   if (!targetCanvas) return;
   const img = new Image();
   img.onload = () => {
@@ -569,8 +579,8 @@ export function captureKristinPortrait() {
   img.src = '/textures/kristin_face_hd.png';
 }
 
-export function captureNonaBataviaPortrait(rndr = renderer) {
-  const targetCanvas = document.getElementById('hud-portrait-canvas');
+export function captureNonaBataviaPortrait(rndr = renderer, targetId = 'hud-portrait-canvas') {
+  const targetCanvas = document.getElementById(targetId);
   if (!targetCanvas || !rndr || !nonaBataviaPlayerScene) return;
 
   const w = 96;
@@ -748,8 +758,8 @@ export function drawInitialPortraitPlaceholder() {
   ctx.fillRect(w / 2 - 2, h * 0.82, 4, 2);
 }
 
-export function captureRodrickPortrait(rndr = renderer) {
-  const targetCanvas = document.getElementById('hud-portrait-canvas');
+export function captureRodrickPortrait(rndr = renderer, targetId = 'hud-portrait-canvas') {
+  const targetCanvas = document.getElementById(targetId);
   if (!targetCanvas || !rndr || !rodrickGLBScene) return;
 
   const w = 96;

@@ -745,6 +745,28 @@ html {
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.8));
 }
 
+.roster-portrait-canvas {
+  width: 88px;
+  height: 88px;
+  border-radius: 4px;
+  border: 1.5px solid rgba(190, 215, 235, 0.35);
+  background: #0b1016;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.75);
+  image-rendering: auto;
+}
+
+.roster-portrait-canvas.nona-portrait {
+  border-color: rgba(255, 195, 110, 0.48);
+}
+
+.roster-portrait-canvas.nun-portrait {
+  border-color: rgba(255, 85, 105, 0.48);
+}
+
+.roster-portrait-canvas.kristin-portrait {
+  border-color: rgba(110, 225, 165, 0.48);
+}
+
 .roster-class-badge {
   font-family: 'Redaction 70', serif, monospace;
   font-size: 11px;
